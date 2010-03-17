@@ -1,0 +1,9 @@
+   =========================================================================
+   ==  NOTICE file corresponding to the section 4 d of                    ==
+   ==  the Apache License, Version 2.0,                                   ==
+   ==  in this case for the agimatec-validation project.                  ==
+   =========================================================================
+
+   This product includes software developed by agimatec GmbH.
+   Copyright 2007-2009 agimatec GmbH
+

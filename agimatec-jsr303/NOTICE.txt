@@ -1,0 +1,15 @@
+   =========================================================================
+   ==  NOTICE file corresponding to the section 4 d of                    ==
+   ==  the Apache License, Version 2.0,                                   ==
+   ==  in this case for the agimatec-validation project.                  ==
+   =========================================================================
+
+   This product includes software developed by agimatec GmbH.
+   Copyright 2007-2009 agimatec GmbH
+
+   Notice for agimatec-jsr303
+   --------------------------
+   This is an implementation of an early-draft specification developed under the
+   Java Community Process (JCP) and is made available for testing and evaluation
+   purposes only. The code is not compatible with any specification of the JCP.
+

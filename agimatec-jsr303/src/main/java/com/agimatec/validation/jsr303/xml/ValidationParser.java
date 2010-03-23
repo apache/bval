@@ -81,7 +81,7 @@ public class ValidationParser {
                 return null;
             }
 
-            if (log.isInfoEnabled()) log.info(validationXmlFile + " found.");
+            if (log.isDebugEnabled()) log.debug(validationXmlFile + " found.");
 
             Schema schema = getSchema();
             JAXBContext jc = JAXBContext.newInstance(ValidationConfigType.class);
@@ -203,8 +203,8 @@ public class ValidationParser {
     private void applyMappingStreams(ValidationConfigType xmlConfig,
                                      ConfigurationImpl target) {
         for (JAXBElement<String> mappingFileName : xmlConfig.getConstraintMapping()) {
-            if (log.isInfoEnabled()) {
-                log.info(
+            if (log.isDebugEnabled()) {
+                log.debug(
                       "Trying to open input stream for " + mappingFileName.getValue());
             }
             InputStream in;

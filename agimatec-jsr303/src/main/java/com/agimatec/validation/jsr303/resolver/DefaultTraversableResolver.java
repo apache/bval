@@ -5,9 +5,9 @@
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -64,9 +64,11 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private void initJpa() {
         try {
             ClassUtils.getClass(PERSISTENCE_UTIL_CLASSNAME);
-            log.debug("Found " + PERSISTENCE_UTIL_CLASSNAME + " on classpath.");
+            if (log.isDebugEnabled())
+                log.debug("Found " + PERSISTENCE_UTIL_CLASSNAME + " on classpath.");
         } catch (Exception e) {
-            log.debug("Cannot find " + PERSISTENCE_UTIL_CLASSNAME +
+            if (log.isDebugEnabled())
+                log.debug("Cannot find " + PERSISTENCE_UTIL_CLASSNAME +
                   " on classpath. All properties will per default be traversable.");
             return;
         }
@@ -76,8 +78,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
                   (Class<? extends TraversableResolver>) ClassUtils
                         .getClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);
             jpaTR = SecureActions.newInstance(jpaAwareResolverClass);
-            log.info("Instantiated an instance of " +
-                  JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME + ".");
+            if (log.isDebugEnabled())
+                log.debug("Instantiated an instance of " +
+                    JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME + ".");
         } catch (Exception e) {
             log.warn("Unable to load or instanciate JPA aware resolver " +
                   JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME +

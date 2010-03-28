@@ -25,13 +25,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.agimatec</groupId>
-  <artifactId>agimatec-validation-parent</artifactId>
-  <name>agimatec-validation-parent :: Parent POM</name>
+  <groupId>org.apache.bval</groupId>
+  <artifactId>bval-parent</artifactId>
+  <name>bval-parent :: Parent POM</name>
   <packaging>pom</packaging>
   <version>0.9.6</version>
 
-  <description>agimatec-validation parent pom</description>
+  <description>bval parent pom</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,19 +44,19 @@
   </properties>
 
   <organization>
-    <name>agimatec GmbH</name>
-    <url>http://www.agimatec.de</url>
+    <name>Apache Software Foundation</name>
+    <url>http://www.apache.org/</url>
   </organization>
 
   <inceptionYear>2007</inceptionYear>
 
-  <url>http://code.google.com/p/agimatec-validation/</url>
+  <url>http://incubator.apache.org/beanvalidation/</url>
 
   <scm>
-    <connection>scm:svn:http://agimatec-validation.googlecode.com/svn/trunk</connection>
-    <developerConnection>scm:svn:https://agimatec-validation.googlecode.com/svn/trunk
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/bval/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/bval/trunk
     </developerConnection>
-    <url>http://agimatec-validation.googlecode.com/svn/trunk</url>
+    <url>http://svn.apache.org/viewvc/incubator/bval/</url>
   </scm>
 
   <licenses>
@@ -88,6 +88,12 @@
       <name>Donald Wodos</name>
       <email>donaldrwoods@gmail.com</email>
       <organization>The Apache Software Foundation</organization>
+    </developer>
+    <developer>
+      <id>simonetripodi</id>
+      <name>Simone Tripodi</name>
+      <email>simonetripodi@apache.org</email>
+      <organization>Sourcesense Srl</organization>
     </developer>
   </developers>
 
@@ -451,8 +457,8 @@
   </build>
 
   <modules>
-    <module>agimatec-validation</module>
-    <module>agimatec-jsr303</module>
+    <module>bval-core</module>
+    <module>bval-jsr303</module>
   </modules>
 
   <profiles>

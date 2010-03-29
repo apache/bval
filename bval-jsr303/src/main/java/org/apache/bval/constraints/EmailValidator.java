@@ -31,10 +31,9 @@ import org.apache.bval.routines.EMailValidation;
  * Copyright: Agimatec GmbH
  */
 public class EmailValidator implements ConstraintValidator<Email, String> {
-    protected final EMailValidation validation = new EMailValidation();
 
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return validation.isValid(value);
+        return EMailValidation.isValid(value);
     }
 
     public void initialize(Email parameters) {

@@ -25,7 +25,7 @@ import java.util.Collection;
 
 /** Check that a Collection's size is between min and max. */
 public class SizeValidatorForCollection extends SizeValidator
-      implements ConstraintValidator<Size, Collection> {
+      implements ConstraintValidator<Size, Collection<?>> {
 
     /**
      * Checks the number of entries in a map.
@@ -36,7 +36,7 @@ public class SizeValidatorForCollection extends SizeValidator
      *         <code>collection</code> is between the specified <code>min</code> and <code>max</code> values (inclusive),
      *         <code>false</code> otherwise.
      */
-    public boolean isValid(Collection collection, ConstraintValidatorContext context) {
+    public boolean isValid(Collection<?> collection, ConstraintValidatorContext context) {
         if (collection == null) {
             return true;
         }

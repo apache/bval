@@ -29,12 +29,12 @@ import java.util.Collection;
  * Time: 14:03:12 <br/>
  * Copyright: Agimatec GmbH
  */
-public class NotEmptyValidatorForCollection implements ConstraintValidator<NotEmpty, Collection> {
+public class NotEmptyValidatorForCollection implements ConstraintValidator<NotEmpty, Collection<?>> {
     public void initialize(NotEmpty constraintAnnotation) {
         // do nothing
     }
 
-    public boolean isValid(Collection value, ConstraintValidatorContext context) {
+    public boolean isValid(Collection<?> value, ConstraintValidatorContext context) {
         return value == null || !value.isEmpty();
     }
 }

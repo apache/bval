@@ -22,7 +22,7 @@ import junit.framework.TestSuite;
 
 import javax.validation.Validator;
 
-import org.apache.bval.jsr303.AgimatecValidatorFactory;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.ClassValidator;
 import org.apache.bval.jsr303.extensions.MethodValidator;
 import org.apache.bval.jsr303.extensions.MethodValidatorImpl;
@@ -126,6 +126,6 @@ public class MethodValidatorImplTest extends TestCase {
     }
 
     private Validator getValidator() {
-        return AgimatecValidatorFactory.getDefault().getValidator();
+        return ApacheValidatorFactory.getDefault().getValidator();
     }
 }

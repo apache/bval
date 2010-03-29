@@ -16,12 +16,10 @@
  */
 package org.apache.bval.jsr303.extensions;
 
-import org.apache.bval.jsr303.*;
-
 import javax.validation.ConstraintViolation;
 import javax.validation.metadata.ConstraintDescriptor;
 
-import org.apache.bval.jsr303.AgimatecFactoryContext;
+import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.BeanDescriptorImpl;
 import org.apache.bval.jsr303.ClassValidator;
 import org.apache.bval.jsr303.ConstraintValidation;
@@ -46,7 +44,7 @@ import java.util.Set;
  */
 class MethodValidatorImpl extends ClassValidator implements MethodValidator {
 
-    public MethodValidatorImpl(AgimatecFactoryContext factoryContext) {
+    public MethodValidatorImpl(ApacheFactoryContext factoryContext) {
         super(factoryContext);
     }
 

@@ -55,7 +55,7 @@ import org.apache.bval.jsr303.util.TestUtils;
  */
 public class Jsr303Test extends TestCase {
 /*    static {
-        AgimatecValidatorFactory.getDefault().getMetaBeanManager()
+        ApacheValidatorFactory.getDefault().getMetaBeanManager()
                 .addResourceLoader("com/agimatec/validation/example/test-beanInfos.xml");
     }*/
 
@@ -224,6 +224,6 @@ public class Jsr303Test extends TestCase {
 
     private Validator getValidator() {
 //        return Validation.buildDefaultValidatorFactory().getValidator();
-        return AgimatecValidatorFactory.getDefault().getValidator();
+        return ApacheValidatorFactory.getDefault().getValidator();
     }
 }

@@ -20,7 +20,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation=
         "http://jboss.org/xml/ns/javax/validation/configuration validation-configuration-1.0.xsd">
-  <default-provider>org.apache.bval.jsr303.AgimatecValidationProvider</default-provider>
+  <default-provider>org.apache.bval.jsr303.ApacheValidationProvider</default-provider>
   <message-interpolator>org.apache.bval.jsr303.xml.TestMessageInterpolator</message-interpolator>
   <traversable-resolver>org.apache.bval.jsr303.resolver.SimpleTraversableResolver</traversable-resolver>
   <constraint-validator-factory>org.apache.bval.jsr303.xml.TestConstraintValidatorFactory</constraint-validator-factory>

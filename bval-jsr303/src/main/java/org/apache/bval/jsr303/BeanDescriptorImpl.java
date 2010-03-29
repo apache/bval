@@ -38,9 +38,9 @@ import java.util.Set;
  * Copyright: Agimatec GmbH
  */
 public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDescriptor {
-    protected final AgimatecFactoryContext factoryContext;
+    protected final ApacheFactoryContext factoryContext;
 
-    protected BeanDescriptorImpl(AgimatecFactoryContext factoryContext, MetaBean metaBean,
+    protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean,
                                  Validation[] validations) {
         super(metaBean, validations);
         this.factoryContext = factoryContext;

@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
 
 import javax.validation.Validator;
 
-import org.apache.bval.jsr303.AgimatecValidatorFactory;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.example.Customer;
 
 /**
@@ -41,7 +41,7 @@ public class EmailValidatorTest extends TestCase {
     }
 
     public void testEmail() {
-        Validator validator = AgimatecValidatorFactory.getDefault().getValidator();
+        Validator validator = ApacheValidatorFactory.getDefault().getValidator();
         Customer customer = new Customer();
         customer.setCustomerId("id-1");
         customer.setFirstName("Mary");

@@ -18,14 +18,13 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import org.apache.bval.jsr303.example.*;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
-import org.apache.bval.jsr303.AgimatecValidatorFactory;
 import org.apache.bval.jsr303.Jsr303Features;
 import org.apache.bval.jsr303.example.Author;
 import org.apache.bval.jsr303.example.Book;
@@ -49,7 +48,7 @@ import java.util.Set;
 public class GroupSequenceTest extends TestCase {
     public void testGroupSequence1() {
         MetaBean metaBean =
-              AgimatecValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
+              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GInterface1.class);
         List<Group> gseq = metaBean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
         Assert.assertNotNull(gseq);
@@ -59,7 +58,7 @@ public class GroupSequenceTest extends TestCase {
 
     public void testGroupSequence2() {
         MetaBean metaBean =
-              AgimatecValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
+              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GClass1.class);
         List<Group> gseq = metaBean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
         Assert.assertNotNull(gseq);
@@ -69,7 +68,7 @@ public class GroupSequenceTest extends TestCase {
 
     public void testGroupSequence3() {
         MetaBean metaBean =
-              AgimatecValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
+              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GClass2.class);
         List<Group> gseq = metaBean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
         Assert.assertNotNull(gseq);
@@ -80,7 +79,7 @@ public class GroupSequenceTest extends TestCase {
 
     public void testGroupSequence4() {
         MetaBean metaBean =
-              AgimatecValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
+              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GClass3.class);
         List<Group> gseq = metaBean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
         Assert.assertNotNull(gseq);
@@ -177,6 +176,6 @@ public class GroupSequenceTest extends TestCase {
     }
 
     public Validator getValidator() {
-        return AgimatecValidatorFactory.getDefault().getValidator();
+        return ApacheValidatorFactory.getDefault().getValidator();
     }
 }

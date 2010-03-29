@@ -50,23 +50,23 @@ import org.apache.bval.jsr303.example.Customer;
  * Copyright: Agimatec GmbH
  */
 public class BootstrapTest extends TestCase {
-    public void testAgimatecBootstrap() {
+    public void testDirectBootstrap() {
         Validator validator =
-                AgimatecValidatorFactory.getDefault().getValidator();
+                ApacheValidatorFactory.getDefault().getValidator();
         Assert.assertNotNull(validator);
-        Assert.assertTrue(AgimatecValidatorFactory.getDefault() ==
-                AgimatecValidatorFactory.getDefault());
+        Assert.assertTrue(ApacheValidatorFactory.getDefault() ==
+                ApacheValidatorFactory.getDefault());
     }
 
     public void testEverydayBootstrap() {
-        AgimatecValidatorFactory factory =
-                (AgimatecValidatorFactory) Validation.buildDefaultValidatorFactory();
+        ApacheValidatorFactory factory =
+                (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
         Assert.assertNotNull(validator);
 
         // each call to Validation.getValidationBuilder() returns a new builder with new state
-        AgimatecValidatorFactory factory2 =
-                (AgimatecValidatorFactory) Validation.buildDefaultValidatorFactory();
+        ApacheValidatorFactory factory2 =
+                (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
         Assert.assertTrue(factory2 != factory);
         Assert.assertTrue(factory2.getMessageInterpolator() != factory.getMessageInterpolator());
 
@@ -77,7 +77,7 @@ public class BootstrapTest extends TestCase {
         // changing the builder allows to create different factories
         DefaultMessageInterpolator interpolator = new DefaultMessageInterpolator();
         builder.messageInterpolator(interpolator);
-        AgimatecValidatorFactory factory = (AgimatecValidatorFactory) builder.buildValidatorFactory();
+        ApacheValidatorFactory factory = (ApacheValidatorFactory) builder.buildValidatorFactory();
 
         // ALTERNATIVE:
         // you could do it without modifying the builder or reusing it,
@@ -128,13 +128,13 @@ public class BootstrapTest extends TestCase {
 
             public List<ValidationProvider<?>> getValidationProviders() {
                 List<ValidationProvider<?>> list = new ArrayList(1);
-                list.add(new AgimatecValidationProvider());
+                list.add(new ApacheValidationProvider());
                 return list;
             }
         };
 
-        AgimatecValidatorConfiguration builder = Validation
-                .byProvider(AgimatecValidationProvider.class)
+        ApacheValidatorConfiguration builder = Validation
+                .byProvider(ApacheValidationProvider.class)
                 .providerResolver(resolver)
                 .configure();
         assertDefaultBuilderAndFactory(builder);
@@ -145,7 +145,7 @@ public class BootstrapTest extends TestCase {
 
             public List<ValidationProvider<?>> getValidationProviders() {
                 List list = new ArrayList();
-                list.add(new AgimatecValidationProvider());
+                list.add(new ApacheValidationProvider());
                 return list;
             }
         };
@@ -163,7 +163,7 @@ public class BootstrapTest extends TestCase {
 
         ValidatorFactory factory = builder.buildValidatorFactory();
         Assert.assertNotNull(factory);
-        Assert.assertTrue(factory instanceof AgimatecValidatorFactory);
+        Assert.assertTrue(factory instanceof ApacheValidatorFactory);
     }
 
     public void testFailingCustomResolver() {
@@ -174,10 +174,10 @@ public class BootstrapTest extends TestCase {
             }
         };
 
-        ProviderSpecificBootstrap<AgimatecValidatorConfiguration> type =
-                Validation.byProvider(AgimatecValidationProvider.class);
+        ProviderSpecificBootstrap<ApacheValidatorConfiguration> type =
+                Validation.byProvider(ApacheValidationProvider.class);
 
-        final ProviderSpecificBootstrap<AgimatecValidatorConfiguration> specializedBuilderFactory =
+        final ProviderSpecificBootstrap<ApacheValidatorConfiguration> specializedBuilderFactory =
                 type.providerResolver(resolver);
 
         try {
@@ -188,7 +188,7 @@ public class BootstrapTest extends TestCase {
             Assert.assertTrue(
                     "Wrong error message",
                     e.getMessage().contains("provider") && 
-                    e.getMessage().contains("org.apache.bval.jsr303.AgimatecValidationProvider")
+                    e.getMessage().contains("org.apache.bval.jsr303.ApacheValidationProvider")
             );
         }
     }

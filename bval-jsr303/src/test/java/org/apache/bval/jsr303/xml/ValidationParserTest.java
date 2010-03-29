@@ -27,8 +27,8 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import org.apache.bval.jsr303.AgimatecValidationProvider;
-import org.apache.bval.jsr303.AgimatecValidatorConfiguration;
+import org.apache.bval.jsr303.ApacheValidationProvider;
+import org.apache.bval.jsr303.ApacheValidatorConfiguration;
 import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.example.XmlEntitySampleBean;
 import org.apache.bval.jsr303.resolver.SimpleTraversableResolver;
@@ -44,7 +44,7 @@ import java.util.Set;
  * @since <pre>11/25/2009</pre>
  */
 public class ValidationParserTest extends TestCase
-      implements AgimatecValidatorConfiguration.Properties {
+      implements ApacheValidatorConfiguration.Properties {
     public ValidationParserTest(String name) {
         super(name);
     }
@@ -52,7 +52,7 @@ public class ValidationParserTest extends TestCase
     public void testParse() {
         ValidationParser vp = new ValidationParser("sample-validation.xml");
         ConfigurationImpl config =
-              new ConfigurationImpl(null, new AgimatecValidationProvider());
+              new ConfigurationImpl(null, new ApacheValidationProvider());
         vp.processValidationConfig(config);
     }
 
@@ -67,8 +67,8 @@ public class ValidationParserTest extends TestCase
     }
 
     private ValidatorFactory getFactory() {
-        AgimatecValidatorConfiguration config =
-              Validation.byProvider(AgimatecValidationProvider.class).configure();
+        ApacheValidatorConfiguration config =
+              Validation.byProvider(ApacheValidationProvider.class).configure();
         config.addProperty(VALIDATION_XML_PATH, "sample-validation.xml");
         return config.buildValidatorFactory();
     }

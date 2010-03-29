@@ -91,6 +91,6 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
 
     private Validator getValidator() {
-        return AgimatecValidatorFactory.getDefault().getValidator();
+        return ApacheValidatorFactory.getDefault().getValidator();
     }
 }

@@ -41,7 +41,7 @@ import java.util.*;
  * Time: 14:47:44 <br/>
  * Copyright: Agimatec GmbH
  */
-public class ConfigurationImpl implements AgimatecValidatorConfiguration, ConfigurationState {
+public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
     private static final Log log = LogFactory.getLog(ConfigurationImpl.class);
     
     protected final ValidationProvider provider;
@@ -84,7 +84,7 @@ public class ConfigurationImpl implements AgimatecValidatorConfiguration, Config
         }
     }
 
-    public AgimatecValidatorConfiguration traversableResolver(TraversableResolver resolver) {
+    public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
         traversableResolver = resolver;
         this.prepared = false;
         return this;
@@ -96,7 +96,7 @@ public class ConfigurationImpl implements AgimatecValidatorConfiguration, Config
      *
      * @return this
      */
-    public AgimatecValidatorConfiguration ignoreXmlConfiguration() {
+    public ApacheValidatorConfiguration ignoreXmlConfiguration() {
         ignoreXmlConfiguration = true;
 //        this.prepared = false;
         return this;
@@ -121,7 +121,7 @@ public class ConfigurationImpl implements AgimatecValidatorConfiguration, Config
      *
      * @return this
      */
-    public AgimatecValidatorConfiguration addMapping(InputStream stream) {
+    public ApacheValidatorConfiguration addMapping(InputStream stream) {
         mappingStreams.add(stream);
         return this;
     }
@@ -133,7 +133,7 @@ public class ConfigurationImpl implements AgimatecValidatorConfiguration, Config
      *
      * @return this
      */
-    public AgimatecValidatorConfiguration addProperty(String name, String value) {
+    public ApacheValidatorConfiguration addProperty(String name, String value) {
         properties.put(name, value);
         return this;
     }

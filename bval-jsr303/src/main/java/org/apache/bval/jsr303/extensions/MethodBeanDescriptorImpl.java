@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.bval.jsr303.AgimatecFactoryContext;
+import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.BeanDescriptorImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
@@ -40,7 +40,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
     private Map<Method, MethodDescriptorImpl> methodConstraints;
     private Map<Constructor, ConstructorDescriptorImpl> constructorConstraints;
 
-    protected MethodBeanDescriptorImpl(AgimatecFactoryContext factoryContext,
+    protected MethodBeanDescriptorImpl(ApacheFactoryContext factoryContext,
                                        MetaBean metaBean, Validation[] validations) {
         super(factoryContext, metaBean, validations);
     }

@@ -48,16 +48,16 @@ import java.util.Set;
  * Copyright: Agimatec GmbH 2008
  */
 public class ClassValidator extends BeanValidator implements Validator {
-    protected final AgimatecFactoryContext factoryContext;
+    protected final ApacheFactoryContext factoryContext;
     protected final GroupsComputer groupsComputer = new GroupsComputer();
 
-    public ClassValidator(AgimatecFactoryContext factoryContext) {
+    public ClassValidator(ApacheFactoryContext factoryContext) {
         super(factoryContext.getMetaBeanFinder());
         this.factoryContext = factoryContext;
     }
 
     /** @deprecated provided for backward compatibility */
-    public ClassValidator(AgimatecValidatorFactory factory) {
+    public ClassValidator(ApacheValidatorFactory factory) {
         this(factory.usingContext());
     }
 
@@ -323,13 +323,13 @@ public class ClassValidator extends BeanValidator implements Validator {
         if (type.isAssignableFrom(getClass())) {
             return (T) this;
         } else if (!type.isInterface()) {
-            return SecureActions.newInstance(type, new Class[]{AgimatecFactoryContext.class},
+            return SecureActions.newInstance(type, new Class[]{ApacheFactoryContext.class},
                   new Object[]{factoryContext});
         } else {
             try {
                 Class<T> cls = ClassUtils.getClass(type.getName() + "Impl");
                 return SecureActions.newInstance(cls,
-                      new Class[]{AgimatecFactoryContext.class}, new Object[]{factoryContext});
+                      new Class[]{ApacheFactoryContext.class}, new Object[]{factoryContext});
             } catch (ClassNotFoundException e) {
                 throw new ValidationException("Type " + type + " not supported");
             }

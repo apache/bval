@@ -42,7 +42,7 @@ public class PayloadTest extends TestCase {
     private Validator validator;
 
     protected void setUp() {
-        validator = AgimatecValidatorFactory.getDefault().getValidator();
+        validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
     static class Severity {

@@ -61,7 +61,7 @@ public class FooTest extends TestCase {
     public void testValidation() {
         FooTest t = new FooTest();
 
-        Validator v = AgimatecValidatorFactory.getDefault().getValidator();
+        Validator v = ApacheValidatorFactory.getDefault().getValidator();
         Set<ConstraintViolation<FooTest>> errors = v.validate(t);
         System.out.println("got errors:");
         for (ConstraintViolation error : errors) {

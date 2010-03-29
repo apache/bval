@@ -40,8 +40,8 @@ import java.util.*;
  * Time: 17:06:20 <br/>
  * Copyright: Agimatec GmbH
  */
-public class AgimatecValidatorFactory implements ValidatorFactory, Cloneable {
-    private static AgimatecValidatorFactory DEFAULT_FACTORY;
+public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
+    private static ApacheValidatorFactory DEFAULT_FACTORY;
     private static final ConstraintDefaults defaultConstraints = new ConstraintDefaults();
 
     private MessageInterpolator messageResolver;
@@ -59,19 +59,19 @@ public class AgimatecValidatorFactory implements ValidatorFactory, Cloneable {
     private final Map<Class<?>, List<AccessStrategy>> validAccesses;
     private final Map<Class<?>, List<MetaConstraint<?, ? extends Annotation>>> constraintMap;
 
-    /** convenience to retrieve a default global AgimatecValidatorFactory */
-    public static AgimatecValidatorFactory getDefault() {
+  /** convenience to retrieve a default global ApacheValidatorFactory */
+    public static ApacheValidatorFactory getDefault() {
         if (DEFAULT_FACTORY == null) {
-            ProviderSpecificBootstrap<AgimatecValidatorConfiguration> provider =
-                  Validation.byProvider(AgimatecValidationProvider.class);
-            AgimatecValidatorConfiguration configuration = provider.configure();
-            DEFAULT_FACTORY = (AgimatecValidatorFactory) configuration
+            ProviderSpecificBootstrap<ApacheValidatorConfiguration> provider =
+                  Validation.byProvider(ApacheValidationProvider.class);
+            ApacheValidatorConfiguration configuration = provider.configure();
+            DEFAULT_FACTORY = (ApacheValidatorFactory) configuration
                   .buildValidatorFactory();
         }
         return DEFAULT_FACTORY;
     }
 
-    public AgimatecValidatorFactory() {
+    public ApacheValidatorFactory() {
         properties = new HashMap<String, String>();
         defaultSequences = new HashMap();
         validAccesses = new HashMap();
@@ -105,15 +105,15 @@ public class AgimatecValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /** @return the validator factory's context */
-    public AgimatecFactoryContext usingContext() {
-        return new AgimatecFactoryContext(this);
+    public ApacheFactoryContext usingContext() {
+        return new ApacheFactoryContext(this);
     }
 
     @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException"})
     @Override
-    public synchronized AgimatecValidatorFactory clone() {
+    public synchronized ApacheValidatorFactory clone() {
         try {
-            return (AgimatecValidatorFactory) super.clone();
+            return (ApacheValidatorFactory) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError(); // VM bug.
         }

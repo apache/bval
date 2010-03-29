@@ -32,12 +32,11 @@ import javax.validation.spi.ValidationProvider;
  * User: roman.stumm <br/>
  * Date: 29.10.2008 <br/>
  * Time: 14:45:41 <br/>
- * Copyright: Agimatec GmbH
  */
-public class AgimatecValidationProvider
-      implements ValidationProvider<AgimatecValidatorConfiguration> {
+public class ApacheValidationProvider
+      implements ValidationProvider<ApacheValidatorConfiguration> {
     public boolean isSuitable(Class<? extends Configuration<?>> builderClass) {
-        return AgimatecValidatorConfiguration.class == builderClass;
+        return ApacheValidatorConfiguration.class == builderClass;
     }
 
     public ConfigurationImpl createSpecializedConfiguration(BootstrapState state) {
@@ -52,9 +51,9 @@ public class AgimatecValidationProvider
      * @throws javax.validation.ValidationException
      *          if the ValidatorFactory cannot be built
      */
-    public AgimatecValidatorFactory buildValidatorFactory(ConfigurationState configuration) {
+    public ApacheValidatorFactory buildValidatorFactory(ConfigurationState configuration) {
         try {
-            AgimatecValidatorFactory factory = new AgimatecValidatorFactory();
+            ApacheValidatorFactory factory = new ApacheValidatorFactory();
             factory.configure(configuration);
             return factory;
         } catch (RuntimeException ex) {

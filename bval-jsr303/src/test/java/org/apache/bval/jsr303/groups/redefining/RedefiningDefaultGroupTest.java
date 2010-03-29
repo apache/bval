@@ -24,7 +24,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.GroupDefinitionException;
 import javax.validation.Validator;
 
-import org.apache.bval.jsr303.AgimatecValidatorFactory;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.util.TestUtils;
 
 import java.util.Set;
@@ -40,7 +40,7 @@ public class RedefiningDefaultGroupTest extends TestCase {
     private Validator validator;
 
     protected void setUp() {
-        validator = AgimatecValidatorFactory.getDefault().getValidator();
+        validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
     /**

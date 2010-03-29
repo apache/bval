@@ -228,7 +228,7 @@ public class ValidationTest extends TestCase {
     }
 
     private Validator getValidator() {
-        return AgimatecValidatorFactory.getDefault().getValidator();
+        return ApacheValidatorFactory.getDefault().getValidator();
     }
 
     public void testGroups() {

@@ -39,7 +39,7 @@ import java.util.*;
 public class ConstraintDefaults {
     private static final Log log = LogFactory.getLog(ConstraintDefaults.class);
     private static final String DEFAULT_CONSTAINTS =
-          "com/agimatec/validation/jsr303/DefaultConstraints.properties";
+          "org/apache/bval/jsr303/DefaultConstraints.properties";
     protected Map<String, Class[]> defaultConstraints;
 
     public ConstraintDefaults() {

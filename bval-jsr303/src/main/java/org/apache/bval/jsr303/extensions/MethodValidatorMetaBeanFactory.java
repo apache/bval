@@ -21,7 +21,7 @@ import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.Valid;
 
-import org.apache.bval.jsr303.AgimatecFactoryContext;
+import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.AppendValidation;
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
@@ -42,7 +42,7 @@ import java.util.List;
  * Copyright: Agimatec GmbH
  */
 public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
-    public MethodValidatorMetaBeanFactory(AgimatecFactoryContext factoryContext) {
+    public MethodValidatorMetaBeanFactory(ApacheFactoryContext factoryContext) {
         super(factoryContext);
     }
 

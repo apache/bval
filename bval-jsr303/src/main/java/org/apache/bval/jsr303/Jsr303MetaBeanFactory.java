@@ -56,9 +56,9 @@ import java.util.Set;
 public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     protected static final Log log = LogFactory.getLog(Jsr303MetaBeanFactory.class);
     protected static final String ANNOTATION_VALUE = "value";
-    protected final AgimatecFactoryContext factoryContext;
+    protected final ApacheFactoryContext factoryContext;
 
-    public Jsr303MetaBeanFactory(AgimatecFactoryContext factoryContext) {
+    public Jsr303MetaBeanFactory(ApacheFactoryContext factoryContext) {
         this.factoryContext = factoryContext;
     }
 

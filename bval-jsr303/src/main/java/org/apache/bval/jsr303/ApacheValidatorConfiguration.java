@@ -28,8 +28,8 @@ import javax.validation.Configuration;
  * Time: 16:16:45 <br/>
  * Copyright: Agimatec GmbH
  */
-public interface AgimatecValidatorConfiguration
-      extends Configuration<AgimatecValidatorConfiguration> {
+public interface ApacheValidatorConfiguration
+      extends Configuration<ApacheValidatorConfiguration> {
 
     /**
      * proprietary property keys for {@link ConfigurationImpl}  
@@ -39,7 +39,7 @@ public interface AgimatecValidatorConfiguration
          * the location where to look for the validation.xml file.
          * default: "META-INF/validation.xml"
          */
-        String VALIDATION_XML_PATH = "agimatec.validation-xml-path";
+        String VALIDATION_XML_PATH = "apache.bval.validation-xml-path";
 
         /**
          * true/false. use Introspector (java beans) metadata additionally
@@ -49,19 +49,19 @@ public interface AgimatecValidatorConfiguration
          * to create the meta data.<br>
          * default: false
          */
-        String ENABLE_INTROSPECTOR = "agimatec.enable-introspector";
+        String ENABLE_INTROSPECTOR = "apache.bval.enable-introspector";
 
         /**
          * true/false. use agimatec metaBeans xml format additionally to
          * build metadata with JSR303.
          * default: false
          */
-        String ENABLE_METABEANS_XML = "agimatec.enable-metabeans-xml";
+        String ENABLE_METABEANS_XML = "apache.bval.enable-metabeans-xml";
 
         /**
          * BeanValidator.treatMapsLikeBeans.
          * default: false 
          */
-         String TREAT_MAPS_LIKE_BEANS = "agimatec.treat-maps-like-beans";
+         String TREAT_MAPS_LIKE_BEANS = "apache.bval.treat-maps-like-beans";
     }
 }

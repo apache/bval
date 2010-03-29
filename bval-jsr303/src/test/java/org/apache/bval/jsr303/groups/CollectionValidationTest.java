@@ -18,13 +18,12 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import org.apache.bval.jsr303.example.*;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
 import junit.framework.TestCase;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
-import org.apache.bval.jsr303.AgimatecValidatorFactory;
 import org.apache.bval.jsr303.example.Address;
 import org.apache.bval.jsr303.example.Author;
 import org.apache.bval.jsr303.example.Book;
@@ -49,7 +48,7 @@ public class CollectionValidationTest extends TestCase {
     private Validator validator;
 
     protected void setUp() {
-        validator = AgimatecValidatorFactory.getDefault().getValidator();
+        validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
     public void testValidateList() {

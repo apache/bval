@@ -18,8 +18,6 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.*;
-
 import javax.validation.*;
 
 import org.apache.bval.IntrospectorMetaBeanFactory;
@@ -40,26 +38,26 @@ import java.util.List;
  * Time: 16:35:25 <br/>
  * Copyright: Agimatec GmbH
  */
-public class AgimatecFactoryContext implements ValidatorContext {
-    private final AgimatecValidatorFactory factory;
+public class ApacheFactoryContext implements ValidatorContext {
+    private final ApacheValidatorFactory factory;
     private final MetaBeanFinder metaBeanFinder;
 
     private MessageInterpolator messageInterpolator;
     private TraversableResolver traversableResolver;
     private ConstraintValidatorFactory constraintValidatorFactory;
 
-    public AgimatecFactoryContext(AgimatecValidatorFactory factory) {
+    public ApacheFactoryContext(ApacheValidatorFactory factory) {
         this.factory = factory;
         this.metaBeanFinder = buildMetaBeanManager();
     }
 
-    protected AgimatecFactoryContext(AgimatecValidatorFactory factory,
+    protected ApacheFactoryContext(ApacheValidatorFactory factory,
                                      MetaBeanFinder metaBeanFinder) {
         this.factory = factory;
         this.metaBeanFinder = metaBeanFinder;
     }
 
-    public AgimatecValidatorFactory getFactory() {
+  public ApacheValidatorFactory getFactory() {
         return factory;
     }
 
@@ -91,7 +89,7 @@ public class AgimatecFactoryContext implements ValidatorContext {
     public Validator getValidator() {
         ClassValidator validator = new ClassValidator(this);
         if (Boolean.getBoolean(factory.getProperties().get(
-              AgimatecValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS))) {
+              ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS))) {
             validator.setTreatMapsLikeBeans(true);
         }
         return validator;
@@ -117,13 +115,13 @@ public class AgimatecFactoryContext implements ValidatorContext {
         // (because ignore-annotations settings in xml)
         List<MetaBeanFactory> builders = new ArrayList(3);
         if (Boolean.parseBoolean(factory.getProperties().get(
-              AgimatecValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
+              ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
             builders.add(new IntrospectorMetaBeanFactory());
         }
         builders.add(new Jsr303MetaBeanFactory(this));
 
         if (Boolean.parseBoolean(factory.getProperties().get(
-              AgimatecValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
+              ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
             builders.add(new XMLMetaBeanFactory());
         }
         return new MetaBeanManager(

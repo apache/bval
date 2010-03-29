@@ -28,7 +28,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 
-import org.apache.bval.jsr303.AgimatecValidatorFactory;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.util.ConverterUtils;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.FieldAccess;
@@ -54,9 +54,9 @@ public class ValidationMappingParser {
     private static final String[] RESERVED_PARAMS = {"message", "groups", "payload"};
 
     private final Set<Class> processedClasses;
-    private final AgimatecValidatorFactory factory;
+    private final ApacheValidatorFactory factory;
 
-    public ValidationMappingParser(AgimatecValidatorFactory factory) {
+    public ValidationMappingParser(ApacheValidatorFactory factory) {
         this.factory = factory;
         this.processedClasses = new HashSet<Class>();
     }

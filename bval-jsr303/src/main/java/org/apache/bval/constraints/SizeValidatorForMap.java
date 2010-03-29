@@ -25,7 +25,7 @@ import java.util.Map;
 
 /** Check that a Map's size is between min and max. */
 public class SizeValidatorForMap extends SizeValidator
-      implements ConstraintValidator<Size, Map> {
+      implements ConstraintValidator<Size, Map<?, ?>> {
     /**
      * Checks the number of entries in a map.
      *
@@ -35,7 +35,7 @@ public class SizeValidatorForMap extends SizeValidator
      *         is between the specified <code>min</code> and <code>max</code> values (inclusive),
      *         <code>false</code> otherwise.
      */
-    public boolean isValid(Map map, ConstraintValidatorContext context) {
+    public boolean isValid(Map<?, ?> map, ConstraintValidatorContext context) {
         if (map == null) {
             return true;
         }

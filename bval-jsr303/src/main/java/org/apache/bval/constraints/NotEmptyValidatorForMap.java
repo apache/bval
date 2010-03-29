@@ -29,12 +29,12 @@ import java.util.Map;
  * Time: 14:02:57 <br/>
  * Copyright: Agimatec GmbH
  */
-public class NotEmptyValidatorForMap implements ConstraintValidator<NotEmpty, Map> {
+public class NotEmptyValidatorForMap implements ConstraintValidator<NotEmpty, Map<?, ?>> {
     public void initialize(NotEmpty constraintAnnotation) {
         // do nothing
     }
 
-    public boolean isValid(Map value, ConstraintValidatorContext context) {
+    public boolean isValid(Map<?, ?> value, ConstraintValidatorContext context) {
         return value == null || !value.isEmpty();
     }
 }

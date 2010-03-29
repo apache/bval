@@ -29,7 +29,7 @@
   <artifactId>bval-parent</artifactId>
   <name>bval-parent :: Parent POM</name>
   <packaging>pom</packaging>
-  <version>0.9.6</version>
+  <version>0.1-SNAPSHOT</version>
 
   <description>bval parent pom</description>
 

@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
-    <version>0.9.6</version>
+    <version>0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>bval-jsr303</artifactId>

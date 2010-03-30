@@ -33,14 +33,14 @@ import org.apache.bval.model.Validation;
  */
 public class ConstructorDescriptorImpl extends ElementDescriptorImpl
       implements ConstructorDescriptor, ProcedureDescriptor {
-    private List<ParameterDescriptor> parameterDescriptors = new ArrayList();
+    private final List<ParameterDescriptor> parameterDescriptors = new ArrayList<ParameterDescriptor>();
     private boolean cascaded;
 
     protected ConstructorDescriptorImpl(MetaBean metaBean, Validation[] validations) {
         super(metaBean, validations);
     }
 
-    protected ConstructorDescriptorImpl(Class elementClass, Validation[] validations) {
+    protected ConstructorDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         super(elementClass, validations);
     }
 

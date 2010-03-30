@@ -31,6 +31,7 @@ import java.io.Serializable;
  */
 public final class NodeImpl implements Path.Node, Serializable {
 
+    private static final long serialVersionUID = 1L;
     private static final String INDEX_OPEN = "[";
     private static final String INDEX_CLOSE = "]";
 

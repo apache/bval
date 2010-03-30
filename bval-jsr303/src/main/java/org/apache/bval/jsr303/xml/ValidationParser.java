@@ -19,7 +19,6 @@
 package org.apache.bval.jsr303.xml;
 
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -40,6 +39,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.apache.bval.jsr303.ConfigurationImpl;
+import org.apache.bval.jsr303.util.IOUtils;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.PrivilegedActions;
 import org.apache.commons.logging.Log;
@@ -100,7 +100,7 @@ public class ValidationParser {
         } catch (IOException e) {
             throw new ValidationException("Unable to parse " + validationXmlFile, e);
         } finally {
-            closeQuietly(inputStream);
+            IOUtils.closeQuietly(inputStream);
         }
     }
 
@@ -226,16 +226,6 @@ public class ValidationParser {
                       mappingFileName.getValue(), e);
             }
             target.addMapping(in);
-        }
-    }
-
-    private static void closeQuietly(Closeable closeable) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                // do nothing
-            }
         }
     }
 }

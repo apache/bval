@@ -145,15 +145,15 @@ public class TypeUtils {
     private static Type resolveTypes(Map<Type, Type> resolvedTypes, Type type) {
         if (type == null) {
             return null;
-        } else if (type instanceof Class) {
-            Class clazz = (Class) type;
+        } else if (type instanceof Class<?>) {
+            Class<?> clazz = (Class<?>) type;
             final Type returnedType = resolveTypeForHierarchy(resolvedTypes, clazz);
             if (returnedType != null) {
                 return returnedType;
             }
         } else if (type instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) type;
-            if (!(paramType.getRawType() instanceof Class)) {
+            if (!(paramType.getRawType() instanceof Class<?>)) {
                 return null;
             }
             Class<?> rawType = (Class<?>) paramType.getRawType();

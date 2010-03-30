@@ -39,6 +39,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -74,8 +76,9 @@ public class ValidationParser {
     }
 
     private ValidationConfigType parseXmlConfig() {
+        InputStream inputStream = null;
         try {
-            InputStream inputStream = getInputStream(validationXmlFile);
+            inputStream = getInputStream(validationXmlFile);
             if (inputStream == null) {
                 if (log.isDebugEnabled()) log.debug("No " + validationXmlFile +
                       " found. Using annotation based configuration only.");
@@ -96,6 +99,8 @@ public class ValidationParser {
             throw new ValidationException("Unable to parse " + validationXmlFile, e);
         } catch (IOException e) {
             throw new ValidationException("Unable to parse " + validationXmlFile, e);
+        } finally {
+            closeQuietly(inputStream);
         }
     }
 
@@ -208,7 +213,7 @@ public class ValidationParser {
                 log.debug(
                       "Trying to open input stream for " + mappingFileName.getValue());
             }
-            InputStream in;
+            InputStream in = null;
             try {
                 in = getInputStream(mappingFileName.getValue());
                 if (in == null) {
@@ -219,8 +224,20 @@ public class ValidationParser {
             } catch (IOException e) {
                 throw new ValidationException("Unable to open input stream for mapping file " +
                       mappingFileName.getValue(), e);
+            } finally {
+                closeQuietly(in);
             }
             target.addMapping(in);
+        }
+    }
+
+    private static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                // do nothing
+            }
         }
     }
 }

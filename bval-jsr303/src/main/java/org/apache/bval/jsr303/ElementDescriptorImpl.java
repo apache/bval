@@ -35,7 +35,7 @@ import java.util.Set;
  */
 public abstract class ElementDescriptorImpl implements ElementDescriptor {
     protected final MetaBean metaBean;
-    protected final Class elementClass;
+    protected final Class<?> elementClass;
     private Set<ConstraintDescriptor<?>> constraintDescriptors;
 
     protected ElementDescriptorImpl(MetaBean metaBean,
@@ -45,14 +45,14 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
         createConstraintDescriptors(validations);
     }
 
-    protected ElementDescriptorImpl(Class elementClass, Validation[] validations) {
+    protected ElementDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         this.metaBean = null;
         this.elementClass = elementClass;
         createConstraintDescriptors(validations);
     }
 
     /** @return Statically defined returned type. */
-    public Class getElementClass() {
+    public Class<?> getElementClass() {
         return elementClass;
     }
 
@@ -70,7 +70,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
     }
 
     private void createConstraintDescriptors(Validation[] validations) {
-        final Set<ConstraintDescriptor<?>> cds = new HashSet(validations.length);
+        final Set<ConstraintDescriptor<?>> cds = new HashSet<ConstraintDescriptor<?>>(validations.length);
         for (Validation validation : validations) {
             if (validation instanceof ConstraintValidation) {
                 ConstraintValidation cval = (ConstraintValidation) validation;

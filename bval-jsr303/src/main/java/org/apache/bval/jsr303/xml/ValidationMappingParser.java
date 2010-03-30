@@ -17,6 +17,19 @@
 package org.apache.bval.jsr303.xml;
 
 
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
@@ -29,19 +42,12 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 
 import org.apache.bval.jsr303.ApacheValidatorFactory;
-import org.apache.bval.jsr303.util.ConverterUtils;
+import org.apache.bval.jsr303.util.EnumerationConverter;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
-
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.util.*;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.Converter;
 
 
 /**
@@ -254,7 +260,14 @@ public class ValidationMappingParser {
         if (returnType.equals(Class.class)) {
             value = toQualifiedClassName(value, defaultPackage);
         }
-        return ConverterUtils.fromStringToType(value, returnType);
+
+        /* Converter lookup */
+        Converter converter = ConvertUtils.lookup(returnType);
+        if (converter == null && returnType.isEnum()) {
+            converter = EnumerationConverter.getInstance();
+        }
+
+        return ConvertUtils.convert(value, returnType);
     }
 
     private <A extends Annotation> Annotation createAnnotation(AnnotationType annotationType,

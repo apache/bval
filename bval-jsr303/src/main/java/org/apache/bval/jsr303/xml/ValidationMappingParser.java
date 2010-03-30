@@ -43,6 +43,7 @@ import javax.xml.validation.Schema;
 
 import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.util.EnumerationConverter;
+import org.apache.bval.jsr303.util.IOUtils;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
@@ -110,6 +111,8 @@ public class ValidationMappingParser {
         } catch (JAXBException e) {
             throw new ValidationException("Failed to parse XML deployment descriptor file.",
                   e);
+        } finally {
+            IOUtils.closeQuietly(in);
         }
         return mappings;
     }

@@ -37,6 +37,8 @@ import java.util.regex.Pattern;
  */
 public class PathImpl implements Path, Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Regular expression used to split a string path into its elements.
      *

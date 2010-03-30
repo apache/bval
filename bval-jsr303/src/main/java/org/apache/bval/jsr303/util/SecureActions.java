@@ -48,7 +48,7 @@ public class SecureActions extends PrivilegedActions {
         return newInstance(cls, ValidationException.class);
     }
 
-    public static <T> T newInstance(final Class<T> cls, final Class[] paramTypes,
+    public static <T> T newInstance(final Class<T> cls, final Class<?>[] paramTypes,
                                     final Object[] values) {
         return newInstance(cls, ValidationException.class, paramTypes, values);
     }
@@ -74,7 +74,7 @@ public class SecureActions extends PrivilegedActions {
         });
     }
 
-    public static Field getDeclaredField(final Class clazz, final String fieldName) {
+    public static Field getDeclaredField(final Class<?> clazz, final String fieldName) {
         return run(new PrivilegedAction<Field>() {
             public Field run() {
                 try {

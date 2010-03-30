@@ -19,12 +19,11 @@
 package org.apache.bval.jsr303.xml;
 
 
-import org.apache.bval.jsr303.ConfigurationImpl;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.util.PrivilegedActions;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.xml.sax.SAXException;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -40,11 +39,12 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Enumeration;
+import org.apache.bval.jsr303.ConfigurationImpl;
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.PrivilegedActions;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.xml.sax.SAXException;
 
 /**
  * Description: uses jaxb to parse validation.xml<br/>
@@ -224,8 +224,6 @@ public class ValidationParser {
             } catch (IOException e) {
                 throw new ValidationException("Unable to open input stream for mapping file " +
                       mappingFileName.getValue(), e);
-            } finally {
-                closeQuietly(in);
             }
             target.addMapping(in);
         }

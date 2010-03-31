@@ -19,8 +19,6 @@ package org.apache.bval.model;
 
 import java.io.Serializable;
 
-import org.apache.bval.ValidationResults;
-
 
 /**
  * Description: The interface to collect errors found during validation<br/>
@@ -43,7 +41,7 @@ public interface ValidationListener {
      */
     void addError(String reason, ValidationContext context);
 
-    /** Alternative method to add a fully initialized {@link ValidationResults.Error} object. */
+    /** Alternative method to add a fully initialized {@link ValidationListener.Error} object. */
     void addError(Error error, ValidationContext context);
 
     /**

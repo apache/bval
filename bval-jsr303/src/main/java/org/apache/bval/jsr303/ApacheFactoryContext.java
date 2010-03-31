@@ -18,15 +18,10 @@
  */
 package org.apache.bval.jsr303;
 
-import javax.validation.*;
-
-import org.apache.bval.IntrospectorMetaBeanFactory;
-import org.apache.bval.MetaBeanBuilder;
-import org.apache.bval.MetaBeanFactory;
-import org.apache.bval.MetaBeanFinder;
-import org.apache.bval.MetaBeanManager;
+import org.apache.bval.*;
 import org.apache.bval.xml.XMLMetaBeanFactory;
 
+import javax.validation.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,7 +114,11 @@ public class ApacheFactoryContext implements ValidatorContext {
             builders.add(new IntrospectorMetaBeanFactory());
         }
         builders.add(new Jsr303MetaBeanFactory(this));
-
+      /**
+       * TODO RSt - decide whether to move proprietary XMLMetaBeanFactory support (currently handled with XStream) out of the core:
+       *  get rid of XStream dependency and package org.apache.bval.xml in core
+       *  this would also require a split in MetaBeanManager and MetaBeanBuilder, because parts of the code deal with classes in this package  
+       */
         if (Boolean.parseBoolean(factory.getProperties().get(
               ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
             builders.add(new XMLMetaBeanFactory());

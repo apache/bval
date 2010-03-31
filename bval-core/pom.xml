@@ -18,95 +18,95 @@
  under the License.
 -->
 <!--
-    Maven release plugin requires the project tag to be on a single line.
+	Maven release plugin requires the project tag to be on a single line.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.apache.bval</groupId>
-    <artifactId>bval-parent</artifactId>
-    <version>0.1-SNAPSHOT</version>
-  </parent>
+	<modelVersion>4.0.0</modelVersion>
 
-  <artifactId>bval-core</artifactId>
-  <name>bval-core :: Validation and Metadata Engine</name>
-  <packaging>jar</packaging>
+	<parent>
+		<groupId>org.apache.bval</groupId>
+		<artifactId>bval-parent</artifactId>
+		<version>0.1-SNAPSHOT</version>
+	</parent>
 
-  <description>
-    This is the implementation of the validation framework of agimatec GmbH,
-    that is in production since 2007. Features:
+	<artifactId>bval-core</artifactId>
+	<name>bval-core :: Validation and Metadata Engine</name>
+	<packaging>jar</packaging>
+
+	<description>
+    This is the implementation of the core validation framework
     like XML-based extensible metadata, code generation (JSON for AJAX applications),
     validation of java-beans with relationships.
-  </description>
+    </description>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.freemarker</groupId>
-      <artifactId>freemarker</artifactId>
-      <optional>true</optional>
-    </dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
 
-  <build>
-    <defaultGoal>install</defaultGoal>
+	<build>
+		<defaultGoal>install</defaultGoal>
 
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-      <!-- also include license and notice files -->
-      <resource>
-        <directory>${basedir}</directory>
-          <includes>
-            <include>NOTICE.txt</include>
-            <include>LICENSE.txt</include>
-            <include>DISCLAIMER.txt</include>
-          </includes>
-        <targetPath>META-INF</targetPath>
-      </resource>
-    </resources>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<!-- also include license and notice files -->
+			<resource>
+				<directory>${basedir}</directory>
+				<includes>
+					<include>NOTICE.txt</include>
+					<include>LICENSE.txt</include>
+					<include>DISCLAIMER.txt</include>
+				</includes>
+				<targetPath>META-INF</targetPath>
+			</resource>
+		</resources>
 
-    <extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-webdav</artifactId>
-        <version>1.0-beta-2</version>
-      </extension>
-    </extensions>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
 
-    <plugins>
-    </plugins>
-  </build>
+		<plugins>
+		</plugins>
+	</build>
 </project>

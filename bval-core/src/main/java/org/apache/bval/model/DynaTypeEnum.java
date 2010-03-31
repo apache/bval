@@ -24,14 +24,14 @@ package org.apache.bval.model;
  * Copyright: Agimatec GmbH
  */
 public class DynaTypeEnum implements DynaType {
-    private final Class enumClass;
+    private final Class<?> enumClass;
     private Value[] enumConstants;
 
-    public DynaTypeEnum(Class enumClass) {
+    public DynaTypeEnum(Class<?> enumClass) {
         this.enumClass = enumClass;
     }
 
-    public DynaTypeEnum(Class enumClass, String... names) {
+    public DynaTypeEnum(Class<?> enumClass, String... names) {
         this.enumClass = enumClass;
         setEnumNames(names);
     }
@@ -48,7 +48,7 @@ public class DynaTypeEnum implements DynaType {
         return enumClass.getName();
     }
 
-    public Class getRawType() {
+    public Class<?> getRawType() {
         return enumClass;
     }
 
@@ -66,7 +66,7 @@ public class DynaTypeEnum implements DynaType {
         return enumConstants;
     }
 
-    public boolean isAssignableFrom(Class cls) {
+    public boolean isAssignableFrom(Class<?> cls) {
         return enumClass.isAssignableFrom(cls);
     }
 

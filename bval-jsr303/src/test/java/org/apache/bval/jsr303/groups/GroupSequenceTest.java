@@ -18,23 +18,19 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import org.apache.bval.jsr303.ApacheValidatorFactory;
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-
+import org.apache.bval.jsr303.ApacheValidatorFactory;
+import org.apache.bval.jsr303.DefaultMessageInterpolator;
 import org.apache.bval.jsr303.Jsr303Features;
-import org.apache.bval.jsr303.example.Author;
-import org.apache.bval.jsr303.example.Book;
-import org.apache.bval.jsr303.example.First;
-import org.apache.bval.jsr303.example.Last;
-import org.apache.bval.jsr303.example.Second;
-import org.apache.bval.jsr303.groups.Group;
+import org.apache.bval.jsr303.example.*;
 import org.apache.bval.jsr303.util.TestUtils;
 import org.apache.bval.model.MetaBean;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -47,11 +43,19 @@ import java.util.Set;
  * Copyright: Agimatec GmbH
  */
 public class GroupSequenceTest extends TestCase {
-    static {   // required for tests on environments where default locale is not EN
-      Locale.setDefault(Locale.ENGLISH);
+
+    static ValidatorFactory factory;
+
+    static {
+        factory = Validation.buildDefaultValidatorFactory();
+        ((DefaultMessageInterpolator)factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
     }
 
-  
+    private Validator getValidator() {
+        return factory.getValidator();
+    }
+
+
     public void testGroupSequence1() {
         MetaBean metaBean =
               ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
@@ -144,7 +148,7 @@ public class GroupSequenceTest extends TestCase {
         assertEquals(author.getCompany(), constraintViolation.getInvalidValue());
         assertEquals("author.company", constraintViolation.getPropertyPath().toString());
 
-        author.setCompany("agimatec");
+        author.setCompany("apache");
 
         constraintViolations = validator.validate(book, First.class, Second.class, Last.class);
         assertEquals(0, constraintViolations.size());
@@ -181,7 +185,4 @@ public class GroupSequenceTest extends TestCase {
         assertEquals(1, constraintViolations.size());
     }
 
-    public Validator getValidator() {
-        return ApacheValidatorFactory.getDefault().getValidator();
-    }
 }

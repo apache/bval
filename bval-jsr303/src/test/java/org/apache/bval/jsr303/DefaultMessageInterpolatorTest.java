@@ -16,18 +16,16 @@
  */
 package org.apache.bval.jsr303;
 
-import javax.validation.MessageInterpolator;
-import javax.validation.Validator;
-import javax.validation.metadata.ConstraintDescriptor;
-
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.apache.bval.jsr303.example.Author;
 import org.apache.bval.jsr303.example.PreferredGuest;
 
+import javax.validation.MessageInterpolator;
+import javax.validation.Validator;
+import javax.validation.metadata.ConstraintDescriptor;
 import java.util.Locale;
 
 /**
@@ -39,11 +37,8 @@ import java.util.Locale;
  *        Copyright: Agimatec GmbH 2008
  */
 public class DefaultMessageInterpolatorTest extends TestCase {
-  static {     // required for tests on environments where default locale is not EN
-    Locale.setDefault(Locale.ENGLISH);
-  }
 
-  DefaultMessageInterpolator interpolator = new DefaultMessageInterpolator();
+  private DefaultMessageInterpolator interpolator;
 
   public DefaultMessageInterpolatorTest(String name) {
     super(name);
@@ -53,6 +48,12 @@ public class DefaultMessageInterpolatorTest extends TestCase {
     return new TestSuite(DefaultMessageInterpolatorTest.class);
   }
 
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();    // call super!
+    interpolator = new DefaultMessageInterpolator();
+    interpolator.setLocale(Locale.ENGLISH);
+  }
 
   public void testCreateResolver() {
 

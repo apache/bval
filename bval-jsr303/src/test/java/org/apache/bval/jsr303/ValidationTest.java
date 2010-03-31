@@ -18,35 +18,27 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.constraints.NotNullValidator;
+import org.apache.bval.jsr303.example.*;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
 import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.constraints.NotNullValidator;
-import org.apache.bval.jsr303.example.AccessTestBusinessObject;
-import org.apache.bval.jsr303.example.AccessTestBusinessObjectSub;
-import org.apache.bval.jsr303.example.Address;
-import org.apache.bval.jsr303.example.Author;
-import org.apache.bval.jsr303.example.Book;
-import org.apache.bval.jsr303.example.BusinessAddress;
-import org.apache.bval.jsr303.example.Country;
-import org.apache.bval.jsr303.example.First;
-import org.apache.bval.jsr303.example.Last;
-import org.apache.bval.jsr303.example.RecursiveFoo;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: <br/>
@@ -56,6 +48,17 @@ import org.apache.bval.jsr303.util.TestUtils;
  * Copyright: Agimatec GmbH 2008
  */
 public class ValidationTest extends TestCase {
+    static ValidatorFactory factory;
+
+    static {
+        factory = Validation.buildDefaultValidatorFactory();
+        ((DefaultMessageInterpolator)factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
+    }
+
+    private Validator getValidator() {
+        return factory.getValidator();
+    }
+
     public void testAccessStrategies_field_method() {
         AccessTestBusinessObject o1 = new AccessTestBusinessObject("1");
         AccessTestBusinessObjectSub o2 = new AccessTestBusinessObjectSub("3");
@@ -160,7 +163,7 @@ public class ValidationTest extends TestCase {
 
         adr.setCity("Berlin");
         adr.setZipCode("12345");
-        adr.setCompany("agimatec GmbH");
+        adr.setCompany("apache");
         found = v.validate(a, Default.class, First.class, Last.class);
         Assert.assertEquals(1, found.size());
         ConstraintViolation ic = (ConstraintViolation) found.iterator().next();
@@ -227,10 +230,6 @@ public class ValidationTest extends TestCase {
         // check that no nullpointer exception gets thrown
     }
 
-    private Validator getValidator() {
-        return ApacheValidatorFactory.getDefault().getValidator();
-    }
-
     public void testGroups() {
         Validator validator = getValidator();
         Author author = new Author();
@@ -245,8 +244,8 @@ public class ValidationTest extends TestCase {
         //assuming an english locale, the interpolated message is returned
         for (ConstraintViolation constraintViolation : constraintViolations) {
             if (constraintViolation.getRootBean().getClass() == Book.class) {
-                Assert.assertTrue(
-                      "may not be empty".equals(constraintViolation.getMessage()));
+                Assert.assertEquals(
+                      "may not be empty", constraintViolation.getMessage());
                 Assert.assertTrue(book == constraintViolation.getRootBean());
 
                 //the offending property

@@ -16,9 +16,6 @@
  */
 package org.apache.bval.xml;
 
-import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
-
-
 import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.model.FeaturesCapable;
 import org.apache.bval.model.MetaBean;
@@ -29,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.*;
+
+import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
 
 /**
  * Description: Create or enrich MetaBeans from agimatec beanInfos xml<br/>
@@ -130,12 +129,13 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
                                      XMLResult result, boolean addStandard)
           throws Exception {
         if (xmlProp.getValidators() != null) {
+            // obsolete code? remove from here --->
             String[] func = prop.getFeature(JAVASCRIPT_VALIDATION_FUNCTIONS);
             List<String> jsValidators = new ArrayList<String>(
                   xmlProp.getValidators().size() + (func == null ? 0 : func.length));
             if (func != null && func.length > 0) {
                 jsValidators.addAll(Arrays.asList(func));
-            }
+            }  // <--- to here
             boolean useStandard = prop instanceof MetaProperty;
             for (XMLMetaValidatorReference valRef : xmlProp.getValidators()) {
                 if (standardValidation != null &&

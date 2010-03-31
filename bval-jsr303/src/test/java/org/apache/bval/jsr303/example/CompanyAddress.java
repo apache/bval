@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr303.example;
 
-import org.apache.bval.constraints.AgimatecEmail;
+import org.apache.bval.constraints.CompanyEmail;
 
 /**
  * Description: <br/>
@@ -27,14 +27,14 @@ import org.apache.bval.constraints.AgimatecEmail;
  * Time: 11:58:37 <br/>
  * Copyright: Agimatec GmbH
  */
-public class AgimatecAddress {
-    @AgimatecEmail
+public class CompanyAddress {
+    @CompanyEmail
     private String email;
 
-    public AgimatecAddress() {
+    public CompanyAddress() {
     }
 
-    public AgimatecAddress(String email) {
+    public CompanyAddress(String email) {
         this.email = email;
     }
 

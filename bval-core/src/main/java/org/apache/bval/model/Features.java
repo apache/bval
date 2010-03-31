@@ -112,6 +112,7 @@ public interface Features {
         String REF_CASCADE = "refCascade";
 
         /** INFO: an array with the string names of custom java script validation functions */
+        @Deprecated // TODO RSt - I suggest to remove this and all related code
         String JAVASCRIPT_VALIDATION_FUNCTIONS = "jsFunctions";
     }
 }

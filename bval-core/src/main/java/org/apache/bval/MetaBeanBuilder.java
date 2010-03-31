@@ -210,7 +210,7 @@ public class MetaBeanBuilder {
         return buildForClass(findLocalClass(xmlMeta.getImpl()));
     }
 
-    protected Class findLocalClass(String className) {
+    protected Class<?> findLocalClass(String className) {
         if (className != null) {
             try {
                 return ClassUtils.getClass(className);
@@ -221,7 +221,7 @@ public class MetaBeanBuilder {
         return null;
     }
 
-    public MetaBean buildForClass(Class clazz) throws Exception {
+    public MetaBean buildForClass(Class<?> clazz) throws Exception {
         MetaBean meta = new MetaBean();
         if (clazz != null) { // local class here?
             meta.setBeanClass(clazz);

@@ -16,15 +16,20 @@
  */
 package org.apache.bval.json;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import org.apache.bval.model.MetaBean;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.bval.model.MetaBean;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
 /**
  * Description: Generate a JSON String for a collection of {@link MetaBean}s.
@@ -54,7 +59,7 @@ public class JSONGenerator {
     }
 
     public String toJSON(MetaBean metaBean) throws IOException, TemplateException {
-        List<MetaBean> metaBeans = new ArrayList(1);
+        List<MetaBean> metaBeans = new ArrayList<MetaBean>(1);
         metaBeans.add(metaBean);
         return toJSON(metaBeans);
     }
@@ -68,7 +73,7 @@ public class JSONGenerator {
 
     public void toJSON(Collection<MetaBean> metaBeans, Writer out)
             throws IOException, TemplateException {
-        Map rootMap = new HashMap();
+        Map<String, Object> rootMap = new HashMap<String, Object>();
         rootMap.put("metaBeans", metaBeans);
         rootMap.put("generator", this);
         template.process(rootMap, out);

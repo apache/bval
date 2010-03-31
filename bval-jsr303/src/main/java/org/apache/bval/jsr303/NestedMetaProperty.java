@@ -126,8 +126,8 @@ final class NestedMetaProperty {
 
     private Object getAtIndex(Object value, int idx) {
         if (value == null) return null;
-        if (value instanceof Iterable) {
-            Iterator iter = ((Iterable) value).iterator();
+        if (value instanceof Iterable<?>) {
+            Iterator<?> iter = ((Iterable<?>) value).iterator();
             for (int i = 0; i <= idx; i++) {
                 value = iter.next();
             }
@@ -153,7 +153,7 @@ final class NestedMetaProperty {
         Type indexedType = type;
         if (isCollection(type) && type instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) type;
-            Class collectionClass = getCollectionClass(type);
+            Class<?> collectionClass = getCollectionClass(type);
             if (Collection.class.isAssignableFrom(collectionClass)) {
                 indexedType = paramType.getActualTypeArguments()[0];
             } else if (Map.class.isAssignableFrom(collectionClass)) {
@@ -166,9 +166,9 @@ final class NestedMetaProperty {
         return indexedType;
     }
 
-    static Class<? extends Collection> getCollectionClass(Type type) {
-        if (type instanceof Class && isCollectionClass((Class) type)) {
-            return (Class<? extends Collection>) type;
+    static Class<? extends Collection<?>> getCollectionClass(Type type) {
+        if (type instanceof Class<?> && isCollectionClass((Class<?>) type)) {
+            return (Class<? extends Collection<?>>) type;
         }
         if (type instanceof ParameterizedType) {
             return getCollectionClass(((ParameterizedType) type).getRawType());
@@ -184,8 +184,8 @@ final class NestedMetaProperty {
     }
 
     static boolean isArray(Type type) {
-        if (type instanceof Class) {
-            return ((Class) type).isArray();
+        if (type instanceof Class<?>) {
+            return ((Class<?>) type).isArray();
         }
         return type instanceof GenericArrayType;
     }
@@ -224,7 +224,7 @@ final class NestedMetaProperty {
                     } catch (NoSuchFieldException e2) {
                         try {
                             member = metaBean.getBeanClass().getMethod(getter);
-                        } catch (NoSuchMethodException e3) {                            
+                        } catch (NoSuchMethodException e3) {
                         }
                     }
                 }

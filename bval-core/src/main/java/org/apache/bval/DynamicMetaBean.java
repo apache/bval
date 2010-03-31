@@ -22,6 +22,8 @@ import org.apache.bval.model.MetaBean;
  * Description: <br/>
  */
 final class DynamicMetaBean extends MetaBean {
+    private static final long serialVersionUID = 1L;
+
     private final MetaBeanFinder finder;
 
     public DynamicMetaBean(MetaBeanFinder finder) {
@@ -34,7 +36,7 @@ final class DynamicMetaBean extends MetaBean {
      */
     @Override
     public MetaBean resolveMetaBean(Object bean) {
-        return bean instanceof Class ?
-                finder.findForClass((Class) bean) : finder.findForClass(bean.getClass());
+        return bean instanceof Class<?> ?
+                finder.findForClass((Class<?>) bean) : finder.findForClass(bean.getClass());
     }
 }

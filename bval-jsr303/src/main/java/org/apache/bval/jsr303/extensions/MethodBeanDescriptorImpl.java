@@ -38,7 +38,7 @@ import org.apache.bval.model.Validation;
 class MethodBeanDescriptorImpl extends BeanDescriptorImpl
       implements MethodBeanDescriptor {
     private Map<Method, MethodDescriptorImpl> methodConstraints;
-    private Map<Constructor, ConstructorDescriptorImpl> constructorConstraints;
+    private Map<Constructor<?>, ConstructorDescriptor> constructorConstraints;
 
     protected MethodBeanDescriptorImpl(ApacheFactoryContext factoryContext,
                                        MetaBean metaBean, Validation[] validations) {
@@ -50,7 +50,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
     }
 
     public void setConstructorConstraints(
-          Map<Constructor, ConstructorDescriptorImpl> constructorConstraints) {
+          Map<Constructor<?>, ConstructorDescriptor> constructorConstraints) {
         this.constructorConstraints = constructorConstraints;
     }
 
@@ -58,12 +58,12 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
         return methodConstraints.get(method);
     }
 
-    public ConstructorDescriptor getConstraintsForConstructor(Constructor constructor) {
+    public ConstructorDescriptor getConstraintsForConstructor(Constructor<?> constructor) {
         return constructorConstraints.get(constructor);
     }
 
     public Set<MethodDescriptor> getConstrainedMethods() {
-        return new HashSet(methodConstraints.values());
+        return new HashSet<MethodDescriptor>(methodConstraints.values());
     }
 
     public void putMethodDescriptor(Method method, MethodDescriptorImpl desc) {
@@ -71,10 +71,10 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
     }
 
     public Set<ConstructorDescriptor> getConstrainedConstructors() {
-        return new HashSet(methodConstraints.values());
+        return new HashSet<ConstructorDescriptor>(this.constructorConstraints.values());
     }
 
-    public void putConstructorDescriptor(Constructor cons, ConstructorDescriptorImpl desc) {
+    public void putConstructorDescriptor(Constructor<?> cons, ConstructorDescriptorImpl desc) {
         constructorConstraints.put(cons, desc);
     }
 
@@ -82,7 +82,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
         return methodConstraints;
     }
 
-    public Map<Constructor, ConstructorDescriptorImpl> getConstructorConstraints() {
+    public Map<Constructor<?>, ConstructorDescriptor> getConstructorConstraints() {
         return constructorConstraints;
     }
 }

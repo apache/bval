@@ -32,7 +32,7 @@ import java.util.Set;
 public interface MethodBeanDescriptor extends BeanDescriptor {
     MethodDescriptor getConstraintsForMethod(Method method);
 
-    ConstructorDescriptor getConstraintsForConstructor(Constructor constructor);
+    ConstructorDescriptor getConstraintsForConstructor(Constructor<?> constructor);
 
     Set<MethodDescriptor> getConstrainedMethods();
 

@@ -36,6 +36,7 @@ import org.apache.bval.jsr303.util.TestUtils;
 import org.apache.bval.model.MetaBean;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -46,6 +47,11 @@ import java.util.Set;
  * Copyright: Agimatec GmbH
  */
 public class GroupSequenceTest extends TestCase {
+    static {   // required for tests on environments where default locale is not EN
+      Locale.setDefault(Locale.ENGLISH);
+    }
+
+  
     public void testGroupSequence1() {
         MetaBean metaBean =
               ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()

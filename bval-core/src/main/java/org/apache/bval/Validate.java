@@ -25,10 +25,6 @@ import java.lang.annotation.Target;
  * Description: Annotate an element (parameter) to be validated.
  * <br>
  *
- * Wichtig:<br>
- * Die Methode muss ebenfalls mit Validate annotiert werden, damit
- * die Parameter-Annotations ueberhaupt untersucht und ein BeanValidationContext angelegt wird.
- * <br/>
  * User: roman.stumm <br/>
  * Date: 09.07.2007 <br/>
  * Time: 13:38:24 <br/>

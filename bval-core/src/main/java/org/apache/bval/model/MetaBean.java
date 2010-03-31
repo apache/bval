@@ -29,9 +29,11 @@ import org.apache.commons.lang.ArrayUtils;
  * @see MetaProperty
  */
 public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bean {
+    private static final long serialVersionUID = 1L;
+
     private String id;
     private String name;
-    private Class beanClass;
+    private Class<?> beanClass;
     private MetaProperty[] properties = new MetaProperty[0];
 
     public String getId() {
@@ -46,7 +48,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         return name;
     }
 
-    public Class getBeanClass() {
+    public Class<?> getBeanClass() {
         return beanClass;
     }
 
@@ -54,7 +56,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         this.name = name;
     }
 
-    public void setBeanClass(Class beanClass) {
+    public void setBeanClass(Class<?> beanClass) {
         this.beanClass = beanClass;
     }
 

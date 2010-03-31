@@ -89,15 +89,14 @@
       </dependencies>
     </profile>
     <!--
-    geronimo profile using geronimo-validation_1.0_spec.jar
-    active when property "agimatec-on-geronimo" is present. 
-    (invoke maven with -Dagimatec-on-geronimo)
+    default profile using geronimo-validation_1.0_spec.jar
+    active when property "ri" is not present. 
      -->
     <profile>
       <id>geronimo</id>
       <activation>
         <property>
-          <name>agimatec-on-geronimo</name>
+          <name>!ri</name>
         </property>
       </activation>
       <dependencies>
@@ -110,14 +109,15 @@
       </dependencies>
     </profile>
     <!--
-    default profile using javax.validation/validation-api.jar
-    automatically active when property "agimatec-on-geronimo" not present.
+    optional profile using javax.validation/validation-api.jar from RI
+    manually active when property "ri" is present.
+    (invoke maven with -Pri)
      -->
     <profile>
       <id>ri</id>
       <activation>
         <property>
-          <name>!agimatec-on-geronimo</name>
+          <name>ri</name>
         </property>
       </activation>
       <dependencies>
@@ -226,93 +226,6 @@
           <extension>true</extension>
         </configuration>
       </plugin>
-
-      <!--
-      create a directory unter test/agimatec-validation-dist/**
-      with all artifacts, sources and dependencies
-      for download from the project website
-      -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${dist-dir}/lib</outputDirectory>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>true</overWriteSnapshots>
-              <overWriteIfNewer>true</overWriteIfNewer>
-              <includeScope>compile</includeScope>
-            </configuration>
-          </execution>
-          <execution>
-            <id>src-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <classifier>sources</classifier>
-              <failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
-              <outputDirectory>${dist-dir}/src</outputDirectory>
-              <excludeTransitive>true</excludeTransitive>
-              <includeScope>compile</includeScope>
-            </configuration>
-          </execution>
-          <execution>
-            <id>copy-installed</id>
-            <phase>install</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${project.version}</version>
-                  <type>${project.packaging}</type>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>${dist-dir}/lib</outputDirectory>
-            </configuration>
-          </execution>
-          <execution>
-            <id>copy-sources</id>
-            <phase>install</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${project.version}</version>
-                  <type>${project.packaging}</type>
-                  <classifier>sources</classifier>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${project.version}</version>
-                  <type>${project.packaging}</type>
-                  <classifier>test-sources</classifier>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>${dist-dir}/src</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
-  <properties>
-    <dist-dir>${project.build.directory}/agimatec-validation-dist-${project.version}</dist-dir>
-  </properties>
 </project>

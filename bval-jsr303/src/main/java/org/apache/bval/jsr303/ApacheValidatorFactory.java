@@ -71,7 +71,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         return DEFAULT_FACTORY;
     }
 
-    public ApacheValidatorFactory() {
+    public static void setDefault(ApacheValidatorFactory aDefaultFactory) {
+     DEFAULT_FACTORY = aDefaultFactory;
+    }
+
+  public ApacheValidatorFactory() {
         properties = new HashMap<String, String>();
         defaultSequences = new HashMap();
         validAccesses = new HashMap();

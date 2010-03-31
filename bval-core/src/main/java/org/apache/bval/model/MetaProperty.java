@@ -89,6 +89,7 @@ public class MetaProperty extends FeaturesCapable
         putFeature(MANDATORY, Boolean.valueOf(mandatory));
     }
 
+    @Deprecated // remove this method?
     public String[] getJavaScriptValidations() {
         return getFeature(JAVASCRIPT_VALIDATION_FUNCTIONS);
     }

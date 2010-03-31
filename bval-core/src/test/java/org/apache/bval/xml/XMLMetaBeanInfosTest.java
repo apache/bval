@@ -19,20 +19,12 @@ package org.apache.bval.xml;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.bval.example.BusinessObject;
+import org.apache.bval.example.BusinessObjectAddress;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.bval.example.BusinessObject;
-import org.apache.bval.example.BusinessObjectAddress;
-import org.apache.bval.xml.XMLMapper;
-import org.apache.bval.xml.XMLMetaBean;
-import org.apache.bval.xml.XMLMetaBeanInfos;
-import org.apache.bval.xml.XMLMetaBeanReference;
-import org.apache.bval.xml.XMLMetaProperty;
-import org.apache.bval.xml.XMLMetaValidator;
-import org.apache.bval.xml.XMLMetaValue;
 
 /**
  * XMLMetaBean Tester.
@@ -158,7 +150,7 @@ public class XMLMetaBeanInfosTest extends TestCase {
 
     public void testMaxValueParsing() {
         String xml = "\n" +
-              "<beanInfos>  <bean id=\"com.agimatec.connecta.model.Profile\">\n" +
+              "<beanInfos>  <bean id=\"org.apache.bval.test.model.Profile\">\n" +
               "    <property name=\"activationDay\" minValue=\"1\" maxValue=\"31\"/>\n" +
               "    <property name=\"activationMonth\" minValue=\"1\" maxValue=\"12\"/>\n" +
               "  </bean></beanInfos>";

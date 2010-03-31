@@ -1,4 +1,4 @@
-agimatec.namespace("agimatec.metadata");
+bval.namespace("bval.metadata");
 
 (function(){
 <#assign var = 0>
@@ -56,7 +56,7 @@ var metaBean${var} = {
     property.metaBean?? && varrefs[property.metaBean.id]??>
 metaBean${var}.properties.${property.name}.metaBean = metaBean${varrefs[property.metaBean.id]};
 </#if></#list><#assign var = var + 1></#list><#assign var = 0>
-agimatec.metadata.metaBeans = {
+bval.metadata.metaBeans = {
 <#list metaBeans as metaBean>
        "${metaBean.id}" : metaBean${var}<#if metaBean_has_next>,</#if>
        <#assign var = var + 1>

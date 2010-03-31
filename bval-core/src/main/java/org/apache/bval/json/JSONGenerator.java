@@ -19,13 +19,12 @@ package org.apache.bval.json;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import org.apache.bval.model.MetaBean;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
-
-import org.apache.bval.model.MetaBean;
 
 /**
  * Description: Generate a JSON String for a collection of {@link MetaBean}s.
@@ -35,6 +34,7 @@ import org.apache.bval.model.MetaBean;
  * Time: 17:14:12 <br/>
  * Copyright: Agimatec GmbH 2008
  */
+// TODO RSt - move. this is an optional module: move freemarker dependency and template "bean-infos-json.ftl" with it.
 public class JSONGenerator {
     private final Template template;
 

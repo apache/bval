@@ -18,7 +18,11 @@
  */
 package org.apache.bval.jsr303;
 
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.jsr303.example.CompanyAddress;
+import org.apache.bval.jsr303.example.FrenchAddress;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -27,13 +31,7 @@ import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.jsr303.example.AgimatecAddress;
-import org.apache.bval.jsr303.example.FrenchAddress;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.util.Set;
 
 /**
  * Description: <br/>
@@ -95,19 +93,19 @@ public class ComposedConstraintsTest extends TestCase {
     }
 
     public void testOverridesAttributeConstraintIndex() {
-        AgimatecAddress adr = new AgimatecAddress("invalid-string");
+        CompanyAddress adr = new CompanyAddress("invalid-string");
         Validator val = factory.getValidator();
-        Set<ConstraintViolation<AgimatecAddress>> findings = val.validate(adr);
+        Set<ConstraintViolation<CompanyAddress>> findings = val.validate(adr);
         assertEquals(2, findings.size()); // without @ReportAsSingleConstraintViolation
-        assertNotNull(TestUtils.getViolationWithMessage(findings, "Not Agimatec"));
+        assertNotNull(TestUtils.getViolationWithMessage(findings, "Not COMPANY"));
         assertNotNull(TestUtils.getViolationWithMessage(findings, "Not an email"));
 
-        adr =  new AgimatecAddress("ROMAN@GMX.DE");
+        adr =  new CompanyAddress("JOHN_DO@WEB.DE");
         findings = val.validate(adr);
         assertEquals(1, findings.size());
-        assertNotNull(TestUtils.getViolationWithMessage(findings, "Not Agimatec"));
+        assertNotNull(TestUtils.getViolationWithMessage(findings, "Not COMPANY"));
 
-        adr =  new AgimatecAddress("ROMAN@AGIMATEC.DE");
+        adr =  new CompanyAddress("JOHN_DO@COMPANY.DE");
         findings = val.validate(adr);
         Assert.assertTrue(findings.isEmpty());
     }

@@ -40,7 +40,7 @@ public interface MetaBeanFinder {
      * @param clazz - bean class
      * @return BeanInfo (never null)
      */
-    MetaBean findForClass(Class clazz);
+    MetaBean findForClass(Class<?> clazz);
 
     /**
      * @return all MetaBeans for classes that have a xml descriptor:

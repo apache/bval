@@ -23,10 +23,6 @@ import java.security.PrivilegedAction;
 
 /**
  * Description: direct field access.<br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 12:13:08 <br/>
- * Copyright: Agimatec GmbH
  */
 public class FieldAccess extends AccessStrategy {
 

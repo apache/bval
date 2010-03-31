@@ -36,10 +36,6 @@ import java.util.*;
  * Description: helper class that builds a {@link ConstraintValidation} or its
  * composite constraint validations by parsing the jsr303-annotations
  * and providing information (e.g. for @OverridesAttributes) <br/>
- * User: roman <br/>
- * Date: 28.10.2009 <br/>
- * Time: 13:53:13 <br/>
- * Copyright: Agimatec GmbH
  */
 final class AnnotationConstraintBuilder {
     private static final Log log = LogFactory.getLog(AnnotationConstraintBuilder.class);

@@ -25,10 +25,6 @@ import java.util.List;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 14:25:19 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 @XStreamAlias("bean")
 public class XMLMetaBean extends XMLFeaturesCapable {

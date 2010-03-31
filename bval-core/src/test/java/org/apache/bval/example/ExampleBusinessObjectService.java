@@ -24,10 +24,6 @@ import org.apache.bval.ValidationResults;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 09.07.2007 <br/>
- * Time: 13:51:59 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public interface ExampleBusinessObjectService {
     /** validated method example */

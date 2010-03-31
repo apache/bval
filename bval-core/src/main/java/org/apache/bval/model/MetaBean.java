@@ -21,10 +21,6 @@ import org.apache.commons.lang.ArrayUtils;
 /**
  * Description: the meta description of a bean or class.
  * the class/bean itself can have a map of features and an array of metaproperties.<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 09:44:31 <br/>
- * Copyright: Agimatec GmbH 2008
  *
  * @see MetaProperty
  */

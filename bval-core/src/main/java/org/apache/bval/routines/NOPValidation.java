@@ -21,10 +21,7 @@ import org.apache.bval.model.ValidationContext;
 
 /**
  * Description: DO NOTHING VALIDATION (can be used to turn off standard validation)<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 16:51:28 <br/>
- * Copyright: Agimatec GmbH 2008
+ * 
  * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml)
  */
 public class NOPValidation implements Validation {

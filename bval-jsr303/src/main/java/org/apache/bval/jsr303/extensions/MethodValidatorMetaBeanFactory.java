@@ -36,10 +36,6 @@ import java.util.List;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 12:07:24 <br/>
- * Copyright: Agimatec GmbH
  */
 public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     public MethodValidatorMetaBeanFactory(ApacheFactoryContext factoryContext) {

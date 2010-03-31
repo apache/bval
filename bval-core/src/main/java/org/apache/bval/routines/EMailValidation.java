@@ -24,13 +24,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Description: example validation for email addresses using a regular expression
- * (taken from hibernate EmailValidator)<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 16:51:16 <br/>
- * Copyright: Agimatec GmbH 2008
- * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml)
+ * Description: example validation for email addresses using a regular expression<br/>
+ * 
+ * TODO RSt - could become part of optional module, depends on proprietary XML
+ * support only (package org.apache.bval.xml)
  */
 public class EMailValidation implements Validation {
     private static String ATOM =

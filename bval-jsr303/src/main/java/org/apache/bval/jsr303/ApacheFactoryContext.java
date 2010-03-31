@@ -28,10 +28,6 @@ import java.util.List;
 /**
  * Description: Represents the context that is used to create <code>ClassValidator</code>
  * instances.<br/>
- * User: roman <br/>
- * Date: 01.10.2009 <br/>
- * Time: 16:35:25 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ApacheFactoryContext implements ValidatorContext {
     private final ApacheValidatorFactory factory;

@@ -37,10 +37,6 @@ import java.util.Set;
 
 /**
  * Description: experimental implementation of method-level-validation <br/>
- * User: roman <br/>
- * Date: 11.11.2009 <br/>
- * Time: 12:36:20 <br/>
- * Copyright: Agimatec GmbH
  */
 class MethodValidatorImpl extends ClassValidator implements MethodValidator {
 

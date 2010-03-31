@@ -33,10 +33,7 @@ import static org.apache.bval.routines.Reasons.*;
  * Description: This class implements the standard validations for properties!
  * You can subclass this class and replace the implementation
  * in the beanInfo-xml by providing it a validation "standard"<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 12:41:06 <br/>
- * Copyright: Agimatec GmbH 2008
+ * 
  * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml) 
  */
 public class StandardValidation implements Validation {

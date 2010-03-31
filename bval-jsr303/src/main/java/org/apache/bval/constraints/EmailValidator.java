@@ -24,11 +24,7 @@ import javax.validation.ConstraintValidatorContext;
 import org.apache.bval.routines.EMailValidation;
 
 /**
- * Description: pattern for validation taken from hibernate.<br/>
- * User: roman.stumm <br/>
- * Date: 14.10.2008 <br/>
- * Time: 12:38:37 <br/>
- * Copyright: Agimatec GmbH
+ * Description: <br/>
  */
 public class EmailValidator implements ConstraintValidator<Email, String> {
 

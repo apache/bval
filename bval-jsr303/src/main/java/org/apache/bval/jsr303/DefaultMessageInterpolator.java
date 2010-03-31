@@ -34,10 +34,6 @@ import java.util.regex.Pattern;
  * This message resolver resolve message descriptors
  * into human-readable messages. It uses ResourceBundles to find the messages.
  * This class is threadsafe.<br/>
- * User: roman.stumm <br/>
- * Date: 02.04.2008 <br/>
- * Time: 17:21:51 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class DefaultMessageInterpolator implements MessageInterpolator {
     private static final Log log = LogFactory.getLog(DefaultMessageInterpolator.class);

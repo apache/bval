@@ -25,10 +25,6 @@ import java.util.Date;
 
 /**
  * Description: validate a date or calendar representing a date in the past<br/>
- * User: roman <br/>
- * Date: 03.02.2009 <br/>
- * Time: 12:49:16 <br/>
- * Copyright: Agimatec GmbH
  */
 public class PastValidatorForDate implements ConstraintValidator<Past, Date> {
 

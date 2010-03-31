@@ -22,10 +22,6 @@ import org.apache.bval.constraints.CompanyEmail;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 28.10.2009 <br/>
- * Time: 11:58:37 <br/>
- * Copyright: Agimatec GmbH
  */
 public class CompanyAddress {
     @CompanyEmail

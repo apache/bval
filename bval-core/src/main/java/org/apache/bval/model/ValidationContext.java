@@ -21,10 +21,6 @@ import org.apache.bval.util.AccessStrategy;
 /**
  * Description: Interface of the context that holds all state information
  * during the validation process<br/>
- * User: roman.stumm <br/>
- * Date: 28.04.2008 <br/>
- * Time: 09:36:02 <br/>
- * Copyright: Agimatec GmbH
  */
 public interface ValidationContext<T extends ValidationListener> {
     Object getPropertyValue();

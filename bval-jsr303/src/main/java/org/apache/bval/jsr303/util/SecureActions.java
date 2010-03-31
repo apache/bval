@@ -30,10 +30,6 @@ import java.security.PrivilegedAction;
 
 /**
  * Description: utility methods to perform actions with AccessController or without.<br/>
- * User: roman <br/>
- * Date: 01.10.2009 <br/>
- * Time: 16:44:09 <br/>
- * Copyright: Agimatec GmbH
  */
 public class SecureActions extends PrivilegedActions {
 

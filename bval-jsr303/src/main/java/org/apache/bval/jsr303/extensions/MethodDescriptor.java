@@ -22,10 +22,6 @@ import java.util.List;
 /**
  * Description: This class will disappear when such
  * functionality is part of the JSR303 specification.<br/>
- * User: roman <br/>
- * Date: 11.11.2009 <br/>
- * Time: 12:38:09 <br/>
- * Copyright: Agimatec GmbH
  */
 public interface MethodDescriptor extends ElementDescriptor {
     List<ParameterDescriptor> getParameterDescriptors(); //index aligned

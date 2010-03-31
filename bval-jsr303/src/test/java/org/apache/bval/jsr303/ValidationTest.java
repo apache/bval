@@ -42,10 +42,6 @@ import java.util.Set;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 11:48:37 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class ValidationTest extends TestCase {
     static ValidatorFactory factory;

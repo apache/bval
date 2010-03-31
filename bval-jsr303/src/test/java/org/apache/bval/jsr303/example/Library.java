@@ -24,10 +24,6 @@ import java.util.*;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 06.10.2009 <br/>
- * Time: 12:35:42 <br/>
- * Copyright: Agimatec GmbH
  */
 public class Library {
     @NotNull

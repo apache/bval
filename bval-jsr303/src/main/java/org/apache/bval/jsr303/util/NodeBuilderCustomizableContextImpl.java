@@ -26,10 +26,6 @@ import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 28.09.2009 <br/>
- * Time: 15:30:03 <br/>
- * Copyright: Agimatec GmbH
  */
 final class NodeBuilderCustomizableContextImpl
       implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {

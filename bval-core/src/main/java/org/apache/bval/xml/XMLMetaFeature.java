@@ -23,10 +23,6 @@ import java.io.Serializable;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 15:32:13 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 @XStreamAlias("feature")
 public class XMLMetaFeature implements Serializable {

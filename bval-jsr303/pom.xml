@@ -41,40 +41,7 @@
     The technical objective is to provide a class level constraint declaration
     and validation facility for the Java application developer, as well as a
     constraint metadata repository and query API.
-    This implementation is based on the validation framework of agimatec GmbH,
-    that is in production since 2007 and offers additional features, like
-    XML-based extensible metadata, code generation (JSON for AJAX applications),
-    and optionally, JSR303 annotation support.
   </description>
-
-  <!-- Sonatype repo doesn't allow this for release artifacts
-  <repositories>
-    <repository>
-      <id>repository.jboss.org</id>
-      <name>JBoss Repository</name>
-      <url>http://repository.jboss.org/maven2</url>
-      <layout>default</layout>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>snapshots.jboss.org</id>
-      <name>JBoss Repository</name>
-      <url>http://snapshots.jboss.org/maven2</url>
-      <layout>default</layout>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-  </repositories>
-  -->
 
   <reporting>
     <plugins>

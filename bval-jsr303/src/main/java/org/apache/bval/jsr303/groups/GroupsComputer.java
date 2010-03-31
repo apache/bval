@@ -25,13 +25,9 @@ import javax.validation.groups.Default;
 import java.util.*;
 
 /**
- * Description: compute group order, based on the hibernate validator algorithm
- * to guarantee compatibility with interpretation of spec by reference implementation <br/>
+ * Description: compute group order, based on the RI behavior as to guarantee
+ * compatibility with interpretations of the spec.<br/>
  * Implementation is thread-safe.
- * User: roman <br/>
- * Date: 09.04.2009 <br/>
- * Time: 09:15:50 <br/>
- * Copyright: Agimatec GmbH
  */
 public class GroupsComputer {
     /** The default group array used in case any of the validate methods is called without a group. */

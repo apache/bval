@@ -30,10 +30,6 @@ import org.apache.bval.model.MetaProperty;
  * Description: use information from java.beans.Introspector in MetaBeans.
  * The PropertyDescriptor can contain info about HIDDEN, PREFERRED, READONLY
  * and other features<br/>
- * User: roman <br/>
- * Date: 07.10.2009 <br/>
- * Time: 11:43:19 <br/>
- * Copyright: Agimatec GmbH
  */
 public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
 

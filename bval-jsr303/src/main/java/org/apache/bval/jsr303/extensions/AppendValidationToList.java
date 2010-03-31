@@ -25,10 +25,6 @@ import org.apache.bval.jsr303.ConstraintValidation;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 13:41:22 <br/>
- * Copyright: Agimatec GmbH
  */
 public class AppendValidationToList implements AppendValidation {
     private final List<ConstraintValidation> validations = new ArrayList();

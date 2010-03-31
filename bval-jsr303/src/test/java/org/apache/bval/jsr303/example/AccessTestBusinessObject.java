@@ -25,10 +25,6 @@ import org.apache.bval.constraints.HasValue;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 14:26:54 <br/>
- * Copyright: Agimatec GmbH
  */
 public class AccessTestBusinessObject {
     // test that field-access is used, not method-access 

@@ -23,10 +23,6 @@ import org.apache.bval.model.MetaBean;
 
 /**
  * Description: Interface to find BeanInfos <br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 16:17:20 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public interface MetaBeanFinder {
     /**

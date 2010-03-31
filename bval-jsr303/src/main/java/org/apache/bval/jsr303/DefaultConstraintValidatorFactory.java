@@ -26,10 +26,6 @@ import org.apache.bval.jsr303.util.SecureActions;
 
 /**
  * Description: create constraint instances with the default / no-arg constructor <br/>
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 13:18:36 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory {
     /**

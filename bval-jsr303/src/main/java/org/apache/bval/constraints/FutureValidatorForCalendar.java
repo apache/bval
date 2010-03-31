@@ -25,10 +25,6 @@ import java.util.Calendar;
 
 /**
  * Description: validate a date or calendar representing a date in the future <br/>
- * User: roman <br/>
- * Date: 03.02.2009 <br/>
- * Time: 12:48:43 <br/>
- * Copyright: Agimatec GmbH
  */
 public class FutureValidatorForCalendar implements ConstraintValidator<Future, Calendar> {
 

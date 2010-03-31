@@ -18,10 +18,6 @@ package org.apache.bval.model;
 
 /**
  * Description: ("artificial" enum with custom values)<br/>
- * User: roman <br/>
- * Date: 12.02.2009 <br/>
- * Time: 16:56:31 <br/>
- * Copyright: Agimatec GmbH
  */
 public class DynaTypeEnum implements DynaType {
     private final Class<?> enumClass;

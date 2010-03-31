@@ -22,10 +22,6 @@ import java.lang.reflect.Type;
 /**
  * Description: the meta description of a property of a bean. it supports a map
  * of features and multiple validations<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 09:58:57 <br/>
- * Copyright: Agimatec GmbH 2008
  *
  * @see Validation
  * @see MetaBean

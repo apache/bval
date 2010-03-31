@@ -27,10 +27,6 @@ import java.lang.annotation.Target;
 
 /**
  * Description: allow distinct string values for element (like enums) <br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 14:28:43 <br/>
- * Copyright: Agimatec GmbH
  */
 @Target({ANNOTATION_TYPE, METHOD, FIELD})
 @Constraint(validatedBy = {HasStringValidator.class})

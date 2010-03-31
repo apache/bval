@@ -25,10 +25,6 @@ import java.security.PrivilegedAction;
 
 /**
  * Description: invoke a zero-argument method (getter)<br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 12:12:46 <br/>
- * Copyright: Agimatec GmbH
  */
 public class MethodAccess extends AccessStrategy {
     private final Method method;

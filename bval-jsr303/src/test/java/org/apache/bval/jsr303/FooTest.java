@@ -31,10 +31,6 @@ import junit.framework.TestCase;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 08.09.2008 <br/>
- * Time: 13:44:58 <br/>
- * Copyright: Agimatec GmbH
  */
 public class FooTest extends TestCase {
 

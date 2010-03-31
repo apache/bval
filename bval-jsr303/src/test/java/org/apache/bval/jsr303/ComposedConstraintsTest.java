@@ -35,10 +35,6 @@ import java.util.Set;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 31.10.2008 <br/>
- * Time: 16:45:11 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ComposedConstraintsTest extends TestCase {
     static ValidatorFactory factory;

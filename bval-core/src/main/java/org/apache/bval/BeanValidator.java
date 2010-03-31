@@ -16,8 +16,6 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.*;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -40,10 +38,6 @@ import org.apache.bval.util.PropertyAccess;
  * <p/>
  * This class supports cyclic object graphs by keeping track of
  * validated instances in the validation context.<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 12:28:46 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class BeanValidator<T extends ValidationListener> {
     private boolean treatMapsLikeBeans = false;

@@ -18,10 +18,6 @@ package org.apache.bval.xml;
 
 /**
  * Description: Interface of the object that holds all XMLMetaBeanLoaders <br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 09:21:38 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public interface XMLMetaBeanRegistry {
     /**

@@ -48,10 +48,6 @@ import org.xml.sax.SAXException;
 
 /**
  * Description: uses jaxb to parse validation.xml<br/>
- * User: roman <br/>
- * Date: 24.11.2009 <br/>
- * Time: 16:48:55 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";

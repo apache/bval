@@ -26,10 +26,6 @@ import java.util.Map;
 /**
  * Description: hold the relationship annotation->validatedBy[] ConstraintValidator classes
  * that are already parsed in a cache.<br/>
- * User: roman <br/>
- * Date: 27.11.2009 <br/>
- * Time: 11:48:26 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ConstraintCached {
     private final Map<Class<? extends Annotation>, Class<? extends ConstraintValidator<?, ?>>[]> classes =

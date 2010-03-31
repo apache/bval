@@ -24,10 +24,6 @@ import javax.validation.constraints.Null;
 
 /**
  * Description: valid when object is null<br/>
- * User: roman <br/>
- * Date: 03.02.2009 <br/>
- * Time: 12:49:08 <br/>
- * Copyright: Agimatec GmbH
  */
 public class NullValidator implements ConstraintValidator<Null, Object> {
 

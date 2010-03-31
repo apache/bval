@@ -31,10 +31,6 @@ import java.util.Map;
 /**
  * Description: Holds the information and creates an annotation proxy
  * during xml parsing of validation mapping constraints. <br/>
- * User: roman <br/>
- * Date: 27.11.2009 <br/>
- * Time: 14:13:12 <br/>
- * Copyright: Agimatec GmbH
  */
 final class AnnotationProxyBuilder<A extends Annotation> {
     private static final String ANNOTATION_PAYLOAD = "payload";

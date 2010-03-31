@@ -26,10 +26,6 @@ import java.math.BigInteger;
 
 /**
  * Description: validate that number-value of passed object is >= min-value<br/>
- * User: roman <br/>
- * Date: 03.02.2009 <br/>
- * Time: 12:48:54 <br/>
- * Copyright: Agimatec GmbH
  */
 public class MinValidatorForNumber implements ConstraintValidator<Min, Number> {
 

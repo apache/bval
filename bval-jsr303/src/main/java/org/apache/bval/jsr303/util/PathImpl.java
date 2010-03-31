@@ -30,10 +30,6 @@ import java.util.regex.Pattern;
  * Description: object holding the property path as a list of nodes.
  * (Implementation based on reference implementation)
  * <br/>
- * User: roman <br/>
- * Date: 28.09.2009 <br/>
- * Time: 11:21:33 <br/>
- * Copyright: Agimatec GmbH
  */
 public class PathImpl implements Path, Serializable {
 

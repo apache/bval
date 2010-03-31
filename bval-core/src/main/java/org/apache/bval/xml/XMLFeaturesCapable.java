@@ -26,10 +26,6 @@ import org.apache.bval.model.FeaturesCapable;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 10.07.2007 <br/>
- * Time: 13:11:56 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class XMLFeaturesCapable implements Serializable {
     @XStreamImplicit

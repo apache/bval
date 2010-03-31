@@ -30,10 +30,6 @@ import java.lang.reflect.Method;
 
 /**
  * Description: hold parsed information from xml to complete MetaBean later<br/>
- * User: roman <br/>
- * Date: 27.11.2009 <br/>
- * Time: 13:53:40 <br/>
- * Copyright: Agimatec GmbH
  */
 public class MetaConstraint<T, A extends Annotation> {
 

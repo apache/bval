@@ -28,10 +28,6 @@ import java.util.Set;
 
 /**
  * Description: MetaData class<br/>
- * User: roman.stumm <br/>
- * Date: 02.04.2008 <br/>
- * Time: 12:23:45 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public abstract class ElementDescriptorImpl implements ElementDescriptor {
     protected final MetaBean metaBean;

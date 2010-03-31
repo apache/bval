@@ -23,10 +23,6 @@ import javax.validation.constraints.Size;
 
 /**
  * Description: Abstract validator impl. for @Size annotation<br/>
- * User: roman <br/>
- * Date: 03.02.2009 <br/>
- * Time: 12:49:24 <br/>
- * Copyright: Agimatec GmbH
  */
 public abstract class SizeValidator {
     protected int min;

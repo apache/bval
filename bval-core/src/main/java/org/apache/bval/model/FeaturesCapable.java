@@ -23,10 +23,6 @@ import java.util.Map;
 
 /**
  * Description: abstract superclass of meta objects that support a map of features.<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 10:29:57 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public abstract class FeaturesCapable implements Serializable {
     private static final long serialVersionUID = 1L;

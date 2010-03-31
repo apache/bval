@@ -24,10 +24,6 @@ import java.util.Set;
 /**
  * Description: This class will disappear when such
  * functionality is part of the JSR303 specification.<br/>
- * User: roman <br/>
- * Date: 11.11.2009 <br/>
- * Time: 12:38:45 <br/>
- * Copyright: Agimatec GmbH
  */
 public interface MethodBeanDescriptor extends BeanDescriptor {
     MethodDescriptor getConstraintsForMethod(Method method);

@@ -44,10 +44,6 @@ import org.apache.bval.jsr303.example.Customer;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 29.10.2008 <br/>
- * Time: 15:06:28 <br/>
- * Copyright: Agimatec GmbH
  */
 public class BootstrapTest extends TestCase {
     public void testDirectBootstrap() {
@@ -87,8 +83,8 @@ public class BootstrapTest extends TestCase {
     }
 
     /**
-     * some tests taken from Hibernate's ValidationTest to ensure that.
-     * our implementation works as the reference implementation
+     * some tests based on RI tested behaviors to ensure our 
+     * implementation works as the reference implementation
      */
 
     public void testCustomConstraintFactory() {

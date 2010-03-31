@@ -29,15 +29,11 @@ import java.lang.annotation.Target;
 /**
  * <p>
  * --
- * This class is NOT part of the bean_validation spec and might disappear
+ * TODO - This class is NOT part of the bean_validation spec and might disappear
  * as soon as a final version of the specification contains a similar functionality.
  * --
  * </p>
  * Description: annotation to validate an email address (by pattern)<br/>
- * User: roman.stumm <br/>
- * Date: 14.10.2008 <br/>
- * Time: 12:38:10 <br/>
- * Copyright: Agimatec GmbH
  */
 @Documented
 @Constraint(validatedBy = EmailValidator.class)

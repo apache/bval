@@ -26,10 +26,6 @@ import org.apache.bval.constraints.NotEmpty;
 /**
  * Description: class with annotated methods to demonstrate
  * method-level-validation<br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 10:05:12 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ExampleMethodService {
     public ExampleMethodService() {

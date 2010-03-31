@@ -38,10 +38,6 @@ import java.util.Set;
 
 /**
  * Description: instance per validation process, not thread-safe<br/>
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 16:32:35 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 final class GroupValidationContextImpl<T extends ValidationListener>
       extends BeanValidationContext<T>

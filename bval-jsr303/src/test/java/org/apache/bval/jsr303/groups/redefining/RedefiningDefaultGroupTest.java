@@ -31,10 +31,6 @@ import java.util.Set;
 
 /**
  * Description: test Redefining the Default group for a class (spec. chapter 3.4.3)<br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 12:42:40 <br/>
- * Copyright: Agimatec GmbH
  */
 public class RedefiningDefaultGroupTest extends TestCase {
     private Validator validator;

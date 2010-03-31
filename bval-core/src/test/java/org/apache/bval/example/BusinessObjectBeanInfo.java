@@ -24,7 +24,9 @@ import java.beans.SimpleBeanInfo;
 
 import org.apache.bval.model.Features;
 
-/** Copyright: Agimatec GmbH 2008 */
+/**
+ * Description: <br/>
+ */
 public class BusinessObjectBeanInfo extends SimpleBeanInfo {
     Class targetClass = BusinessObject.class;
 

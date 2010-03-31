@@ -23,10 +23,6 @@ import java.math.BigDecimal;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 17.11.2009 <br/>
- * Time: 15:21:45 <br/>
- * Copyright: Agimatec GmbH
  */
 public class MaxTestEntity {
     @Max(100)

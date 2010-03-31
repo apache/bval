@@ -35,10 +35,6 @@ import java.util.Set;
 
 /**
  * Description: Implementation to find constraints.<br/>
- * User: roman <br/>
- * Date: 13.10.2009 <br/>
- * Time: 10:44:46 <br/>
- * Copyright: Agimatec GmbH
  */
 final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     private final MetaBean metaBean;

@@ -37,10 +37,6 @@ import java.util.*;
 /**
  * Description: Adapter between Constraint (JSR303) and Validation (Agimatec)<br/>
  * this instance is immutable!<br/>
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 17:31:36 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class ConstraintValidation<T extends Annotation>
       implements Validation, ConstraintDescriptor<T> {

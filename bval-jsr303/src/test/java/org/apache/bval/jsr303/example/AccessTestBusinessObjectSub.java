@@ -22,10 +22,6 @@ import org.apache.bval.constraints.HasValue;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 14:27:06 <br/>
- * Copyright: Agimatec GmbH
  */
 public class AccessTestBusinessObjectSub extends AccessTestBusinessObject {
     private String var2, _var2;

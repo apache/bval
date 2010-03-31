@@ -25,10 +25,6 @@ import javax.validation.ConstraintValidatorContext;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 14:41:07 <br/>
- * Copyright: Agimatec GmbH
  */
 public class HasStringValidator implements ConstraintValidator<HasValue, String> {
     private String[] values;

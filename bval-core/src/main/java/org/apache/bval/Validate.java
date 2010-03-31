@@ -24,11 +24,6 @@ import java.lang.annotation.Target;
 /**
  * Description: Annotate an element (parameter) to be validated.
  * <br>
- *
- * User: roman.stumm <br/>
- * Date: 09.07.2007 <br/>
- * Time: 13:38:24 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER, ElementType.METHOD})

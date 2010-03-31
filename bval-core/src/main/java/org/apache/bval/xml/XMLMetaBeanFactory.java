@@ -31,10 +31,6 @@ import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNC
 
 /**
  * Description: Create or enrich MetaBeans from agimatec beanInfos xml<br/>
- * User: roman <br/>
- * Date: 07.10.2009 <br/>
- * Time: 13:19:05 <br/>
- * Copyright: Agimatec GmbH
  */
 public class XMLMetaBeanFactory implements MetaBeanFactory {
     private static final Log log = LogFactory.getLog(XMLMetaBeanFactory.class);

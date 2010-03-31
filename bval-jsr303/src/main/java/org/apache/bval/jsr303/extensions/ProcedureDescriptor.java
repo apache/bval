@@ -23,10 +23,6 @@ import org.apache.bval.model.MetaBean;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 14:43:28 <br/>
- * Copyright: Agimatec GmbH
  */
 public interface ProcedureDescriptor {
     MetaBean getMetaBean();

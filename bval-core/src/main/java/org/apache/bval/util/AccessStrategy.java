@@ -22,10 +22,6 @@ import java.lang.reflect.Type;
 /**
  * Description: abstract class to encapsulate different strategies
  * to get the value of a Property.<br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 12:12:08 <br/>
- * Copyright: Agimatec GmbH
  */
 public abstract class AccessStrategy {
     /**

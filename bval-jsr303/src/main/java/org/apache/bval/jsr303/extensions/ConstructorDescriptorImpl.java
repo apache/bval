@@ -26,10 +26,6 @@ import org.apache.bval.model.Validation;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 10:57:39 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ConstructorDescriptorImpl extends ElementDescriptorImpl
       implements ConstructorDescriptor, ProcedureDescriptor {

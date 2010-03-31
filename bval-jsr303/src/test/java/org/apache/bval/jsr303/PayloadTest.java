@@ -33,10 +33,6 @@ import org.apache.bval.jsr303.util.TestUtils;
  * Description: test that payload information can be retrieved
  * from error reports via the ConstraintDescriptor either accessed
  * through the ConstraintViolation objects<br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 09:59:52 <br/>
- * Copyright: Agimatec GmbH
  */
 public class PayloadTest extends TestCase {
     private Validator validator;

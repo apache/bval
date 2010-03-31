@@ -28,11 +28,6 @@ import java.util.Map;
 
 /**
  * XMLMetaBean Tester.
- *
- * @author ${USER}
- * @version 1.0
- *          Copyright: Agimatec GmbH 2008
- * @since <pre>07/05/2007</pre>
  */
 public class XMLMetaBeanInfosTest extends TestCase {
 

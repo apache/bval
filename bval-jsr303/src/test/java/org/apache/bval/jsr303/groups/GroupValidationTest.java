@@ -30,10 +30,6 @@ import java.util.Set;
 
 /**
  * Description: test features from spec chapter 3.4 group and group sequence<br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 11:29:53 <br/>
- * Copyright: Agimatec GmbH
  */
 public class GroupValidationTest extends TestCase {
     private Validator validator;

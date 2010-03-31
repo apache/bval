@@ -27,10 +27,6 @@ import org.apache.bval.jsr303.groups.BillableCreditCard;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 12:18:31 <br/>
- * Copyright: Agimatec GmbH
  */
 public class BillableUser {
     @NotNull

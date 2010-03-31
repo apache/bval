@@ -31,10 +31,6 @@ import java.util.Map;
 /**
  * Description: This class instantiated during the parsing of the XML configuration
  * data and keeps track of the annotations which should be ignored.<br/>
- * User: roman <br/>
- * Date: 26.11.2009 <br/>
- * Time: 13:09:21 <br/>
- * Copyright: Agimatec GmbH
  */
 public final class AnnotationIgnores {
 

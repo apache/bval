@@ -32,10 +32,6 @@ import java.util.Set;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 25.02.2009 <br/>
- * Time: 16:54:16 <br/>
- * Copyright: Agimatec GmbH
  */
 public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDescriptor {
     protected final ApacheFactoryContext factoryContext;

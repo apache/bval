@@ -23,10 +23,6 @@ import javax.validation.metadata.ConstraintDescriptor;
 /**
  * Description: Describe a constraint validation defect<br/>
  * From rootBean and propertyPath, it is possible to rebuild the context of the failure
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 14:50:12 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 class ConstraintViolationImpl<T> implements ConstraintViolation<T> {
     private final String messageTemplate;

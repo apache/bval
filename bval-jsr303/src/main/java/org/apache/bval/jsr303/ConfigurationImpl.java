@@ -36,10 +36,6 @@ import java.util.*;
  * Implementation of Configuration that also implements ConfigurationState,
  * hence this can be passed to buildValidatorFactory(ConfigurationState).
  * <br/>
- * User: roman.stumm <br/>
- * Date: 29.10.2008 <br/>
- * Time: 14:47:44 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
     private static final Log log = LogFactory.getLog(ConfigurationImpl.class);

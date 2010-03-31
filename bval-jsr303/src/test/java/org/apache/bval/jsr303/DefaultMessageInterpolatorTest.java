@@ -30,11 +30,6 @@ import java.util.Locale;
 
 /**
  * MessageResolverImpl Tester.
- *
- * @author ${USER}
- * @version 1.0
- * @since <pre>04/02/2008</pre>
- *        Copyright: Agimatec GmbH 2008
  */
 public class DefaultMessageInterpolatorTest extends TestCase {
 

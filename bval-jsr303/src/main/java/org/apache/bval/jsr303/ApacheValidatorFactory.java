@@ -35,10 +35,6 @@ import java.util.*;
 /**
  * Description: a factory is a complete configurated object that can create validators<br/>
  * this instance is not thread-safe<br/>
- * User: roman.stumm <br/>
- * Date: 29.10.2008 <br/>
- * Time: 17:06:20 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private static ApacheValidatorFactory DEFAULT_FACTORY;

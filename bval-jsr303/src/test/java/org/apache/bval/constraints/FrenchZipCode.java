@@ -36,10 +36,6 @@ import java.lang.annotation.Target;
 /**
  * Description: example for composed constraint.
  * not implemented! simple dummy implemenation for tests only! <br/>
- * User: roman.stumm <br/>
- * Date: 31.10.2008 <br/>
- * Time: 16:34:56 <br/>
- * Copyright: Agimatec GmbH
  */
 @NotEmpty
 @NotNull

@@ -31,10 +31,6 @@ import java.util.*;
 /**
  * Description: hold default constraints that are build in the framework.
  * The default constraints are configured in DefaultConstraints.properties.<br/>
- * User: roman <br/>
- * Date: 26.11.2009 <br/>
- * Time: 15:12:23 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ConstraintDefaults {
     private static final Log log = LogFactory.getLog(ConstraintDefaults.class);

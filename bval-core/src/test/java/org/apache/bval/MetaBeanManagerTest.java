@@ -27,11 +27,6 @@ import java.util.Map;
 
 /**
  * MetaBeanManager Tester.
- *
- * @author ${USER}
- * @version 1.0
- * @since <pre>07/05/2007</pre>
- *        Copyright: Agimatec GmbH 2008
  */
 public class MetaBeanManagerTest extends TestCase {
     MetaBeanManager mbm = new MetaBeanManager();

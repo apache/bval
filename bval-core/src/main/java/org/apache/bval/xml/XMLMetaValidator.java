@@ -26,10 +26,6 @@ import org.apache.bval.model.Validation;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 14:34:46 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 @XStreamAlias("validator")
 public class XMLMetaValidator implements Serializable {

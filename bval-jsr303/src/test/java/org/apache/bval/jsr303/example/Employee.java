@@ -20,10 +20,6 @@ package org.apache.bval.jsr303.example;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 06.10.2009 <br/>
- * Time: 13:41:43 <br/>
- * Copyright: Agimatec GmbH
  */
 public class Employee implements Person {
     private String firstName, lastName;

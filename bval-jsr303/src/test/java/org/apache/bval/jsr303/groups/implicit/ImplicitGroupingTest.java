@@ -30,10 +30,6 @@ import java.util.Set;
 
 /**
  * Description: test spec chapter 3.4.4. Implicit grouping<br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 12:45:24 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ImplicitGroupingTest extends TestCase {
     private Validator validator;

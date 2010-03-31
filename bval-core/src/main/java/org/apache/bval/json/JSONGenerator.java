@@ -34,10 +34,6 @@ import freemarker.template.TemplateException;
 /**
  * Description: Generate a JSON String for a collection of {@link MetaBean}s.
  * This implementation uses a freemarker template to generate the output.<br/>
- * User: roman.stumm <br/>
- * Date: 09.07.2007 <br/>
- * Time: 17:14:12 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 // TODO RSt - move. this is an optional module: move freemarker dependency and template "bean-infos-json.ftl" with it.
 public class JSONGenerator {

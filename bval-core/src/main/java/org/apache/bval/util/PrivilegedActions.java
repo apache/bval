@@ -25,10 +25,6 @@ import java.security.PrivilegedAction;
 
 /**
  * Description: utility methods to perform actions with AccessController or without. <br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 11:57:36 <br/>
- * Copyright: Agimatec GmbH
  */
 public class PrivilegedActions {
     /**

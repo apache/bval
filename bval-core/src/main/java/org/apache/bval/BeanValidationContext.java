@@ -16,8 +16,6 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.*;
-
 import java.util.IdentityHashMap;
 
 import org.apache.bval.model.FeaturesCapable;
@@ -36,11 +34,6 @@ import org.apache.bval.util.PropertyAccess;
  * <b>This class is NOT thread-safe: a new instance will be created for each
  * validation
  * processing per thread.<br/></b>
- * <br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 12:30:01 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class BeanValidationContext<T extends ValidationListener>
       implements ValidationContext<T> {

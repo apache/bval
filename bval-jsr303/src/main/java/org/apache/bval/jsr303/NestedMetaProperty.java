@@ -30,10 +30,6 @@ import java.util.*;
 
 /**
  * Description: handle nested property paths <br/>
- * User: roman.stumm <br/>
- * Date: 31.10.2008 <br/>
- * Time: 14:04:23 <br/>
- * Copyright: Agimatec GmbH
  */
 final class NestedMetaProperty {
     private MetaBean metaBean;

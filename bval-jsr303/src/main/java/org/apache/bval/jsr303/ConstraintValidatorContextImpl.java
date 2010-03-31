@@ -35,10 +35,6 @@ import java.util.List;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 28.09.2009 <br/>
- * Time: 14:19:30 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ConstraintValidatorContextImpl implements ConstraintValidatorContext {
     private final List<ValidationListener.Error> errorMessages =

@@ -21,10 +21,6 @@ package org.apache.bval.model;
  * This DOES NOT MEAN that the list of property- or bean-features is closed. You can
  * put anything into the metabean as a feature and use it in your custom validators
  * and other classes that access your metabeans.<br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 17:03:47 <br/>
- * Copyright: Agimatec GmbH 2008
  *
  * @see FeaturesCapable
  */

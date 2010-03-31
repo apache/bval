@@ -24,10 +24,6 @@ import java.util.Map;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 18.11.2009 <br/>
- * Time: 11:58:46 <br/>
- * Copyright: Agimatec GmbH
  */
 public class SizeTestEntity {
     @Size(max=2)

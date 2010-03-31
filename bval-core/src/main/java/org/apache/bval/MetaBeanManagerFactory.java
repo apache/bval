@@ -21,10 +21,6 @@ import org.apache.bval.xml.XMLMetaBeanRegistry;
 /**
  * Description: API class to hold a singleton of a {@link MetaBeanManager}
  * that implements the finder and registry interfaces for MetaBeans<br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 16:20:03 <br/>
- * Copyright: Agimatec GmbH 2008
  *
  * @see org.apache.bval.model.MetaBean
  * @see MetaBeanManager

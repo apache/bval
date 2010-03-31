@@ -30,10 +30,6 @@ import org.apache.bval.model.Validation;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 11.11.2009 <br/>
- * Time: 15:18:00 <br/>
- * Copyright: Agimatec GmbH
  */
 class MethodBeanDescriptorImpl extends BeanDescriptorImpl
       implements MethodBeanDescriptor {

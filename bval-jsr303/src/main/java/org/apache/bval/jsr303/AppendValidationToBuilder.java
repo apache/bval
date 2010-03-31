@@ -18,10 +18,6 @@ package org.apache.bval.jsr303;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 12:28:56 <br/>
- * Copyright: Agimatec GmbH
  */
 public class AppendValidationToBuilder implements AppendValidation {
     private final AnnotationConstraintBuilder builder;

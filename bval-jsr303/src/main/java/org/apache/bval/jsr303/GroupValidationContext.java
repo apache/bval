@@ -30,10 +30,6 @@ import org.apache.bval.model.ValidationListener;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 28.04.2008 <br/>
- * Time: 10:15:08 <br/>
- * Copyright: Agimatec GmbH
  */
 public interface GroupValidationContext<T extends ValidationListener>
       extends ValidationContext<T> {

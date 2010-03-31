@@ -37,10 +37,6 @@ import java.util.Set;
 
 /**
  * Description: test of group sequence behavior<br/>
- * User: roman <br/>
- * Date: 25.02.2009 <br/>
- * Time: 16:47:06 <br/>
- * Copyright: Agimatec GmbH
  */
 public class GroupSequenceTest extends TestCase {
 

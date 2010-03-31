@@ -28,10 +28,6 @@ import java.util.Map;
 /**
  * Description: Undefined dynamic strategy. Uses PropertyUtils or tries to determine
  * field to access the value<br/>
- * User: roman <br/>
- * Date: 29.10.2009 <br/>
- * Time: 12:27:27 <br/>
- * Copyright: Agimatec GmbH
  */
 public class PropertyAccess extends AccessStrategy {
     private final Class<?> beanClass;

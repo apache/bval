@@ -30,10 +30,6 @@ import java.util.Set;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 12:19:40 <br/>
- * Copyright: Agimatec GmbH
  */
 public class GroupInheritanceTest extends TestCase {
     private Validator validator;

@@ -27,10 +27,6 @@ import org.apache.bval.model.Validation;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 25.02.2009 <br/>
- * Time: 16:54:37 <br/>
- * Copyright: Agimatec GmbH
  */
 class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDescriptor {
     private boolean cascaded;

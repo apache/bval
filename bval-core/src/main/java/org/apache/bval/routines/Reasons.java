@@ -21,10 +21,7 @@ import org.apache.bval.model.Features;
 /**
  * Description: StandardReasons for validation errors found in
  * {@link org.apache.bval.ValidationResults}<br/>
- * User: roman.stumm <br/>
- * Date: 06.07.2007 <br/>
- * Time: 13:20:43 <br/>
- * Copyright: Agimatec GmbH 2008
+ * 
  * TODO RSt - could become part of optional module or remove this interface. it depends indirectly on proprietary XML support only (package org.apache.bval.xml)
  */
 public interface Reasons extends Features.Property {

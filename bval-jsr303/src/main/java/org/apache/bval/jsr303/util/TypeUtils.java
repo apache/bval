@@ -35,10 +35,6 @@ import java.util.*;
  * handles java5 generic types to find suitable implementations for
  * ConstraintValidators.
  * <br/>
- * User: roman <br/>
- * Date: 17.11.2009 <br/>
- * Time: 16:36:02 <br/>
- * Copyright: Agimatec GmbH
  */
 public class TypeUtils {
     private static final Map<Class<?>, Set<Class<?>>> SUBTYPES_BY_PRIMITIVE;

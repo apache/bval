@@ -21,10 +21,6 @@ import javax.validation.metadata.ElementDescriptor;
 /**
  * Description: This class will disappear when such
  * functionality is part of the JSR303 specification.<br/>
- * User: roman <br/>
- * Date: 11.11.2009 <br/>
- * Time: 12:37:59 <br/>
- * Copyright: Agimatec GmbH
  */
 public interface ParameterDescriptor extends ElementDescriptor {
     /**

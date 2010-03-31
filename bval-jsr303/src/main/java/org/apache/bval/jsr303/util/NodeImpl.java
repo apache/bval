@@ -24,10 +24,6 @@ import java.io.Serializable;
 /**
  * Description: a node (property) as part of a Path.
  * (Implementation based on reference implementation) <br/>
- * User: roman <br/>
- * Date: 28.09.2009 <br/>
- * Time: 11:56:35 <br/>
- * Copyright: Agimatec GmbH
  */
 public final class NodeImpl implements Path.Node, Serializable {
 

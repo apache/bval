@@ -48,10 +48,6 @@ import java.util.Set;
  * Description: process the class annotations for JSR303 constraint validations
  * to build the MetaBean with information from annotations and JSR303 constraint
  * mappings (defined in xml)<br/>
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 14:12:51 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     protected static final Log log = LogFactory.getLog(Jsr303MetaBeanFactory.class);

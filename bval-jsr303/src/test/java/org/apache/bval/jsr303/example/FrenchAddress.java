@@ -22,10 +22,6 @@ import org.apache.bval.constraints.FrenchZipCode;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 31.10.2008 <br/>
- * Time: 16:47:35 <br/>
- * Copyright: Agimatec GmbH
  */
 public class FrenchAddress {
     @FrenchZipCode(size = 7)

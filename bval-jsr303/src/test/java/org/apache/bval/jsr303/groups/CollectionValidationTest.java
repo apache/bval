@@ -39,10 +39,6 @@ import java.util.Set;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 06.10.2009 <br/>
- * Time: 12:47:30 <br/>
- * Copyright: Agimatec GmbH
  */
 public class CollectionValidationTest extends TestCase {
     private Validator validator;

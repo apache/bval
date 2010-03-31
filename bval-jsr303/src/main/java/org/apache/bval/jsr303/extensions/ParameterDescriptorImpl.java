@@ -23,10 +23,6 @@ import org.apache.bval.model.Validation;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 01.02.2010 <br/>
- * Time: 10:49:29 <br/>
- * Copyright: Agimatec GmbH
  */
 public class ParameterDescriptorImpl extends ElementDescriptorImpl
       implements ParameterDescriptor {

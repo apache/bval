@@ -34,10 +34,6 @@ import org.apache.bval.xml.XMLMetaBeanURLLoader;
  * create MetaBeans. In most situations a single instance of this class is
  * sufficient and you can get this instance from the {@link MetaBeanManagerFactory}.
  * <br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 16:19:43 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, MetaBeanEnricher {
 

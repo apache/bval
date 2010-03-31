@@ -24,10 +24,6 @@ import java.util.Map;
 
 /**
  * Description: a cache to hold metabeans by id and by class.<br/>
- * User: roman.stumm <br/>
- * Date: 18.02.2008 <br/>
- * Time: 11:38:53 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class MetaBeanCache implements MetaBeanFinder, Serializable {
     private static final long serialVersionUID = 1L;

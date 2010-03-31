@@ -48,10 +48,6 @@ import org.apache.bval.jsr303.util.TestUtils;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 01.04.2008 <br/>
- * Time: 15:12:29 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class Jsr303Test extends TestCase {
 /*    static {

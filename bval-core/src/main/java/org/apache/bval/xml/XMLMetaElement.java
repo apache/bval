@@ -25,10 +25,6 @@ import org.apache.commons.lang.ClassUtils;
 
 /**
  * Description: <br/>
- * User: roman.stumm <br/>
- * Date: 05.07.2007 <br/>
- * Time: 14:48:36 <br/>
- * Copyright: Agimatec GmbH 2008
  */
 public class XMLMetaElement extends XMLFeaturesCapable {
 

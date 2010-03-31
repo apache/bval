@@ -23,10 +23,6 @@ import org.apache.bval.model.Features;
 /**
  * Description: Contains MetaBean feature keys of additional features used in the implementation
  * of JSR303<br/>
- * User: roman.stumm <br/>
- * Date: 02.04.2008 <br/>
- * Time: 15:22:49 <br/>
- * Copyright: Agimatec GmbH 2008
  *
  * @see org.apache.bval.model.FeaturesCapable
  * @see org.apache.bval.model.Features

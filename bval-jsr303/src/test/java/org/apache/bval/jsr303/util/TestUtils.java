@@ -23,10 +23,6 @@ import java.util.Set;
 
 /**
  * Description: <br/>
- * User: roman <br/>
- * Date: 05.10.2009 <br/>
- * Time: 12:00:35 <br/>
- * Copyright: Agimatec GmbH
  */
 public class TestUtils {
     /**

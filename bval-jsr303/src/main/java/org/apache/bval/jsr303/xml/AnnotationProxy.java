@@ -33,11 +33,6 @@ import org.apache.bval.jsr303.util.SecureActions;
  * InvocationHandler implementation of <code>Annotation</code> that pretends it is a
  * "real" source code annotation.
  * <p/>
- * <p/>
- * User: roman <br/>
- * Date: 27.11.2009 <br/>
- * Time: 14:31:26 <br/>
- * Copyright: Agimatec GmbH
  */
 public class AnnotationProxy implements Annotation, InvocationHandler {
 

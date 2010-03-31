@@ -24,10 +24,6 @@ import java.lang.annotation.ElementType;
 
 /**
  * Description: traversable resolver that does always resolve<br/>
- * User: roman <br/>
- * Date: 25.11.2009 <br/>
- * Time: 13:21:18 <br/>
- * Copyright: Agimatec GmbH
  */
 public class SimpleTraversableResolver implements TraversableResolver, CachingRelevant {
     /** @return true */

@@ -53,7 +53,6 @@ import org.apache.commons.beanutils.Converter;
 
 /**
  * Uses JAXB to parse constraints.xml based on validation-mapping-1.0.xsd.<br>
- * Copyright: Agimatec GmbH, 2009
  */
 public class ValidationMappingParser {
     //    private static final Log log = LogFactory.getLog(ValidationMappingParser.class);

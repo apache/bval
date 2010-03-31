@@ -17,11 +17,11 @@
 package org.apache.bval.routines;
 
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Description: example validation for email addresses using a regular expression
@@ -30,6 +30,7 @@ import org.apache.bval.model.ValidationContext;
  * Date: 06.07.2007 <br/>
  * Time: 16:51:16 <br/>
  * Copyright: Agimatec GmbH 2008
+ * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml)
  */
 public class EMailValidation implements Validation {
     private static String ATOM =

@@ -25,6 +25,7 @@ import org.apache.bval.model.Features;
  * Date: 06.07.2007 <br/>
  * Time: 13:20:43 <br/>
  * Copyright: Agimatec GmbH 2008
+ * TODO RSt - could become part of optional module or remove this interface. it depends indirectly on proprietary XML support only (package org.apache.bval.xml)
  */
 public interface Reasons extends Features.Property {
     // The reasons inherited from Features are VALIDATION features only.

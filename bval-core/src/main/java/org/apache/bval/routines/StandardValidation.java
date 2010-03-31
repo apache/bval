@@ -16,19 +16,18 @@
  */
 package org.apache.bval.routines;
 
-import static org.apache.bval.routines.Reasons.*;
-
+import org.apache.bval.model.Features;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.model.Validation;
+import org.apache.bval.model.ValidationContext;
+import org.apache.bval.xml.XMLMetaValue;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.bval.model.Features;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.Validation;
-import org.apache.bval.model.ValidationContext;
-import org.apache.bval.xml.XMLMetaValue;
+import static org.apache.bval.routines.Reasons.*;
 
 /**
  * Description: This class implements the standard validations for properties!
@@ -38,6 +37,7 @@ import org.apache.bval.xml.XMLMetaValue;
  * Date: 06.07.2007 <br/>
  * Time: 12:41:06 <br/>
  * Copyright: Agimatec GmbH 2008
+ * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml) 
  */
 public class StandardValidation implements Validation {
     /** key for this validation in the validation list of the beanInfos */

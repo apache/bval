@@ -19,19 +19,18 @@
 package org.apache.bval.jsr303;
 
 
-import javax.validation.ConstraintValidator;
-import javax.validation.Payload;
-import javax.validation.ValidationException;
-import javax.validation.metadata.ConstraintDescriptor;
-
 import org.apache.bval.BeanValidationContext;
-import org.apache.bval.ValidationResults;
 import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 
+import javax.validation.ConstraintValidator;
+import javax.validation.Payload;
+import javax.validation.ValidationException;
+import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
@@ -192,7 +191,7 @@ public class ConstraintValidation<T extends Annotation>
 
     private void addErrors(GroupValidationContext context,
                            ConstraintValidatorContextImpl jsrContext) {
-        for (ValidationResults.Error each : jsrContext.getErrorMessages()) {
+        for (ValidationListener.Error each : jsrContext.getErrorMessages()) {
             context.getListener().addError(each, context);
         }
     }

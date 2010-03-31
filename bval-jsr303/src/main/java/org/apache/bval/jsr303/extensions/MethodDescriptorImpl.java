@@ -33,14 +33,14 @@ import org.apache.bval.model.Validation;
  */
 public class MethodDescriptorImpl extends ElementDescriptorImpl
       implements MethodDescriptor, ProcedureDescriptor {
-    private List<ParameterDescriptor> parameterDescriptors = new ArrayList();
+    private final List<ParameterDescriptor> parameterDescriptors = new ArrayList<ParameterDescriptor>();
     private boolean cascaded;
 
     protected MethodDescriptorImpl(MetaBean metaBean, Validation[] validations) {
         super(metaBean, validations);
     }
 
-    protected MethodDescriptorImpl(Class elementClass, Validation[] validations) {
+    protected MethodDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         super(elementClass, validations);
     }
 

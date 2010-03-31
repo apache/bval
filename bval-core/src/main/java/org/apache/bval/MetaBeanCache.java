@@ -30,6 +30,8 @@ import java.util.Map;
  * Copyright: Agimatec GmbH 2008
  */
 public class MetaBeanCache implements MetaBeanFinder, Serializable {
+    private static final long serialVersionUID = 1L;
+
     protected final FastHashMap cacheById;
     protected final FastHashMap cacheByClass;
 
@@ -56,7 +58,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
         return (MetaBean) cacheById.get(beanInfoId);
     }
 
-    public MetaBean findForClass(Class clazz) {
+    public MetaBean findForClass(Class<?> clazz) {
         return (MetaBean) cacheByClass.get(clazz);
     }
 

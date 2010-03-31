@@ -20,27 +20,28 @@
 <!--
     Maven release plugin requires the project tag to be on a single line.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>6</version>
+    </parent>
 
   <groupId>org.apache.bval</groupId>
   <artifactId>bval-parent</artifactId>
-  <name>bval-parent :: Parent POM</name>
+  <name>Apache BeanValidation :: Parent POM</name>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
 
-  <description>bval parent pom</description>
+  <description>Apache BeanValidation parent pom</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-    <agimatec-site-url>http://agimatec-validation.googlecode.com/svn/site/maven2
-    </agimatec-site-url>
-    <agimatec-snapshots-url>http://oss.sonatype.org/content/repositories/agimatec-snapshots
-    </agimatec-snapshots-url>
-    <agimatec-releases-url>http://oss.sonatype.org/service/local/staging/deploy/maven2</agimatec-releases-url>
+    <siteId>bval</siteId>
+    <site.deploy.url>scp://people.apache.org/www/incubator.apache.org</site.deploy.url>
   </properties>
 
   <organization>
@@ -48,15 +49,14 @@
     <url>http://www.apache.org/</url>
   </organization>
 
-  <inceptionYear>2007</inceptionYear>
+  <inceptionYear>2010</inceptionYear>
 
   <url>http://incubator.apache.org/beanvalidation/</url>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/bval/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/bval/trunk
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/incubator/bval/</url>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/bval/trunk</developerConnection>
+    <url>http://svn.apache.org/repos/asf/incubator/bval/trunk</url>
   </scm>
 
   <licenses>
@@ -67,27 +67,42 @@
     </license>
   </licenses>
 
-  <mailingLists>
-    <mailingList>
-      <name>Google Groups Mailing List</name>
-      <subscribe>agimatec-validation@googlegroups.com</subscribe>
-      <unsubscribe>agimatec-validation@googlegroups.com</unsubscribe>
-      <post>agimatec-validation@googlegroups.com</post>
-    </mailingList>
-  </mailingLists>
+    <mailingLists>
+        <mailingList>
+            <name>BeanValidation User List</name>
+            <subscribe>bval-user-subscribe@incubator.apache.org</subscribe>
+            <unsubscribe>bval-user-unsubscribe@incubator.apache.org</unsubscribe>
+            <post>mailto:bval-user@incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/incubator-bval-user/</archive>
+        </mailingList>
+
+        <mailingList>
+            <name>BeanValidation Developer List</name>
+            <subscribe>bval-dev-subscribe@incubator.apache.org</subscribe>
+            <unsubscribe>bval-dev-unsubscribe@incubator.apache.org</unsubscribe>
+            <post>mailto:bval-dev@incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/incubator-bval-dev/</archive>
+        </mailingList>
+
+        <mailingList>
+            <name>BeanValidation Commits List</name>
+            <subscribe>bval-commits-subscribe@incubator.apache.org</subscribe>
+            <unsubscribe>bval-commits-unsubscribe@incubator.apache.org</unsubscribe>
+            <post>mailto:bval-commits@incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/incubator-bval-commits/</archive>
+        </mailingList>
+    </mailingLists>
 
   <developers>
     <developer>
-      <id>roman.stumm</id>
+      <id>romanstumm</id>
       <name>Roman Stumm</name>
-      <email>roman.stumm@agimatec.de</email>
-      <organization>agimatec GmbH</organization>
+      <email>romanstumm@apache.org</email>
     </developer>
     <developer>
-      <id>donaldrwoods</id>
-      <name>Donald Wodos</name>
-      <email>donaldrwoods@gmail.com</email>
-      <organization>The Apache Software Foundation</organization>
+      <id>dwoods</id>
+      <name>Donald Woods</name>
+      <email>dwoods@apache.org</email>
     </developer>
     <developer>
       <id>simonetripodi</id>
@@ -97,48 +112,12 @@
     </developer>
   </developers>
 
-  <!-- Sonatype repo doesn't allow these for release artifacts
-  <repositories>
-    <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Snapshot Repository</name>
-      <url>http://repository.apache.org/snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>geronimo-staging</id>
-      <url>https://repository.apache.org/content/repositories/staging/</url>
-      <releases>
-        <checksumPolicy>fail</checksumPolicy>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  -->
-
-  <distributionManagement>
-    <site>
-      <id>agimatec-site</id>
-      <url>${agimatec-site-url}</url>
-    </site>
-    <snapshotRepository>
-      <id>agimatec-snapshots</id>
-      <name>Agimatec Snapshot Repository</name>
-      <url>${agimatec-snapshots-url}</url>
-      <uniqueVersion>false</uniqueVersion>
-    </snapshotRepository>
-    <repository>
-      <id>agimatec-releases</id>
-      <name>Agimatec Release Repository</name>
-      <url>${agimatec-releases-url}</url>
-    </repository>
-  </distributionManagement>
+    <distributionManagement>
+        <site>
+            <id>apache-website</id>
+            <url>${site.deploy.url}/maven/${siteId}/${version}</url>
+        </site>
+    </distributionManagement>
 
   <reporting>
     <plugins>
@@ -177,12 +156,13 @@
   <!-- default versions for dependencies that child modules may include -->
   <dependencyManagement>
     <dependencies>
+      <!-- Spec RI API -->
       <dependency>
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>1.0.0.GA</version>
       </dependency>
-      <!-- Apache Geronimo version of the spec -->
+      <!-- Apache Geronimo version of the Spec API -->
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-validation_1.0_spec</artifactId>

@@ -32,6 +32,8 @@ import java.lang.reflect.Type;
  */
 public class MetaProperty extends FeaturesCapable
       implements Cloneable, Features.Property {
+    private static final long serialVersionUID = 1L;
+
     private String name;
 
     private Type type;
@@ -66,8 +68,8 @@ public class MetaProperty extends FeaturesCapable
     }
 
     private Class<?> getTypeClass(Type rawType) {
-        if (rawType instanceof Class) {
-            return (Class) rawType;
+        if (rawType instanceof Class<?>) {
+            return (Class<?>) rawType;
         } else if (rawType instanceof ParameterizedType) {
             return getTypeClass(((ParameterizedType) rawType).getRawType()); // recursion!
         } else if(rawType instanceof DynaType) {

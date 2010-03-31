@@ -29,6 +29,8 @@ import java.util.Map;
  * Copyright: Agimatec GmbH 2008
  */
 public abstract class FeaturesCapable implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private FastHashMap features = new FastHashMap();
     /** key = validation id, value = the validation */
     private Validation[] validations = new Validation[0];

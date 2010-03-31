@@ -28,6 +28,8 @@ import junit.framework.TestSuite;
 import org.apache.bval.jsr303.example.Author;
 import org.apache.bval.jsr303.example.PreferredGuest;
 
+import java.util.Locale;
+
 /**
  * MessageResolverImpl Tester.
  *
@@ -37,60 +39,65 @@ import org.apache.bval.jsr303.example.PreferredGuest;
  *        Copyright: Agimatec GmbH 2008
  */
 public class DefaultMessageInterpolatorTest extends TestCase {
-    DefaultMessageInterpolator interpolator = new DefaultMessageInterpolator();
+  static {     // required for tests on environments where default locale is not EN
+    Locale.setDefault(Locale.ENGLISH);
+  }
 
-    public DefaultMessageInterpolatorTest(String name) {
-        super(name);
-    }
+  DefaultMessageInterpolator interpolator = new DefaultMessageInterpolator();
 
-    public static Test suite() {
-        return new TestSuite(DefaultMessageInterpolatorTest.class);
-    }
+  public DefaultMessageInterpolatorTest(String name) {
+    super(name);
+  }
 
-    public void testCreateResolver() {
-
-        final Validator gvalidator = getValidator();
-
-        assertTrue(!gvalidator.getConstraintsForClass(PreferredGuest.class)
-              .getConstraintsForProperty("guestCreditCardNumber")
-              .getConstraintDescriptors().isEmpty());
-
-        MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
-
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor<?>) gvalidator
-                      .getConstraintsForClass(PreferredGuest.class).
-                      getConstraintsForProperty("guestCreditCardNumber")
-                      .getConstraintDescriptors().toArray()[0];
-            }
-
-            public Object getValidatedValue() {
-                return "12345678";
-            }
-        };
-        String msg = interpolator.interpolate("{validator.creditcard}", ctx);
-        Assert.assertEquals("credit card is not valid", msg);
-
-        ctx = new MessageInterpolator.Context() {
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor) gvalidator
-                      .getConstraintsForClass(Author.class).
-                      getConstraintsForProperty("lastName")
-                      .getConstraintDescriptors().toArray()[0];
-            }
-
-            public Object getValidatedValue() {
-                return "";
-            }
-        };
+  public static Test suite() {
+    return new TestSuite(DefaultMessageInterpolatorTest.class);
+  }
 
 
-        msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
-        Assert.assertEquals("may not be empty", msg);
-    }
+  public void testCreateResolver() {
+
+    final Validator gvalidator = getValidator();
+
+    assertTrue(!gvalidator.getConstraintsForClass(PreferredGuest.class)
+        .getConstraintsForProperty("guestCreditCardNumber")
+        .getConstraintDescriptors().isEmpty());
+
+    MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
+
+      public ConstraintDescriptor<?> getConstraintDescriptor() {
+        return (ConstraintDescriptor<?>) gvalidator
+            .getConstraintsForClass(PreferredGuest.class).
+                getConstraintsForProperty("guestCreditCardNumber")
+            .getConstraintDescriptors().toArray()[0];
+      }
+
+      public Object getValidatedValue() {
+        return "12345678";
+      }
+    };
+    String msg = interpolator.interpolate("{validator.creditcard}", ctx);
+    Assert.assertEquals("credit card is not valid", msg);
+
+    ctx = new MessageInterpolator.Context() {
+      public ConstraintDescriptor<?> getConstraintDescriptor() {
+        return (ConstraintDescriptor) gvalidator
+            .getConstraintsForClass(Author.class).
+                getConstraintsForProperty("lastName")
+            .getConstraintDescriptors().toArray()[0];
+      }
+
+      public Object getValidatedValue() {
+        return "";
+      }
+    };
 
 
-    private Validator getValidator() {
-        return ApacheValidatorFactory.getDefault().getValidator();
-    }
+    msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
+    Assert.assertEquals("may not be empty", msg);
+  }
+
+
+  private Validator getValidator() {
+    return ApacheValidatorFactory.getDefault().getValidator();
+  }
 }

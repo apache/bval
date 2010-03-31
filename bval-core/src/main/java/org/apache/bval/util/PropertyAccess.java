@@ -34,11 +34,11 @@ import java.util.Map;
  * Copyright: Agimatec GmbH
  */
 public class PropertyAccess extends AccessStrategy {
-    private final Class beanClass;
+    private final Class<?> beanClass;
     private final String propertyName;
     private Field rememberField;
 
-    public PropertyAccess(Class clazz, String propertyName) {
+    public PropertyAccess(Class<?> clazz, String propertyName) {
         this.beanClass = clazz;
         this.propertyName = propertyName;
     }
@@ -49,8 +49,8 @@ public class PropertyAccess extends AccessStrategy {
 
     public static Object getProperty(Object bean, String property) throws
           InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        if (bean instanceof Map) {
-            return ((Map) bean).get(property);
+        if (bean instanceof Map<?, ?>) {
+            return ((Map<?, ?>) bean).get(property);
         } else { // supports DynaBean and standard Objects
             return PropertyUtils.getSimpleProperty(bean, property);
         }
@@ -76,7 +76,7 @@ public class PropertyAccess extends AccessStrategy {
             return beanClass.getField(propertyName).getGenericType();
         } catch (NoSuchFieldException ex2) {
             // search for private/protected field up the hierarchy
-            Class theClass = beanClass;
+            Class<?> theClass = beanClass;
             while (theClass != null) {
                 try {
                     return theClass.getDeclaredField(propertyName).getGenericType();
@@ -110,7 +110,7 @@ public class PropertyAccess extends AccessStrategy {
                     return value;
                 } catch (NoSuchFieldException ex2) {
                     // search for private/protected field up the hierarchy
-                    Class theClass = bean.getClass();
+                    Class<?> theClass = bean.getClass();
                     while (theClass != null) {
                         try {
                             Field aField = theClass

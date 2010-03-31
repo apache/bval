@@ -37,7 +37,7 @@ public class ParameterDescriptorImpl extends ElementDescriptorImpl
         super(metaBean, validations);
     }
 
-    public ParameterDescriptorImpl(Class elementClass, Validation[] validations) {
+    public ParameterDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         super(elementClass, validations);
     }
 

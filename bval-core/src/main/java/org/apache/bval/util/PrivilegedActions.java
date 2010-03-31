@@ -44,7 +44,7 @@ public class PrivilegedActions {
 
     public static <T, E extends RuntimeException> T newInstance(final Class<T> cls,
                                                                 final Class<E> exception,
-                                                                final Class[] paramTypes,
+                                                                final Class<?>[] paramTypes,
                                                                 final Object[] values) {
         return run(new PrivilegedAction<T>() {
             public T run() {
@@ -117,7 +117,7 @@ public class PrivilegedActions {
 
     public static Object getAnnotationValue(final Annotation annotation, final String name)
           throws IllegalAccessException, InvocationTargetException {
-        return run(new PrivilegedAction() {
+        return run(new PrivilegedAction<Object>() {
             public Object run() {
                 Method valueMethod = null;
                 try {
@@ -135,7 +135,7 @@ public class PrivilegedActions {
         });
     }
 
-    public static ClassLoader getClassLoader(final Class clazz) {
+    public static ClassLoader getClassLoader(final Class<?> clazz) {
         return run(new PrivilegedAction<ClassLoader>() {
             public ClassLoader run() {
                 ClassLoader cl = Thread.currentThread().getContextClassLoader();

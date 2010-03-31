@@ -143,7 +143,7 @@ public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, Met
         }
     }
 
-    public MetaBean findForClass(Class clazz) {
+    public MetaBean findForClass(Class<?> clazz) {
         if (clazz == null) return null;
         MetaBean beanInfo = cache.findForClass(clazz);
         if (beanInfo != null) return beanInfo;
@@ -169,7 +169,7 @@ public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, Met
             if (beanRef != null) {
                 prop.setMetaBean(findForId(beanRef));
             } else {
-                Class beanType = prop.getFeature(REF_BEAN_TYPE);
+                Class<?> beanType = prop.getFeature(REF_BEAN_TYPE);
                 if (beanType != null) {
                     prop.setMetaBean(findForClass(beanType));
                 } // dynamic type resolution:

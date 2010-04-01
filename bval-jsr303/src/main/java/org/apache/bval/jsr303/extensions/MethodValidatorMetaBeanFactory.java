@@ -37,6 +37,7 @@ import java.util.List;
 /**
  * Description: <br/>
  */
+//TODO RSt - move. this is an optional module: move the whole package. core code has no dependencies on it 
 public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     public MethodValidatorMetaBeanFactory(ApacheFactoryContext factoryContext) {
         super(factoryContext);

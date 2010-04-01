@@ -85,7 +85,7 @@ public interface MethodValidator extends Validator {
      * the parameters of <code>constructor</code>.
      *
      * @param clazz           class hosting the constructor
-     * @param constructor     the constructor whose parameters are currectly validated
+     * @param constructor     the constructor whose parameters are correctly validated
      * @param parameterValues the parameter values passed to the constructor for invocation
      * @param groups          groups targeted for validation
      * @return set of constraint violations
@@ -93,7 +93,7 @@ public interface MethodValidator extends Validator {
      *                                  or if the Object[] does not match the constructor signature
      */
     <T> Set<ConstraintViolation<T>> validateParameters(Class<T> clazz,
-                                                    Constructor constructor,
+                                                    Constructor<T> constructor,
                                                     Object[] parameterValues,
                                                     Class<?>... groups);
 
@@ -102,7 +102,7 @@ public interface MethodValidator extends Validator {
      * the parameterIndex-th parameter of <code>constructor</code>.
      *
      * @param clazz          class hosting the constructor
-     * @param constructor    the method whose parameters are currectly validated
+     * @param constructor    the method whose parameters are correctly validated
      * @param parameterValue the parameter value passed to the
      *                       parameterIndex-th parameter of constructor
      * @param parameterIndex parameter index of the parameter validated in constructor
@@ -112,7 +112,7 @@ public interface MethodValidator extends Validator {
      *                                  or if prameterIndex is out of bound
      */
     <T> Set<ConstraintViolation<T>> validateParameter(Class<T> clazz,
-                                                   Constructor constructor,
+                                                   Constructor<T> constructor,
                                                    Object parameterValue,
                                                    int parameterIndex,
                                                    Class<?>... groups);

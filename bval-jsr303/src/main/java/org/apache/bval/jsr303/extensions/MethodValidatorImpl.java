@@ -93,7 +93,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     }
 
     public <T> Set<ConstraintViolation<T>> validateParameters(Class<T> clazz,
-                                                              Constructor constructor,
+                                                              Constructor<T> constructor,
                                                               Object[] parameters,
                                                               Class<?>... groupArray) {
         MethodBeanDescriptorImpl beanDesc =
@@ -105,7 +105,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     }
 
     public <T> Set<ConstraintViolation<T>> validateParameter(Class<T> clazz,
-                                                             Constructor constructor,
+                                                             Constructor<T> constructor,
                                                              Object parameter,
                                                              int parameterIndex,
                                                              Class<?>... groupArray) {

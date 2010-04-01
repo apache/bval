@@ -56,7 +56,7 @@ public class BeanValidationContext<T extends ValidationListener>
     private AccessStrategy access;
 
     /** set of objects already validated to avoid endless loops. */
-    protected IdentityHashMap validatedObjects = new IdentityHashMap();
+    protected IdentityHashMap<Object, Object> validatedObjects = new IdentityHashMap<Object, Object>();
 
     /**
      * true when value is fixed, so that it will NOT be dynamically

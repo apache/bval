@@ -39,13 +39,13 @@ public class AnnotationProxy implements Annotation, InvocationHandler {
     private final Class<? extends Annotation> annotationType;
     private final Map<String, Object> values;
 
-    public AnnotationProxy(AnnotationProxyBuilder descriptor) {
+    public <A extends Annotation> AnnotationProxy(AnnotationProxyBuilder<A> descriptor) {
         this.annotationType = descriptor.getType();
         values = getAnnotationValues(descriptor);
     }
 
-    private Map<String, Object> getAnnotationValues(AnnotationProxyBuilder descriptor) {
-        Map<String, Object> result = new HashMap();
+    private <A extends Annotation> Map<String, Object> getAnnotationValues(AnnotationProxyBuilder<A> descriptor) {
+        Map<String, Object> result = new HashMap<String, Object>();
         int processedValuesFromDescriptor = 0;
         final Method[] declaredMethods = SecureActions.getDeclaredMethods(annotationType);
         for (Method m : declaredMethods) {
@@ -90,7 +90,7 @@ public class AnnotationProxy implements Annotation, InvocationHandler {
     }
 
     private SortedSet<String> getMethodsSorted() {
-        SortedSet<String> result = new TreeSet();
+        SortedSet<String> result = new TreeSet<String>();
         result.addAll(values.keySet());
         return result;
     }

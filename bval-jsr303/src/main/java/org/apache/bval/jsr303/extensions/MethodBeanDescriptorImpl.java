@@ -33,7 +33,7 @@ import org.apache.bval.model.Validation;
  */
 class MethodBeanDescriptorImpl extends BeanDescriptorImpl
       implements MethodBeanDescriptor {
-    private Map<Method, MethodDescriptorImpl> methodConstraints;
+    private Map<Method, MethodDescriptor> methodConstraints;
     private Map<Constructor<?>, ConstructorDescriptor> constructorConstraints;
 
     protected MethodBeanDescriptorImpl(ApacheFactoryContext factoryContext,
@@ -41,7 +41,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
         super(factoryContext, metaBean, validations);
     }
 
-    public void setMethodConstraints(Map<Method, MethodDescriptorImpl> methodConstraints) {
+    public void setMethodConstraints(Map<Method, MethodDescriptor> methodConstraints) {
         this.methodConstraints = methodConstraints;
     }
 
@@ -62,7 +62,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
         return new HashSet<MethodDescriptor>(methodConstraints.values());
     }
 
-    public void putMethodDescriptor(Method method, MethodDescriptorImpl desc) {
+    public void putMethodDescriptor(Method method, MethodDescriptor desc) {
         methodConstraints.put(method, desc);
     }
 
@@ -70,11 +70,11 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
         return new HashSet<ConstructorDescriptor>(this.constructorConstraints.values());
     }
 
-    public void putConstructorDescriptor(Constructor<?> cons, ConstructorDescriptorImpl desc) {
+    public void putConstructorDescriptor(Constructor<?> cons, ConstructorDescriptor desc) {
         constructorConstraints.put(cons, desc);
     }
 
-    public Map<Method, MethodDescriptorImpl> getMethodConstraints() {
+    public Map<Method, MethodDescriptor> getMethodConstraints() {
         return methodConstraints;
     }
 

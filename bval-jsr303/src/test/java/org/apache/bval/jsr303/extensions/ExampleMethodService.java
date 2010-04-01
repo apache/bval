@@ -19,9 +19,11 @@
 package org.apache.bval.jsr303.extensions;
 
 
-import javax.validation.constraints.NotNull;
-
 import org.apache.bval.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 /**
  * Description: class with annotated methods to demonstrate
@@ -38,5 +40,15 @@ public class ExampleMethodService {
     @NotEmpty
     public String concat(@NotNull @NotEmpty String s1, @NotNull String s2) {
         return s1 + s2;
+    }
+    
+    public void save(@Pattern(regexp="[a-f0-9]{4}") String data) {
+    	return;
+    }
+    
+    @NotNull
+    @Size(min=3,max=10)
+    public String echo(@NotNull @Size(min=3,max=10) String str) {
+    	return str;
     }
 }

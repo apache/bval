@@ -20,6 +20,7 @@ import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 import org.apache.bval.xml.XMLMetaValue;
 
 import java.util.Collection;
@@ -42,7 +43,7 @@ public class StandardValidation implements Validation {
         return "standard";
     }
 
-    public void validate(ValidationContext context) {
+    public <T extends ValidationListener> void validate(ValidationContext<T> context) {
         validateMandatory(context);
         validateMaxLength(context);
         validateMinLength(context);
@@ -52,7 +53,7 @@ public class StandardValidation implements Validation {
         validateTimeLag(context);
     }
 
-    protected void validateTimeLag(ValidationContext context) {
+    protected <T extends ValidationListener> void validateTimeLag(ValidationContext<T> context) {
         String lag = (String) context.getMetaProperty().getFeature(TIME_LAG);
         if (lag == null) return;
         if (context.getPropertyValue() == null) return;
@@ -73,7 +74,7 @@ public class StandardValidation implements Validation {
 
     private static final String REG_EXP_PATTERN = "cachedRegExpPattern";
 
-    protected void validateRegExp(ValidationContext context) {
+    protected <T extends ValidationListener> void validateRegExp(ValidationContext<T> context) {
         final MetaProperty meta = context.getMetaProperty();
         final String regExp = (String) meta.getFeature(REG_EXP);
         if (regExp == null) return;
@@ -95,7 +96,7 @@ public class StandardValidation implements Validation {
         }
     }
 
-    protected void validateMinValue(ValidationContext context) {
+    protected <T extends ValidationListener> void validateMinValue(ValidationContext<T> context) {
         Comparable minValue = (Comparable) context.getMetaProperty().getFeature(MIN_VALUE);
         if (minValue == null || context.getPropertyValue() == null) return;
         if (compare(context, minValue, context.getPropertyValue()) > 0) {
@@ -103,7 +104,7 @@ public class StandardValidation implements Validation {
         }
     }
 
-    protected void validateMaxValue(ValidationContext context) {
+    protected <T extends ValidationListener> void validateMaxValue(ValidationContext<T> context) {
         Comparable maxValue = (Comparable) context.getMetaProperty().getFeature(MAX_VALUE);
         if (maxValue == null || context.getPropertyValue() == null) return;
         if (compare(context, maxValue, context.getPropertyValue()) < 0) {
@@ -111,7 +112,7 @@ public class StandardValidation implements Validation {
         }
     }
 
-    private int compare(ValidationContext context, Comparable constraintValue,
+    private <T extends ValidationListener> int compare(ValidationContext<T> context, Comparable constraintValue,
                         Object currentValue) {
         int r;
         if (constraintValue.getClass().isAssignableFrom(currentValue.getClass())) {
@@ -126,7 +127,7 @@ public class StandardValidation implements Validation {
         return r;
     }
 
-    protected void validateMaxLength(ValidationContext context) {
+    protected <T extends ValidationListener> void validateMaxLength(ValidationContext<T> context) {
         Integer maxLength = (Integer) context.getMetaProperty()
               .getFeature(Features.Property.MAX_LENGTH);
         if (maxLength == null) return;
@@ -144,7 +145,7 @@ public class StandardValidation implements Validation {
         }
     }
 
-    protected void validateMinLength(ValidationContext context) {
+    protected <T extends ValidationListener> void validateMinLength(ValidationContext<T> context) {
         Integer maxLength = (Integer) context.getMetaProperty()
               .getFeature(Features.Property.MIN_LENGTH);
         if (maxLength == null) return;
@@ -162,7 +163,7 @@ public class StandardValidation implements Validation {
         }
     }
 
-    protected void validateMandatory(ValidationContext context) {
+    protected <T extends ValidationListener> void validateMandatory(ValidationContext<T> context) {
         if (context.getMetaProperty().isMandatory()) {
             if (context.getPropertyValue() == null) {
                 context.getListener().addError(MANDATORY, context);

@@ -35,16 +35,18 @@ public interface ValidationListener {
      *                bean =         the object that contains the error (owner)
      *                propertyName = the Name of the attribute that caused the error
      */
-    void addError(String reason, ValidationContext context);
+    <T extends ValidationListener> void addError(String reason, ValidationContext<T> context);
 
     /** Alternative method to add a fully initialized {@link ValidationListener.Error} object. */
-    void addError(Error error, ValidationContext context);
+    <T extends ValidationListener> void addError(Error error, ValidationContext<T> context);
 
     /**
      * an object holding a single validation constraint violation
      * found during the validation process.
      */
     public class Error implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         final String reason;
         final Object owner;
         final String propertyName;

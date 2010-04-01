@@ -27,6 +27,8 @@ import org.apache.bval.model.ValidationListener;
  * Description: Implements a contains to hold and transport validation results<br/>
  */
 public class ValidationResults implements ValidationListener, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Map<String, List<Error>> errorsByReason;
     private Map<Object, Map<String, List<Error>>> errorsByOwner;
 
@@ -38,7 +40,7 @@ public class ValidationResults implements ValidationListener, Serializable {
      *                       or custom reason of validation error
      * @param context        - context information (bean, propertyName, value, ...)
      */
-    public void addError(String reason, ValidationContext context) {
+    public <T extends ValidationListener> void addError(String reason, ValidationContext<T> context) {
         Error error = createError(reason, context.getBean(), context.getPropertyName());
         addError(error, context);
     }
@@ -51,7 +53,7 @@ public class ValidationResults implements ValidationListener, Serializable {
       *                     the validation error
      * @param context     - null or the context to provide additional information
      */
-    public void addError(Error error, ValidationContext context) {
+    public <T extends ValidationListener> void addError(Error error, ValidationContext<T> context) {
         if (errorsByReason == null) {
             initialize();
         }
@@ -80,8 +82,8 @@ public class ValidationResults implements ValidationListener, Serializable {
      * not on instance creation to save memory garbage.
      */
     protected void initialize() {
-        errorsByReason = new LinkedHashMap();
-        errorsByOwner = new LinkedHashMap();
+        errorsByReason = new LinkedHashMap<String, List<Error>>();
+        errorsByOwner = new LinkedHashMap<Object, Map<String, List<Error>>>();
     }
 
     protected void addToReasonBucket(Error error) {

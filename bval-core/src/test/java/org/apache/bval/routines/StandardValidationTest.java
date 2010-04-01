@@ -39,7 +39,7 @@ import org.apache.bval.xml.XMLMetaValue;
  */
 public class StandardValidationTest extends TestCase implements ValidationListener {
     private StandardValidation validation;
-    private BeanValidationContext context;
+    private BeanValidationContext<StandardValidationTest> context;
     private List<String> reasons = new ArrayList<String>();
     private MetaProperty metaProperty;
     private String stringValue;
@@ -53,7 +53,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
     public void setUp() throws Exception {
         super.setUp();
         validation = new StandardValidation();
-        context = new BeanValidationContext(this);
+        context = new BeanValidationContext<StandardValidationTest>(this);
         metaProperty = new MetaProperty();
         context.setBean(this, null);
         context.setMetaProperty(metaProperty);
@@ -215,11 +215,11 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         return new TestSuite(StandardValidationTest.class);
     }
 
-    public void addError(String reason, ValidationContext context) {
+    public <T extends ValidationListener> void addError(String reason, ValidationContext<T> context) {
         reasons.add(reason);
     }
 
-    public void addError(ValidationListener.Error error, ValidationContext context) {
+    public <T extends ValidationListener> void addError(ValidationListener.Error error, ValidationContext<T> context) {
         reasons.add(error.getReason());
     }
 

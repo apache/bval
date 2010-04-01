@@ -131,13 +131,13 @@ public class BeanValidator<T extends ValidationListener> {
     }
 
     /** @return true when validation should happen, false to skip it */
-    protected boolean determineMetaBean(Validate validate, Object parameter,
-                                        ValidationContext context) {
+    protected <VL extends ValidationListener> boolean determineMetaBean(Validate validate, Object parameter,
+                                        ValidationContext<VL> context) {
         if (validate.value().length() == 0) {
             if (parameter == null) return false;
-            Class beanClass;
-            if (parameter instanceof Collection) {   // do not validate empty collection
-                Collection coll = ((Collection) parameter);
+            Class<?> beanClass;
+            if (parameter instanceof Collection<?>) {   // do not validate empty collection
+                Collection<?> coll = ((Collection<?>) parameter);
                 if (coll.isEmpty()) return false;
                 beanClass = coll.iterator().next().getClass(); // get first object
             } else if (parameter.getClass().isArray()) {
@@ -187,7 +187,7 @@ public class BeanValidator<T extends ValidationListener> {
      * validate a single property only. performs all validations
      * for this property.
      */
-    public void validateProperty(ValidationContext context) {
+    public <VL extends ValidationListener> void validateProperty(ValidationContext<VL> context) {
         for (Validation validation : context.getMetaProperty().getValidations()) {
             validation.validate(context);
         }
@@ -203,11 +203,11 @@ public class BeanValidator<T extends ValidationListener> {
      *                <br>&nbsp;&nbsp;metaBean - the meta information for the root object(s)
      * @return a new instance of validation results
      */
-    public void validateContext(ValidationContext context) {
+    public <VL extends ValidationListener> void validateContext(ValidationContext<VL> context) {
         if (context.getBean() != null) {
-            if (!treatMapsLikeBeans && context.getBean() instanceof Map) {
+            if (!treatMapsLikeBeans && context.getBean() instanceof Map<?, ?>) {
                 validateMapInContext(context);
-            } else if (context.getBean() instanceof Iterable) {
+            } else if (context.getBean() instanceof Iterable<?>) {
                 validateIteratableInContext(context);
             } else if (context.getBean() instanceof Object[]) {
                 validateArrayInContext(context);
@@ -217,7 +217,7 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private void validateBeanInContext(ValidationContext context) {
+    private <VL extends ValidationListener> void validateBeanInContext(ValidationContext<VL> context) {
         if (getDynamicMetaBean(context) != null) {
             context.setMetaBean(
                   getDynamicMetaBean(context).resolveMetaBean(context.getBean()));
@@ -225,7 +225,7 @@ public class BeanValidator<T extends ValidationListener> {
         validateBeanNet(context);
     }
 
-    private void validateArrayInContext(ValidationContext context) {
+    private <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context) {
         int index = 0;
         DynamicMetaBean dyn = getDynamicMetaBean(context);
         for (Object each : ((Object[]) context.getBean())) {
@@ -240,14 +240,14 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private DynamicMetaBean getDynamicMetaBean(ValidationContext context) {
+    private <VL extends ValidationListener> DynamicMetaBean getDynamicMetaBean(ValidationContext<VL> context) {
         return context.getMetaBean() instanceof DynamicMetaBean ?
               (DynamicMetaBean) context.getMetaBean() : null;
     }
 
     /** Any object implementing java.lang.Iterable is supported */
-    private void validateIteratableInContext(ValidationContext context) {
-        Iterator it = ((Iterable) context.getBean()).iterator();
+    private <VL extends ValidationListener> void validateIteratableInContext(ValidationContext<VL> context) {
+        Iterator<?> it = ((Iterable<?>) context.getBean()).iterator();
         int index = 0;
         // jsr303 spec: Each object provided by the iterator is validated.
         final DynamicMetaBean dyn = getDynamicMetaBean(context);
@@ -265,12 +265,12 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private void validateMapInContext(ValidationContext context) {
+    private <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context) {
         // jsr303 spec: For Map, the value of each Map.Entry is validated (key is not validated).
-        Iterator<Map.Entry> it = ((Map) context.getBean()).entrySet().iterator();
+        Iterator<Map.Entry<Object, Object>> it = ((Map<Object, Object>) context.getBean()).entrySet().iterator();
         final DynamicMetaBean dyn = getDynamicMetaBean(context);
         while (it.hasNext()) { // to Many
-            Map.Entry entry = it.next();
+            Map.Entry<Object, Object> entry = it.next();
             context.setCurrentKey(entry.getKey());
             if (entry.getValue() == null)
                 continue; // enhancement: throw IllegalArgumentException? (=> spec)
@@ -284,7 +284,7 @@ public class BeanValidator<T extends ValidationListener> {
     }
 
     /** internal validate a bean (=not a collection of beans) and its related beans */
-    protected void validateBeanNet(ValidationContext context) {
+    protected <VL extends ValidationListener> void validateBeanNet(ValidationContext<VL> context) {
         if (context.collectValidated()) {
             validateBean(context);
             for (MetaProperty prop : context.getMetaBean().getProperties()) {
@@ -293,7 +293,7 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private void validateRelatedBean(ValidationContext context, MetaProperty prop) {
+    private <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context, MetaProperty prop) {
         AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
         if (access == null && prop.getMetaBean() != null) { // single property access strategy
             // save old values from context
@@ -319,7 +319,7 @@ public class BeanValidator<T extends ValidationListener> {
     }
 
     /** validate a single bean only. no related beans will be validated */
-    public void validateBean(ValidationContext context) {
+    public <VL extends ValidationListener> void validateBean(ValidationContext<VL> context) {
         /**
          * execute all property level validations
          */

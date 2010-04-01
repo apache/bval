@@ -16,9 +16,11 @@
  */
 package org.apache.bval.jsr303;
 
+import java.lang.annotation.Annotation;
+
 /**
  * Description: <br/>
  */
 public interface AppendValidation {
-     void append(ConstraintValidation validation);
+    <T extends Annotation> void append(ConstraintValidation<T> validation);
 }

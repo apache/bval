@@ -16,6 +16,8 @@
  */
 package org.apache.bval.jsr303;
 
+import java.lang.annotation.Annotation;
+
 /**
  * Description: <br/>
  */
@@ -26,7 +28,7 @@ public class AppendValidationToBuilder implements AppendValidation {
         this.builder = builder;
     }
 
-    public void append(ConstraintValidation validation) {
+    public <T extends Annotation> void append(ConstraintValidation<T> validation) {
         builder.addComposed(validation);
     }
 }

@@ -107,7 +107,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
     /** return the property descriptors having at least a constraint defined */
     public Set<PropertyDescriptor> getConstrainedProperties() {
-        Set<PropertyDescriptor> validatedProperties = new HashSet();
+        Set<PropertyDescriptor> validatedProperties = new HashSet<PropertyDescriptor>();
         for (MetaProperty prop : metaBean.getProperties()) {
             if (prop.getValidations().length > 0 || (prop.getMetaBean() != null ||
                   prop.getFeature(Features.Property.REF_CASCADE) != null)) {

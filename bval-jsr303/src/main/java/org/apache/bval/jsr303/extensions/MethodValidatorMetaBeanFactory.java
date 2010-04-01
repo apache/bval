@@ -17,22 +17,22 @@
 package org.apache.bval.jsr303.extensions;
 
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.Valid;
+
 import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.AppendValidation;
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.Valid;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Description: <br/>
@@ -54,9 +54,9 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
 
     private void buildConstructorConstraints(MethodBeanDescriptorImpl beanDesc)
           throws InvocationTargetException, IllegalAccessException {
-        beanDesc.setConstructorConstraints(new HashMap());
+        beanDesc.setConstructorConstraints(new HashMap<Constructor<?>, ConstructorDescriptor>());
 
-        for (Constructor cons : beanDesc.getMetaBean().getBeanClass()
+        for (Constructor<?> cons : beanDesc.getMetaBean().getBeanClass()
               .getDeclaredConstructors()) {
             if (!factoryContext.getFactory().getAnnotationIgnores()
                   .isIgnoreAnnotations(cons)) {
@@ -68,7 +68,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 Annotation[][] paramsAnnos = cons.getParameterAnnotations();
                 int idx = 0;
                 for (Annotation[] paramAnnos : paramsAnnos) {
-                	ParameterAccess access = new ParameterAccess(cons.getParameterTypes()[idx], idx);
+                    ParameterAccess access = new ParameterAccess(cons.getParameterTypes()[idx], idx);
                     processAnnotations(consDesc, paramAnnos, access, idx);
                     idx++;
                 }
@@ -78,7 +78,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
 
     private void buildMethodConstraints(MethodBeanDescriptorImpl beanDesc)
           throws InvocationTargetException, IllegalAccessException {
-        beanDesc.setMethodConstraints(new HashMap());
+        beanDesc.setMethodConstraints(new HashMap<Method, MethodDescriptor>());
 
         for (Method method : beanDesc.getMetaBean().getBeanClass().getDeclaredMethods()) {
             if (!factoryContext.getFactory().getAnnotationIgnores()
@@ -95,14 +95,13 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 for (Annotation anno : method.getAnnotations()) {
                     processAnnotation(anno, methodDesc, returnAccess, validations);
                 }
-                methodDesc.getConstraintDescriptors().addAll(
-                      (List)validations.getValidations());
+                methodDesc.getConstraintDescriptors().addAll(validations.getValidations());
 
                 // parameter validations
                 Annotation[][] paramsAnnos = method.getParameterAnnotations();
                 int idx = 0;
                 for (Annotation[] paramAnnos : paramsAnnos) {
-                	ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
+                    ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
                     processAnnotations(methodDesc, paramAnnos, access, idx);
                     idx++;
                 }
@@ -150,6 +149,5 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
             }
         }
     }
-    
-    
+
 }

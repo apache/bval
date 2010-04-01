@@ -17,16 +17,16 @@
 package org.apache.bval.jsr303.extensions;
 
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.Valid;
-
 import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.AppendValidation;
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Validation;
+import org.apache.bval.util.AccessStrategy;
 
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.Valid;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -67,7 +67,8 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 Annotation[][] paramsAnnos = cons.getParameterAnnotations();
                 int idx = 0;
                 for (Annotation[] paramAnnos : paramsAnnos) {
-                    processAnnotations(consDesc, paramAnnos, idx);
+                	ParameterAccess access = new ParameterAccess(cons.getParameterTypes()[idx], idx);
+                    processAnnotations(consDesc, paramAnnos, access, idx);
                     idx++;
                 }
             }
@@ -89,8 +90,9 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
 
                 // return value validations
                 AppendValidationToList validations = new AppendValidationToList();
+                ReturnAccess returnAccess = new ReturnAccess(method.getReturnType());
                 for (Annotation anno : method.getAnnotations()) {
-                    processAnnotation(anno, methodDesc, validations);
+                    processAnnotation(anno, methodDesc, returnAccess, validations);
                 }
                 methodDesc.getConstraintDescriptors().addAll(
                       (List)validations.getValidations());
@@ -99,7 +101,8 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 Annotation[][] paramsAnnos = method.getParameterAnnotations();
                 int idx = 0;
                 for (Annotation[] paramAnnos : paramsAnnos) {
-                    processAnnotations(methodDesc, paramAnnos, idx);
+                	ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
+                    processAnnotations(methodDesc, paramAnnos, access, idx);
                     idx++;
                 }
             }
@@ -107,11 +110,11 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     }
 
     private void processAnnotations(ProcedureDescriptor methodDesc, Annotation[] paramAnnos,
-                                    int idx)
+                                    AccessStrategy access, int idx)
           throws InvocationTargetException, IllegalAccessException {
         AppendValidationToList validations = new AppendValidationToList();
         for (Annotation anno : paramAnnos) {
-            processAnnotation(anno, methodDesc, validations);
+            processAnnotation(anno, methodDesc, access, validations);
         }
         ParameterDescriptorImpl paramDesc = new ParameterDescriptorImpl(
               methodDesc.getMetaBean(), validations.getValidations().toArray(
@@ -121,7 +124,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     }
 
     private void processAnnotation(Annotation annotation, ProcedureDescriptor desc,
-                                   AppendValidation validations)
+                                   AccessStrategy access, AppendValidation validations)
           throws InvocationTargetException, IllegalAccessException {
 
         if (annotation instanceof Valid) {
@@ -132,7 +135,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
                 validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
                 applyConstraint(annotation, validatorClasses, null,
-                      desc.getMetaBean().getBeanClass(), null, validations);
+                      desc.getMetaBean().getBeanClass(), access, validations);
             } else {
                 /**
                  * Multi-valued constraints
@@ -140,10 +143,12 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 Object result = SecureActions.getAnnotationValue(annotation, ANNOTATION_VALUE);
                 if (result != null && result instanceof Annotation[]) {
                     for (Annotation each : (Annotation[]) result) {
-                        processAnnotation(each, desc, validations); // recursion
+                        processAnnotation(each, desc, access, validations); // recursion
                     }
                 }
             }
         }
     }
+    
+    
 }

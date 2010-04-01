@@ -19,14 +19,10 @@ package org.apache.bval.jsr303.extensions;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import javax.validation.Validator;
-
 import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.ClassValidator;
-import org.apache.bval.jsr303.extensions.MethodValidator;
-import org.apache.bval.jsr303.extensions.MethodValidatorImpl;
 
+import javax.validation.Validator;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -85,6 +81,40 @@ public class MethodValidatorImplTest extends TestCase {
         results = mv.validateParameter(service.getClass(), method,  "ok", 0);
         assertEquals(0, results.size());
     }
+    
+    public void testValidateMoreMethodParameters() throws NoSuchMethodException {
+    	
+    	ExampleMethodService service = new ExampleMethodService();
+    	MethodValidator mv = getValidator().unwrap(MethodValidator.class);
+    	Method saveMethod = service.getClass().getMethod("save", new Class[]{String.class});
+    	
+    	String[] saveParams = new String[1];
+    	saveParams[0] = "abcd";
+    	
+    	Set results = mv.validateParameters(service.getClass(), saveMethod, saveParams);
+    	assertTrue(results.isEmpty());
+    	
+    	saveParams[0] = "zzzz";
+    	results = mv.validateParameters(service.getClass(), saveMethod, saveParams);
+    	assertEquals(1, results.size());
+    	
+    	Method echoMethod = service.getClass().getMethod("echo", new Class[]{String.class});
+    	
+    	String[] echoParams = new String[1];
+    	echoParams[0] = "hello";
+    	
+    	results = mv.validateParameters(service.getClass(), echoMethod, echoParams);
+    	assertTrue(results.isEmpty());
+    	
+    	echoParams[0] = "h";
+    	results = mv.validateParameters(service.getClass(), echoMethod, echoParams);
+    	assertEquals(1, results.size());
+    	
+    	echoParams[0] = null;
+    	results = mv.validateParameters(service.getClass(), echoMethod, echoParams);
+    	assertEquals(1, results.size());
+    	
+    }
 
     public void testValidateConstructorParameters() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
@@ -123,6 +153,27 @@ public class MethodValidatorImplTest extends TestCase {
 
         results = mv.validateReturnedValue(service.getClass(), method, "");
         assertEquals(1, results.size());
+    }
+    
+    public void testValidateMoreReturnValue() throws NoSuchMethodException {
+    	
+    	ExampleMethodService service = new ExampleMethodService();
+    	MethodValidator mv = getValidator().unwrap(MethodValidator.class);
+    	Method echoMethod = service.getClass().getMethod("echo", new Class[]{String.class});
+    	
+    	String returnedValue = "a too long string";
+    	Set results = mv.validateReturnedValue(service.getClass(), echoMethod, returnedValue);
+    	assertEquals(1, results.size());
+    	
+    	returnedValue = null;
+    	results = mv.validateReturnedValue(service.getClass(), echoMethod, returnedValue);
+    	assertEquals(1, results.size());
+    	
+    	returnedValue = "valid";
+    	results = mv.validateReturnedValue(service.getClass(), echoMethod, returnedValue);
+    	assertTrue(results.isEmpty());
+    	
+    	
     }
 
     private Validator getValidator() {

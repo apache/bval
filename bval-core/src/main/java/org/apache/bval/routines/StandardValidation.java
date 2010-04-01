@@ -97,7 +97,7 @@ public class StandardValidation implements Validation {
     }
 
     protected <T extends ValidationListener> void validateMinValue(ValidationContext<T> context) {
-        Comparable minValue = (Comparable) context.getMetaProperty().getFeature(MIN_VALUE);
+        Comparable<Object> minValue = (Comparable<Object>) context.getMetaProperty().getFeature(MIN_VALUE);
         if (minValue == null || context.getPropertyValue() == null) return;
         if (compare(context, minValue, context.getPropertyValue()) > 0) {
             context.getListener().addError(MIN_VALUE, context);
@@ -105,14 +105,14 @@ public class StandardValidation implements Validation {
     }
 
     protected <T extends ValidationListener> void validateMaxValue(ValidationContext<T> context) {
-        Comparable maxValue = (Comparable) context.getMetaProperty().getFeature(MAX_VALUE);
+        Comparable<Object> maxValue = (Comparable<Object>) context.getMetaProperty().getFeature(MAX_VALUE);
         if (maxValue == null || context.getPropertyValue() == null) return;
         if (compare(context, maxValue, context.getPropertyValue()) < 0) {
             context.getListener().addError(MAX_VALUE, context);
         }
     }
 
-    private <T extends ValidationListener> int compare(ValidationContext<T> context, Comparable constraintValue,
+    private <T extends ValidationListener> int compare(ValidationContext<T> context, Comparable<Object> constraintValue,
                         Object currentValue) {
         int r;
         if (constraintValue.getClass().isAssignableFrom(currentValue.getClass())) {
@@ -137,8 +137,8 @@ public class StandardValidation implements Validation {
         int length = 0;
         if (value instanceof String) {
             length = ((String) value).length();
-        } else if (value instanceof Collection) {
-            length = ((Collection) value).size();
+        } else if (value instanceof Collection<?>) {
+            length = ((Collection<?>) value).size();
         }
         if (length > maxLength) {
             context.getListener().addError(MAX_LENGTH, context);
@@ -155,8 +155,8 @@ public class StandardValidation implements Validation {
         int length = 0;
         if (value instanceof String) {
             length = ((String) value).length();
-        } else if (value instanceof Collection) {
-            length = ((Collection) value).size();
+        } else if (value instanceof Collection<?>) {
+            length = ((Collection<?>) value).size();
         }
         if (length < maxLength) {
             context.getListener().addError(MIN_LENGTH, context);

@@ -18,6 +18,7 @@ package org.apache.bval.routines;
 
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 
 /**
  * Description: DO NOTHING VALIDATION (can be used to turn off standard validation)<br/>
@@ -26,7 +27,7 @@ import org.apache.bval.model.ValidationContext;
  */
 public class NOPValidation implements Validation {
 
-    public void validate(ValidationContext context) {
+    public <T extends ValidationListener> void validate(ValidationContext<T> context) {
         // do nothing
     }
 }

@@ -26,5 +26,5 @@ public interface Validation {
      *
      * @param context - to access the property, value, constraints
      */
-    void validate(ValidationContext context);
+    <T extends ValidationListener> void validate(ValidationContext<T> context);
 }

@@ -19,6 +19,7 @@ package org.apache.bval.routines;
 
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +50,7 @@ public class EMailValidation implements Validation {
 
     private java.util.regex.Pattern pattern = DEFAULT_PATTERN;
 
-    public void validate(ValidationContext context) {
+    public <T extends ValidationListener> void validate(ValidationContext<T> context) {
         if (context.getPropertyValue() == null) return;
         if (!isValid(context.getPropertyValue(), pattern)) {
             context.getListener().addError(Reasons.EMAIL_ADDRESS, context);

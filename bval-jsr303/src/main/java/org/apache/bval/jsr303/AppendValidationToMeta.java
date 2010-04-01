@@ -16,6 +16,8 @@
  */
 package org.apache.bval.jsr303;
 
+import java.lang.annotation.Annotation;
+
 import org.apache.bval.model.FeaturesCapable;
 
 /**
@@ -28,7 +30,7 @@ public class AppendValidationToMeta implements AppendValidation {
         this.feature = meta;
     }
 
-    public void append(ConstraintValidation validation) {
+    public <T extends Annotation> void append(ConstraintValidation<T> validation) {
         feature.addValidation(validation);
     }
 }

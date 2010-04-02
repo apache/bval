@@ -14,32 +14,32 @@ import java.lang.reflect.Type;
  */
 public class ParameterAccess extends AccessStrategy {
 
-	private Type paramType;
-	private int paramIdx;
+    private Type paramType;
+    private int paramIdx;
 
-	public ParameterAccess(Type paramType, int paramIdx ) {
-		this.paramType = paramType;
-		this.paramIdx = paramIdx;
-	}
+    public ParameterAccess(Type paramType, int paramIdx ) {
+        this.paramType = paramType;
+        this.paramIdx = paramIdx;
+    }
 
-	@Override
-	public Object get(Object instance) {
-		throw new NotImplementedException("Obtaining a parameter value not yet implemented");
-	}
+    @Override
+    public Object get(Object instance) {
+        throw new NotImplementedException("Obtaining a parameter value not yet implemented");
+    }
 
-	@Override
-	public ElementType getElementType() {
-		return ElementType.PARAMETER;
-	}
+    @Override
+    public ElementType getElementType() {
+        return ElementType.PARAMETER;
+    }
 
-	@Override
-	public Type getJavaType() {
-		return this.paramType;
-	}
+    @Override
+    public Type getJavaType() {
+        return this.paramType;
+    }
 
-	@Override
-	public String getPropertyName() {
-		return "" + paramIdx;
-	}
+    @Override
+    public String getPropertyName() {
+        return "" + paramIdx;
+    }
 
 }

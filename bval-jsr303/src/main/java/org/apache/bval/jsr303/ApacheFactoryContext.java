@@ -104,7 +104,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     private MetaBeanManager buildMetaBeanManager() {
         // this is relevant: xml before annotations
         // (because ignore-annotations settings in xml)
-        List<MetaBeanFactory> builders = new ArrayList(3);
+        List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(3);
         if (Boolean.parseBoolean(factory.getProperties().get(
               ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
             builders.add(new IntrospectorMetaBeanFactory());

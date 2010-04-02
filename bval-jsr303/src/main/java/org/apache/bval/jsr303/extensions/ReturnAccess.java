@@ -13,30 +13,30 @@ import java.lang.reflect.Type;
  */
 public class ReturnAccess extends AccessStrategy {
 
-	private Type returnType;
+    private Type returnType;
 
-	public ReturnAccess(Type returnType) {
-		this.returnType = returnType;
-	}
+    public ReturnAccess(Type returnType) {
+        this.returnType = returnType;
+    }
 
-	@Override
-	public Object get(Object instance) {
-		throw new NotImplementedException("Obtaining a method return value not yet implemented");
-	}
+    @Override
+    public Object get(Object instance) {
+        throw new NotImplementedException("Obtaining a method return value not yet implemented");
+    }
 
-	@Override
-	public ElementType getElementType() {
-		return ElementType.METHOD;
-	}
+    @Override
+    public ElementType getElementType() {
+        return ElementType.METHOD;
+    }
 
-	@Override
-	public Type getJavaType() {
-		return this.returnType;
-	}
+    @Override
+    public Type getJavaType() {
+        return this.returnType;
+    }
 
-	@Override
-	public String getPropertyName() {
-		return "Return value";
-	}
+    @Override
+    public String getPropertyName() {
+        return "Return value";
+    }
 
 }

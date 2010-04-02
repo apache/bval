@@ -75,13 +75,13 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         try {
             final Class<?> beanClass = metabean.getBeanClass();
             processGroupSequence(beanClass, metabean);
-            for (Class interfaceClass : beanClass.getInterfaces()) {
+            for (Class<?> interfaceClass : beanClass.getInterfaces()) {
                 processClass(interfaceClass, metabean);
             }
 
             // process class, superclasses and interfaces
-            List<Class> classSequence = new ArrayList<Class>();
-            Class theClass = beanClass;
+            List<Class<?>> classSequence = new ArrayList<Class<?>>();
+            Class<?> theClass = beanClass;
             while (theClass != null && theClass != Object.class) {
                 classSequence.add(theClass);
                 theClass = theClass.getSuperclass();
@@ -90,7 +90,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             // the child classes are processed last to have the chance to overwrite some declarations
             // of their superclasses and that they see what they inherit at the time of processing
             for (int i = classSequence.size() - 1; i >= 0; i--) {
-                Class eachClass = classSequence.get(i);
+                Class<?> eachClass = classSequence.get(i);
                 processClass(eachClass, metabean);
             }
         } catch (IllegalAccessException e) {
@@ -211,7 +211,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return metaProperty;
     }
 
-    private boolean processAnnotations(MetaProperty prop, Class owner,
+    private boolean processAnnotations(MetaProperty prop, Class<?> owner,
                                        AnnotatedElement element, AccessStrategy access,
                                        AppendValidation appender)
           throws IllegalAccessException, InvocationTargetException {
@@ -223,7 +223,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return changed;
     }
 
-    private boolean processAnnotation(Annotation annotation, MetaProperty prop, Class owner,
+    private boolean processAnnotation(Annotation annotation, MetaProperty prop, Class<?> owner,
                                       AccessStrategy access, AppendValidation appender)
           throws IllegalAccessException, InvocationTargetException {
         if (annotation instanceof Valid) {
@@ -304,7 +304,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         GroupSequence annotation = beanClass.getAnnotation(GroupSequence.class);
         List<Group> groupSeq = metabean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
         if (groupSeq == null) {
-            groupSeq = new ArrayList(annotation == null ? 1 : annotation.value().length);
+            groupSeq = new ArrayList<Group>(annotation == null ? 1 : annotation.value().length);
             metabean.putFeature(Jsr303Features.Bean.GROUP_SEQUENCE, groupSeq);
         }
         Class<?>[] groupClasses = factoryContext.getFactory().getDefaultSequence(beanClass);
@@ -345,7 +345,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
      */
     protected boolean applyConstraint(Annotation annotation,
                                       Class<? extends ConstraintValidator<?, ?>>[] constraintClasses,
-                                      MetaProperty prop, Class owner, AccessStrategy access,
+                                      MetaProperty prop, Class<?> owner, AccessStrategy access,
                                       AppendValidation appender)
           throws IllegalAccessException, InvocationTargetException {
 
@@ -363,7 +363,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
              */
             Map<Type, Class<? extends ConstraintValidator<?, ?>>> validatorTypes =
                   TypeUtils.getValidatorsTypes(constraintClasses);
-            final List<Type> assignableTypes = new ArrayList(constraintClasses.length);
+            final List<Type> assignableTypes = new ArrayList<Type>(constraintClasses.length);
             fillAssignableTypes(type, validatorTypes.keySet(), assignableTypes);
             reduceAssignableTypes(assignableTypes);
             checkOneType(assignableTypes, type, owner, annotation, access);
@@ -386,7 +386,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         }
     }
 
-    private void checkOneType(List<Type> types, Type targetType, Class owner, Annotation anno,
+    private void checkOneType(List<Type> types, Type targetType, Class<?> owner, Annotation anno,
                               AccessStrategy access) {
 
         if (types.isEmpty()) {
@@ -416,29 +416,29 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     }
 
     /** implements spec chapter 3.5.3. ConstraintValidator resolution algorithm. */
-    private Type determineTargetedType(Class owner, AccessStrategy access) {
+    private Type determineTargetedType(Class<?> owner, AccessStrategy access) {
         // if the constraint declaration is hosted on a class or an interface,
         // the targeted type is the class or the interface.
         if (access == null) return owner;
         Type type = access.getJavaType();
         if (type == null) return Object.class;
-        if (type instanceof Class) type = ClassUtils.primitiveToWrapper((Class) type);
+        if (type instanceof Class<?>) type = ClassUtils.primitiveToWrapper((Class<?>) type);
         return type;
     }
 
     private String stringForType(Type clazz) {
-        if (clazz instanceof Class) {
-            if (((Class) clazz).isArray()) {
-                return ((Class) clazz).getComponentType().getName() + "[]";
+        if (clazz instanceof Class<?>) {
+            if (((Class<?>) clazz).isArray()) {
+                return ((Class<?>) clazz).getComponentType().getName() + "[]";
             } else {
-                return ((Class) clazz).getName();
+                return ((Class<?>) clazz).getName();
             }
         } else {
             return clazz.toString();
         }
     }
 
-    private String stringForLocation(Class owner, AccessStrategy access) {
+    private String stringForLocation(Class<?> owner, AccessStrategy access) {
         if (access != null) {
             return access.toString();
         } else {

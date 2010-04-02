@@ -73,9 +73,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
   public ApacheValidatorFactory() {
         properties = new HashMap<String, String>();
-        defaultSequences = new HashMap();
-        validAccesses = new HashMap();
-        constraintMap = new HashMap();
+        defaultSequences = new HashMap<Class<?>, Class<?>[]>();
+        validAccesses = new HashMap<Class<?>, List<AccessStrategy>>();
+        constraintMap = new HashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
     }
 
     public void configure(ConfigurationState configuration) {
@@ -109,7 +109,6 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         return new ApacheFactoryContext(this);
     }
 
-    @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public synchronized ApacheValidatorFactory clone() {
         try {
@@ -199,7 +198,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         if (slot != null) {
             slot.add(accessStategy);
         } else {
-            List<AccessStrategy> tmpList = new ArrayList();
+            List<AccessStrategy> tmpList = new ArrayList<AccessStrategy>();
             tmpList.add(accessStategy);
             validAccesses.put(beanClass, tmpList);
         }
@@ -214,7 +213,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         List<MetaConstraint<?,? extends Annotation>> slot = constraintMap.get(beanClass);
         if (slot != null) {
             //noinspection RedundantCast
-            return (List)slot;
+            return (List) slot;
         } else {
             return Collections.EMPTY_LIST;
         }

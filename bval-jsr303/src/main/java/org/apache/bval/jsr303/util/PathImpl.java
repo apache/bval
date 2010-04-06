@@ -106,7 +106,12 @@ public class PathImpl implements Path, Serializable {
     }
 
     public void addNode(Node node) {
-        nodeList.add(node);
+    	if ( isRootPath() && nodeList.get(0).getIndex() == null ) {
+    		nodeList.set(0, node);
+    	}
+    	else {
+    		nodeList.add(node);
+    	}
     }
 
     public Node removeLeafNode() {

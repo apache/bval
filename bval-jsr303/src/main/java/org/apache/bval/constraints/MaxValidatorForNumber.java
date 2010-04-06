@@ -44,7 +44,7 @@ public class MaxValidatorForNumber implements ConstraintValidator<Max, Number> {
         } else if (value instanceof BigInteger) {
             return ((BigInteger) value).compareTo(BigInteger.valueOf(max)) != 1;
         } else {
-            return value.doubleValue() <= max;
+            return value.longValue() <= max;
         }
     }
 }

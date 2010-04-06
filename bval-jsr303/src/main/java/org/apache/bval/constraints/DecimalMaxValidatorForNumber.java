@@ -49,5 +49,5 @@ public class DecimalMaxValidatorForNumber
         } else {
             return (new BigDecimal(value.doubleValue()).compareTo(maxValue)) != 1;
         }
-    }
+    }           
 }

@@ -43,7 +43,7 @@ public class MinValidatorForNumber implements ConstraintValidator<Min, Number> {
         } else if (value instanceof BigInteger) {
             return ((BigInteger) value).compareTo(BigInteger.valueOf(minValue)) != -1;
         } else {
-            return value.doubleValue() >= minValue;
+            return value.longValue() >= minValue;
         }
 
     }

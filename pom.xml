@@ -464,6 +464,7 @@
     <modules>
         <module>bval-core</module>
         <module>bval-jsr303</module>
+        <!-- <module>bval-tck</module> -->
     </modules>
 
     <profiles>

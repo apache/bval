@@ -34,7 +34,7 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache BeanValidation :: Parent POM</name>
     <packaging>pom</packaging>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1-incubating-SNAPSHOT</version>
 
     <description>Apache BeanValidation parent pom</description>
 

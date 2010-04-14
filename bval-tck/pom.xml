@@ -290,16 +290,16 @@
     </profiles>
 
     <repositories>
-		<repository>
-			<id>jboss</id>
-			<url>http://repository.jboss.com/maven2</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
+        <repository>
+            <id>jboss</id>
+            <url>http://repository.jboss.com/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
     </repositories>
 
 </project>

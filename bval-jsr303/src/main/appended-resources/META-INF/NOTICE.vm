@@ -1,13 +1,3 @@
-
-Apache Incubator - Bean Validation project
-Copyright 2010 The Apache Software Foundation.
-
-This product includes software developed by
-The Apache Software Foundation (http://www.apache.org/).
-
-Apache and the Apache feather logo are trademarks of The Apache Software Foundation.
-
-
 The Bean Validation JSR-303 module (bval-jsr303) includes the Bean Validation
 schemas:
     validation-configuration-1.0.xsd

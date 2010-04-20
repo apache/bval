@@ -211,7 +211,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
                     resolvedParameterValue = variable.toString();
                 }
             } else {
-                resolvedParameterValue = message;
+                resolvedParameterValue = parameter;
             }
             matcher.appendReplacement(sb, resolvedParameterValue);
         }

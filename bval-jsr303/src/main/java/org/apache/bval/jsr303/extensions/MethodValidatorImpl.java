@@ -130,7 +130,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         MethodDescriptorImpl methodDescriptor =
               (MethodDescriptorImpl) beanDesc.getConstraintsForMethod(method);
         final GroupValidationContext<ConstraintValidationListener<Object>> context =
-              createContext(methodDescriptor.getMetaBean(), returnedValue, groupArray);
+              createContext(methodDescriptor.getMetaBean(), returnedValue, null, groupArray);
         validateReturnedValueInContext(context, methodDescriptor);
         ConstraintValidationListener result = context.getListener();
         return result.getConstaintViolations();
@@ -144,7 +144,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         if (parameters.length > 0) {
             try {
                 GroupValidationContext<ConstraintValidationListener<Object[]>> context =
-                      createContext(metaBean, null, groupArray);
+                      createContext(metaBean, null, null, groupArray);
                 for (int i = 0; i < parameters.length; i++) {
                     ParameterDescriptorImpl paramDesc =
                           (ParameterDescriptorImpl) paramDescriptors.get(i);
@@ -165,7 +165,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
           ParameterDescriptorImpl paramDesc, Object parameter, Class<?>... groupArray) {
         try {
             final GroupValidationContext<ConstraintValidationListener<Object>> context =
-                  createContext(paramDesc.getMetaBean(), parameter, groupArray);
+                  createContext(paramDesc.getMetaBean(), parameter, null, groupArray);
             final ConstraintValidationListener result = context.getListener();
             validateParameterInContext(context, paramDesc);
             return result.getConstaintViolations();

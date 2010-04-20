@@ -92,7 +92,7 @@ public class Jsr303Test extends TestCase {
         try {
             validator.validateValue(Book.class, "unknownProperty", 4);
             fail("unknownProperty not detected");
-        } catch (ValidationException ex) {
+        } catch (IllegalArgumentException ex) {
             // OK
             assertEquals(
                   "unknown property 'unknownProperty' in org.apache.bval.jsr303.example.Book",

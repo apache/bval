@@ -65,10 +65,12 @@ public class ClassValidator extends BeanValidator implements Validator {
      */
     public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groupArray) {
         if (object == null) throw new IllegalArgumentException("cannot validate null");
+        checkGroups(groupArray);
+        
         try {
             final GroupValidationContext<ConstraintValidationListener<T>> context =
                   createContext(factoryContext.getMetaBeanFinder()
-                        .findForClass(object.getClass()), object, groupArray);
+                        .findForClass(object.getClass()), object, (Class<T>)object.getClass(), groupArray);
             final ConstraintValidationListener result = context.getListener();
             final Groups groups = context.getGroups();
             // 1. process groups
@@ -134,7 +136,7 @@ public class ClassValidator extends BeanValidator implements Validator {
 
     protected ValidationException unrecoverableValidationError(RuntimeException ex,
                                                                Object object) {
-        if (ex instanceof ValidationException) {
+        if (ex instanceof ValidationException || ex instanceof IllegalArgumentException) {
             throw ex; // do not wrap specific ValidationExceptions (or instances from subclasses)
         } else {
             throw new ValidationException("error during validation of " + object, ex);
@@ -152,11 +154,15 @@ public class ClassValidator extends BeanValidator implements Validator {
     public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName,
                                                             Class<?>... groups) {
         if (object == null) throw new IllegalArgumentException("cannot validate null");
+        
+        checkPropertyName(propertyName);
+        checkGroups(groups);
+        
         try {
             MetaBean metaBean =
                   factoryContext.getMetaBeanFinder().findForClass(object.getClass());
             GroupValidationContext<ConstraintValidationListener<T>> context =
-                  createContext(metaBean, object, groups);
+                  createContext(metaBean, object, (Class<T>)object.getClass(), groups);
             ConstraintValidationListener result = context.getListener();
             NestedMetaProperty nestedProp = getNestedProperty(metaBean, object, propertyName);
             context.setMetaProperty(nestedProp.getMetaProperty());
@@ -231,10 +237,15 @@ public class ClassValidator extends BeanValidator implements Validator {
     public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType,
                                                          String propertyName, Object value,
                                                          Class<?>... groups) {
+        
+        checkBeanType(beanType);
+        checkPropertyName(propertyName);
+        checkGroups(groups);
+        
         try {
             MetaBean metaBean = factoryContext.getMetaBeanFinder().findForClass(beanType);
             GroupValidationContext<ConstraintValidationListener<T>> context =
-                  createContext(metaBean, null, groups);
+                  createContext(metaBean, null, beanType, groups);
             ConstraintValidationListener result = context.getListener();
             context.setMetaProperty(
                   getNestedProperty(metaBean, null, propertyName).getMetaProperty());
@@ -265,8 +276,8 @@ public class ClassValidator extends BeanValidator implements Validator {
     }
 
     protected <T> GroupValidationContext<ConstraintValidationListener<T>> createContext(
-          MetaBean metaBean, T object, Class<?>[] groups) {
-        ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object);
+          MetaBean metaBean, T object, Class<T> objectClass, Class<?>[] groups) {
+        ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object, objectClass);
         GroupValidationContextImpl<ConstraintValidationListener<T>> context =
               new GroupValidationContextImpl(listener,
                     this.factoryContext.getMessageInterpolator(),
@@ -332,4 +343,42 @@ public class ClassValidator extends BeanValidator implements Validator {
         }
     }
 
+    /**
+     * Checks that beanType is valid according to spec Section 4.1.1 i. Throws
+     * an {@link IllegalArgumentException} if it is not.
+     * 
+     * @param beanType
+     *            Bean type to check.
+     */
+    private void checkBeanType(Class<?> beanType) {
+        if (beanType == null) {
+            throw new IllegalArgumentException("Bean type cannot be null.");
+        }
+    }
+
+    /**
+     * Checks that the property name is valid according to spec Section 4.1.1 i.
+     * Throws an {@link IllegalArgumentException} if it is not.
+     * 
+     * @param propertyName
+     *            Property name to check.
+     */
+    private void checkPropertyName(String propertyName) {
+        if (propertyName == null || propertyName.isEmpty() ) {
+            throw new IllegalArgumentException("Property path cannot be null or empty.");
+        }
+    }
+
+    /**
+     * Checks that the groups array is valid according to spec Section 4.1.1 i.
+     * Throws an {@link IllegalArgumentException} if it is not.
+     * 
+     * @param groups
+     *            The groups to check.
+     */
+    private void checkGroups(Class<?>[] groups) {
+        if ( groups == null ) {
+            throw new IllegalArgumentException("Groups cannot be null.");
+        }
+    }
 }

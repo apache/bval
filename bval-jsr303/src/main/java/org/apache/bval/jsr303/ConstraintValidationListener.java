@@ -35,9 +35,11 @@ import java.util.Set;
 public final class ConstraintValidationListener<T> implements ValidationListener {
     private final Set<ConstraintViolation<T>> constaintViolations = new HashSet();
     private final T rootBean;
+    private final Class<T> rootBeanType;
 
-    public ConstraintValidationListener(T aRootBean) {
+    public ConstraintValidationListener(T aRootBean, Class<T> rootBeanType) {
         this.rootBean = aRootBean;
+        this.rootBeanType = rootBeanType;
     }
 
     @SuppressWarnings({"ManualArrayToCollectionCopy"})
@@ -81,7 +83,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
             constraint = null;
         }
         ConstraintViolationImpl<T> ic = new ConstraintViolationImpl<T>(messageTemplate,
-              message, rootBean, context.getBean(), propPath, value, constraint);
+              message, rootBean, context.getBean(), propPath, value, constraint, rootBeanType);
         constaintViolations.add(ic);
     }
 
@@ -95,5 +97,9 @@ public final class ConstraintValidationListener<T> implements ValidationListener
 
     public T getRootBean() {
         return rootBean;
+    }
+    
+    public Class<T> getRootBeanType() {
+        return rootBeanType;
     }
 }

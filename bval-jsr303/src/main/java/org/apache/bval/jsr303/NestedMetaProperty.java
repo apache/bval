@@ -61,7 +61,7 @@ final class NestedMetaProperty {
                 } else if (!".".equals(token)) { // it is a property name
                     MetaProperty mp = getMetaBean().getProperty(token);
                     if (mp == null) {
-                        throw new ValidationException(
+                        throw new IllegalArgumentException(
                                 "unknown property '" + token + "' in " + getMetaBean().getId());
                     }
                     if (getValue() != null) {
@@ -73,6 +73,8 @@ final class NestedMetaProperty {
                 }
             }
         } catch (ValidationException ex) {
+            throw ex; // route exception
+        } catch (IllegalArgumentException ex) {
             throw ex; // route exception
         } catch (Exception ex) { // wrap exception
             throw new ValidationException(

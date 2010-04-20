@@ -123,7 +123,7 @@ public class ConstraintValidation<T extends Annotation>
             ConstraintValidationListener oldListener =
                   ((ConstraintValidationListener) gctx.getListener());
             ConstraintValidationListener listener =
-                  new ConstraintValidationListener(oldListener.getRootBean());
+                  new ConstraintValidationListener(oldListener.getRootBean(), oldListener.getRootBeanType());
             gctx.setListener(listener);
             try {
                 for (ConstraintValidation composed : getComposingValidations()) {

@@ -29,11 +29,13 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T> {
     private final String message;
     /** root bean validation was invoked on. */
     private final T rootBean;
+    private final Class<T> rootBeanClass;
     /** last bean validated. */
     private final Object leafBean;
     private final Object value;
     private final Path propertyPath;
     private final ConstraintDescriptor constraintDescriptor;
+    
 
     /**
      * @param messageTemplate - message reason (raw message) 
@@ -46,10 +48,11 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T> {
      */
     public ConstraintViolationImpl(String messageTemplate, String message, T rootBean, Object leafBean,
                                    Path propertyPath, Object value,
-                                   ConstraintDescriptor constraintDescriptor) {
+                                   ConstraintDescriptor constraintDescriptor, Class<T> rootBeanClass) {
         this.messageTemplate = messageTemplate;
         this.message = message;
         this.rootBean = rootBean;
+        this.rootBeanClass = rootBeanClass;
         this.propertyPath = propertyPath;
         this.leafBean = leafBean;
         this.value = value;
@@ -73,8 +76,8 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T> {
         return rootBean;
     }
 
-    public Class getRootBeanClass() {
-        return rootBean == null ? null : rootBean.getClass();
+    public Class<T> getRootBeanClass() {
+        return rootBeanClass;
     }
 
     public Object getLeafBean() {

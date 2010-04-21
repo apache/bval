@@ -30,122 +30,131 @@ import java.util.Map;
  * field to access the value<br/>
  */
 public class PropertyAccess extends AccessStrategy {
-    private final Class<?> beanClass;
-    private final String propertyName;
-    private Field rememberField;
+  private final Class<?> beanClass;
+  private final String propertyName;
+  private Field rememberField;
 
-    public PropertyAccess(Class<?> clazz, String propertyName) {
-        this.beanClass = clazz;
-        this.propertyName = propertyName;
+  public PropertyAccess(Class<?> clazz, String propertyName) {
+    this.beanClass = clazz;
+    this.propertyName = propertyName;
+  }
+
+  public ElementType getElementType() {
+    return ElementType.METHOD;
+  }
+
+  private static Object getPublicProperty(Object bean, String property) throws
+      InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    if (bean instanceof Map<?, ?>) {
+      return ((Map<?, ?>) bean).get(property);
+    } else { // supports DynaBean and standard Objects
+      return PropertyUtils.getSimpleProperty(bean, property);
     }
+  }
 
-    public ElementType getElementType() {
-        return ElementType.METHOD;
+  public static Object getProperty(Object bean, String propertyName) throws
+      InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    return new PropertyAccess(bean.getClass(), propertyName).get(bean);
+  }
+
+  public String toString() {
+    return "Property{" + beanClass.getName() + '.' + propertyName + '}';
+  }
+
+  public Type getJavaType() {
+    /*if(Map.class.isAssignableFrom(beanClass)) {
+        return beanClass.
+    }*/
+    if (rememberField != null) {  // use cached field of previous access
+      return rememberField.getGenericType();
     }
-
-    public static Object getProperty(Object bean, String property) throws
-          InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        if (bean instanceof Map<?, ?>) {
-            return ((Map<?, ?>) bean).get(property);
-        } else { // supports DynaBean and standard Objects
-            return PropertyUtils.getSimpleProperty(bean, property);
-        }
+    for (PropertyDescriptor each : PropertyUtils.getPropertyDescriptors(beanClass)) {
+      if (each.getName().equals(propertyName) && each.getReadMethod() != null) {
+        return each.getReadMethod().getGenericReturnType();
+      }
     }
-
-    public String toString() {
-        return "Property{" + beanClass.getName() + '.' + propertyName + '}';
-    }
-
-    public Type getJavaType() {
-        /*if(Map.class.isAssignableFrom(beanClass)) {
-            return beanClass. 
-        }*/
-        if (rememberField != null) {  // use cached field of previous access
-            return rememberField.getGenericType();
-        }
-        for (PropertyDescriptor each : PropertyUtils.getPropertyDescriptors(beanClass)) {
-            if (each.getName().equals(propertyName) && each.getReadMethod() != null) {
-                return each.getReadMethod().getGenericReturnType();
-            }
-        }
-        try { // try public field
-            return beanClass.getField(propertyName).getGenericType();
-        } catch (NoSuchFieldException ex2) {
-            // search for private/protected field up the hierarchy
-            Class<?> theClass = beanClass;
-            while (theClass != null) {
-                try {
-                    return theClass.getDeclaredField(propertyName).getGenericType();
-                } catch (NoSuchFieldException ex3) {
-                    // do nothing
-                }
-                theClass = theClass.getSuperclass();
-            }
-        }
-        return Object.class; // unknown type: allow any type?? 
-    }
-
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    public Object get(Object bean) {
+    try { // try public field
+      return beanClass.getField(propertyName).getGenericType();
+    } catch (NoSuchFieldException ex2) {
+      // search for private/protected field up the hierarchy
+      Class<?> theClass = beanClass;
+      while (theClass != null) {
         try {
-            if (rememberField != null) {  // cache field of previous access
-                return rememberField.get(bean);
-            }
-
-            try {   // try public method
-                return getProperty(bean, propertyName);
-            } catch (NoSuchMethodException ex) {
-                Object value;
-                try { // try public field
-                    Field aField = bean.getClass().getField(propertyName);
-                    value = aField.get(bean);
-                    rememberField = aField;
-                    return value;
-                } catch (NoSuchFieldException ex2) {
-                    // search for private/protected field up the hierarchy
-                    Class<?> theClass = bean.getClass();
-                    while (theClass != null) {
-                        try {
-                            Field aField = theClass
-                                  .getDeclaredField(propertyName);
-                            if (!aField.isAccessible()) {
-                                aField.setAccessible(true);
-                            }
-                            value = aField.get(bean);
-                            rememberField = aField;
-                            return value;
-                        } catch (NoSuchFieldException ex3) {
-                            // do nothing
-                        }
-                        theClass = theClass.getSuperclass();
-                    }
-                    throw new IllegalArgumentException(
-                          "cannot access field " + propertyName);
-                }
-            }
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("cannot access " + propertyName, e);
+          return theClass.getDeclaredField(propertyName).getGenericType();
+        } catch (NoSuchFieldException ex3) {
+          // do nothing
         }
+        theClass = theClass.getSuperclass();
+      }
     }
+    return Object.class; // unknown type: allow any type??
+  }
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  public String getPropertyName() {
+    return propertyName;
+  }
 
-        PropertyAccess that = (PropertyAccess) o;
+  public Object get(Object bean) {
+    try {
+      if (rememberField != null) {  // cache field of previous access
+        return rememberField.get(bean);
+      }
 
-        return beanClass.equals(that.beanClass) && propertyName.equals(that.propertyName);
+      try {   // try public method
+        return getPublicProperty(bean, propertyName);
+      } catch (NoSuchMethodException ex) {
+        return getFieldValue(bean);
+      }
+    } catch (IllegalArgumentException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IllegalArgumentException("cannot access " + propertyName, e);
     }
+  }
 
-    public int hashCode() {
-        int result;
-        result = beanClass.hashCode();
-        result = 31 * result + propertyName.hashCode();
-        return result;
+  private Object getFieldValue(Object bean) throws IllegalAccessException {
+    Object value;
+    try { // try public field
+      Field aField = bean.getClass().getField(propertyName);
+      value = aField.get(bean);
+      rememberField = aField;
+      return value;
+    } catch (NoSuchFieldException ex2) {
+      // search for private/protected field up the hierarchy
+      Class<?> theClass = bean.getClass();
+      while (theClass != null) {
+        try {
+          Field aField = theClass
+              .getDeclaredField(propertyName);
+          if (!aField.isAccessible()) {
+            aField.setAccessible(true);
+          }
+          value = aField.get(bean);
+          rememberField = aField;
+          return value;
+        } catch (NoSuchFieldException ex3) {
+          // do nothing
+        }
+        theClass = theClass.getSuperclass();
+      }
+      throw new IllegalArgumentException(
+          "cannot access field " + propertyName);
     }
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    PropertyAccess that = (PropertyAccess) o;
+
+    return beanClass.equals(that.beanClass) && propertyName.equals(that.propertyName);
+  }
+
+  public int hashCode() {
+    int result;
+    result = beanClass.hashCode();
+    result = 31 * result + propertyName.hashCode();
+    return result;
+  }
 }

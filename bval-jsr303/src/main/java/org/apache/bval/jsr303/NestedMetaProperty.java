@@ -65,8 +65,7 @@ final class NestedMetaProperty {
                                 "unknown property '" + token + "' in " + getMetaBean().getId());
                     }
                     if (getValue() != null) {
-                        setValue(
-                              PropertyAccess.getProperty(getValue(), token));
+                        setValue(PropertyAccess.getProperty(getValue(), token));
                     }
                     setMetaProperty(mp);
                     resolveMetaBean();

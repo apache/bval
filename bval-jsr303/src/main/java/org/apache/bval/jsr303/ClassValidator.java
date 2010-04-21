@@ -89,7 +89,7 @@ public class ClassValidator extends BeanValidator implements Validator {
                      */
                     if (!result.isEmpty()) break;
                 }
-//                if (!result.isEmpty()) break; // ?? TODO RSt - clarify!
+                if (!result.isEmpty()) break; 
             }
             return result.getConstaintViolations();
         } catch (RuntimeException ex) {
@@ -190,7 +190,7 @@ public class ClassValidator extends BeanValidator implements Validator {
                      */
                     if (!result.isEmpty()) break;
                 }
-//                if (!result.isEmpty()) break; // ?? TODO RSt - clarify!
+                if (!result.isEmpty()) break;
             }
             return result.getConstaintViolations();
         } catch (RuntimeException ex) {
@@ -267,7 +267,7 @@ public class ClassValidator extends BeanValidator implements Validator {
                      */
                     if (!result.isEmpty()) break;
                 }
-//                if (!result.isEmpty()) break; // ?? TODO RSt - clarify!
+                if (!result.isEmpty()) break;
             }
             return result.getConstaintViolations();
         } catch (RuntimeException ex) {

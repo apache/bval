@@ -39,10 +39,7 @@ import javax.validation.*;
 import javax.validation.groups.Default;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Description: process the class annotations for JSR303 constraint validations
@@ -75,17 +72,11 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         try {
             final Class<?> beanClass = metabean.getBeanClass();
             processGroupSequence(beanClass, metabean);
-            for (Class<?> interfaceClass : beanClass.getInterfaces()) {
-                processClass(interfaceClass, metabean);
-            }
 
             // process class, superclasses and interfaces
             List<Class<?>> classSequence = new ArrayList<Class<?>>();
-            Class<?> theClass = beanClass;
-            while (theClass != null && theClass != Object.class) {
-                classSequence.add(theClass);
-                theClass = theClass.getSuperclass();
-            }
+            fillFullClassHierarchyAsList(classSequence, beanClass);
+
             // start with superclasses and go down the hierarchy so that
             // the child classes are processed last to have the chance to overwrite some declarations
             // of their superclasses and that they see what they inherit at the time of processing
@@ -98,6 +89,39 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e.getTargetException());
         }
+    }
+    
+    /**
+     * Fill the list with the full class/interface hierarchy of the given class.
+     * List is ordered from the most to less specific.
+     * 
+     * @param allClasses
+     *            The current list of classes in the hierarchy.
+     * @param clazz
+     *            The current class, root of the hierarchy to traverse.
+     */
+    private void fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
+        
+        if ( clazz == null || clazz == Object.class ) {
+            return;
+        }
+        
+        if ( allClasses.contains(clazz) ) {
+            // No duplicates wanted, and if it is already in the list, then
+            // its superclasses/interfaces will also be
+            return;
+        }
+        
+        allClasses.add(clazz);
+
+        // Obtain the list of interfaces and superclass
+        List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
+        subClasses.add(0, clazz.getSuperclass());
+        
+        for ( Class<?> subClass : subClasses ) {
+            fillFullClassHierarchyAsList(allClasses, subClass);
+        }
+        
     }
 
     /**

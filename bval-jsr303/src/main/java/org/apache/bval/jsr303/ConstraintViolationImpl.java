@@ -23,9 +23,8 @@ import java.io.Serializable;
 import java.lang.annotation.ElementType;
 
 /**
- * Description: Describe a constraint validation defect<br/>
+ * Description: Describe a constraint validation defect.<br/>
  * From rootBean and propertyPath, it is possible to rebuild the context of the failure
- * TODO RSt - must be serializable (BVAL-13)
  */
 class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable {
     private final String messageTemplate;

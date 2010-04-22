@@ -76,6 +76,10 @@ public class ConstraintValidation<T extends Annotation>
         this.owner = owner;
         this.access = access;
         this.reportFromComposite = reportFromComposite;
+    }            
+
+    public ConstraintDescriptor<T> asSerializableDescriptor() {
+      return new ConstraintDescriptorImpl(this);
     }
 
     void setGroups(Set<Class<?>> groups) {
@@ -102,7 +106,7 @@ public class ConstraintValidation<T extends Annotation>
     }
 
     public void validate(GroupValidationContext context) {
-        context.setConstraintDescriptor(this);
+        context.setConstraintValidation(this);
         /**
          * execute unless the given validation constraint has already been processed
          * during this validation routine (as part of a previous group match)

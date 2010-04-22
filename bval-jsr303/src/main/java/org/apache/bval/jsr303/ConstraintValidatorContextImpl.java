@@ -19,16 +19,14 @@
 package org.apache.bval.jsr303;
 
 
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Path;
-import javax.validation.ValidationException;
-import javax.validation.metadata.ConstraintDescriptor;
-
 import org.apache.bval.jsr303.util.NodeBuilderDefinedContextImpl;
 import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.ValidationListener;
 
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.Path;
+import javax.validation.ValidationException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,10 +107,6 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
                   null));
         }
         return returnedErrorMessages;
-    }
-
-    public ConstraintDescriptor<?> getConstraintDescriptor() {
-        return constraintDescriptor;
     }
 
     public GroupValidationContext getValidationContext() {

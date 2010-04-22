@@ -65,4 +65,6 @@ public interface ValidationContext<T extends ValidationListener> {
      * used to create the propertyPath with [key] information for maps.
      */
     void setCurrentKey(Object key);
+    
+    AccessStrategy getAccess();
 }

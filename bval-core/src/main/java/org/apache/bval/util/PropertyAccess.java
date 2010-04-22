@@ -26,7 +26,8 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
- * Description: Undefined dynamic strategy. Uses PropertyUtils or tries to determine
+ * Description: Undefined dynamic strategy (FIELD or METHOD access) 
+ * Uses PropertyUtils or tries to determine
  * field to access the value<br/>
  */
 public class PropertyAccess extends AccessStrategy {
@@ -40,7 +41,7 @@ public class PropertyAccess extends AccessStrategy {
   }
 
   public ElementType getElementType() {
-    return ElementType.METHOD;
+    return (rememberField != null) ? ElementType.FIELD : ElementType.METHOD;
   }
 
   private static Object getPublicProperty(Object bean, String property) throws

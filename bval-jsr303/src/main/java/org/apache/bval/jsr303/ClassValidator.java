@@ -297,6 +297,9 @@ public class ClassValidator extends BeanValidator implements Validator {
      *                             constraints are invalid.
      */
     public BeanDescriptor getConstraintsForClass(Class<?> clazz) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Class cannot be null");
+        }
         try {
             MetaBean metaBean = factoryContext.getMetaBeanFinder().findForClass(clazz);
             BeanDescriptorImpl edesc =

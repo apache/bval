@@ -134,6 +134,9 @@ public class PathImpl implements Path, Serializable {
     }
 
     public boolean isSubPathOf(Path path) {
+        if ( ((PathImpl)path).isRootPath() ) {
+            return true;
+        }
         Iterator<Node> pathIter = path.iterator();
         Iterator<Node> thisIter = iterator();
         while (pathIter.hasNext()) {

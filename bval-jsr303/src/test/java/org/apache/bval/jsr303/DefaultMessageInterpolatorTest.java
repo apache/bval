@@ -25,6 +25,7 @@ import org.apache.bval.jsr303.example.PreferredGuest;
 
 import javax.validation.MessageInterpolator;
 import javax.validation.Validator;
+import javax.validation.constraints.Pattern;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.util.Locale;
 
@@ -91,6 +92,63 @@ public class DefaultMessageInterpolatorTest extends TestCase {
     msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
     Assert.assertEquals("may not be empty", msg);
   }
+
+    /**
+     * Checks that strings containing special characters are correctly
+     * substituted when interpolating.
+     */
+    public void testReplacementWithSpecialChars() {
+        
+        final Validator validator = getValidator();
+        MessageInterpolator.Context ctx;
+
+        // Try to interpolate an annotation attribute containing $
+        ctx = new MessageInterpolator.Context() {
+
+            public ConstraintDescriptor<?> getConstraintDescriptor() {
+                return (ConstraintDescriptor<?>) validator
+                        .getConstraintsForClass(Person.class)
+                        .getConstraintsForProperty("idNumber")
+                        .getConstraintDescriptors().toArray()[0];
+            }
+
+            public Object getValidatedValue() {
+                return "12345678";
+            }
+        };
+
+        String result = this.interpolator.interpolate("Id number should match {regexp}", ctx);
+        Assert.assertEquals("Incorrect message interpolation when $ is in an attribute", "Id number should match ....$", result);
+        
+        // Try to interpolate an annotation attribute containing \
+        ctx = new MessageInterpolator.Context() {
+
+            public ConstraintDescriptor<?> getConstraintDescriptor() {
+                return (ConstraintDescriptor<?>) validator
+                        .getConstraintsForClass(Person.class)
+                        .getConstraintsForProperty("otherId")
+                        .getConstraintDescriptors().toArray()[0];
+            }
+
+            public Object getValidatedValue() {
+                return "12345678";
+            }
+        };
+        
+        result = this.interpolator.interpolate("Other id should match {regexp}", ctx);
+        Assert.assertEquals("Incorrect message interpolation when \\ is in an attribute value", "Other id should match .\\n", result);
+        
+    }
+    
+    public static class Person {
+
+        @Pattern(message = "Id number should match {regexp}", regexp = "....$")
+        public String idNumber;
+
+        @Pattern(message = "Other id should match {regexp}", regexp = ".\\n")
+        public String otherId;
+
+    }
 
 
   private Validator getValidator() {

@@ -190,7 +190,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             String parameter = matcher.group(1);
             resolvedParameterValue = resolveParameter(parameter, bundle, locale, recurse);
 
-            matcher.appendReplacement(sb, resolvedParameterValue);
+            matcher.appendReplacement(sb, sanitizeForAppendReplacement(resolvedParameterValue));
         }
         matcher.appendTail(sb);
         return sb.toString();
@@ -213,7 +213,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             } else {
                 resolvedParameterValue = parameter;
             }
-            matcher.appendReplacement(sb, resolvedParameterValue);
+            matcher.appendReplacement(sb, sanitizeForAppendReplacement(resolvedParameterValue));
         }
         matcher.appendTail(sb);
         return sb.toString();
@@ -268,6 +268,18 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     public void setLocale(Locale locale) {
         defaultLocale = locale;
+    }
+    
+    /**
+     * Escapes the string to comply with
+     * {@link Matcher#appendReplacement(StringBuffer, String)} requirements.
+     * 
+     * @param src
+     *            The original string.
+     * @return The sanitized string.
+     */
+    private String sanitizeForAppendReplacement(String src) {
+        return src.replace("\\", "\\\\").replace("$", "\\$");
     }
 
 }

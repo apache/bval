@@ -217,6 +217,20 @@ public class Jsr303Test extends TestCase {
         Set<ConstraintViolation<SizeTestEntity>> vi = getValidator().validate(en);
         assertEquals(13, vi.size());
     }
+    
+    /**
+     * JSR-303 Section 5.1.c, IllegalArgumentException should be thrown
+     */
+    public void testGetConstraintsForNullClass() {
+        Validator validator = getValidator();
+        try {
+            validator.getConstraintsForClass(null);
+            Assert.fail("No exception thrown on Validator.getConstraintsForClass(null)");
+        } catch (IllegalArgumentException e) {
+            // Correct
+            return;
+        }
+    }
 
     private Validator getValidator() {
 //        return Validation.buildDefaultValidatorFactory().getValidator();

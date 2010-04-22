@@ -16,15 +16,11 @@
  */
 package org.apache.bval;
 
-import java.util.IdentityHashMap;
-
-import org.apache.bval.model.FeaturesCapable;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.ValidationContext;
-import org.apache.bval.model.ValidationListener;
+import org.apache.bval.model.*;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
+
+import java.util.IdentityHashMap;
 
 /**
  * Description: Context during validation to help the {@link org.apache.bval.model.Validation}
@@ -235,6 +231,10 @@ public class BeanValidationContext<T extends ValidationListener>
 
     public void setCurrentKey(Object key) {
         // do nothing
+    }
+    
+    public AccessStrategy getAccess() {
+        return this.access;
     }
 
 }

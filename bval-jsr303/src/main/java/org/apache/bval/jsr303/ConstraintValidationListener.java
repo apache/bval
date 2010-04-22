@@ -17,15 +17,15 @@
 package org.apache.bval.jsr303;
 
 
-import javax.validation.ConstraintViolation;
-import javax.validation.MessageInterpolator;
-import javax.validation.Path;
-import javax.validation.metadata.ConstraintDescriptor;
-
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.MessageInterpolator;
+import javax.validation.Path;
+import javax.validation.metadata.ConstraintDescriptor;
+import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -59,7 +59,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
                           ValidationContext context) {
         final Object value;
 
-        final ConstraintDescriptor constraint;
+        final ConstraintDescriptor descriptor;
         final String message;
         if (context instanceof GroupValidationContext) {
             GroupValidationContext gcontext = (GroupValidationContext) context;
@@ -72,18 +72,19 @@ public final class ConstraintValidationListener<T> implements ValidationListener
                 message =
                       gcontext.getMessageResolver().interpolate(messageTemplate, null);
             }
-            constraint = gcontext.getConstraintDescriptor();
+            descriptor = gcontext.getConstraintValidation().asSerializableDescriptor();
             if (propPath == null) propPath = gcontext.getPropertyPath();
         } else {
             if (context.getMetaProperty() == null) value = context.getBean();
-            else value = context.getPropertyValue();                        
+            else value = context.getPropertyValue();
             message = messageTemplate;
             if (propPath == null)
                 propPath = PathImpl.createPathFromString(context.getPropertyName());
-            constraint = null;
+            descriptor = null;
         }
+        ElementType elementType = (context.getAccess() != null) ? context.getAccess().getElementType() : null;
         ConstraintViolationImpl<T> ic = new ConstraintViolationImpl<T>(messageTemplate,
-              message, rootBean, context.getBean(), propPath, value, constraint, rootBeanType);
+              message, rootBean, context.getBean(), propPath, value, descriptor, rootBeanType, elementType);
         constaintViolations.add(ic);
     }
 
@@ -98,7 +99,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     public T getRootBean() {
         return rootBean;
     }
-    
+
     public Class<T> getRootBeanType() {
         return rootBeanType;
     }

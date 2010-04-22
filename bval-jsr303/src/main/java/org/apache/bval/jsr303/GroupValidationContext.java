@@ -17,16 +17,16 @@
 package org.apache.bval.jsr303;
 
 
-import javax.validation.ConstraintValidator;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
-
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.MessageInterpolator;
+import javax.validation.TraversableResolver;
 
 /**
  * Description: <br/>
@@ -44,9 +44,9 @@ public interface GroupValidationContext<T extends ValidationListener>
 
     MetaBean getRootMetaBean();
 
-    void setConstraintDescriptor(ConstraintValidation constraint);
+    void setConstraintValidation(ConstraintValidation constraint);
 
-    public ConstraintValidation getConstraintDescriptor();
+    public ConstraintValidation getConstraintValidation();
 
     public Object getValidatedValue();
 

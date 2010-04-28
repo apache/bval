@@ -26,11 +26,12 @@ import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
+import javax.validation.metadata.BeanDescriptor;
 import java.util.Locale;
 
 /**
- * Several checks to validate that the implementation of {@link Validator}
- * throws the correct exceptions as per the spec.
+ * Several checks to validate that the implementations of {@link Validator} and
+ * {@link BeanDescriptor} throw the correct exceptions as per the spec.
  * 
  * @author Carlos Vara
  */
@@ -195,6 +196,31 @@ public class ExceptionsContractTest extends TestCase {
             // Correct
         }
     }
+
+    /**
+     * Checks that an {@link IllegalArgumentException} is thrown when calling
+     * {@link BeanDescriptor#getConstraintsForProperty(String)} with an invalid
+     * property name.
+     */
+    public void testGetConstraintsForInvalidProperty() {
+        Validator validator = getValidator();
+        BeanDescriptor personDescriptor = validator.getConstraintsForClass(Person.class);
+        
+        try {
+            personDescriptor.getConstraintsForProperty(null);
+            fail("No exception thrown when calling getConstraintsForProperty with null property");
+        } catch (IllegalArgumentException e) {
+            // Correct
+        }
+        
+        try {
+            personDescriptor.getConstraintsForProperty("");
+            fail("No exception thrown when calling getConstraintsForProperty with empty property");
+        } catch (IllegalArgumentException e) {
+            // Correct
+        }
+    }
+    
 
     public static class ExceptionThrowingBean {
 

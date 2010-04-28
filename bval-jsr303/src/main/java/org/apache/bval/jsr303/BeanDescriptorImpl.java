@@ -19,14 +19,13 @@
 package org.apache.bval.jsr303;
 
 
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -77,6 +76,9 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      * @param propertyName property evaludated
      */
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
+        if (propertyName == null || propertyName.isEmpty()) {
+            throw new IllegalArgumentException("propertyName cannot be null or empty");
+        }
         MetaProperty prop = metaBean.getProperty(propertyName);
         if (prop == null) return null;
         return getPropertyDescriptor(prop);

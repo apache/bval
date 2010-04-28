@@ -121,6 +121,7 @@ public class PrivilegedActions {
                 } catch (NoSuchMethodException ex) { /* do nothing */ }
                 if (null != valueMethod) {
                     try {
+                        valueMethod.setAccessible(true);
                         return valueMethod.invoke(annotation);
                     } catch (Exception e) {
                         throw new RuntimeException(e);

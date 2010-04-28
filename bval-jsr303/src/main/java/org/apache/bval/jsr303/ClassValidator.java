@@ -134,12 +134,16 @@ public class ClassValidator extends BeanValidator implements Validator {
         }
     }
 
-    protected ValidationException unrecoverableValidationError(RuntimeException ex,
+    protected RuntimeException unrecoverableValidationError(RuntimeException ex,
                                                                Object object) {
-        if (ex instanceof ValidationException || ex instanceof IllegalArgumentException) {
-            throw ex; // do not wrap specific ValidationExceptions (or instances from subclasses)
+        if (ex instanceof UnknownPropertyException) {
+            // Convert to IllegalArgumentException
+            return new IllegalArgumentException(ex.getMessage(), ex);
+        }
+        else if (ex instanceof ValidationException) {
+            return ex; // do not wrap specific ValidationExceptions (or instances from subclasses)
         } else {
-            throw new ValidationException("error during validation of " + object, ex);
+            return new ValidationException("error during validation of " + object, ex);
         }
     }
 

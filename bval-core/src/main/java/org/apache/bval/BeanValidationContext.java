@@ -225,7 +225,7 @@ public class BeanValidationContext<T extends ValidationListener>
         setBean(bean, aMetaBean); // reset context state
     }
 
-    public void setCurrentIndex(int index) {
+    public void setCurrentIndex(Integer index) {
         // do nothing
     }
 

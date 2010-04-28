@@ -56,6 +56,6 @@ public interface GroupValidationContext<T extends ValidationListener>
 
     TraversableResolver getTraversableResolver();
 
-    boolean collectValidated(Object bean, ConstraintValidator constraint);
+    boolean collectValidated(ConstraintValidator constraint);
 
 }

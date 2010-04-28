@@ -189,6 +189,24 @@ public class ValidationTest extends TestCase {
         assertPropertyPath("addresses[1].country", constraints);
         assertPropertyPath("addresses[2].country", constraints);
     }
+    
+    /**
+     * Check correct path reporting when validating a set of beans.
+     */
+    public void testPropertyPathOnSet() {
+        Continent c = new Continent();
+        c.name = "c1";
+        Country country = new Country();
+        country.setISO2Code("xx");
+        country.setISO3Code("xxx");
+        country.setName(null);
+        c.countries.add(country);
+        
+        Set<ConstraintViolation<Continent>> constraints = getValidator().validate(c);
+        Assert.assertEquals("Incorrect number of violations detected", 1, constraints.size());
+        assertPropertyPath("countries[].name", constraints);
+        
+    }
 
     private <T> void assertPropertyPath(String propertyPath,
                                         Set<ConstraintViolation<T>> constraints) {

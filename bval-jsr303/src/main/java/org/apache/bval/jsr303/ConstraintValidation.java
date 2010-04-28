@@ -114,7 +114,7 @@ public class ConstraintValidation<T extends Annotation>
         if (!isMemberOf(context.getCurrentGroup().getGroup())) {
             return; // do not validate in the current group
         }
-        if (validator != null && !context.collectValidated(context.getPropertyPath(), validator))
+        if (validator != null && !context.collectValidated(validator))
             return; // already done
 
         if (context.getMetaProperty() != null && !isCascadeEnabled(context)) {

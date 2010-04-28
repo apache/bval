@@ -32,7 +32,10 @@ import javax.validation.ConstraintValidator;
 import javax.validation.MessageInterpolator;
 import javax.validation.TraversableResolver;
 import javax.validation.metadata.ConstraintDescriptor;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Description: instance per validation process, not thread-safe<br/>
@@ -57,8 +60,8 @@ final class GroupValidationContextImpl<T extends ValidationListener>
    * contains the validation constraints that have already been processed during
    * this validation routine (as part of a previous group match)
    */
-  private HashMap<PathImpl, IdentityHashMap<ConstraintValidator, Object>> validatedConstraints =
-      new HashMap<PathImpl, IdentityHashMap<ConstraintValidator, Object>>();
+  private HashSet<ConstraintValidatorIdentity> validatedConstraints =
+      new HashSet<ConstraintValidatorIdentity>();
   private ConstraintValidation constraintValidation;
   private final TraversableResolver traversableResolver;
 
@@ -73,7 +76,7 @@ final class GroupValidationContextImpl<T extends ValidationListener>
   }
 
   @Override
-  public void setCurrentIndex(int index) {
+  public void setCurrentIndex(Integer index) {
     path.getLeafNode().setIndex(index);
   }
 
@@ -94,54 +97,48 @@ final class GroupValidationContextImpl<T extends ValidationListener>
     super.moveUp(bean, metaBean); // call super!
   }
 
-    /**
-     * add the object in the current group to the collection of validated
-     * objects to keep track of them to avoid endless loops during validation.
-     * 
-     * @return true when the object was not already validated in this context
-     */
-    @Override
-    public boolean collectValidated() {
+  /**
+   * add the object in the current group to the collection of validated
+   * objects to keep track of them to avoid endless loops during validation.
+   *
+   * @return true when the object was not already validated in this context
+   */
+  @Override
+  public boolean collectValidated() {
 
-        Map<Group, Set<PathImpl>> groupMap = (Map<Group, Set<PathImpl>>) validatedObjects
-                .get(getBean());
-        if (groupMap == null) {
-            groupMap = new HashMap<Group, Set<PathImpl>>();
-            validatedObjects.put(getBean(), groupMap);
-        }
-        Set<PathImpl> validatedPathsForGroup = groupMap.get(getCurrentGroup());
-        if (validatedPathsForGroup == null) {
-            validatedPathsForGroup = new HashSet<PathImpl>();
-            groupMap.put(getCurrentGroup(), validatedPathsForGroup);
-        }
-
-        // If any of the paths is a subpath of the current path, there is a
-        // circular dependency, so return false
-        for (PathImpl validatedPath : validatedPathsForGroup) {
-            if (path.isSubPathOf(validatedPath)) {
-                return false;
-            }
-        }
-
-        // Else, add the currentPath to the set of validatedPaths
-        validatedPathsForGroup.add(PathImpl.copy(path));
-        return true;
+    Map<Group, Set<PathImpl>> groupMap = (Map<Group, Set<PathImpl>>) validatedObjects
+        .get(getBean());
+    if (groupMap == null) {
+      groupMap = new HashMap<Group, Set<PathImpl>>();
+      validatedObjects.put(getBean(), groupMap);
     }
-  
-    /**
-     * @return true when the constraint for the object in this path was not
-     *         already validated in this context
-     */
-    public boolean collectValidated(Object path, ConstraintValidator constraint) {
-        IdentityHashMap<ConstraintValidator, Object> constraints = this.validatedConstraints
-                .get(path);
-        if (constraints == null) {
-            constraints = new IdentityHashMap<ConstraintValidator, Object>();
-            this.validatedConstraints.put((PathImpl) path, constraints);
-        }
-
-        return (constraints.put(constraint, Boolean.TRUE) == null);
+    Set<PathImpl> validatedPathsForGroup = groupMap.get(getCurrentGroup());
+    if (validatedPathsForGroup == null) {
+      validatedPathsForGroup = new HashSet<PathImpl>();
+      groupMap.put(getCurrentGroup(), validatedPathsForGroup);
     }
+
+    // If any of the paths is a subpath of the current path, there is a
+    // circular dependency, so return false
+    for (PathImpl validatedPath : validatedPathsForGroup) {
+      if (path.isSubPathOf(validatedPath)) {
+        return false;
+      }
+    }
+
+    // Else, add the currentPath to the set of validatedPaths
+    validatedPathsForGroup.add(PathImpl.copy(path));
+    return true;
+  }
+
+  /**
+   * @return true when the constraint for the object in this path was not
+   *         already validated in this context
+   */
+  public boolean collectValidated(ConstraintValidator constraint) {
+    ConstraintValidatorIdentity cvi = new ConstraintValidatorIdentity(getBean(), getPropertyPath(), constraint);
+    return this.validatedConstraints.add(cvi);
+  }
 
   public void resetValidatedConstraints() {
     validatedConstraints.clear();

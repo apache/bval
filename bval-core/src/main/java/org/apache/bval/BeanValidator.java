@@ -16,20 +16,16 @@
  */
 package org.apache.bval;
 
+import org.apache.bval.model.*;
+import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.PropertyAccess;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-
-import org.apache.bval.model.Features;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.Validation;
-import org.apache.bval.model.ValidationContext;
-import org.apache.bval.model.ValidationListener;
-import org.apache.bval.util.AccessStrategy;
-import org.apache.bval.util.PropertyAccess;
 
 /**
  * Description: Top-Level API-class to validate objects or object-trees.
@@ -207,8 +203,10 @@ public class BeanValidator<T extends ValidationListener> {
         if (context.getBean() != null) {
             if (!treatMapsLikeBeans && context.getBean() instanceof Map<?, ?>) {
                 validateMapInContext(context);
+            } else if (context.getBean() instanceof List<?>) {
+            	validateIteratableInContext(context);
             } else if (context.getBean() instanceof Iterable<?>) {
-                validateIteratableInContext(context);
+                validateNonPositionalIteratableInContext(context);
             } else if (context.getBean() instanceof Object[]) {
                 validateArrayInContext(context);
             } else { // to One Bean (or Map like Bean) 
@@ -254,6 +252,24 @@ public class BeanValidator<T extends ValidationListener> {
         while (it.hasNext()) { // to Many
             Object each = it.next();
             context.setCurrentIndex(index++);
+            if (each == null)
+                continue; // enhancement: throw IllegalArgumentException? (=> spec)
+            if (dyn != null) {
+                context.setBean(each, dyn.resolveMetaBean(each));
+            } else {
+                context.setBean(each);
+            }
+            validateBeanNet(context);
+        }
+    }
+    
+    private <VL extends ValidationListener> void validateNonPositionalIteratableInContext(ValidationContext<VL> context) {
+        Iterator<?> it = ((Iterable<?>) context.getBean()).iterator();
+        // jsr303 spec: Each object provided by the iterator is validated.
+        context.setCurrentIndex(null);
+        final DynamicMetaBean dyn = getDynamicMetaBean(context);
+        while (it.hasNext()) { // to Many
+            Object each = it.next();
             if (each == null)
                 continue; // enhancement: throw IllegalArgumentException? (=> spec)
             if (dyn != null) {

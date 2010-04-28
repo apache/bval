@@ -58,7 +58,7 @@ public interface ValidationContext<T extends ValidationListener> {
      * set the index of the object currently validated into the context.
      * used to create the propertyPath with [index] information for collections.
      */
-    void setCurrentIndex(int index);
+    void setCurrentIndex(Integer index);
 
     /**
      * set the key of the object in a map currently validated into the context.

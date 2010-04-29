@@ -84,13 +84,57 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 Class<?> eachClass = classSequence.get(i);
                 processClass(eachClass, metabean);
             }
+            
+            // JSR-303 2.3:
+            // Groups from the main constraint annotation are inherited by the composing annotations.
+            // Any groups definition on a composing annotation is ignored.
+//            applyGroupInheritance(metabean);
+            
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e.getTargetException());
         }
     }
-    
+
+//    /**
+//     * Traverses the metabean to set the groups of the composed constraints the
+//     * same as the groups from its root constraint.
+//     * 
+//     * @param metabean
+//     *            The metabean to which group inheritance will be applied.
+//     */
+//    private void applyGroupInheritance(MetaBean metabean) {
+//        for ( MetaProperty prop : metabean.getProperties() ) {
+//            for ( Validation val : prop.getValidations() ) {
+//                if ( val instanceof ConstraintValidation<?> ) { // Should always be true?
+//                    ConstraintValidation<?> cv = (ConstraintValidation<?>) val;
+//                    Set<Class<?>> baseGroups = cv.getGroups();
+//                    for ( ConstraintValidation<?> composedVal : cv.getComposingValidations() ) {
+//                        overrideGroupsAndContinueRecursion(baseGroups, composedVal);
+//                    }
+//                }
+//            }
+//        }        
+//    }
+//
+//    /**
+//     * Recursive method that sets the current {@link ConstraintValidation}
+//     * groups as baseGroups, and continues the recursion with its composing
+//     * validations (if any).
+//     * 
+//     * @param baseGroups
+//     *            The groups to set in the current validation node.
+//     * @param val
+//     *            The current validation node.
+//     */
+//    private void overrideGroupsAndContinueRecursion(Set<Class<?>> baseGroups, ConstraintValidation<?> val) {
+//        val.setGroups(baseGroups);
+//        for ( ConstraintValidation<?> composedVal : val.getComposingValidations() ) {
+//            overrideGroupsAndContinueRecursion(baseGroups, composedVal);
+//        }
+//    }
+
     /**
      * Fill the list with the full class/interface hierarchy of the given class.
      * List is ordered from the most to less specific.
@@ -186,7 +230,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                                   new AppendValidationToMeta(metaProperty));
                         }
                     }
-                }
+                } // TODO: If propName == null AND it's annotated, throw Ex
             }
         }
         addXmlConstraints(beanClass, metabean);
@@ -399,6 +443,10 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         }
         final AnnotationConstraintBuilder builder = new AnnotationConstraintBuilder(
               constraintClasses, validator, annotation, owner, access);
+        // If already building a constraint composition tree, ensure that the parent groups are inherited
+        if ( appender instanceof AppendValidationToBuilder ) {
+            builder.getConstraintValidation().setGroups(((AppendValidationToBuilder) appender).getInheritedGroups());
+        }
         // process composed constraints:
         // here are not other superclasses possible, because annotations do not inherit!
         if (processAnnotations(prop, owner, annotation.annotationType(), access,

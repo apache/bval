@@ -17,6 +17,7 @@
 package org.apache.bval.jsr303;
 
 import java.lang.annotation.Annotation;
+import java.util.Set;
 
 /**
  * Description: <br/>
@@ -29,6 +30,18 @@ public class AppendValidationToBuilder implements AppendValidation {
     }
 
     public <T extends Annotation> void append(ConstraintValidation<T> validation) {
+        // JSR-303 2.3:
+        // Groups from the main constraint annotation are inherited by the composing annotations.
+        // Any groups definition on a composing annotation is ignored.
+        validation.setGroups(builder.getConstraintValidation().getGroups());
         builder.addComposed(validation);
     }
+    
+    /**
+     * @return The set of groups from the parent constraint.
+     */
+    public Set<?> getInheritedGroups() {
+        return builder.getConstraintValidation().getGroups();
+    }
+    
 }

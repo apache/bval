@@ -20,7 +20,6 @@ package org.apache.bval.jsr303.util;
 
 
 import javax.validation.ConstraintValidatorContext;
-import javax.validation.Path;
 
 import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
@@ -32,27 +31,41 @@ final class NodeBuilderCustomizableContextImpl
     private final ConstraintValidatorContextImpl parent;
     private final String messageTemplate;
     private final PathImpl propertyPath;
+    // The name of the last "added" node, it will only be added if it has a non-null name
+    // The actual incorporation in the path will take place when the definition of the current leaf node is complete
+    private String lastNodeName; // Not final as it can be re-used
 
     NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl contextImpl, String template,
-                              PathImpl path) {
+                              PathImpl path, String name) {
         parent = contextImpl;
         messageTemplate = template;
         propertyPath = path;
+        lastNodeName = name;
     }
 
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder inIterable() {
-        return new NodeContextBuilderImpl(parent, messageTemplate, propertyPath);
+        // Modifies the "previous" node in the path
+        this.propertyPath.getLeafNode().setInIterable( true );
+        return new NodeContextBuilderImpl(parent, messageTemplate, propertyPath, lastNodeName);
     }
 
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
-        Path.Node node = new NodeImpl(name);
-        propertyPath.addNode(node);
-        return this;
+        addLastNodeIfNeeded();
+        lastNodeName = name;
+        return this; // Re-use this instance
     }
 
     public ConstraintValidatorContext addConstraintViolation() {
+        addLastNodeIfNeeded();
         parent.addError(messageTemplate, propertyPath);
         return parent;
+    }
+    
+    private void addLastNodeIfNeeded() {
+        if (lastNodeName != null) {
+            NodeImpl node = new NodeImpl(lastNodeName);
+            propertyPath.addNode(node);
+        }
     }
 }

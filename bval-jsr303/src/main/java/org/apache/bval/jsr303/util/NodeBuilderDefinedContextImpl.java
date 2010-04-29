@@ -41,9 +41,8 @@ public final class NodeBuilderDefinedContextImpl
 
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
-        NodeImpl node = new NodeImpl(name);
-        propertyPath.addNode(node);
-        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
+        // Node not yet added, wait until more information is provided
+        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
     public ConstraintValidatorContext addConstraintViolation() {

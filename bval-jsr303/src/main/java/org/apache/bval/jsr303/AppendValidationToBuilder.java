@@ -16,6 +16,8 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -33,7 +35,18 @@ public class AppendValidationToBuilder implements AppendValidation {
         // JSR-303 2.3:
         // Groups from the main constraint annotation are inherited by the composing annotations.
         // Any groups definition on a composing annotation is ignored.
-        validation.setGroups(builder.getConstraintValidation().getGroups());
+        Set<Class<?>> inheritedGroups = builder.getConstraintValidation().getGroups();
+        validation.setGroups(inheritedGroups);
+
+        // Inherited groups value must also be replicated in the annotation, so
+        // it has to be substituted with a new proxy.
+        T originalAnnot = validation.getAnnotation();
+        AnnotationProxyBuilder<T> apb = new AnnotationProxyBuilder<T>(originalAnnot);
+        apb.putValue("groups", inheritedGroups.toArray(new Class[inheritedGroups.size()]));
+        T newAnnot = apb.createAnnotation();
+        validation.setAnnotation(newAnnot);
+        
+        // And finally, add the composed validation
         builder.addComposed(validation);
     }
     

@@ -42,7 +42,7 @@ public class ConstraintValidation<T extends Annotation>
       implements Validation, ConstraintDescriptor<T> {
     private static final String ANNOTATION_MESSAGE = "message";
     private final ConstraintValidator validator;
-    private final T annotation; // for metadata request API
+    private T annotation; // for metadata request API
     private final AccessStrategy access;
     private final boolean reportFromComposite;
     private final Map<String, Object> attributes;
@@ -226,6 +226,10 @@ public class ConstraintValidation<T extends Annotation>
 
     public AccessStrategy getAccess() {
         return access;
+    }
+    
+    public void setAnnotation(T annotation) {
+        this.annotation = annotation;
     }
 
     /////////////////////////// ConstraintDescriptor implementation

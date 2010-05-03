@@ -19,27 +19,20 @@
 
 package org.apache.bval.jsr303;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
+import javax.validation.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintViolation;
-import javax.validation.Payload;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Checks that groups are correctly inherited from the root constraint to its
@@ -90,6 +83,31 @@ public class ConstraintCompositionTest extends TestCase {
         Assert.assertEquals("Wrong number of violations detected", 1, violations.size());
         String msg = violations.iterator().next().getMessage();
         Assert.assertEquals("Incorrect violation message", "A person needs a non null name", msg);
+    }
+
+    /**
+     * Checks that the groups() value of the constraint annotations are
+     * correctly set to the inherited ones.
+     */
+    public void testAnnotationGroupsAreInherited() {
+        Validator validator = getValidator();
+        
+        // Check that the groups() value is right when querying the metadata
+        ConstraintDescriptor<?> manNameDesc = getValidator().getConstraintsForClass(Man.class).getConstraintsForProperty("name").getConstraintDescriptors().iterator().next();
+        ConstraintDescriptor<?> personNameDesc = manNameDesc.getComposingConstraints().iterator().next();
+        ConstraintDescriptor<?> notNullDesc = personNameDesc.getComposingConstraints().iterator().next();
+        Assert.assertEquals("There should only be 1 group", 1, manNameDesc.getGroups().size());
+        Assert.assertTrue("Group1 should be present", manNameDesc.getGroups().contains(Group1.class));
+        Assert.assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
+        Assert.assertTrue("Group1 should be present", personNameDesc.getGroups().contains(Group1.class));
+        Assert.assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
+        Assert.assertTrue("Group1 should be present", notNullDesc.getGroups().contains(Group1.class));
+        
+        // Check that the groups() value is right when accesing it from an error
+        Set<ConstraintViolation<Man>> violations = validator.validate(new Man(), Group1.class);
+        Set<Class<?>> notNullGroups = violations.iterator().next().getConstraintDescriptor().getGroups();
+        Assert.assertEquals("There should only be 1 group", 1, notNullGroups.size());
+        Assert.assertTrue("Group1 should be the only group", notNullGroups.contains(Group1.class));
     }
     
     

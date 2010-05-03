@@ -17,13 +17,14 @@
 package org.apache.bval.jsr303.xml;
 
 
-import javax.validation.Payload;
-import javax.validation.ValidationException;
-
 import org.apache.bval.jsr303.util.SecureActions;
 
+import javax.validation.Payload;
+import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ import java.util.Map;
  * Description: Holds the information and creates an annotation proxy
  * during xml parsing of validation mapping constraints. <br/>
  */
-final class AnnotationProxyBuilder<A extends Annotation> {
+final public class AnnotationProxyBuilder<A extends Annotation> {
     private static final String ANNOTATION_PAYLOAD = "payload";
     private static final String ANNOTATION_GROUPS = "groups";
     private static final String ANNOTATION_MESSAGE = "message";
@@ -49,6 +50,34 @@ final class AnnotationProxyBuilder<A extends Annotation> {
         this.type = annotationType;
         for (Map.Entry<String, Object> entry : elements.entrySet()) {
             this.elements.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    /**
+     * Replicates an existing {@link Annotation} instance.
+     * 
+     * @param annot
+     *            Annotation to be replicated.
+     */
+    public AnnotationProxyBuilder(A annot) {
+        this.type = (Class<A>) annot.annotationType();
+        // Obtain the "elements" of the annotation
+        Method[] methods = SecureActions.getDeclaredMethods(annot.annotationType());
+        for ( Method m : methods ) {
+            if ( !m.isAccessible() ) {
+                m.setAccessible(true);
+            }
+            try {
+                Object value = m.invoke(annot);
+                this.elements.put(m.getName(), value);
+            } catch (IllegalArgumentException e) {
+                // No args, so should not happen
+                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
+            } catch (IllegalAccessException e) {
+                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
+            } catch (InvocationTargetException e) {
+                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
+            }
         }
     }
 

@@ -17,6 +17,9 @@
 package org.apache.bval.jsr303.xml;
 
 
+import org.apache.bval.jsr303.util.SecureActions;
+
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -25,8 +28,6 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.bval.jsr303.util.SecureActions;
-
 
 /**
  * Description: <br/>
@@ -34,7 +35,7 @@ import org.apache.bval.jsr303.util.SecureActions;
  * "real" source code annotation.
  * <p/>
  */
-public class AnnotationProxy implements Annotation, InvocationHandler {
+public class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
 
     private final Class<? extends Annotation> annotationType;
     private final Map<String, Object> values;

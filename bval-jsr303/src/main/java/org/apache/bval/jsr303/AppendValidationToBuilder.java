@@ -25,14 +25,14 @@ import java.util.Set;
 /**
  * Description: <br/>
  */
-public class AppendValidationToBuilder implements AppendValidation {
+public class AppendValidationToBuilder extends BaseAppendValidation {
     private final AnnotationConstraintBuilder builder;
 
     public AppendValidationToBuilder(AnnotationConstraintBuilder builder) {
         this.builder = builder;
     }
 
-    public <T extends Annotation> void append(ConstraintValidation<T> validation) {
+    public <T extends Annotation> void preProcessValidation(ConstraintValidation<T> validation) {
         // JSR-303 2.3:
         // Groups from the main constraint annotation are inherited by the composing annotations.
         // Any groups definition on a composing annotation is ignored.
@@ -52,8 +52,9 @@ public class AppendValidationToBuilder implements AppendValidation {
         apb.putValue("payload", inheritedPayload.toArray(new Class[inheritedPayload.size()]));
         T newAnnot = apb.createAnnotation();
         validation.setAnnotation(newAnnot);
-        
-        // And finally, add the composed validation
+    }
+    
+    public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         builder.addComposed(validation);
     }
     

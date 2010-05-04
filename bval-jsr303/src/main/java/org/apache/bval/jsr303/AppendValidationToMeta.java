@@ -16,21 +16,21 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.annotation.Annotation;
-
 import org.apache.bval.model.FeaturesCapable;
+
+import java.lang.annotation.Annotation;
 
 /**
  * Description: <br/>
  */
-public class AppendValidationToMeta implements AppendValidation {
+public class AppendValidationToMeta extends BaseAppendValidation {
     private final FeaturesCapable feature;
 
     public AppendValidationToMeta(FeaturesCapable meta) {
         this.feature = meta;
     }
 
-    public <T extends Annotation> void append(ConstraintValidation<T> validation) {
+    public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         feature.addValidation(validation);
     }
 }

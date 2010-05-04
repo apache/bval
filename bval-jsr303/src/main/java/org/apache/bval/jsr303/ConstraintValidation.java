@@ -27,6 +27,7 @@ import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 
+import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
@@ -150,11 +151,31 @@ public class ConstraintValidation<T extends Annotation>
             }
         }
 
+        // Restore current constraint validation
+        context.setConstraintValidation(this);
+        
         if (validator != null) {
             ConstraintValidatorContextImpl jsrContext =
                   new ConstraintValidatorContextImpl(context, this);
             if (!validator.isValid(context.getValidatedValue(), jsrContext)) {
                 addErrors(context, jsrContext);
+            }
+        }
+    }
+
+    /**
+     * Initialize the validator (if not <code>null</code>) with the stored
+     * annotation.
+     */
+    public void initialize() {
+        if (null != validator) {
+            try {
+                validator.initialize(annotation);
+            } catch (RuntimeException e) {
+                // Either a "legit" problem initializing the validator or a
+                // ClassCastException if the validator associated annotation is 
+                // not a supertype of the validated annotation.
+                throw new ConstraintDefinitionException("Incorrect validator [" + validator.getClass().getCanonicalName() + "] for annotation " + annotation.annotationType().getCanonicalName(), e);
             }
         }
     }

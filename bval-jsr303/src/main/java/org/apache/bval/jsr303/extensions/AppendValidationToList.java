@@ -17,23 +17,23 @@
 package org.apache.bval.jsr303.extensions;
 
 
+import org.apache.bval.jsr303.BaseAppendValidation;
+import org.apache.bval.jsr303.ConstraintValidation;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.bval.jsr303.AppendValidation;
-import org.apache.bval.jsr303.ConstraintValidation;
-
 /**
  * Description: <br/>
  */
-public class AppendValidationToList implements AppendValidation {
+public class AppendValidationToList extends BaseAppendValidation {
     private final List<ConstraintValidation<? extends Annotation>> validations = new ArrayList<ConstraintValidation<? extends Annotation>>();
 
     public AppendValidationToList() {
     }
 
-    public <T extends Annotation> void append(ConstraintValidation<T> validation) {
+    public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         validations.add(validation);
     }
 

@@ -21,19 +21,16 @@ package org.apache.bval.jsr303.xml;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.apache.bval.jsr303.ApacheValidatorConfiguration;
 import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.example.XmlEntitySampleBean;
 import org.apache.bval.jsr303.resolver.SimpleTraversableResolver;
-import org.apache.bval.jsr303.xml.ValidationParser;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.util.Set;
 
 /**
@@ -82,7 +79,7 @@ public class ValidationParserTest extends TestCase
         assertTrue(!results.isEmpty());
         assertTrue(results.size() == 3);
 
-        bean.setZipCode("valid");
+        bean.setZipCode("123");
         bean.setValueCode("20");
         bean.setFirstName("valid");
         results = validator.validate(bean);

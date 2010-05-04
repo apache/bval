@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 
 import javax.validation.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -134,11 +135,43 @@ public class ConstraintCompositionTest extends TestCase {
         Assert.assertEquals("There should only be 1 payload class", 1, notNullPayload.size());
         Assert.assertTrue("Payload1 should be the only payload", notNullPayload.contains(Payload1.class));
     }
-    
+
+    /**
+     * Checks that {@link OverridesAttribute#constraintIndex()} parsing and
+     * applying works.
+     */
+    public void testIndexedOverridesAttributes() {
+        Validator validator = getValidator();
+        
+        Person p = new Person();
+        p.name = "valid";
+        
+        // With a valid id, no errors expected
+        p.id = "1234";
+        Set<ConstraintViolation<Person>> constraintViolations = validator.validate(p);
+        Assert.assertTrue("No violations should be reported on valid id", constraintViolations.isEmpty());
+        
+        // With a short id, only 1 error expected
+        p.id = "1";
+        constraintViolations = validator.validate(p);
+        Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
+        ConstraintViolation<Person> violation = constraintViolations.iterator().next();
+        Assert.assertEquals("Wrong violation", "Id is too short", violation.getMessage());
+        
+        // With a long id, only 1 error expected
+        p.id = "loooooong id";
+        constraintViolations = validator.validate(p);
+        Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
+        violation = constraintViolations.iterator().next();
+        Assert.assertEquals("Wrong violation", "Id is too long", violation.getMessage());
+    }
     
     public static class Person {
         @PersonName
         String name;
+        
+        @PersonId
+        String id;
     }
     
     public static class Man {
@@ -166,6 +199,25 @@ public class ConstraintCompositionTest extends TestCase {
         String message() default "Wrong man name";
         Class<?>[] groups() default { };
         Class<? extends Payload>[] payload() default {};
+    }
+    
+    
+    @Size.List({ @Size(min=3, max=3, message="Id is too short"), @Size(min=5,max=5, message="Id is too long") })
+    @Constraint(validatedBy = {})
+    @Documented
+    @Target({ METHOD, FIELD, TYPE })
+    @Retention(RUNTIME)
+    public static @interface PersonId {
+        String message() default "Wrong person id";
+        Class<?>[] groups() default { };
+        Class<? extends Payload>[] payload() default {};
+        
+        @OverridesAttribute(constraint=Size.class,constraintIndex=0,name="max")
+        int maxSize() default 1000;
+        
+        @OverridesAttribute(constraint=Size.class,constraintIndex=1,name="min")
+        int minSize() default 0;
+        
     }
     
     public static interface Group1 {

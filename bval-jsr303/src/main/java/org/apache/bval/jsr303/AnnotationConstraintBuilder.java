@@ -21,6 +21,7 @@ package org.apache.bval.jsr303;
 
 import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -156,30 +157,44 @@ final class AnnotationConstraintBuilder {
         constraintValidation.addComposed(composite); // add AFTER apply()
     }
 
-    private void applyOverridesAttributes(ConstraintValidation composite) {
-        if (null == overrides) buildOverridesAttributes();
+    private void applyOverridesAttributes(ConstraintValidation<?> composite) {
+        if (null == overrides) {
+            buildOverridesAttributes();
+        }
         if (!overrides.isEmpty()) {
-            int index = computeIndex(composite); // assume composite not yet added! (+1)
-            if (index < 0) {
-                ConstraintOverrides override = // search for constraintIndex = -1
-                      findOverride(composite.getAnnotation().annotationType(), -1);
-                if (override != null) override.applyOn(composite);
-                else override = // search for constraintIndex == 0
-                      findOverride(composite.getAnnotation().annotationType(), 0);
-                if (override != null) override.applyOn(composite);
-            } else { // search for constraintIndex > 0
-                ConstraintOverrides override =
-                      findOverride(composite.getAnnotation().annotationType(), index + 1);
-                if (override != null) override.applyOn(composite);
+            int index = computeIndex(composite);
+
+            // Search for the overrides to apply
+            ConstraintOverrides generalOverride = findOverride(composite.getAnnotation().annotationType(), -1);
+            if ( generalOverride != null ) {
+                if ( index > 0 ) {
+                    throw new ConstraintDeclarationException("Wrong OverridesAttribute declaration for " + generalOverride.constraintType + ", it needs a defined index when there is a list of constraints");
+                }
+                generalOverride.applyOn(composite);
             }
+
+            ConstraintOverrides override = findOverride(composite.getAnnotation().annotationType(), index);
+            if ( override != null ) {
+                override.applyOn(composite);
+            }
+            
         }
     }
 
-    private int computeIndex(ConstraintValidation composite) {
-        int idx = -1;
+    
+    /**
+     * Calculates the index of the composite constraint. The index represents
+     * the order in which it is added in reference to other constraints of the
+     * same type.
+     * 
+     * @param composite
+     *            The composite constraint (not yet added).
+     * @return An integer index always >= 0
+     */
+    private int computeIndex(ConstraintValidation<?> composite) {
+        int idx = 0;
         for (ConstraintValidation<?> each : constraintValidation.getComposingValidations()) {
-            if (each.getAnnotation().annotationType() ==
-                  composite.getAnnotation().annotationType()) {
+            if (each.getAnnotation().annotationType() == composite.getAnnotation().annotationType()) {
                 idx++;
             }
         }
@@ -188,7 +203,7 @@ final class AnnotationConstraintBuilder {
 
     /** read overridesAttributes from constraintValidation.annotation */
     private void buildOverridesAttributes() {
-        overrides = new LinkedList();
+        overrides = new LinkedList<ConstraintOverrides>();
         for (Method method : constraintValidation.getAnnotation()
               .annotationType()
               .getDeclaredMethods()) {
@@ -246,7 +261,17 @@ final class AnnotationConstraintBuilder {
         }
 
         public void applyOn(ConstraintValidation composite) {
+            // Update the attributes
             composite.getAttributes().putAll(values);
+            
+            // And the annotation
+            Annotation originalAnnot = composite.getAnnotation();
+            AnnotationProxyBuilder<Annotation> apb = new AnnotationProxyBuilder<Annotation>(originalAnnot);
+            for ( String key : values.keySet() ) {
+                apb.putValue(key, values.get(key));
+            }
+            Annotation newAnnot = apb.createAnnotation();
+            composite.setAnnotation(newAnnot);
         }
     }
 }

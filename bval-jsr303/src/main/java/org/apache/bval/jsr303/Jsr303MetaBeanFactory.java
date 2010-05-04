@@ -437,13 +437,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             checkOneType(assignableTypes, type, owner, annotation, access);
             validator = getConstraintValidatorFactory()
                   .getInstance(validatorTypes.get(assignableTypes.get(0)));
-            try {
-                validator.initialize(annotation);
-            } catch (RuntimeException e) {
-                // Either a "legit" problem initializing the validator or a ClassCastException if
-                // the validator associated annotation is not a supertype of the validated annotation.
-                throw new ConstraintDefinitionException("Incorrect validator ["+validator.getClass().getCanonicalName()+"] for annotation " + annotation.annotationType().getCanonicalName(), e);
-            }
+            // NOTE: validator initialization deferred until append phase
         } else {
             validator = null;
         }

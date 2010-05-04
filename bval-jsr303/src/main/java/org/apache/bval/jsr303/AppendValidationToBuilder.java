@@ -18,6 +18,7 @@ package org.apache.bval.jsr303;
 
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 
+import javax.validation.Payload;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -37,12 +38,18 @@ public class AppendValidationToBuilder implements AppendValidation {
         // Any groups definition on a composing annotation is ignored.
         Set<Class<?>> inheritedGroups = builder.getConstraintValidation().getGroups();
         validation.setGroups(inheritedGroups);
+        
+        // JSR-303 2.3 p:
+        // Payloads are also inherited
+        Set<Class<? extends Payload>> inheritedPayload = builder.getConstraintValidation().getPayload();
+        validation.setPayload(inheritedPayload);
 
-        // Inherited groups value must also be replicated in the annotation, so
-        // it has to be substituted with a new proxy.
+        // Inherited groups and payload values must also be replicated in the 
+        // annotation, so it has to be substituted with a new proxy.
         T originalAnnot = validation.getAnnotation();
         AnnotationProxyBuilder<T> apb = new AnnotationProxyBuilder<T>(originalAnnot);
         apb.putValue("groups", inheritedGroups.toArray(new Class[inheritedGroups.size()]));
+        apb.putValue("payload", inheritedPayload.toArray(new Class[inheritedPayload.size()]));
         T newAnnot = apb.createAnnotation();
         validation.setAnnotation(newAnnot);
         
@@ -55,6 +62,13 @@ public class AppendValidationToBuilder implements AppendValidation {
      */
     public Set<?> getInheritedGroups() {
         return builder.getConstraintValidation().getGroups();
+    }
+    
+    /**
+     * @return The set of payloads from the parent constraint.
+     */
+    public Set<?> getInheritedPayload() {
+        return builder.getConstraintValidation().getPayload();
     }
     
 }

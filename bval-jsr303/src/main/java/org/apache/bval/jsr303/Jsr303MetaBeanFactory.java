@@ -449,9 +449,13 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         }
         final AnnotationConstraintBuilder builder = new AnnotationConstraintBuilder(
               constraintClasses, validator, annotation, owner, access);
-        // If already building a constraint composition tree, ensure that the parent groups are inherited
+        // If already building a constraint composition tree, ensure that:
+        //  - the parent groups are inherited
+        //  - the parent payload is inherited
         if ( appender instanceof AppendValidationToBuilder ) {
-            builder.getConstraintValidation().setGroups(((AppendValidationToBuilder) appender).getInheritedGroups());
+            AppendValidationToBuilder avb = (AppendValidationToBuilder) appender;
+            builder.getConstraintValidation().setGroups(avb.getInheritedGroups());
+            builder.getConstraintValidation().setPayload(avb.getInheritedPayload());
         }
         // process composed constraints:
         // here are not other superclasses possible, because annotations do not inherit!

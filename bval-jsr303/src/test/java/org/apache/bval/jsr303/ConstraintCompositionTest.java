@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 
 import javax.validation.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Documented;
@@ -165,6 +166,25 @@ public class ConstraintCompositionTest extends TestCase {
         violation = constraintViolations.iterator().next();
         Assert.assertEquals("Wrong violation", "Id is too long", violation.getMessage());
     }
+
+    /**
+     * Checks that errors are reported correctly when using
+     * {@link ReportAsSingleViolation}.
+     */
+    public void testReportAsAsingleViolation() {
+        Validator validator = getValidator();
+        
+        Code c = new Code();
+        c.code = "very invalid code";
+        Set<ConstraintViolation<Code>> constraintViolations = validator.validate(c);
+        
+        // Only 1 error expected
+        Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
+        ConstraintViolation<Code> violation = constraintViolations.iterator().next();
+        Assert.assertEquals("Wrong violation message", "Invalid code", violation.getMessage());
+        Assert.assertEquals("Wrong violation type", ElevenDigitsCode.class, violation.getConstraintDescriptor().getAnnotation().annotationType());
+        
+    }
     
     public static class Person {
         @PersonName
@@ -177,6 +197,11 @@ public class ConstraintCompositionTest extends TestCase {
     public static class Man {
         @ManName(groups={Group1.class},payload={Payload1.class})
         String name;
+    }
+    
+    public static class Code {
+        @ElevenDigitsCode
+        String code;
     }
     
     @NotNull(message="A person needs a non null name", groups={Group1.class}, payload={})
@@ -217,7 +242,19 @@ public class ConstraintCompositionTest extends TestCase {
         
         @OverridesAttribute(constraint=Size.class,constraintIndex=1,name="min")
         int minSize() default 0;
-        
+    }
+    
+    @Size(min=11, max=11)
+    @Pattern(regexp="\\d*")
+    @Constraint(validatedBy = {})
+    @ReportAsSingleViolation
+    @Documented
+    @Target({ METHOD, FIELD, TYPE })
+    @Retention(RUNTIME)
+    public static @interface ElevenDigitsCode {
+        String message() default "Invalid code";
+        Class<?>[] groups() default { };
+        Class<? extends Payload>[] payload() default {};
     }
     
     public static interface Group1 {

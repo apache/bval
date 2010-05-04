@@ -137,6 +137,10 @@ public class ConstraintValidation<T extends Annotation>
             } finally {
                 gctx.setListener(oldListener);
             }
+            
+            // Restore current constraint validation
+            context.setConstraintValidation(this);
+            
             // stop validating when already failed and ReportAsSingleInvalidConstraint = true ?
             if (!listener.getConstaintViolations().isEmpty()) {
                 // TODO RSt - how should the composed constraint error report look like?
@@ -149,10 +153,10 @@ public class ConstraintValidation<T extends Annotation>
             for (ConstraintValidation composed : getComposingValidations()) {
                 composed.validate(context);
             }
+            
+            // Restore current constraint validation
+            context.setConstraintValidation(this);
         }
-
-        // Restore current constraint validation
-        context.setConstraintValidation(this);
         
         if (validator != null) {
             ConstraintValidatorContextImpl jsrContext =
@@ -277,6 +281,9 @@ public class ConstraintValidation<T extends Annotation>
     }
 
     public List<Class<? extends ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
+        if ( validatorClasses == null ) {
+            return Collections.emptyList();
+        }
         return Arrays.asList(validatorClasses);
     }
 

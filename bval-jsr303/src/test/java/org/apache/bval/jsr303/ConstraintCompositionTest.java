@@ -103,13 +103,37 @@ public class ConstraintCompositionTest extends TestCase {
         Assert.assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
         Assert.assertTrue("Group1 should be present", notNullDesc.getGroups().contains(Group1.class));
         
-        // Check that the groups() value is right when accesing it from an error
+        // Check that the groups() value is right when accessing it from an error
         Set<ConstraintViolation<Man>> violations = validator.validate(new Man(), Group1.class);
         Set<Class<?>> notNullGroups = violations.iterator().next().getConstraintDescriptor().getGroups();
         Assert.assertEquals("There should only be 1 group", 1, notNullGroups.size());
         Assert.assertTrue("Group1 should be the only group", notNullGroups.contains(Group1.class));
     }
     
+    /**
+     * Checks that the payload() value of the constraint annotations are
+     * correctly set to the inherited ones.
+     */
+    public void testAnnotationPayloadsAreInherited() {
+        Validator validator = getValidator();
+        
+        // Check that the payload() value is right when querying the metadata
+        ConstraintDescriptor<?> manNameDesc = getValidator().getConstraintsForClass(Man.class).getConstraintsForProperty("name").getConstraintDescriptors().iterator().next();
+        ConstraintDescriptor<?> personNameDesc = manNameDesc.getComposingConstraints().iterator().next();
+        ConstraintDescriptor<?> notNullDesc = personNameDesc.getComposingConstraints().iterator().next();
+        Assert.assertEquals("There should only be 1 payload class", 1, manNameDesc.getPayload().size());
+        Assert.assertTrue("Payload1 should be present", manNameDesc.getPayload().contains(Payload1.class));
+        Assert.assertEquals("There should only be 1 payload class", 1, personNameDesc.getPayload().size());
+        Assert.assertTrue("Payload1 should be present", personNameDesc.getPayload().contains(Payload1.class));
+        Assert.assertEquals("There should only be 1 payload class", 1, personNameDesc.getPayload().size());
+        Assert.assertTrue("Payload1 should be present", notNullDesc.getPayload().contains(Payload1.class));
+        
+        // Check that the payload() value is right when accessing it from an error
+        Set<ConstraintViolation<Man>> violations = validator.validate(new Man(), Group1.class);
+        Set<Class<? extends Payload>> notNullPayload = violations.iterator().next().getConstraintDescriptor().getPayload();
+        Assert.assertEquals("There should only be 1 payload class", 1, notNullPayload.size());
+        Assert.assertTrue("Payload1 should be the only payload", notNullPayload.contains(Payload1.class));
+    }
     
     
     public static class Person {
@@ -118,11 +142,11 @@ public class ConstraintCompositionTest extends TestCase {
     }
     
     public static class Man {
-        @ManName(groups={Group1.class})
+        @ManName(groups={Group1.class},payload={Payload1.class})
         String name;
     }
     
-    @NotNull(message="A person needs a non null name", groups={Group1.class})
+    @NotNull(message="A person needs a non null name", groups={Group1.class}, payload={})
     @Constraint(validatedBy = {})
     @Documented
     @Target({ METHOD, FIELD, TYPE })
@@ -133,7 +157,7 @@ public class ConstraintCompositionTest extends TestCase {
         Class<? extends Payload>[] payload() default {};
     }
     
-    @PersonName(groups={Group2.class})
+    @PersonName(groups={Group2.class},payload={Payload1.class,Payload2.class})
     @Constraint(validatedBy = {})
     @Documented
     @Target({ METHOD, FIELD, TYPE })
@@ -148,6 +172,12 @@ public class ConstraintCompositionTest extends TestCase {
     }
     
     public static interface Group2 {
+    }
+    
+    public static class Payload1 implements Payload {
+    }
+    
+    public static class Payload2 implements Payload {
     }
     
 }

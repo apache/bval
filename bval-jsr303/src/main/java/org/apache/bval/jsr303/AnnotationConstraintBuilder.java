@@ -65,18 +65,17 @@ final class AnnotationConstraintBuilder {
                     for (Method method : constraintValidation.getAnnotation()
                           .annotationType()
                           .getDeclaredMethods()) {
-                        // enhancement: clarify: should groups + payload also appear in attributes?
+                        // groups + payload must also appear in attributes (also checked by TCK-Tests)
                         if (method.getParameterTypes().length == 0) {
                             try {
                                 if (ANNOTATION_PAYLOAD.equals(method.getName())) {
                                     buildPayload(method);
                                 } else if (ANNOTATION_GROUPS.equals(method.getName())) {
                                     buildGroups(method);
-                                } else {
-                                    constraintValidation.getAttributes()
-                                          .put(method.getName(), method.invoke(
-                                                constraintValidation.getAnnotation()));
                                 }
+                                constraintValidation.getAttributes()
+                                      .put(method.getName(), method.invoke(
+                                            constraintValidation.getAnnotation()));
                             } catch (Exception e) { // do nothing
                                 log.warn("error processing annotation: " +
                                       constraintValidation.getAnnotation(), e);
@@ -177,16 +176,16 @@ final class AnnotationConstraintBuilder {
             if ( override != null ) {
                 override.applyOn(composite);
             }
-            
+
         }
     }
 
-    
+
     /**
      * Calculates the index of the composite constraint. The index represents
      * the order in which it is added in reference to other constraints of the
      * same type.
-     * 
+     *
      * @param composite
      *            The composite constraint (not yet added).
      * @return An integer index always >= 0
@@ -263,7 +262,7 @@ final class AnnotationConstraintBuilder {
         public void applyOn(ConstraintValidation composite) {
             // Update the attributes
             composite.getAttributes().putAll(values);
-            
+
             // And the annotation
             Annotation originalAnnot = composite.getAnnotation();
             AnnotationProxyBuilder<Annotation> apb = new AnnotationProxyBuilder<Annotation>(originalAnnot);

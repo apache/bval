@@ -21,6 +21,7 @@ package org.apache.bval.jsr303;
 
 import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.jsr303.groups.Group;
+import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.util.TypeUtils;
 import org.apache.bval.jsr303.xml.MetaConstraint;
@@ -304,6 +305,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
              */
             Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
             if (vcAnno != null) {
+                ConstraintDefinitionValidator.validateConstraintDefinition(annotation);
                 Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
                 validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
                 return applyConstraint(annotation, validatorClasses, prop, owner, access,

@@ -22,10 +22,8 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.apache.bval.constraints.NotEmpty;
-
 import java.lang.annotation.Retention;
+
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -41,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = {})
 // test that Password is validated although only combined constraints exists, no own implementation 
 public @interface Password {
-    String[] groups() default {};
+    Class<?>[] groups() default {};
 
     String message() default "Wrong password";
 

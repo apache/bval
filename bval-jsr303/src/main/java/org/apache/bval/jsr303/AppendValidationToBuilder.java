@@ -61,14 +61,14 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
     /**
      * @return The set of groups from the parent constraint.
      */
-    public Set<?> getInheritedGroups() {
+    public Set<Class<?>> getInheritedGroups() {
         return builder.getConstraintValidation().getGroups();
     }
     
     /**
      * @return The set of payloads from the parent constraint.
      */
-    public Set<?> getInheritedPayload() {
+    public Set<Class<? extends Payload>> getInheritedPayload() {
         return builder.getConstraintValidation().getPayload();
     }
     

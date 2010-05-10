@@ -21,14 +21,18 @@ package org.apache.bval.jsr303;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Tests the implementation of {@link BeanDescriptor} and its dependent
@@ -64,10 +68,54 @@ public class BeanDescriptorTest extends TestCase {
         Assert.assertTrue("payload attribute not present", nameDescriptor.getAttributes().containsKey("payload"));
         Assert.assertTrue("message attribute not present", nameDescriptor.getAttributes().containsKey("message"));
     }
+
+    /**
+     * Check that the groups() attribute value has the correct value when
+     * inheriting groups.
+     */
+    public void testCorrectValueForInheritedGroupsAttribute() {
+        Validator validator = getValidator();
+        
+        Set<ConstraintDescriptor<?>> passwordDescriptors = validator.getConstraintsForClass(Account.class).getConstraintsForProperty("password").getConstraintDescriptors();
+        Assert.assertEquals("Incorrect number of descriptors", 1, passwordDescriptors.size());
+        ConstraintDescriptor<?> passwordDescriptor = passwordDescriptors.iterator().next();
+        Assert.assertEquals("Incorrect number of composing constraints", 1, passwordDescriptor.getComposingConstraints().size());
+        ConstraintDescriptor<?> notNullDescriptor = passwordDescriptor.getComposingConstraints().iterator().next();
+        
+        // Check that the groups value containts Group1.class
+        Class[] notNullGroups = (Class[]) notNullDescriptor.getAttributes().get("groups");
+        boolean found = false;
+        for ( Class group : notNullGroups ) {
+            if ( group == Group1.class ) {
+                found = true;
+                break;
+            }
+        }
+        Assert.assertTrue("Group1 not present in groups attribute", found);
+    }
     
     public static class Form {
         @NotNull
         public String name;
+    }
+    
+    public static class Account {
+        @Password(groups={Group1.class})
+        public String password;
+    }
+    
+    @NotNull(groups={})
+    @Constraint(validatedBy = {})
+    @Documented
+    @Target({ METHOD, FIELD, TYPE })
+    @Retention(RUNTIME)
+    public static @interface Password {
+        String message() default "Invalid password";
+        Class<?>[] groups() default { };
+        Class<? extends Payload>[] payload() default {};
+    }
+    
+    public static interface Group1 {
     }
     
 }

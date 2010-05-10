@@ -85,10 +85,12 @@ public class ConstraintValidation<T extends Annotation>
 
     void setGroups(Set<Class<?>> groups) {
         this.groups = groups;
+        this.attributes.put("groups", groups.toArray(new Class[groups.size()]));
     }
 
     void setPayload(Set<Class<? extends Payload>> payload) {
         this.payload = payload;
+        this.attributes.put("payload", groups.toArray(new Class[groups.size()]));
     }
 
     public boolean isReportAsSingleViolation() {

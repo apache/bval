@@ -72,10 +72,11 @@ final class AnnotationConstraintBuilder {
                                     buildPayload(method);
                                 } else if (ANNOTATION_GROUPS.equals(method.getName())) {
                                     buildGroups(method);
+                                } else {
+                                    constraintValidation.getAttributes()
+                                          .put(method.getName(), method.invoke(
+                                                constraintValidation.getAnnotation()));
                                 }
-                                constraintValidation.getAttributes()
-                                      .put(method.getName(), method.invoke(
-                                            constraintValidation.getAnnotation()));
                             } catch (Exception e) { // do nothing
                                 log.warn("error processing annotation: " +
                                       constraintValidation.getAnnotation(), e);

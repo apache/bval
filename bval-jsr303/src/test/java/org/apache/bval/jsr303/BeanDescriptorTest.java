@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import javax.validation.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Documented;
@@ -83,9 +84,9 @@ public class BeanDescriptorTest extends TestCase {
         ConstraintDescriptor<?> notNullDescriptor = passwordDescriptor.getComposingConstraints().iterator().next();
         
         // Check that the groups value containts Group1.class
-        Class[] notNullGroups = (Class[]) notNullDescriptor.getAttributes().get("groups");
+        Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
         boolean found = false;
-        for ( Class group : notNullGroups ) {
+        for ( Class<?> group : notNullGroups ) {
             if ( group == Group1.class ) {
                 found = true;
                 break;
@@ -93,6 +94,39 @@ public class BeanDescriptorTest extends TestCase {
         }
         Assert.assertTrue("Group1 not present in groups attribute", found);
     }
+
+    /**
+     * Check that the groups() attribute value contains the correct interface as
+     * implicit group when the constraint is defined in that interface instead
+     * of the queried class.
+     */
+    public void testImplicitGroupIsPresent() {
+        Validator validator = getValidator();
+        
+        Set<ConstraintDescriptor<?>> nameDescriptors = validator.getConstraintsForClass(Woman.class).getConstraintsForProperty("name").getConstraintDescriptors();
+        Assert.assertEquals("Incorrect number of descriptors", 1, nameDescriptors.size());
+        ConstraintDescriptor<?> notNullDescriptor = nameDescriptors.iterator().next();
+        
+        // Check that the groups attribute value contains the implicit group Person and the Default group
+        Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
+        Assert.assertEquals("Incorrect number of groups", 2, notNullGroups.length);
+        Assert.assertTrue("Default group not present", notNullGroups[0].equals(Default.class) || notNullGroups[1].equals(Default.class));
+        Assert.assertTrue("Implicit group not present", notNullGroups[0].equals(Person.class) || notNullGroups[1].equals(Person.class));
+    }
+    
+    public void testNoImplicitGroupWhenQueryingInterfaceDirectly() {
+        Validator validator = getValidator();
+        
+        Set<ConstraintDescriptor<?>> nameDescriptors = validator.getConstraintsForClass(Person.class).getConstraintsForProperty("name").getConstraintDescriptors();
+        Assert.assertEquals("Incorrect number of descriptors", 1, nameDescriptors.size());
+        ConstraintDescriptor<?> notNullDescriptor = nameDescriptors.iterator().next();
+        
+        // Check that only the default group is present
+        Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
+        Assert.assertEquals("Incorrect number of groups", 1, notNullGroups.length);
+        Assert.assertTrue("Default group not present", notNullGroups[0].equals(Default.class));
+    }
+    
     
     public static class Form {
         @NotNull
@@ -116,6 +150,25 @@ public class BeanDescriptorTest extends TestCase {
     }
     
     public static interface Group1 {
+    }
+    
+    
+    public static class Woman implements Person {
+        
+        private String name;
+
+        public String getName() {
+            return this.name;
+        }
+        
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+    
+    public static interface Person {
+        @NotNull
+        String getName();
     }
     
 }

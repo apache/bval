@@ -87,31 +87,6 @@ final class AnnotationConstraintBuilder {
                 }
             });
         }
-        try {
-            /*
-           spec: Invalid constraint definitions causes are multiple but include missing or illegal message
-           or groups elements
-            */
-            if (constraintValidation.getGroups() == null) {
-                throw new ConstraintDefinitionException(
-                      constraintValidation.getAnnotation().annotationType()
-                            .getName() + " does not contain a groups parameter.");
-            }
-            if (constraintValidation.getMessageTemplate() == null) {
-                throw new ConstraintDefinitionException(
-                      constraintValidation.getAnnotation().annotationType()
-                            .getName() + " does not contain a message parameter.");
-            }
-            if (constraintValidation.getPayload() == null) {
-                throw new ConstraintDefinitionException(
-                      constraintValidation.getAnnotation().annotationType()
-                            .getName() + " does not contain a payload parameter.");
-            }
-        } catch (ConstraintDefinitionException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e); // execution never reaches this point
-        }
     }
 
     private void buildGroups(Method method)

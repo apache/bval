@@ -34,6 +34,7 @@ public class MetaProperty extends FeaturesCapable
 
     private Type type;
     private MetaBean metaBean;
+    private MetaBean parentMetaBean;
 
     public MetaProperty() {
     }
@@ -46,6 +47,14 @@ public class MetaProperty extends FeaturesCapable
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
     }
+    
+    public MetaBean getParentMetaBean() {
+        return parentMetaBean;
+    }
+
+    public void setParentMetaBean(MetaBean parentMetaBean) {
+        this.parentMetaBean = parentMetaBean;
+    }    
 
     public boolean isRelationship() {
         return metaBean != null;

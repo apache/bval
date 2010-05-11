@@ -190,7 +190,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 if (!factoryContext.getFactory().getAnnotationIgnores()
                       .isIgnoreAnnotations(field)) {
                     if (metaProperty == null) {
-                        metaProperty = createMetaProperty(field.getName(), field.getType());
+                        metaProperty = createMetaProperty(metabean, field.getName(), field.getType());
                         /*if (*/
                         processAnnotations(metaProperty, beanClass, field,
                               new FieldAccess(field),
@@ -218,7 +218,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                         // create a property for those methods for which there is not yet a MetaProperty
                         if (metaProperty == null) {
                             metaProperty =
-                                  createMetaProperty(propName, method.getReturnType());
+                                  createMetaProperty(metabean, propName, method.getReturnType());
                             /*if (*/
                             processAnnotations(metaProperty, beanClass, method,
                                   new MethodAccess(propName, method),
@@ -249,7 +249,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 metaProperty =
                       metabean.getProperty(meta.getAccessStrategy().getPropertyName());
                 if (metaProperty == null) {
-                    metaProperty = createMetaProperty(
+                    metaProperty = createMetaProperty(metabean,
                           meta.getAccessStrategy().getPropertyName(),
                           meta.getAccessStrategy().getJavaType());
                     metabean.putProperty(metaProperty.getName(), metaProperty);
@@ -265,18 +265,19 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             MetaProperty metaProperty = metabean.getProperty(access.getPropertyName());
             if (metaProperty == null) {
                 metaProperty =
-                      createMetaProperty(access.getPropertyName(), access.getJavaType());
+                      createMetaProperty(metabean, access.getPropertyName(), access.getJavaType());
                 metabean.putProperty(metaProperty.getName(), metaProperty);
             }
             processValid(metaProperty, access);
         }
     }
 
-    private MetaProperty createMetaProperty(String propName, Type type) {
+    private MetaProperty createMetaProperty(MetaBean parentMetaBean, String propName, Type type) {
         MetaProperty metaProperty;
         metaProperty = new MetaProperty();
         metaProperty.setName(propName);
         metaProperty.setType(type);
+        metaProperty.setParentMetaBean(parentMetaBean);
         return metaProperty;
     }
 
@@ -445,6 +446,25 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         }
         final AnnotationConstraintBuilder builder = new AnnotationConstraintBuilder(
               constraintClasses, validator, annotation, owner, access);
+
+        // JSR-303 3.4.4: Add implicit groups
+        if ( prop != null && prop.getParentMetaBean() != null ) {
+            MetaBean parentMetaBean = prop.getParentMetaBean();
+            // If:
+            //  - the owner is an interface
+            //  - the class of the metabean being build is different than the owner
+            //  - and only the Default group is defined
+            // Then: add the owner interface as implicit groups
+            if ( builder.getConstraintValidation().getOwner().isInterface() &&
+                    parentMetaBean.getBeanClass() != builder.getConstraintValidation().getOwner() &&
+                    builder.getConstraintValidation().getGroups().size() == 1 &&
+                    builder.getConstraintValidation().getGroups().contains(Default.class) ) {
+                Set<Class<?>> groups = builder.getConstraintValidation().getGroups();
+                groups.add(builder.getConstraintValidation().getOwner());
+                builder.getConstraintValidation().setGroups(groups);
+            }
+        }
+
         // If already building a constraint composition tree, ensure that:
         //  - the parent groups are inherited
         //  - the parent payload is inherited
@@ -453,6 +473,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             builder.getConstraintValidation().setGroups(avb.getInheritedGroups());
             builder.getConstraintValidation().setPayload(avb.getInheritedPayload());
         }
+        
         // process composed constraints:
         // here are not other superclasses possible, because annotations do not inherit!
         if (processAnnotations(prop, owner, annotation.annotationType(), access,

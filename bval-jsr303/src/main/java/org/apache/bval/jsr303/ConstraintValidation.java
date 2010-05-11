@@ -236,11 +236,7 @@ public class ConstraintValidation<T extends Annotation>
     }
 
     protected boolean isMemberOf(Class<?> reqGroup) {
-        /**
-         * owner: implicit grouping support:
-         * owner is reqGroup or a superclass/superinterface of reqGroup
-         */
-        return owner.isAssignableFrom(reqGroup) || groups.contains(reqGroup);
+        return groups.contains(reqGroup);
     }
 
     public Class getOwner() {

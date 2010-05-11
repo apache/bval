@@ -97,6 +97,59 @@
         </extensions>
 
         <plugins>
+            <!--
+                get the svn revision number and project version
+                and set it in a properties file for later retrieval
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>set subversion revision</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <tasks>
+                                <property name="tmpdir" value="${java.io.tmpdir}/bvalmvntmp" />
+                                <condition property="outdir" value="${project.build.outputDirectory}">
+                                    <available type="dir" file="${project.build.outputDirectory}" />
+                                </condition>
+                                <property name="outdir" value="${tmpdir}" />
+                                <property name="svnversion.executable" value="svnversion" />
+                                <exec outputproperty="subversion.revision" failonerror="false" failifexecutionfails="false" executable="${svnversion.executable}">
+                                    <arg line="-c ${basedir}/.." />
+                                </exec>
+                                <property name="subversion.revision" value="unknown" />
+                                <echo>Revision: ${subversion.revision}</echo>
+                                <echo>Version: ${project.version}</echo>
+                                <mkdir dir="${outdir}/META-INF" />
+                                <echo file="${outdir}/META-INF/org.apache.bval.revision.properties">
+svn.revision=${subversion.revision}
+project.version=${project.version}
+                                </echo>
+                                <delete dir="${tmpdir}" />
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- create mainClass attribute -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                           <mainClass>org.apache.bval.util.BeanValidationVersion</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
+

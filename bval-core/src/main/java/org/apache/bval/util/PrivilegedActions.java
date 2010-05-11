@@ -27,6 +27,45 @@ import java.security.PrivilegedAction;
  * Description: utility methods to perform actions with AccessController or without. <br/>
  */
 public class PrivilegedActions {
+    private static String lineSeparator = null;
+    private static String pathSeparator = null;
+
+    /**
+     * Return the value of the "line.separator" system property.
+     * 
+     * Requires security policy: 
+     *   'permission java.util.PropertyPermission "read";'
+     */
+    public static final String getLineSeparator() {
+        if (lineSeparator == null) {
+            lineSeparator =
+                AccessController.doPrivileged(new PrivilegedAction<String>() {
+                    public String run() {
+                        return System.getProperty("line.separator");
+                    }
+                });
+        }
+        return lineSeparator;
+    }
+
+    /**
+     * Return the value of the "path.separator" system property.
+     * 
+     * Requires security policy:
+     *   'permission java.util.PropertyPermission "read";'
+     */
+    public static final String getPathSeparator() {
+        if (pathSeparator == null) {
+            pathSeparator =
+                AccessController.doPrivileged(new PrivilegedAction<String>() {
+                    public String run() {
+                        return System.getProperty("path.separator");
+                    }
+                });
+        }
+        return pathSeparator;
+    }
+
     /**
      * create a new instance.
      *
@@ -111,6 +150,16 @@ public class PrivilegedActions {
         }
     }
 
+    /**
+     * Return a PrivilegedAction object for clazz.getDeclaredMethod().invoke().
+     * 
+     * Requires security policy
+     *  'permission java.lang.RuntimePermission "accessDeclaredMembers";'
+     *  'permission java.lang.reflect.ReflectPermission "suppressAccessChecks";'
+     *   
+     * @return Object
+     * @exception IllegalAccessException, InvocationTargetException
+     */
     public static Object getAnnotationValue(final Annotation annotation, final String name)
           throws IllegalAccessException, InvocationTargetException {
         return run(new PrivilegedAction<Object>() {
@@ -132,6 +181,14 @@ public class PrivilegedActions {
         });
     }
 
+    /**
+     * Return a PrivilegeAction object for clazz.getClassloader().
+     * 
+     * Requires security policy:
+     *   'permission java.lang.RuntimePermission "getClassLoader";'
+     *   
+     * @return Classloader
+     */
     public static ClassLoader getClassLoader(final Class<?> clazz) {
         return run(new PrivilegedAction<ClassLoader>() {
             public ClassLoader run() {
@@ -143,4 +200,22 @@ public class PrivilegedActions {
             }
         });
     }
+
+    /**
+     * Return a PrivilegeAction object for System.getProperty().
+     * 
+     * Requires security policy:
+     *   'permission java.util.PropertyPermission "read";'
+     *   
+     * @return String
+     */
+    public static final String getProperty(final String name) {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+            public String run() {
+                return System.getProperty(name);
+            }
+        });
+    }
+
 }
+

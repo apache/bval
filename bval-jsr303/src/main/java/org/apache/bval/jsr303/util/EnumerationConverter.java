@@ -20,7 +20,7 @@ package org.apache.bval.jsr303.util;
 
 import org.apache.commons.beanutils.Converter;
 
-import com.thoughtworks.xstream.converters.ConversionException;
+//import com.thoughtworks.xstream.converters.ConversionException;
 
 /**
  * A {@code org.apache.commons.beanutils.Converter} implementation to handle
@@ -57,15 +57,15 @@ public final class EnumerationConverter implements Converter {
     @SuppressWarnings("unchecked")
     public Object convert(Class type, Object value) {
         if (!type.isEnum()) {
-            throw new ConversionException("Only enum types supported in this version!");
+            throw new RuntimeException("Only enum types supported in this version!");
         }
 
         if (value == null) {
-            throw new ConversionException("Null values not supported in this version!");
+            throw new RuntimeException("Null values not supported in this version!");
         }
 
         if (String.class != value.getClass()) {
-            throw new ConversionException("Only java.lang.String values supported in this version!");
+            throw new RuntimeException("Only java.lang.String values supported in this version!");
         }
 
         String stringValue = (String) value;

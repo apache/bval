@@ -31,16 +31,10 @@
     </parent>
 
     <artifactId>bval-jsr303</artifactId>
-    <name>bval-jsr303 :: Bean Validation 1.0 Implementation</name>
-    <packaging>jar</packaging>
+    <name>Apache Bean Validation :: bval-jsr303</name>
+    <packaging>bundle</packaging>
 
-    <description>
-    This is an implementation of JSR 303 (Bean Validation), a specification
-    of the Java API for Javabean validation in Java EE and Java SE.
-    The technical objective is to provide a class level constraint declaration
-    and validation facility for the Java application developer, as well as a
-    constraint metadata repository and query API.
-    </description>
+    <description>Implementation specific classes for JSR 303 Bean Validation 1.0</description>
 
     <reporting>
         <plugins>
@@ -136,6 +130,10 @@
             <version>${pom.version}</version>
         </dependency>
         <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -147,11 +145,6 @@
         </dependency>
 
         <!-- optional dependencies -->
-        <dependency>
-            <groupId>com.thoughtworks.xstream</groupId>
-            <artifactId>xstream</artifactId>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-jpa_2.0_spec</artifactId>
@@ -211,10 +204,37 @@
                 </executions>
                 <configuration>
                     <packageName>org.apache.bval.jsr303.xml</packageName>
-                    <outputDirectory>${basedir}/target/generated-sources</outputDirectory>
                     <extension>true</extension>
                 </configuration>
             </plugin>
+
+            <!-- create an OSGi bundle -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Specification-Title>JSR-303 Bean Validation</Specification-Title>
+                        <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                        <Specification-Version>1.0</Specification-Version>
+                        <!-- OSGi Bundle Metadata -->
+                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
+                        <Bundle-Activator></Bundle-Activator>
+                        <Private-Package />
+                        <Export-Package>org.apache.bval.*</Export-Package>
+                        <!-- No export version for now...
+                        <Export-Package>org.apache.bval.*;version=${project.version}</Export-Package>
+                        -->
+                        <Import-Package>com.thoughtworks.xstream.*;resolution:=optional,freemarker.template.*;resolution:=optional,javax.persistence.*;resolution:=optional,*</Import-Package>
+                        <!-- Eclipse metadata -->
+                        <Eclipse-Autostart>false</Eclipse-Autostart>
+                        <Bundle-ClassPath>.</Bundle-ClassPath>
+                    </instructions>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
+

@@ -19,6 +19,7 @@
 package org.apache.bval.jsr303.groups;
 
 
+import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.ValidationException;
 import javax.validation.groups.Default;
@@ -105,7 +106,7 @@ public class GroupsComputer {
     private List<Group> resolveSequence(Class<?> group, GroupSequence sequenceAnnotation,
                                         Set<Class<?>> processedSequences) {
         if (processedSequences.contains(group)) {
-            throw new ValidationException("Cyclic dependency in groups definition");
+            throw new GroupDefinitionException("Cyclic dependency in groups definition");
         } else {
             processedSequences.add(group);
         }

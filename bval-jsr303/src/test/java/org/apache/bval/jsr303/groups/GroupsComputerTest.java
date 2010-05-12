@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import javax.validation.GroupDefinitionException;
 import javax.validation.ValidationException;
 import javax.validation.groups.Default;
 
@@ -100,7 +101,7 @@ public class GroupsComputerTest extends TestCase {
             groups.add(CyclicGroupSequence1.class);
             groupsComputer.computeGroups(groups);
             fail();
-        } catch (ValidationException ex) {
+        } catch (GroupDefinitionException ex) {
 
         }
     }
@@ -111,7 +112,7 @@ public class GroupsComputerTest extends TestCase {
             groups.add(CyclicGroupSequence.class);
             groupsComputer.computeGroups(groups);
             fail();
-        } catch (ValidationException ex) {
+        } catch (GroupDefinitionException ex) {
 
         }
     }

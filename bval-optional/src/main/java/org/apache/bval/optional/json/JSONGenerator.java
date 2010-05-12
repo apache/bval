@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.bval.json;
+package org.apache.bval.optional.json;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -34,8 +34,10 @@ import freemarker.template.TemplateException;
 /**
  * Description: Generate a JSON String for a collection of {@link MetaBean}s.
  * This implementation uses a freemarker template to generate the output.<br/>
+ *
+ * This is an optional module which requires the freemarker dependency
+ * and template resourece file "bean-infos-json.ftl" with it.
  */
-// TODO RSt - move. this is an optional module: move freemarker dependency and template "bean-infos-json.ftl" with it.
 public class JSONGenerator {
     private final Template template;
 

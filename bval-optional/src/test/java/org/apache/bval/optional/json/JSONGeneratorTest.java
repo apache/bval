@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.bval.json;
+package org.apache.bval.optional.json;
 
 import junit.framework.TestCase;
 import org.apache.bval.MetaBeanManager;
@@ -31,12 +31,8 @@ import java.util.List;
 
 /**
  * Description: <br>
- * User: roman.stumm<br>
- * Date: 31.03.2010<br>
- * Time: 17:00:17<br>
- * viaboxx GmbH, 2010
+ * Author: roman.stumm<br>
  */
-// TODO RSt - move. this tests an optional module
 public class JSONGeneratorTest extends TestCase {
   private MetaBeanManager mbm;
 

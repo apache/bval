@@ -38,22 +38,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
@@ -68,9 +58,14 @@
             <artifactId>commons-collections</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <optional>true</optional>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -82,14 +77,6 @@
                 <directory>src/main/resources</directory>
             </resource>
         </resources>
-
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-webdav</artifactId>
-                <version>1.0-beta-2</version>
-            </extension>
-        </extensions>
 
         <plugins>
             <!--
@@ -145,27 +132,22 @@ project.version=${project.version}
                 </configuration>
             </plugin>
 
-            <!-- create an OSGi bundle -->
+            <!--
+                 Create a tests.jar so we can reuse some of the base
+                 test classes in other modules.
+            -->
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <!-- OSGi Bundle Metadata -->
-                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
-                        <Bundle-Activator></Bundle-Activator>
-                        <Private-Package />
-                        <Export-Package>org.apache.bval.*</Export-Package>
-                        <!-- No export version for now...
-                        <Export-Package>org.apache.bval.*;version=${project.version}</Export-Package>
-                        -->
-                        <Import-Package>freemarker.template.*;resolution:=optional,*</Import-Package>
-                        <!-- Eclipse metadata -->
-                        <Eclipse-Autostart>false</Eclipse-Autostart>
-                        <Bundle-ClassPath>.</Bundle-ClassPath>
-                    </instructions>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-tests</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>

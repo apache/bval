@@ -28,9 +28,11 @@ import org.apache.bval.jsr303.util.TestUtils;
 import org.apache.bval.model.MetaBean;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.GroupSequence;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -181,4 +183,33 @@ public class GroupSequenceTest extends TestCase {
         assertEquals(1, constraintViolations.size());
     }
 
+    
+    /**
+     * Check that when there is one constraint failure in one of the groups in
+     * a sequence, validation stops.
+     * JSR-303: 3.4.3
+     */
+    public void testValidationStopsWhenFailuresOnGroup() {
+        Validator validator = getValidator();
+        
+        // Validate Dummy with its redefined Default group
+        Set<ConstraintViolation<Dummy>> violations = validator.validate(new Dummy());
+        assertEquals("Only 1 violation expected", 1, violations.size());
+        ConstraintViolation<Dummy> violation = violations.iterator().next();
+        assertEquals("Group1 should be evaluated first", "field1", violation.getPropertyPath().toString());
+    }
+    
+    @GroupSequence({Dummy.Group1.class, Dummy.class})
+    public static class Dummy {
+        
+        @NotNull(groups=Group1.class)
+        public String field1;
+        
+        @NotNull
+        public String field2;
+        
+        interface Group1 {
+        }
+    }
+    
 }

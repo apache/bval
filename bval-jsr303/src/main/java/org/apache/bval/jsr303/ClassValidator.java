@@ -101,12 +101,16 @@ public class ClassValidator extends BeanValidator implements Validator {
     public void validateBeanNet(ValidationContext vcontext) {
         GroupValidationContext context = (GroupValidationContext) vcontext;
         List<Group> defaultGroups = expandDefaultGroup(context);
+        final ConstraintValidationListener result = (ConstraintValidationListener) vcontext.getListener();
         if (defaultGroups != null) {
             Group currentGroup = context.getCurrentGroup();
             for (Group each : defaultGroups) {
                 context.setCurrentGroup(each);
                 super.validateBeanNet(context);
-                // continue validation, even if errors already found: if (!result.isEmpty())
+                // Spec 3.4.3 - Stop validation if errors already found
+                if ( !result.isEmpty() ) {
+                    break;
+                }
             }
             context.setCurrentGroup(currentGroup); // restore  (finally{} not required)
         } else {

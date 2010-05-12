@@ -141,15 +141,16 @@ public class CollectionValidationTest extends TestCase {
         /*
         This, by the way, tests redefined default group sequence behavior
         on non-root-beans (Library.Book)!!
+        So only 1 constraint violation expected
          */
         violations = validator.validate(lib);
         assertEquals(
-              "redefined default group of Book not correctly validated from Library", 3,
+              "redefined default group of Book not correctly validated from Library", 1,
               violations.size());
         assertNotNull(TestUtils.getViolation(violations, "taggedBooks[politics].title"));
-        assertNotNull(
+        assertNull(
               TestUtils.getViolation(violations, "taggedBooks[humor].author.firstName"));
-        assertNotNull(TestUtils.getViolation(violations,
+        assertNull(TestUtils.getViolation(violations,
               "taggedBooks[science].author.addresses[0].city"));
     }
 

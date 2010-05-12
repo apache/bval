@@ -30,11 +30,11 @@
         <version>0.1-incubating-SNAPSHOT</version>
     </parent>
 
-    <artifactId>bval-optional</artifactId>
-    <name>Apache Bean Validation :: bval-optional</name>
+    <artifactId>bval-json</artifactId>
+    <name>Apache Bean Validation :: bval-json</name>
     <packaging>bundle</packaging>
 
-    <description>Bean Validation Optional Components</description>
+    <description>Bean Validation - Optional JSON Component</description>
 
     <dependencies>
         <dependency>
@@ -70,25 +70,6 @@
             </resource>
         </resources>
 
-        <plugins>
-            <!-- create an OSGi bundle
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
-                        <Bundle-Activator></Bundle-Activator>
-                        <Private-Package />
-                        <Export-Package>org.apache.bval.optional.*</Export-Package>
-                        <Eclipse-Autostart>false</Eclipse-Autostart>
-                        <Bundle-ClassPath>.</Bundle-ClassPath>
-                    </instructions>
-                </configuration>
-            </plugin>
--->
-        </plugins>
     </build>
 </project>
 

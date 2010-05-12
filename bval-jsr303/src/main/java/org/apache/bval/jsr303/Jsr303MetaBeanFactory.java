@@ -190,13 +190,11 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 if (!factoryContext.getFactory().getAnnotationIgnores()
                       .isIgnoreAnnotations(field)) {
                     if (metaProperty == null) {
-                        metaProperty = createMetaProperty(metabean, field.getName(), field.getType());
-                        /*if (*/
+                        metaProperty = createMetaProperty(field.getName(), field.getType());
+                        metabean.putProperty(metaProperty.getName(), metaProperty);
                         processAnnotations(metaProperty, beanClass, field,
                               new FieldAccess(field),
                               new AppendValidationToMeta(metaProperty));//) {
-                        metabean.putProperty(metaProperty.getName(), metaProperty);
-                        //}
                     } else {
                         processAnnotations(metaProperty, beanClass, field,
                               new FieldAccess(field),
@@ -218,13 +216,11 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                         // create a property for those methods for which there is not yet a MetaProperty
                         if (metaProperty == null) {
                             metaProperty =
-                                  createMetaProperty(metabean, propName, method.getReturnType());
-                            /*if (*/
+                                  createMetaProperty(propName, method.getReturnType());
+                            metabean.putProperty(propName, metaProperty);
                             processAnnotations(metaProperty, beanClass, method,
                                   new MethodAccess(propName, method),
                                   new AppendValidationToMeta(metaProperty));//) {
-                            metabean.putProperty(propName, metaProperty);
-                            //}
                         } else {
                             processAnnotations(metaProperty, beanClass, method,
                                   new MethodAccess(propName, method),
@@ -249,7 +245,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 metaProperty =
                       metabean.getProperty(meta.getAccessStrategy().getPropertyName());
                 if (metaProperty == null) {
-                    metaProperty = createMetaProperty(metabean,
+                    metaProperty = createMetaProperty(
                           meta.getAccessStrategy().getPropertyName(),
                           meta.getAccessStrategy().getJavaType());
                     metabean.putProperty(metaProperty.getName(), metaProperty);
@@ -265,19 +261,18 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             MetaProperty metaProperty = metabean.getProperty(access.getPropertyName());
             if (metaProperty == null) {
                 metaProperty =
-                      createMetaProperty(metabean, access.getPropertyName(), access.getJavaType());
+                      createMetaProperty(access.getPropertyName(), access.getJavaType());
                 metabean.putProperty(metaProperty.getName(), metaProperty);
             }
             processValid(metaProperty, access);
         }
     }
 
-    private MetaProperty createMetaProperty(MetaBean parentMetaBean, String propName, Type type) {
+    private MetaProperty createMetaProperty(String propName, Type type) {
         MetaProperty metaProperty;
         metaProperty = new MetaProperty();
         metaProperty.setName(propName);
         metaProperty.setType(type);
-        metaProperty.setParentMetaBean(parentMetaBean);
         return metaProperty;
     }
 

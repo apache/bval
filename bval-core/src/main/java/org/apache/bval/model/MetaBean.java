@@ -83,8 +83,14 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         return properties.length > 0;
     }
 
+  /**
+   * bidirectional - set the relationship between a MetaProperty and its parentMetaBean
+   * @param name
+   * @param property
+   */
     public void putProperty(String name, MetaProperty property) {
         final MetaProperty oldProperty = getProperty(name);
+        if(property != null) property.setParentMetaBean(this);
         if (oldProperty == null) { // add
             if (properties.length == 0) {
                 properties = new MetaProperty[1];

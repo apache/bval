@@ -39,7 +39,7 @@ public class MetaProperty extends FeaturesCapable
     public MetaProperty() {
     }
 
-    /** the meta info of the target bean (mainly for relationships) */
+    /** the metabean of the target bean (mainly for relationships) */
     public MetaBean getMetaBean() {
         return metaBean;
     }
@@ -47,7 +47,10 @@ public class MetaProperty extends FeaturesCapable
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
     }
-    
+
+  /**
+   * the metabean that owns this property (set by MetaBean.putProperty())
+   */
     public MetaBean getParentMetaBean() {
         return parentMetaBean;
     }

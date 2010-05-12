@@ -190,8 +190,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 if (!factoryContext.getFactory().getAnnotationIgnores()
                       .isIgnoreAnnotations(field)) {
                     if (metaProperty == null) {
-                        metaProperty = createMetaProperty(field.getName(), field.getType());
-                        metabean.putProperty(metaProperty.getName(), metaProperty);
+                        metaProperty = addMetaProperty(metabean, field.getName(), field.getType());
                         processAnnotations(metaProperty, beanClass, field,
                               new FieldAccess(field),
                               new AppendValidationToMeta(metaProperty));//) {
@@ -216,8 +215,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                         // create a property for those methods for which there is not yet a MetaProperty
                         if (metaProperty == null) {
                             metaProperty =
-                                  createMetaProperty(propName, method.getReturnType());
-                            metabean.putProperty(propName, metaProperty);
+                                  addMetaProperty(metabean, propName, method.getReturnType());
                             processAnnotations(metaProperty, beanClass, method,
                                   new MethodAccess(propName, method),
                                   new AppendValidationToMeta(metaProperty));//) {
@@ -245,10 +243,9 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 metaProperty =
                       metabean.getProperty(meta.getAccessStrategy().getPropertyName());
                 if (metaProperty == null) {
-                    metaProperty = createMetaProperty(
+                    metaProperty = addMetaProperty(metabean,
                           meta.getAccessStrategy().getPropertyName(),
                           meta.getAccessStrategy().getJavaType());
-                    metabean.putProperty(metaProperty.getName(), metaProperty);
                 }
             }
             Class<? extends ConstraintValidator<?, ?>>[] constraintClasses =
@@ -261,18 +258,18 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             MetaProperty metaProperty = metabean.getProperty(access.getPropertyName());
             if (metaProperty == null) {
                 metaProperty =
-                      createMetaProperty(access.getPropertyName(), access.getJavaType());
-                metabean.putProperty(metaProperty.getName(), metaProperty);
+                      addMetaProperty(metabean, access.getPropertyName(), access.getJavaType());
             }
             processValid(metaProperty, access);
         }
     }
 
-    private MetaProperty createMetaProperty(String propName, Type type) {
+    private MetaProperty addMetaProperty(MetaBean parentMetaBean, String propName, Type type) {
         MetaProperty metaProperty;
         metaProperty = new MetaProperty();
         metaProperty.setName(propName);
         metaProperty.setType(type);
+        parentMetaBean.putProperty(propName, metaProperty);
         return metaProperty;
     }
 

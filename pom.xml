@@ -509,6 +509,7 @@
         <module>bval-core</module>
         <module>bval-jsr303</module>
         <module>bval-json</module>
+        <module>bval-guice</module>
         <!-- <module>bval-tck</module> -->
     </modules>
 

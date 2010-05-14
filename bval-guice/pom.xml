@@ -31,34 +31,28 @@
     </parent>
 
     <artifactId>bval-guice</artifactId>
-    <name>Apache Bean Validation :: bval-guice</name>
+    <name>Apache Bean Validation :: bval-guice (optional)</name>
     <packaging>bundle</packaging>
 
     <description>Bean Validation - Google Guice Integration</description>
 
     <dependencies>
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-jsr303</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>2.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>aopalliance</groupId>
             <artifactId>aopalliance</artifactId>
             <version>1.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -66,6 +60,49 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <!--
+            default profile using geronimo-validation_1.0_spec.jar
+            active when property "ri" is not present.
+        -->
+        <profile>
+            <id>geronimo</id>
+            <activation>
+                <property>
+                    <name>!ri</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-validation_1.0_spec</artifactId>
+                    <!-- allow users to choose an API provider -->
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <!--
+            optional profile using javax.validation/validation-api.jar
+            from RI manually active when property "-Pri" is provided.
+        -->
+        <profile>
+            <id>ri</id>
+            <activation>
+                <property>
+                    <name>ri</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                    <!-- allow users to choose an API provider -->
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <build>
         <defaultGoal>install</defaultGoal>

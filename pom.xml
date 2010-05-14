@@ -32,7 +32,7 @@
 
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
-    <name>Apache BeanValidation :: Parent POM</name>
+    <name>Apache Bean Validation :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
     <version>0.1-incubating-SNAPSHOT</version>
 
@@ -162,17 +162,17 @@
     -->
     <dependencyManagement>
         <dependencies>
-            <!-- Optional profile to use Spec RI API -->
-            <dependency>
-                <groupId>javax.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <version>1.0.0.GA</version>
-            </dependency>
             <!-- Default of Apache Geronimo version of the Spec API -->
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-validation_1.0_spec</artifactId>
                 <version>1.1</version>
+            </dependency>
+            <!-- Optional profile to use Spec RI API -->
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <version>1.0.0.GA</version>
             </dependency>
             <!-- JPA2 spec required for JPA aware TraversableResolver support -->
             <dependency>
@@ -217,11 +217,11 @@
                 <artifactId>commons-collections</artifactId>
                 <version>3.2.1</version>
             </dependency>
+            <!-- Optional - only used by bval-json -->
             <dependency>
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>2.3.15</version>
-                <!-- some older version is also compatible -->
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -277,7 +277,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.0.2</version>
+                    <version>2.1</version>
                     <configuration>
                         <source>1.5</source>
                         <target>1.5</target>
@@ -297,7 +297,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.0-alpha-4</version>
+                    <version>1.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -307,7 +307,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>2.3</version>
                     <configuration>
                         <archive>
                             <manifest>
@@ -320,7 +320,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>2.6.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -330,7 +330,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.0-beta-9</version>
+                    <version>2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -348,7 +348,10 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.2-beta-3</version>
+                    <version>2.2-beta-5</version>
+                    <configuration>
+                        <tarLongFileMode>gnu</tarLongFileMode>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -416,11 +419,28 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.4.3</version>
+                    <configuration>
+                        <useFile>false</useFile>
+                        <trimStackTrace>false</trimStackTrace>
+                        <useSystemClassLoader>true</useSystemClassLoader>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>2.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.2</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.plexus</groupId>
+                            <artifactId>plexus-velocity</artifactId>
+                            <version>1.1.3</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -502,6 +522,34 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                            <tarLongFileMode>gnu</tarLongFileMode>
+                            <descriptorRefs>
+                                <descriptorRef>
+                                    source-release
+                                </descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.apache.resources</groupId>
+                        <artifactId>apache-source-release-assembly-descriptor</artifactId>
+                        <version>1.0.2</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
 
@@ -510,7 +558,7 @@
         <module>bval-jsr303</module>
         <module>bval-json</module>
         <module>bval-guice</module>
-        <!-- <module>bval-tck</module> -->
+        <module>bval-tck</module>
     </modules>
 
     <profiles>

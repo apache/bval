@@ -17,6 +17,8 @@
 package org.apache.bval.jsr303.extensions;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
+import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 
 import org.apache.bval.jsr303.ApacheFactoryContext;
@@ -25,6 +27,7 @@ import org.apache.bval.jsr303.ClassValidator;
 import org.apache.bval.jsr303.ConstraintValidation;
 import org.apache.bval.jsr303.ConstraintValidationListener;
 import org.apache.bval.jsr303.GroupValidationContext;
+import org.apache.bval.jsr303.Jsr303Features;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.model.MetaBean;
@@ -43,6 +46,17 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     public MethodValidatorImpl(ApacheFactoryContext factoryContext) {
         super(factoryContext);
     }
+
+    
+    @Override
+    public BeanDescriptor getConstraintsForClass(Class<?> clazz) {
+        // TODO: Cache this MetaBean
+        MetaBean uncachedStubmetaBean = new MetaBean();
+        uncachedStubmetaBean.setBeanClass(clazz);
+        BeanDescriptorImpl edesc = createBeanDescriptor(uncachedStubmetaBean);
+        return edesc;
+    }
+
 
     @Override
     protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {

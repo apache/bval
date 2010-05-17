@@ -94,6 +94,18 @@
                     <version>1.0.0</version>
                 </dependency>
             </dependencies>
+            <repositories>
+                <repository>
+                    <id>jboss</id>
+                    <url>http://repository.jboss.com/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
             <build>
                 <plugins>
                     <plugin>
@@ -125,14 +137,14 @@
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
                                             <artifactId>bval-jsr303</artifactId>
-                                            <version>${version}</version>
+                                            <version>${project.version}</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
                                             <artifactId>bval-core</artifactId>
-                                            <version>${version}</version>
+                                            <version>${project.version}</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
@@ -160,7 +172,7 @@
                             <suiteXmlFiles>
                                 <suiteXmlFile>${project.build.directory}/dependency/jsr303-tck-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
-                            <argLine>-Xmx128m</argLine>
+                            <argLine>-Xmx512m</argLine>
                             <forkMode>once</forkMode>
                             <systemProperties>
                                 <property>
@@ -235,7 +247,7 @@
                                 </property>
                                 <property>
                                     <name>org.jboss.testharness.container.javaOpts</name>
-                                    <value>-Xms128m -Xmx384m -XX:MaxPermSize=128m -Dorg.jboss.resolver.warning=true
+                                    <value>-Xms128m -Xmx512m -XX:MaxPermSize=256m -Dorg.jboss.resolver.warning=true
                                         -Dvalidation.provider=${validation.provider} ${remote.debug}
                                     </value>
                                 </property>
@@ -307,17 +319,5 @@
         </profile>
     </profiles>
 
-    <repositories>
-        <repository>
-            <id>jboss</id>
-            <url>http://repository.jboss.com/maven2</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
 </project>
+

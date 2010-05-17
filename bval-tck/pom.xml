@@ -125,12 +125,14 @@
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
                                             <artifactId>bval-jsr303</artifactId>
+                                            <version>${version}</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
                                             <artifactId>bval-core</artifactId>
+                                            <version>${version}</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>

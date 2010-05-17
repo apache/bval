@@ -225,10 +225,52 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                                   new AppendValidationToMeta(metaProperty));
                         }
                     }
-                } // TODO: If propName == null AND it's annotated, throw Ex
+                }
+                else if ( hasValidationConstraintsDefined(method) ) {
+                    throw new ValidationException("Property " + method.getName() + " does not follow javabean conventions.");
+                }
             }
         }
         addXmlConstraints(beanClass, metabean);
+    }
+    
+    private boolean hasValidationConstraintsDefined(Method method) {
+        boolean ret = false;
+        for ( Annotation annot : method.getDeclaredAnnotations() ) {
+            if ( true == (ret = hasValidationConstraintsDefined(annot)) ) {
+                break;
+            }
+        }
+        
+        return ret;
+    }
+    
+    private boolean hasValidationConstraintsDefined(Annotation annot) {
+        // If it is annotated with @Constraint
+        if ( annot.annotationType().getAnnotation(Constraint.class) != null ) {
+            return true;
+        }
+        boolean ret = false;
+        
+        // Check in case it is a multivalued constraint
+        Object value = null;
+        try {
+            value = SecureActions.getAnnotationValue(annot, ANNOTATION_VALUE);
+        } catch (IllegalAccessException e) {
+            // Swallow it
+        } catch (InvocationTargetException e) {
+            // Swallow it
+        }
+        
+        if ( value instanceof Annotation[] ) {
+            for (Annotation annot2 : (Annotation[])value ) {
+                if ( true == (ret = hasValidationConstraintsDefined(annot2)) ) {
+                    break;
+                }
+            }
+        }
+        
+        return ret;
     }
 
     /** add cascade validation and constraints from xml mappings */

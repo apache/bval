@@ -90,7 +90,7 @@ public class ConstraintValidation<T extends Annotation>
 
     void setPayload(Set<Class<? extends Payload>> payload) {
         this.payload = payload;
-        this.attributes.put("payload", groups.toArray(new Class[groups.size()]));
+        this.attributes.put("payload", payload.toArray(new Class[payload.size()]));
     }
 
     public boolean isReportAsSingleViolation() {

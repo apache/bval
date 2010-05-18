@@ -38,115 +38,120 @@ import java.util.HashMap;
  */
 //TODO RSt - move. this is an optional module: move the whole package. core code has no dependencies on it 
 public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
-    public MethodValidatorMetaBeanFactory(ApacheFactoryContext factoryContext) {
-        super(factoryContext);
-    }
+  public MethodValidatorMetaBeanFactory(ApacheFactoryContext factoryContext) {
+    super(factoryContext);
+  }
 
-    public void buildMethodDescriptor(MethodBeanDescriptorImpl descriptor) {
-        try {
-            buildMethodConstraints(descriptor);
-            buildConstructorConstraints(descriptor);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e.getMessage(), e);
+  @Override
+  protected boolean hasValidationConstraintsDefined(Method method) {
+    return false;
+  }
+
+  public void buildMethodDescriptor(MethodBeanDescriptorImpl descriptor) {
+    try {
+      buildMethodConstraints(descriptor);
+      buildConstructorConstraints(descriptor);
+    } catch (Exception e) {
+      throw new IllegalArgumentException(e.getMessage(), e);
+    }
+  }
+
+  private void buildConstructorConstraints(MethodBeanDescriptorImpl beanDesc)
+      throws InvocationTargetException, IllegalAccessException {
+    beanDesc.setConstructorConstraints(new HashMap<Constructor<?>, ConstructorDescriptor>());
+
+    for (Constructor<?> cons : beanDesc.getMetaBean().getBeanClass()
+        .getDeclaredConstructors()) {
+      if (!factoryContext.getFactory().getAnnotationIgnores()
+          .isIgnoreAnnotations(cons)) {
+
+        ConstructorDescriptorImpl consDesc =
+            new ConstructorDescriptorImpl(beanDesc.getMetaBean(), new Validation[0]);
+        beanDesc.putConstructorDescriptor(cons, consDesc);
+
+        Annotation[][] paramsAnnos = cons.getParameterAnnotations();
+        int idx = 0;
+        for (Annotation[] paramAnnos : paramsAnnos) {
+          ParameterAccess access = new ParameterAccess(cons.getParameterTypes()[idx], idx);
+          processAnnotations(consDesc, paramAnnos, access, idx);
+          idx++;
         }
+      }
     }
+  }
 
-    private void buildConstructorConstraints(MethodBeanDescriptorImpl beanDesc)
-          throws InvocationTargetException, IllegalAccessException {
-        beanDesc.setConstructorConstraints(new HashMap<Constructor<?>, ConstructorDescriptor>());
+  private void buildMethodConstraints(MethodBeanDescriptorImpl beanDesc)
+      throws InvocationTargetException, IllegalAccessException {
+    beanDesc.setMethodConstraints(new HashMap<Method, MethodDescriptor>());
 
-        for (Constructor<?> cons : beanDesc.getMetaBean().getBeanClass()
-              .getDeclaredConstructors()) {
-            if (!factoryContext.getFactory().getAnnotationIgnores()
-                  .isIgnoreAnnotations(cons)) {
-
-                ConstructorDescriptorImpl consDesc =
-                      new ConstructorDescriptorImpl(beanDesc.getMetaBean(), new Validation[0]);
-                beanDesc.putConstructorDescriptor(cons, consDesc);
-
-                Annotation[][] paramsAnnos = cons.getParameterAnnotations();
-                int idx = 0;
-                for (Annotation[] paramAnnos : paramsAnnos) {
-                    ParameterAccess access = new ParameterAccess(cons.getParameterTypes()[idx], idx);
-                    processAnnotations(consDesc, paramAnnos, access, idx);
-                    idx++;
-                }
-            }
-        }
-    }
-
-    private void buildMethodConstraints(MethodBeanDescriptorImpl beanDesc)
-          throws InvocationTargetException, IllegalAccessException {
-        beanDesc.setMethodConstraints(new HashMap<Method, MethodDescriptor>());
-
-        for (Method method : beanDesc.getMetaBean().getBeanClass().getDeclaredMethods()) {
-            if (!factoryContext.getFactory().getAnnotationIgnores()
-                  .isIgnoreAnnotations(method)) {
+    for (Method method : beanDesc.getMetaBean().getBeanClass().getDeclaredMethods()) {
+      if (!factoryContext.getFactory().getAnnotationIgnores()
+          .isIgnoreAnnotations(method)) {
 
 
-                MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(
-                      beanDesc.getMetaBean(), new Validation[0]);
-                beanDesc.putMethodDescriptor(method, methodDesc);
+        MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(
+            beanDesc.getMetaBean(), new Validation[0]);
+        beanDesc.putMethodDescriptor(method, methodDesc);
 
-                // return value validations
-                AppendValidationToList validations = new AppendValidationToList();
-                ReturnAccess returnAccess = new ReturnAccess(method.getReturnType());
-                for (Annotation anno : method.getAnnotations()) {
-                    processAnnotation(anno, methodDesc, returnAccess, validations);
-                }
-                methodDesc.getConstraintDescriptors().addAll(validations.getValidations());
-
-                // parameter validations
-                Annotation[][] paramsAnnos = method.getParameterAnnotations();
-                int idx = 0;
-                for (Annotation[] paramAnnos : paramsAnnos) {
-                    ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
-                    processAnnotations(methodDesc, paramAnnos, access, idx);
-                    idx++;
-                }
-            }
-        }
-    }
-
-    private void processAnnotations(ProcedureDescriptor methodDesc, Annotation[] paramAnnos,
-                                    AccessStrategy access, int idx)
-          throws InvocationTargetException, IllegalAccessException {
+        // return value validations
         AppendValidationToList validations = new AppendValidationToList();
-        for (Annotation anno : paramAnnos) {
-            processAnnotation(anno, methodDesc, access, validations);
+        ReturnAccess returnAccess = new ReturnAccess(method.getReturnType());
+        for (Annotation anno : method.getAnnotations()) {
+          processAnnotation(anno, methodDesc, returnAccess, validations);
         }
-        ParameterDescriptorImpl paramDesc = new ParameterDescriptorImpl(
-              methodDesc.getMetaBean(), validations.getValidations().toArray(
-              new Validation[validations.getValidations().size()]));
-        paramDesc.setIndex(idx);
-        methodDesc.getParameterDescriptors().add(paramDesc);
-    }
+        methodDesc.getConstraintDescriptors().addAll(validations.getValidations());
 
-    private void processAnnotation(Annotation annotation, ProcedureDescriptor desc,
-                                   AccessStrategy access, AppendValidation validations)
-          throws InvocationTargetException, IllegalAccessException {
-
-        if (annotation instanceof Valid) {
-            desc.setCascaded(true);
-        } else {
-            Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
-            if (vcAnno != null) {
-                Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
-                validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
-                applyConstraint(annotation, validatorClasses, null,
-                      desc.getMetaBean().getBeanClass(), access, validations);
-            } else {
-                /**
-                 * Multi-valued constraints
-                 */
-                Object result = SecureActions.getAnnotationValue(annotation, ANNOTATION_VALUE);
-                if (result != null && result instanceof Annotation[]) {
-                    for (Annotation each : (Annotation[]) result) {
-                        processAnnotation(each, desc, access, validations); // recursion
-                    }
-                }
-            }
+        // parameter validations
+        Annotation[][] paramsAnnos = method.getParameterAnnotations();
+        int idx = 0;
+        for (Annotation[] paramAnnos : paramsAnnos) {
+          ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
+          processAnnotations(methodDesc, paramAnnos, access, idx);
+          idx++;
         }
+      }
     }
+  }
+
+  private void processAnnotations(ProcedureDescriptor methodDesc, Annotation[] paramAnnos,
+                                  AccessStrategy access, int idx)
+      throws InvocationTargetException, IllegalAccessException {
+    AppendValidationToList validations = new AppendValidationToList();
+    for (Annotation anno : paramAnnos) {
+      processAnnotation(anno, methodDesc, access, validations);
+    }
+    ParameterDescriptorImpl paramDesc = new ParameterDescriptorImpl(
+        methodDesc.getMetaBean(), validations.getValidations().toArray(
+            new Validation[validations.getValidations().size()]));
+    paramDesc.setIndex(idx);
+    methodDesc.getParameterDescriptors().add(paramDesc);
+  }
+
+  private void processAnnotation(Annotation annotation, ProcedureDescriptor desc,
+                                 AccessStrategy access, AppendValidation validations)
+      throws InvocationTargetException, IllegalAccessException {
+
+    if (annotation instanceof Valid) {
+      desc.setCascaded(true);
+    } else {
+      Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
+      if (vcAnno != null) {
+        Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
+        validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
+        applyConstraint(annotation, validatorClasses, null,
+            desc.getMetaBean().getBeanClass(), access, validations);
+      } else {
+        /**
+         * Multi-valued constraints
+         */
+        Object result = SecureActions.getAnnotationValue(annotation, ANNOTATION_VALUE);
+        if (result != null && result instanceof Annotation[]) {
+          for (Annotation each : (Annotation[]) result) {
+            processAnnotation(each, desc, access, validations); // recursion
+          }
+        }
+      }
+    }
+  }
 
 }

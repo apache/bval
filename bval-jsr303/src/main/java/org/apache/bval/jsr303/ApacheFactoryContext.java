@@ -48,7 +48,7 @@ public class ApacheFactoryContext implements ValidatorContext {
         this.metaBeanFinder = metaBeanFinder;
     }
 
-  public ApacheValidatorFactory getFactory() {
+    public ApacheValidatorFactory getFactory() {
         return factory;
     }
 

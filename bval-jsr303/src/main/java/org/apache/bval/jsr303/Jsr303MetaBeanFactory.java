@@ -234,7 +234,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         addXmlConstraints(beanClass, metabean);
     }
     
-    private boolean hasValidationConstraintsDefined(Method method) {
+    protected boolean hasValidationConstraintsDefined(Method method) {
         boolean ret = false;
         for ( Annotation annot : method.getDeclaredAnnotations() ) {
             if ( true == (ret = hasValidationConstraintsDefined(annot)) ) {

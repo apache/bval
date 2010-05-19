@@ -123,7 +123,7 @@ public class ConstraintValidation<T extends Annotation>
     if (validator != null && !context.collectValidated(validator))
       return; // already done
 
-    if (context.getMetaProperty() != null && !isCascadeEnabled(context)) {
+    if (context.getMetaProperty() != null && !isReachable(context)) {
       return;
     }
 
@@ -191,7 +191,7 @@ public class ConstraintValidation<T extends Annotation>
     }
   }
 
-  private boolean isCascadeEnabled(GroupValidationContext context) {
+  private boolean isReachable(GroupValidationContext context) {
     PathImpl path = context.getPropertyPath();
     NodeImpl node = path.getLeafNode();
     PathImpl beanPath = path.getPathWithoutLeafNode();
@@ -206,16 +206,6 @@ public class ConstraintValidation<T extends Annotation>
     } catch (RuntimeException e) {
       throw new ValidationException(
           "Error in TraversableResolver.isReachable() for " + context.getBean(), e);
-    }
-
-    try {
-      if (!context.getTraversableResolver()
-          .isCascadable(context.getBean(), node,
-              context.getRootMetaBean().getBeanClass(), beanPath,
-              access.getElementType())) return false;
-    } catch (RuntimeException e) {
-      throw new ValidationException(
-          "Error TraversableResolver.isCascadable() for " + context.getBean(), e);
     }
 
     return true;

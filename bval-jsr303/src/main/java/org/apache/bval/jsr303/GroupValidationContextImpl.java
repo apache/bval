@@ -34,7 +34,6 @@ import javax.validation.TraversableResolver;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,19 +55,23 @@ final class GroupValidationContextImpl<T extends ValidationListener>
    */
   private Group currentGroup;
 
+  private Class<?> currentOwner;
+
   /**
    * contains the validation constraints that have already been processed during
    * this validation routine (as part of a previous group match)
    */
   private HashSet<ConstraintValidatorIdentity> validatedConstraints =
       new HashSet<ConstraintValidatorIdentity>();
+
   private ConstraintValidation constraintValidation;
   private final TraversableResolver traversableResolver;
 
   public GroupValidationContextImpl(T listener, MessageInterpolator aMessageResolver,
                                     TraversableResolver traversableResolver,
                                     MetaBean rootMetaBean) {
-    super(listener);
+    // inherited variable 'validatedObjects' is of type: HashMap<GraphBeanIdentity, Set<PathImpl>> in this class 
+    super(listener, new HashMap<GraphBeanIdentity, Set<PathImpl>>());
     this.messageResolver = aMessageResolver;
     this.traversableResolver = CachingTraversableResolver.cacheFor(traversableResolver);
     this.rootMetaBean = rootMetaBean;
@@ -100,34 +103,33 @@ final class GroupValidationContextImpl<T extends ValidationListener>
   /**
    * add the object in the current group to the collection of validated
    * objects to keep track of them to avoid endless loops during validation.
+   * <p/>
+   * NOTE: No longer uses the inherited validatedObjects hashmap
    *
    * @return true when the object was not already validated in this context
    */
   @Override
   public boolean collectValidated() {
 
-    Map<Group, Set<PathImpl>> groupMap = (Map<Group, Set<PathImpl>>) validatedObjects
-        .get(getBean());
-    if (groupMap == null) {
-      groupMap = new HashMap<Group, Set<PathImpl>>();
-      validatedObjects.put(getBean(), groupMap);
-    }
-    Set<PathImpl> validatedPathsForGroup = groupMap.get(getCurrentGroup());
-    if (validatedPathsForGroup == null) {
-      validatedPathsForGroup = new HashSet<PathImpl>();
-      groupMap.put(getCurrentGroup(), validatedPathsForGroup);
+    // Combination of bean+group+owner (owner is currently ignored)
+    GraphBeanIdentity gbi = new GraphBeanIdentity(getBean(), getCurrentGroup().getGroup(), getCurrentOwner());
+
+    Set<PathImpl> validatedPathsForGBI = (Set<PathImpl>) validatedObjects.get(gbi);
+    if (validatedPathsForGBI == null) {
+      validatedPathsForGBI = new HashSet<PathImpl>();
+      validatedObjects.put(gbi, validatedPathsForGBI);
     }
 
     // If any of the paths is a subpath of the current path, there is a
     // circular dependency, so return false
-    for (PathImpl validatedPath : validatedPathsForGroup) {
+    for (PathImpl validatedPath : validatedPathsForGBI) {
       if (path.isSubPathOf(validatedPath)) {
         return false;
       }
     }
 
     // Else, add the currentPath to the set of validatedPaths
-    validatedPathsForGroup.add(PathImpl.copy(path));
+    validatedPathsForGBI.add(PathImpl.copy(path));
     return true;
   }
 
@@ -209,5 +211,14 @@ final class GroupValidationContextImpl<T extends ValidationListener>
 
   public TraversableResolver getTraversableResolver() {
     return traversableResolver;
+  }
+
+
+  public Class<?> getCurrentOwner() {
+    return this.currentOwner;
+  }
+
+  public void setCurrentOwner(Class<?> currentOwner) {
+    this.currentOwner = currentOwner;
   }
 }

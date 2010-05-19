@@ -18,15 +18,8 @@
  */
 package org.apache.bval.jsr303;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
-import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.jsr303.util.PathImpl;
@@ -35,6 +28,12 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationListener;
 import org.apache.bval.model.ValidationListener.Error;
 import org.apache.bval.util.AccessStrategy;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
+import javax.validation.MessageInterpolator;
+import javax.validation.TraversableResolver;
 
 
 /**
@@ -220,6 +219,16 @@ public class ConstraintValidatorContextTest extends TestCase {
         }
 
         public void setMetaProperty(MetaProperty metaProperty) {
+            throw new IllegalStateException("Unexpected call");
+        }
+
+        @Override
+        public Class<?> getCurrentOwner() {
+            throw new IllegalStateException("Unexpected call");
+        }
+
+        @Override
+        public void setCurrentOwner(Class<?> currentOwner) {
             throw new IllegalStateException("Unexpected call");
         }
 

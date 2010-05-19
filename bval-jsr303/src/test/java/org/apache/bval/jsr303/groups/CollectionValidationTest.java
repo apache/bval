@@ -18,22 +18,13 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import org.apache.bval.jsr303.ApacheValidatorFactory;
 import junit.framework.TestCase;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
+import org.apache.bval.jsr303.example.*;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-
-import org.apache.bval.jsr303.example.Address;
-import org.apache.bval.jsr303.example.Author;
-import org.apache.bval.jsr303.example.Book;
-import org.apache.bval.jsr303.example.Country;
-import org.apache.bval.jsr303.example.Customer;
-import org.apache.bval.jsr303.example.Employee;
-import org.apache.bval.jsr303.example.Library;
-import org.apache.bval.jsr303.example.Person;
-import org.apache.bval.jsr303.util.TestUtils;
-
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -141,16 +132,15 @@ public class CollectionValidationTest extends TestCase {
         /*
         This, by the way, tests redefined default group sequence behavior
         on non-root-beans (Library.Book)!!
-        So only 1 constraint violation expected
          */
         violations = validator.validate(lib);
         assertEquals(
-              "redefined default group of Book not correctly validated from Library", 1,
+              "redefined default group of Book not correctly validated from Library", 3,
               violations.size());
         assertNotNull(TestUtils.getViolation(violations, "taggedBooks[politics].title"));
-        assertNull(
+        assertNotNull(
               TestUtils.getViolation(violations, "taggedBooks[humor].author.firstName"));
-        assertNull(TestUtils.getViolation(violations,
+        assertNotNull(TestUtils.getViolation(violations,
               "taggedBooks[science].author.addresses[0].city"));
     }
 

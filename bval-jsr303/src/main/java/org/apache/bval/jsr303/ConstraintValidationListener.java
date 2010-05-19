@@ -103,4 +103,8 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     public Class<T> getRootBeanType() {
         return rootBeanType;
     }
+    
+    public int violationsSize() {
+        return constaintViolations.size();
+    }
 }

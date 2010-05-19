@@ -57,5 +57,9 @@ public interface GroupValidationContext<T extends ValidationListener>
     TraversableResolver getTraversableResolver();
 
     boolean collectValidated(ConstraintValidator constraint);
+    
+    Class<?> getCurrentOwner();
+    
+    void setCurrentOwner(Class<?> currentOwner);
 
 }

@@ -215,7 +215,7 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private <VL extends ValidationListener> void validateBeanInContext(ValidationContext<VL> context) {
+    protected <VL extends ValidationListener> void validateBeanInContext(ValidationContext<VL> context) {
         if (getDynamicMetaBean(context) != null) {
             context.setMetaBean(
                   getDynamicMetaBean(context).resolveMetaBean(context.getBean()));
@@ -223,7 +223,7 @@ public class BeanValidator<T extends ValidationListener> {
         validateBeanNet(context);
     }
 
-    private <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context) {
+    protected <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context) {
         int index = 0;
         DynamicMetaBean dyn = getDynamicMetaBean(context);
         for (Object each : ((Object[]) context.getBean())) {
@@ -244,7 +244,7 @@ public class BeanValidator<T extends ValidationListener> {
     }
 
     /** Any object implementing java.lang.Iterable is supported */
-    private <VL extends ValidationListener> void validateIteratableInContext(ValidationContext<VL> context) {
+    protected <VL extends ValidationListener> void validateIteratableInContext(ValidationContext<VL> context) {
         Iterator<?> it = ((Iterable<?>) context.getBean()).iterator();
         int index = 0;
         // jsr303 spec: Each object provided by the iterator is validated.
@@ -263,7 +263,7 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
     
-    private <VL extends ValidationListener> void validateNonPositionalIteratableInContext(ValidationContext<VL> context) {
+    protected <VL extends ValidationListener> void validateNonPositionalIteratableInContext(ValidationContext<VL> context) {
         Iterator<?> it = ((Iterable<?>) context.getBean()).iterator();
         // jsr303 spec: Each object provided by the iterator is validated.
         context.setCurrentIndex(null);
@@ -281,7 +281,7 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context) {
+    protected <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context) {
         // jsr303 spec: For Map, the value of each Map.Entry is validated (key is not validated).
         Iterator<Map.Entry<Object, Object>> it = ((Map<Object, Object>) context.getBean()).entrySet().iterator();
         final DynamicMetaBean dyn = getDynamicMetaBean(context);
@@ -309,7 +309,7 @@ public class BeanValidator<T extends ValidationListener> {
         }
     }
 
-    private <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context, MetaProperty prop) {
+    protected <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context, MetaProperty prop) {
         AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
         if (access == null && prop.getMetaBean() != null) { // single property access strategy
             // save old values from context

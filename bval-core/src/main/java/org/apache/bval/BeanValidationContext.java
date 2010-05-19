@@ -21,6 +21,7 @@ import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
 
 import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Description: Context during validation to help the {@link org.apache.bval.model.Validation}
@@ -52,7 +53,7 @@ public class BeanValidationContext<T extends ValidationListener>
     private AccessStrategy access;
 
     /** set of objects already validated to avoid endless loops. */
-    protected IdentityHashMap<Object, Object> validatedObjects = new IdentityHashMap<Object, Object>();
+    protected Map validatedObjects;
 
     /**
      * true when value is fixed, so that it will NOT be dynamically
@@ -66,7 +67,12 @@ public class BeanValidationContext<T extends ValidationListener>
     private T listener;
 
     public BeanValidationContext(T listener) {
+        this(listener, new IdentityHashMap());
+    }
+
+    protected BeanValidationContext(T listener, Map validatedMap) {
         this.listener = listener;
+        this.validatedObjects = validatedMap;
     }
 
     public T getListener() {

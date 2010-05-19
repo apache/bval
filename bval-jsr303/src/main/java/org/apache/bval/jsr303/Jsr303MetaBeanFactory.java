@@ -21,6 +21,7 @@ package org.apache.bval.jsr303;
 
 import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.jsr303.groups.Group;
+import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.util.TypeUtils;
@@ -40,7 +41,10 @@ import javax.validation.*;
 import javax.validation.groups.Default;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Description: process the class annotations for JSR303 constraint validations
@@ -76,7 +80,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
 
             // process class, superclasses and interfaces
             List<Class<?>> classSequence = new ArrayList<Class<?>>();
-            fillFullClassHierarchyAsList(classSequence, beanClass);
+            ClassHelper.fillFullClassHierarchyAsList(classSequence, beanClass);
 
             // start with superclasses and go down the hierarchy so that
             // the child classes are processed last to have the chance to overwrite some declarations
@@ -84,89 +88,14 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             for (int i = classSequence.size() - 1; i >= 0; i--) {
                 Class<?> eachClass = classSequence.get(i);
                 processClass(eachClass, metabean);
+                processGroupSequence(eachClass, metabean, "{GroupSequence:"+eachClass.getCanonicalName()+"}");
             }
-            
-            // JSR-303 2.3:
-            // Groups from the main constraint annotation are inherited by the composing annotations.
-            // Any groups definition on a composing annotation is ignored.
-//            applyGroupInheritance(metabean);
             
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e.getTargetException());
         }
-    }
-
-//    /**
-//     * Traverses the metabean to set the groups of the composed constraints the
-//     * same as the groups from its root constraint.
-//     * 
-//     * @param metabean
-//     *            The metabean to which group inheritance will be applied.
-//     */
-//    private void applyGroupInheritance(MetaBean metabean) {
-//        for ( MetaProperty prop : metabean.getProperties() ) {
-//            for ( Validation val : prop.getValidations() ) {
-//                if ( val instanceof ConstraintValidation<?> ) { // Should always be true?
-//                    ConstraintValidation<?> cv = (ConstraintValidation<?>) val;
-//                    Set<Class<?>> baseGroups = cv.getGroups();
-//                    for ( ConstraintValidation<?> composedVal : cv.getComposingValidations() ) {
-//                        overrideGroupsAndContinueRecursion(baseGroups, composedVal);
-//                    }
-//                }
-//            }
-//        }        
-//    }
-//
-//    /**
-//     * Recursive method that sets the current {@link ConstraintValidation}
-//     * groups as baseGroups, and continues the recursion with its composing
-//     * validations (if any).
-//     * 
-//     * @param baseGroups
-//     *            The groups to set in the current validation node.
-//     * @param val
-//     *            The current validation node.
-//     */
-//    private void overrideGroupsAndContinueRecursion(Set<Class<?>> baseGroups, ConstraintValidation<?> val) {
-//        val.setGroups(baseGroups);
-//        for ( ConstraintValidation<?> composedVal : val.getComposingValidations() ) {
-//            overrideGroupsAndContinueRecursion(baseGroups, composedVal);
-//        }
-//    }
-
-    /**
-     * Fill the list with the full class/interface hierarchy of the given class.
-     * List is ordered from the most to less specific.
-     * 
-     * @param allClasses
-     *            The current list of classes in the hierarchy.
-     * @param clazz
-     *            The current class, root of the hierarchy to traverse.
-     */
-    private void fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
-        
-        if ( clazz == null || clazz == Object.class ) {
-            return;
-        }
-        
-        if ( allClasses.contains(clazz) ) {
-            // No duplicates wanted, and if it is already in the list, then
-            // its superclasses/interfaces will also be
-            return;
-        }
-        
-        allClasses.add(clazz);
-
-        // Obtain the list of interfaces and superclass
-        List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
-        subClasses.add(0, clazz.getSuperclass());
-        
-        for ( Class<?> subClass : subClasses ) {
-            fillFullClassHierarchyAsList(allClasses, subClass);
-        }
-        
     }
 
     /**
@@ -406,11 +335,15 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     }
 
     private void processGroupSequence(Class<?> beanClass, MetaBean metabean) {
+        processGroupSequence(beanClass, metabean, Jsr303Features.Bean.GROUP_SEQUENCE);
+    }
+    
+    private void processGroupSequence(Class<?> beanClass, MetaBean metabean, String key) {
         GroupSequence annotation = beanClass.getAnnotation(GroupSequence.class);
-        List<Group> groupSeq = metabean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
+        List<Group> groupSeq = metabean.getFeature(key);
         if (groupSeq == null) {
             groupSeq = new ArrayList<Group>(annotation == null ? 1 : annotation.value().length);
-            metabean.putFeature(Jsr303Features.Bean.GROUP_SEQUENCE, groupSeq);
+            metabean.putFeature(key, groupSeq);
         }
         Class<?>[] groupClasses = factoryContext.getFactory().getDefaultSequence(beanClass);
         if (groupClasses == null || groupClasses.length == 0) {

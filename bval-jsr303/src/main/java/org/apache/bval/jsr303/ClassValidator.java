@@ -23,16 +23,24 @@ import org.apache.bval.BeanValidator;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.jsr303.groups.GroupsComputer;
+import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationContext;
+import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.PropertyAccess;
 import org.apache.commons.lang.ClassUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
+import javax.validation.groups.Default;
 import javax.validation.metadata.BeanDescriptor;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -76,13 +84,13 @@ public class ClassValidator extends BeanValidator implements Validator {
             // 1. process groups
             for (Group current : groups.getGroups()) {
                 context.setCurrentGroup(current);
-                validateContext(context);
+                validateBeanNet(context);
             }
             // 2. process sequences
             for (List<Group> eachSeq : groups.getSequences()) {
                 for (Group current : eachSeq) {
                     context.setCurrentGroup(current);
-                    validateContext(context);
+                    validateBeanNet(context);
                     /**
                      * if one of the group process in the sequence leads to one or more validation failure,
                      * the groups following in the sequence must not be processed
@@ -97,26 +105,171 @@ public class ClassValidator extends BeanValidator implements Validator {
         }
     }
 
+    /**
+     * Validates a bean and all its cascaded related beans for the currently
+     * defined group.
+     * 
+     * Special code is present to manage the {@link Default} group.
+     * 
+     * TODO: More descriptive name and don't override method from BeanValidator.
+     * 
+     * @param ValidationContext
+     *            The current context of this validation call.
+     */
     @Override
-    public void validateBeanNet(ValidationContext vcontext) {
-        GroupValidationContext context = (GroupValidationContext) vcontext;
-        List<Group> defaultGroups = expandDefaultGroup(context);
-        final ConstraintValidationListener result = (ConstraintValidationListener) vcontext.getListener();
-        if (defaultGroups != null) {
-            Group currentGroup = context.getCurrentGroup();
-            for (Group each : defaultGroups) {
-                context.setCurrentGroup(each);
-                super.validateBeanNet(context);
-                // Spec 3.4.3 - Stop validation if errors already found
-                if ( !result.isEmpty() ) {
-                    break;
+    protected void validateBeanNet(ValidationContext vcontext) {
+        
+        GroupValidationContext<?> context = (GroupValidationContext<?>)vcontext;
+        
+        // If reached a cascaded bean which is null
+        if ( context.getBean() == null ) {
+            return;
+        }
+        
+        // If reached a cascaded bean which has already been validated for the current group
+        if ( !context.collectValidated() ) {
+            return;
+        }
+        
+        
+        // ### First, validate the bean
+        
+        // Default is a special case
+        if ( context.getCurrentGroup().isDefault() ) {
+            
+            List<Group> defaultGroups = expandDefaultGroup(context);
+            final ConstraintValidationListener result = (ConstraintValidationListener) context.getListener();
+            
+            // If the rootBean defines a GroupSequence
+            if ( defaultGroups.size() > 1 ) {
+                
+                int numViolations = result.violationsSize();
+                
+                // Validate the bean for each group in the sequence
+                Group currentGroup = context.getCurrentGroup();
+                for (Group each : defaultGroups) {
+                    context.setCurrentGroup(each);
+                    super.validateBean(context);
+                    // Spec 3.4.3 - Stop validation if errors already found
+                    if ( result.violationsSize() > numViolations ) {
+                        break;
+                    }
                 }
+                context.setCurrentGroup(currentGroup);
             }
-            context.setCurrentGroup(currentGroup); // restore  (finally{} not required)
-        } else {
-            super.validateBeanNet(context);
+            else {
+                
+                // For each class in the hierarchy of classes of rootBean,
+                // validate the constraints defined in that class according
+                // to the GroupSequence defined in the same class
+                
+                // Obtain the full class hierarchy
+                List<Class<?>> classHierarchy = new ArrayList<Class<?>>();
+                ClassHelper.fillFullClassHierarchyAsList(classHierarchy, context.getMetaBean().getBeanClass());
+                Class<?> initialOwner = context.getCurrentOwner();
+                
+                // For each owner in the hierarchy
+                for ( Class<?> owner : classHierarchy ) {
+                    context.setCurrentOwner(owner);
+                    
+                    int numViolations = result.violationsSize();
+                    
+                    // Obtain the group sequence of the owner, and use it for the constraints that belong to it
+                    List<Group> ownerDefaultGroups = context.getMetaBean().getFeature("{GroupSequence:"+owner.getCanonicalName()+"}");
+                    for (Group each : ownerDefaultGroups) {
+                        context.setCurrentGroup(each);
+                        super.validateBean(context);
+                        // Spec 3.4.3 - Stop validation if errors already found
+                        if ( result.violationsSize() > numViolations ) {
+                            break;
+                        }
+                    }
+                    
+                }
+                context.setCurrentOwner(initialOwner);
+                context.setCurrentGroup(Group.DEFAULT);
+                
+            }
+            
+        }
+        // if not the default group, proceed as normal
+        else {
+            super.validateBean(context);
+        }
+        
+        
+        // ### Then, the cascaded beans (@Valid)
+        for (MetaProperty prop : context.getMetaBean().getProperties()) {
+            validateCascadedBean(context, prop);
+        }
+         
+    }
+
+    /**
+     * TODO: Currently, almost the same code as super.validateRelatedBean, but
+     * as it is being called at a different time, I have explicitly added the
+     * code here with a different method name.
+     * 
+     * @param context
+     *            The current context
+     * @param prop
+     *            The property to cascade from (in case it is possible).
+     */
+    private void validateCascadedBean(GroupValidationContext<?> context, MetaProperty prop) {
+        AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
+        if (access == null && prop.getMetaBean() != null) { // single property access strategy
+            // save old values from context
+            final Object bean = context.getBean();
+            final MetaBean mbean = context.getMetaBean();
+            // modify context state for relationship-target bean
+            context.moveDown(prop, new PropertyAccess(bean.getClass(), prop.getName()));
+            followCascadedConstraint(context);
+            // restore old values in context
+            context.moveUp(bean, mbean);
+        } else if (access != null) { // different accesses to relation
+            // save old values from context
+            final Object bean = context.getBean();
+            final MetaBean mbean = context.getMetaBean();
+            for (AccessStrategy each : access) {
+                // modify context state for relationship-target bean
+                context.moveDown(prop, each);
+                // Now, if the related bean is an instance of Map/Array/etc, 
+                followCascadedConstraint(context);
+                // restore old values in context
+                context.moveUp(bean, mbean);
+            }
         }
     }
+    
+    
+    /**
+     * TODO: Currently almost the same code as super.validateContext, but as it
+     * is being called at a different time, I have explicitly added the code
+     * here with a different method name.
+     * 
+     * Methods defined in {@link BeanValidator} take care of setting the path
+     * and current bean correctly and call
+     * {@link #validateBeanNet(ValidationContext)} for each individual bean.
+     * 
+     * @param context
+     *            The current validation context.
+     */
+    private void followCascadedConstraint(GroupValidationContext<?> context) {
+        if ( context.getBean() != null ) {
+            if (context.getBean() instanceof Map<?, ?>) {
+                validateMapInContext(context);
+            } else if (context.getBean() instanceof List<?>) {
+                validateIteratableInContext(context);
+            } else if (context.getBean() instanceof Iterable<?>) {
+                validateNonPositionalIteratableInContext(context);
+            } else if (context.getBean() instanceof Object[]) {
+                validateArrayInContext(context);
+            } else { // to One Bean (or Map like Bean) 
+                validateBeanInContext(context);
+            }
+        }
+    }
+    
 
     /**
      * in case of a default group return the list of groups

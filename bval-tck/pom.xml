@@ -34,6 +34,11 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
+            <artifactId>bval-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
             <artifactId>bval-jsr303</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -149,8 +154,32 @@
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
+                                            <groupId>commons-lang</groupId>
+                                            <artifactId>commons-lang</artifactId>
+                                            <overWrite>true</overWrite>
+                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>commons-logging</groupId>
+                                            <artifactId>commons-logging</artifactId>
+                                            <overWrite>true</overWrite>
+                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>commons-beanutils</groupId>
+                                            <artifactId>commons-beanutils</artifactId>
+                                            <overWrite>true</overWrite>
+                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
                                             <groupId>com.thoughtworks.xstream</groupId>
                                             <artifactId>xstream</artifactId>
+                                            <overWrite>true</overWrite>
+                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>commons-collections</groupId>
+                                            <artifactId>commons-collections</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>

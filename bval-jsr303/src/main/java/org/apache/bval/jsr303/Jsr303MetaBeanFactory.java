@@ -407,6 +407,9 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             checkOneType(assignableTypes, type, owner, annotation, access);
             validator = getConstraintValidatorFactory()
                   .getInstance(validatorTypes.get(assignableTypes.get(0)));
+            if ( validator == null ) {
+                throw new ValidationException("Factory returned null validator for: " + validatorTypes.get(assignableTypes.get(0)));
+            }
             // NOTE: validator initialization deferred until append phase
         } else {
             validator = null;

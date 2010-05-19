@@ -24,13 +24,14 @@ import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.util.ClassHelper;
+import org.apache.bval.jsr303.util.NodeImpl;
+import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.bval.util.PropertyAccess;
 import org.apache.commons.lang.ClassUtils;
 
 import javax.validation.ConstraintViolation;
@@ -217,30 +218,77 @@ public class ClassValidator extends BeanValidator implements Validator {
      */
     private void validateCascadedBean(GroupValidationContext<?> context, MetaProperty prop) {
         AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
-        if (access == null && prop.getMetaBean() != null) { // single property access strategy
-            // save old values from context
-            final Object bean = context.getBean();
-            final MetaBean mbean = context.getMetaBean();
-            // modify context state for relationship-target bean
-            context.moveDown(prop, new PropertyAccess(bean.getClass(), prop.getName()));
-            followCascadedConstraint(context);
-            // restore old values in context
-            context.moveUp(bean, mbean);
-        } else if (access != null) { // different accesses to relation
+//      TODO: Delete, never reached in JSR-303 validations
+//        if (access == null && prop.getMetaBean() != null) { // single property access strategy
+//            System.out.println("\n\n ### UNEXPECTED REACH ### \n\n");
+//            // save old values from context
+//            final Object bean = context.getBean();
+//            final MetaBean mbean = context.getMetaBean();
+//            // modify context state for relationship-target bean
+//            context.moveDown(prop, new PropertyAccess(bean.getClass(), prop.getName()));
+//            followCascadedConstraint(context);
+//            // restore old values in context
+//            context.moveUp(bean, mbean);
+//        } else
+        if (access != null) { // different accesses to relation
             // save old values from context
             final Object bean = context.getBean();
             final MetaBean mbean = context.getMetaBean();
             for (AccessStrategy each : access) {
-                // modify context state for relationship-target bean
-                context.moveDown(prop, each);
-                // Now, if the related bean is an instance of Map/Array/etc, 
-                followCascadedConstraint(context);
-                // restore old values in context
-                context.moveUp(bean, mbean);
+                if (isCascadable(context, prop, each)) {
+                    // modify context state for relationship-target bean
+                    context.moveDown(prop, each);
+                    // Now, if the related bean is an instance of Map/Array/etc,
+                    followCascadedConstraint(context);
+                    // restore old values in context
+                    context.moveUp(bean, mbean);
+                }
             }
         }
     }
-    
+
+    /**
+     * Before accessing a related bean (marked with {@link Valid}), the
+     * validator has to check if it is reachable and cascadable.
+     * 
+     * @param context
+     *            The current validation context.
+     * @param prop
+     *            The property of the related bean.
+     * @param access
+     *            The access strategy used to get the related bean value.
+     * @return <code>true</code> if the validator can access the related bean,
+     *         <code>false</code> otherwise.
+     */
+    private boolean isCascadable(GroupValidationContext<?> context, MetaProperty prop, AccessStrategy access) {
+        
+        PathImpl beanPath = context.getPropertyPath();
+        NodeImpl node = new NodeImpl(prop.getName());
+        if (beanPath == null) {
+            beanPath = PathImpl.create(null);
+        }
+        try {
+            if (!context.getTraversableResolver().isReachable(
+                    context.getBean(), node,
+                    context.getRootMetaBean().getBeanClass(), beanPath,
+                    access.getElementType()))
+                return false;
+        } catch (RuntimeException e) {
+            throw new ValidationException("Error in TraversableResolver.isReachable() for " + context.getBean(), e);
+        }
+
+        try {
+            if (!context.getTraversableResolver().isCascadable(
+                    context.getBean(), node,
+                    context.getRootMetaBean().getBeanClass(), beanPath,
+                    access.getElementType()))
+                return false;
+        } catch (RuntimeException e) {
+            throw new ValidationException("Error TraversableResolver.isCascadable() for " + context.getBean(), e);
+        }
+
+        return true;
+    }
     
     /**
      * TODO: Currently almost the same code as super.validateContext, but as it

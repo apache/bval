@@ -102,19 +102,20 @@ public class ValidationParser {
 
     private InputStream getInputStream(String path) throws IOException {
         ClassLoader loader = PrivilegedActions.getClassLoader(getClass());
-        Enumeration<URL> urls = loader.getResources(path);
-        if (urls.hasMoreElements()) {
-            URL url = urls.nextElement();
-            if (urls.hasMoreElements()) {
-                // spec says: If more than one META-INF/validation.xml file
-                // is found in the classpath, a ValidationException is raised.
-                throw new ValidationException(
-                      "More than one " + path + " is found in the classpath");
+        InputStream inputStream = loader.getResourceAsStream( path );
+        
+        if ( inputStream != null ) {
+            // spec says: If more than one META-INF/validation.xml file
+            // is found in the classpath, a ValidationException is raised.
+            if ( path.equals("META-INF/validation.xml") ) {
+                Enumeration<URL> urls = loader.getResources(path);
+                if ( urls.hasMoreElements() && (urls.nextElement() != null) && urls.hasMoreElements() ) {
+                    throw new ValidationException("More than one " + path + " is found in the classpath");
+                }
             }
-            return url.openStream();
-        } else {
-            return null;
         }
+        
+        return inputStream;
     }
 
     private Schema getSchema() {
@@ -204,22 +205,27 @@ public class ValidationParser {
 
     private void applyMappingStreams(ValidationConfigType xmlConfig,
                                      ConfigurationImpl target) {
-        for (JAXBElement<String> mappingFileName : xmlConfig.getConstraintMapping()) {
+        for (JAXBElement<String> mappingFileNameElement : xmlConfig.getConstraintMapping()) {
+            String mappingFileName = mappingFileNameElement.getValue();
+            if ( mappingFileName.startsWith("/") ) {
+                // Classloader needs a path without a starting /
+                mappingFileName = mappingFileName.substring(1);
+            }
             if (log.isDebugEnabled()) {
                 log.debug(
-                      "Trying to open input stream for " + mappingFileName.getValue());
+                      "Trying to open input stream for " + mappingFileName);
             }
             InputStream in = null;
             try {
-                in = getInputStream(mappingFileName.getValue());
+                in = getInputStream(mappingFileName);
                 if (in == null) {
                     throw new ValidationException(
                           "Unable to open input stream for mapping file " +
-                                mappingFileName.getValue());
+                                mappingFileName);
                 }
             } catch (IOException e) {
                 throw new ValidationException("Unable to open input stream for mapping file " +
-                      mappingFileName.getValue(), e);
+                      mappingFileName, e);
             }
             target.addMapping(in);
         }

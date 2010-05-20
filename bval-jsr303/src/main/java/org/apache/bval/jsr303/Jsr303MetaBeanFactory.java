@@ -106,60 +106,62 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
      */
     private void processClass(Class<?> beanClass, MetaBean metabean)
           throws IllegalAccessException, InvocationTargetException {
+        
+        // if NOT ignore class level annotations
         if (!factoryContext.getFactory().getAnnotationIgnores()
-              .isIgnoreAnnotations(beanClass)) { // ignore on class level
-
+              .isIgnoreAnnotations(beanClass)) { 
             processAnnotations(null, beanClass, beanClass, null,
                   new AppendValidationToMeta(metabean));
+        }
 
-            Field[] fields = beanClass.getDeclaredFields();
-            for (Field field : fields) {
-                MetaProperty metaProperty = metabean.getProperty(field.getName());
-                // create a property for those fields for which there is not yet a MetaProperty
+        Field[] fields = beanClass.getDeclaredFields();
+        for (Field field : fields) {
+            MetaProperty metaProperty = metabean.getProperty(field.getName());
+            // create a property for those fields for which there is not yet a MetaProperty
+            if (!factoryContext.getFactory().getAnnotationIgnores()
+                  .isIgnoreAnnotations(field)) {
+                if (metaProperty == null) {
+                    metaProperty = addMetaProperty(metabean, field.getName(), field.getType());
+                    processAnnotations(metaProperty, beanClass, field,
+                          new FieldAccess(field),
+                          new AppendValidationToMeta(metaProperty));//) {
+                } else {
+                    processAnnotations(metaProperty, beanClass, field,
+                          new FieldAccess(field),
+                          new AppendValidationToMeta(metaProperty));
+                }
+            }
+        }
+        Method[] methods = beanClass.getDeclaredMethods();
+        for (Method method : methods) {
+
+            String propName = null;
+            if (method.getParameterTypes().length == 0) {
+                propName = MethodAccess.getPropertyName(method);
+            }
+            if (propName != null) {
                 if (!factoryContext.getFactory().getAnnotationIgnores()
-                      .isIgnoreAnnotations(field)) {
+                      .isIgnoreAnnotations(method)) {
+                    MetaProperty metaProperty = metabean.getProperty(propName);
+                    // create a property for those methods for which there is not yet a MetaProperty
                     if (metaProperty == null) {
-                        metaProperty = addMetaProperty(metabean, field.getName(), field.getType());
-                        processAnnotations(metaProperty, beanClass, field,
-                              new FieldAccess(field),
+                        metaProperty =
+                              addMetaProperty(metabean, propName, method.getReturnType());
+                        processAnnotations(metaProperty, beanClass, method,
+                              new MethodAccess(propName, method),
                               new AppendValidationToMeta(metaProperty));//) {
                     } else {
-                        processAnnotations(metaProperty, beanClass, field,
-                              new FieldAccess(field),
+                        processAnnotations(metaProperty, beanClass, method,
+                              new MethodAccess(propName, method),
                               new AppendValidationToMeta(metaProperty));
                     }
                 }
             }
-            Method[] methods = beanClass.getDeclaredMethods();
-            for (Method method : methods) {
-
-                String propName = null;
-                if (method.getParameterTypes().length == 0) {
-                    propName = MethodAccess.getPropertyName(method);
-                }
-                if (propName != null) {
-                    if (!factoryContext.getFactory().getAnnotationIgnores()
-                          .isIgnoreAnnotations(method)) {
-                        MetaProperty metaProperty = metabean.getProperty(propName);
-                        // create a property for those methods for which there is not yet a MetaProperty
-                        if (metaProperty == null) {
-                            metaProperty =
-                                  addMetaProperty(metabean, propName, method.getReturnType());
-                            processAnnotations(metaProperty, beanClass, method,
-                                  new MethodAccess(propName, method),
-                                  new AppendValidationToMeta(metaProperty));//) {
-                        } else {
-                            processAnnotations(metaProperty, beanClass, method,
-                                  new MethodAccess(propName, method),
-                                  new AppendValidationToMeta(metaProperty));
-                        }
-                    }
-                }
-                else if ( hasValidationConstraintsDefined(method) ) {
-                    throw new ValidationException("Property " + method.getName() + " does not follow javabean conventions.");
-                }
+            else if ( hasValidationConstraintsDefined(method) ) {
+                throw new ValidationException("Property " + method.getName() + " does not follow javabean conventions.");
             }
         }
+
         addXmlConstraints(beanClass, metabean);
     }
     

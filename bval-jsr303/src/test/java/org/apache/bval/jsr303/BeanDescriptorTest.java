@@ -26,6 +26,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
+import javax.validation.metadata.Scope;
+import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -113,7 +118,11 @@ public class BeanDescriptorTest extends TestCase {
         Assert.assertTrue("Default group not present", notNullGroups[0].equals(Default.class) || notNullGroups[1].equals(Default.class));
         Assert.assertTrue("Implicit group not present", notNullGroups[0].equals(Person.class) || notNullGroups[1].equals(Person.class));
     }
-    
+
+    /**
+     * Check that the groups() attribute value does not contain the implicit
+     * interface group when querying the interface directly.
+     */
     public void testNoImplicitGroupWhenQueryingInterfaceDirectly() {
         Validator validator = getValidator();
         
@@ -126,7 +135,35 @@ public class BeanDescriptorTest extends TestCase {
         Assert.assertEquals("Incorrect number of groups", 1, notNullGroups.length);
         Assert.assertTrue("Default group not present", notNullGroups[0].equals(Default.class));
     }
-    
+
+    /**
+     * Check that the implementations of
+     * {@link ElementDescriptor#getElementClass()} work as defined in the spec.
+     */
+    public void testElementDescriptorGetElementClass() {
+        Validator validator = getValidator();
+        
+        BeanDescriptor beanDescriptor = validator.getConstraintsForClass( Person.class );
+        Assert.assertEquals("Incorrect class returned", Person.class, beanDescriptor.getElementClass());
+        
+        PropertyDescriptor nameDescriptor = beanDescriptor.getConstraintsForProperty("name");
+        Assert.assertEquals("Incorrect class returned", String.class, nameDescriptor.getElementClass());
+    }
+
+    /**
+     * Check the correct behavior of
+     * {@link ConstraintFinder#lookingAt(javax.validation.metadata.Scope)}.
+     */
+    public void testConstraintFinderLookingAt() {
+        Validator validator = getValidator();
+        
+        PropertyDescriptor nameDescriptor = validator.getConstraintsForClass( Woman.class ).getConstraintsForProperty("name");
+        Set<ConstraintDescriptor<?>> constraints = nameDescriptor.findConstraints().lookingAt(Scope.HIERARCHY).getConstraintDescriptors();
+        Assert.assertEquals("Incorrect number of descriptors", 1, constraints.size());
+        
+        constraints = nameDescriptor.findConstraints().lookingAt(Scope.LOCAL_ELEMENT).getConstraintDescriptors();
+        Assert.assertEquals("Incorrect number of descriptors", 0, constraints.size());
+    }
     
     public static class Form {
         @NotNull

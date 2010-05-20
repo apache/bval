@@ -32,8 +32,8 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
     private boolean cascaded;
     private String propertyPath;
 
-    PropertyDescriptorImpl(MetaBean metaBean, Validation[] validations) {
-        super(metaBean, validations);
+    PropertyDescriptorImpl(MetaBean metaBean, String propertyPath, Validation[] validations) {
+        super(metaBean, metaBean.getProperty(propertyPath).getTypeClass(), validations);
     }
 
     PropertyDescriptorImpl(Class<?> elementClass, Validation[] validations) {

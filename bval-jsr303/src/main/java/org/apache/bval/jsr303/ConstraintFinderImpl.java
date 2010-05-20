@@ -31,6 +31,8 @@ import org.apache.bval.model.MetaBean;
 import java.lang.annotation.ElementType;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -52,9 +54,22 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
               new HashSet<ConstraintValidation>(constraintDescriptors.size());
         Groups groupChain = new GroupsComputer().computeGroups(groups);
         for (Group group : groupChain.getGroups()) {
-            for (ConstraintValidation descriptor : constraintDescriptors) {
-                if (isInScope(descriptor) && isInGroup(descriptor, group)) {
-                    matchingDescriptors.add(descriptor);
+            if ( group.isDefault() ) {
+                // If group is default, check if it gets redefined
+                List<Group> expandedDefaultGroup = metaBean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
+                for ( Group defaultGroupMember : expandedDefaultGroup ) {
+                    for (ConstraintValidation descriptor : constraintDescriptors) {
+                        if (isInScope(descriptor) && isInGroup(descriptor, defaultGroupMember)) {
+                            matchingDescriptors.add(descriptor);
+                        }
+                    }
+                }
+            }
+            else {
+                for (ConstraintValidation descriptor : constraintDescriptors) {
+                    if (isInScope(descriptor) && isInGroup(descriptor, group)) {
+                        matchingDescriptors.add(descriptor);
+                    }
                 }
             }
         }
@@ -64,6 +79,12 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     public ElementDescriptor.ConstraintFinder lookingAt(Scope scope) {
         if (scope.equals(Scope.LOCAL_ELEMENT)) {
             findInScopes.remove(Scope.HIERARCHY);
+            for (Iterator<ConstraintValidation> it = constraintDescriptors.iterator(); it.hasNext(); ) {
+                ConstraintValidation cv = it.next();
+                if ( cv.getOwner() != metaBean.getBeanClass() ) {
+                    it.remove();
+                }
+            }
         }
         return this;
     }

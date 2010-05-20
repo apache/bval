@@ -168,38 +168,44 @@ public class ValidationParser {
     private void applyMessageInterpolator(ValidationConfigType xmlConfig,
                                           ConfigurationImpl target) {
         String messageInterpolatorClass = xmlConfig.getMessageInterpolator();
-        if (messageInterpolatorClass != null) {
-            Class<MessageInterpolator> clazz = (Class<MessageInterpolator>) SecureActions
-                  .loadClass(messageInterpolatorClass, this.getClass());
-            target.messageInterpolator(SecureActions.newInstance(clazz));
-            if (log.isInfoEnabled())
-                log.info("Using " + messageInterpolatorClass + " as message interpolator.");
-
+        if ( target.getMessageInterpolator() == null ) {
+            if (messageInterpolatorClass != null) {
+                Class<MessageInterpolator> clazz = (Class<MessageInterpolator>) SecureActions
+                      .loadClass(messageInterpolatorClass, this.getClass());
+                target.messageInterpolator(SecureActions.newInstance(clazz));
+                if (log.isInfoEnabled())
+                    log.info("Using " + messageInterpolatorClass + " as message interpolator.");
+    
+            }
         }
     }
 
     private void applyTraversableResolver(ValidationConfigType xmlConfig,
                                           ConfigurationImpl target) {
         String traversableResolverClass = xmlConfig.getTraversableResolver();
-        if (traversableResolverClass != null) {
-            Class<TraversableResolver> clazz = (Class<TraversableResolver>) SecureActions
-                  .loadClass(traversableResolverClass, this.getClass());
-            target.traversableResolver(SecureActions.newInstance(clazz));
-            if (log.isInfoEnabled())
-                log.info("Using " + traversableResolverClass + " as traversable resolver.");
+        if ( target.getTraversableResolver() == null ) {
+            if (traversableResolverClass != null) {
+                Class<TraversableResolver> clazz = (Class<TraversableResolver>) SecureActions
+                      .loadClass(traversableResolverClass, this.getClass());
+                target.traversableResolver(SecureActions.newInstance(clazz));
+                if (log.isInfoEnabled())
+                    log.info("Using " + traversableResolverClass + " as traversable resolver.");
+            }
         }
     }
 
     private void applyConstraintFactory(ValidationConfigType xmlConfig,
                                         ConfigurationImpl target) {
         String constraintFactoryClass = xmlConfig.getConstraintValidatorFactory();
-        if (constraintFactoryClass != null) {
-            Class<ConstraintValidatorFactory> clazz =
-                  (Class<ConstraintValidatorFactory>) SecureActions
-                        .loadClass(constraintFactoryClass, this.getClass());
-            target.constraintValidatorFactory(SecureActions.newInstance(clazz));
-            if (log.isInfoEnabled())
-                log.info("Using " + constraintFactoryClass + " as constraint factory.");
+        if ( target.getConstraintValidatorFactory() == null ) {
+            if (constraintFactoryClass != null) {
+                Class<ConstraintValidatorFactory> clazz =
+                      (Class<ConstraintValidatorFactory>) SecureActions
+                            .loadClass(constraintFactoryClass, this.getClass());
+                target.constraintValidatorFactory(SecureActions.newInstance(clazz));
+                if (log.isInfoEnabled())
+                    log.info("Using " + constraintFactoryClass + " as constraint factory.");
+            }
         }
     }
 

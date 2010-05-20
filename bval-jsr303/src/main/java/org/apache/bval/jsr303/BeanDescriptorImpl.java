@@ -37,7 +37,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
     protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean,
                                  Validation[] validations) {
-        super(metaBean, validations);
+        super(metaBean, metaBean.getBeanClass(), validations);
         this.factoryContext = factoryContext;
     }
 
@@ -90,15 +90,10 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         if (edesc == null) {
             Class<?> targetClass =
                   prop.getFeature(Features.Property.REF_BEAN_TYPE, prop.getTypeClass());
-            if (targetClass.isPrimitive()) {
-                // optimization: do not create MetaBean for primitives
-                // enhancement: do not create MetaBean for classes without any metadata?
-                edesc = new PropertyDescriptorImpl(targetClass, prop.getValidations());
-            } else {
-                edesc = new PropertyDescriptorImpl(
-                      factoryContext.getMetaBeanFinder().findForClass(targetClass),
+            edesc = new PropertyDescriptorImpl(
+                      metaBean,
+                      prop.getName(),
                       prop.getValidations());
-            }
             edesc.setCascaded((prop.getMetaBean() != null ||
                   prop.getFeature(Features.Property.REF_CASCADE) != null));
             edesc.setPropertyPath(prop.getName());

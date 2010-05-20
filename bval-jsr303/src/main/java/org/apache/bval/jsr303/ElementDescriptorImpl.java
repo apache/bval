@@ -34,10 +34,10 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
     protected final Class<?> elementClass;
     private Set<ConstraintDescriptor<?>> constraintDescriptors;
 
-    protected ElementDescriptorImpl(MetaBean metaBean,
+    protected ElementDescriptorImpl(MetaBean metaBean, Class<?> elementClass, 
                                  Validation[] validations) {
         this.metaBean = metaBean;
-        this.elementClass = metaBean.getBeanClass();
+        this.elementClass = elementClass;
         createConstraintDescriptors(validations);
     }
 

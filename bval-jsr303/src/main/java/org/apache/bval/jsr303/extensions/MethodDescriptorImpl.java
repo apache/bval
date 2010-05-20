@@ -33,7 +33,7 @@ public class MethodDescriptorImpl extends ElementDescriptorImpl
     private boolean cascaded;
 
     protected MethodDescriptorImpl(MetaBean metaBean, Validation[] validations) {
-        super(metaBean, validations);
+        super(metaBean, metaBean.getClass(), validations);
     }
 
     protected MethodDescriptorImpl(Class<?> elementClass, Validation[] validations) {

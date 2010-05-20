@@ -33,7 +33,7 @@ public class ConstructorDescriptorImpl extends ElementDescriptorImpl
     private boolean cascaded;
 
     protected ConstructorDescriptorImpl(MetaBean metaBean, Validation[] validations) {
-        super(metaBean, validations);
+        super(metaBean, metaBean.getBeanClass(), validations);
     }
 
     protected ConstructorDescriptorImpl(Class<?> elementClass, Validation[] validations) {

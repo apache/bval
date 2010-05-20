@@ -30,7 +30,7 @@ public class ParameterDescriptorImpl extends ElementDescriptorImpl
     private int index;
 
     public ParameterDescriptorImpl(MetaBean metaBean, Validation[] validations) {
-        super(metaBean, validations);
+        super(metaBean, metaBean.getClass(), validations);
     }
 
     public ParameterDescriptorImpl(Class<?> elementClass, Validation[] validations) {

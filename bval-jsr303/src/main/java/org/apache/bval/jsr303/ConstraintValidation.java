@@ -36,7 +36,7 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 
 /**
- * Description: Adapter between Constraint (JSR303) and Validation (Agimatec)<br/>
+ * Description: Adapter between Constraint (JSR303) and Validation (Core)<br/>
  * this instance is immutable!<br/>
  */
 public class ConstraintValidation<T extends Annotation>

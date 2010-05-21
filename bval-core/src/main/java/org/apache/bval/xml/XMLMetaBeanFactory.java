@@ -30,7 +30,7 @@ import java.util.*;
 import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
 
 /**
- * Description: Create or enrich MetaBeans from agimatec beanInfos xml<br/>
+ * Description: Create or enrich MetaBeans from apache beanInfos xml<br/>
  */
 public class XMLMetaBeanFactory implements MetaBeanFactory {
     private static final Log log = LogFactory.getLog(XMLMetaBeanFactory.class);

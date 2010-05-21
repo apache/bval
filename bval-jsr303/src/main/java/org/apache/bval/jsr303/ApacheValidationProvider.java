@@ -26,7 +26,7 @@ import javax.validation.spi.ValidationProvider;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr303 implementation of
- * the agimatec-validation framework.
+ * the apache-validation framework.
  * <p/>
  * <br/>
  * User: roman.stumm <br/>

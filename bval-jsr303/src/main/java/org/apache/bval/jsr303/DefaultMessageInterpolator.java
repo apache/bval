@@ -135,6 +135,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         // resolve annotation attributes (step 4)
         resolvedMessage =
               replaceAnnotationAttributes(resolvedMessage, annotationParameters);
+        
+        // curly braces need to be scaped in the original msg, so unescape them now
+        resolvedMessage = resolvedMessage.replace( "\\{", "{" ).replace( "\\}", "}" ).replace( "\\\\", "\\" );
+        
         return resolvedMessage;
     }
 

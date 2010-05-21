@@ -390,7 +390,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
           throws IllegalAccessException, InvocationTargetException {
 
         final ConstraintValidator validator;
-        if (constraintClasses != null) {
+        if (constraintClasses != null && constraintClasses.length > 0) {
             Type type = determineTargetedType(owner, access);
             /**
              * spec says in chapter 3.5.3.:
@@ -448,13 +448,11 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         
         // process composed constraints:
         // here are not other superclasses possible, because annotations do not inherit!
-        if (processAnnotations(prop, owner, annotation.annotationType(), access,
-              new AppendValidationToBuilder(builder)) || validator != null) {  // recursion!
-            appender.append(builder.getConstraintValidation());
-            return true;
-        } else {
-            return false;
-        }
+        processAnnotations(prop, owner, annotation.annotationType(), access, new AppendValidationToBuilder(builder));
+        
+        // Even if the validator is null, it must be added to mimic the RI impl
+        appender.append(builder.getConstraintValidation());
+        return true;
     }
 
     private void checkOneType(List<Type> types, Type targetType, Class<?> owner, Annotation anno,

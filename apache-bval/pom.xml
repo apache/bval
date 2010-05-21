@@ -152,11 +152,16 @@
                         <Bundle-DocURL>${project.url}</Bundle-DocURL>
                         <!-- <Bundle-Activator>org.apache.bval.osgi.BundleActivator</Bundle-Activator> -->
                         <Private-Package />
+                        <!-- No versions on exports for now
                         <Export-Package>org.apache.bval.*;version=${project.version}</Export-Package>
-                        <Import-Package>*</Import-Package>
+                        -->
+                        <Export-Package>org.apache.bval.*</Export-Package>
+                        <Import-Package>javax.persistence.*;resolution:=optional,*</Import-Package>
                         <!-- Eclipse metadata -->
                         <Eclipse-Autostart>false</Eclipse-Autostart>
                         <Bundle-ClassPath>.</Bundle-ClassPath>
+                        <!-- geronimo spec osgi services support -->
+                        <SPI-Provider>true</SPI-Provider>
                     </instructions>
                 </configuration>
             </plugin>

@@ -18,33 +18,24 @@
  */
 package org.apache.bval.jsr303;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.constraints.SizeValidatorForString;
+import org.apache.bval.jsr303.example.*;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.UnexpectedTypeException;
-import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.constraints.SizeValidatorForString;
-import org.apache.bval.jsr303.example.Address;
-import org.apache.bval.jsr303.example.Book;
-import org.apache.bval.jsr303.example.Engine;
-import org.apache.bval.jsr303.example.MaxTestEntity;
-import org.apache.bval.jsr303.example.NoValidatorTestEntity;
-import org.apache.bval.jsr303.example.Second;
-import org.apache.bval.jsr303.example.SizeTestEntity;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Description: <br/>
@@ -52,10 +43,10 @@ import org.apache.bval.jsr303.util.TestUtils;
 public class Jsr303Test extends TestCase {
 /*    static {
         ApacheValidatorFactory.getDefault().getMetaBeanManager()
-                .addResourceLoader("com/agimatec/validation/example/test-beanInfos.xml");
+                .addResourceLoader("org/apache/bval/example/test-beanInfos.xml");
     }*/
 
-    /*  public void testUseAgimatecXmlMetaData() {
+    /*  public void testUseCoreXmlMetaData() {
         Validator validator = getValidator();
 
         BusinessObject object = new BusinessObject();

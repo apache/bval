@@ -21,8 +21,8 @@ package org.apache.bval.jsr303;
 import javax.validation.Configuration;
 
 /**
- * Description: Uniquely identify Agimatec Validation in the Bean Validation bootstrap
- * strategy. Also contains agimatec validation specific configurations<br/>
+ * Description: Uniquely identify apache Validation in the Bean Validation bootstrap
+ * strategy. Also contains apache validation specific configurations<br/>
  */
 public interface ApacheValidatorConfiguration
       extends Configuration<ApacheValidatorConfiguration> {
@@ -48,7 +48,7 @@ public interface ApacheValidatorConfiguration
         String ENABLE_INTROSPECTOR = "apache.bval.enable-introspector";
 
         /**
-         * true/false. use agimatec metaBeans xml format additionally to
+         * true/false. use apache metaBeans xml format additionally to
          * build metadata with JSR303.
          * default: false
          */

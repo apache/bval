@@ -18,29 +18,18 @@
  */
 package org.apache.bval.jsr303;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.constraints.NotNullValidator;
+import org.apache.bval.jsr303.example.Customer;
+
+import javax.validation.*;
+import javax.validation.bootstrap.ProviderSpecificBootstrap;
+import javax.validation.spi.ValidationProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.validation.Configuration;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.ValidationProviderResolver;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.bootstrap.ProviderSpecificBootstrap;
-import javax.validation.spi.ValidationProvider;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.constraints.NotNullValidator;
-import org.apache.bval.jsr303.example.Customer;
 
 /**
  * Description: <br/>
@@ -77,7 +66,7 @@ public class BootstrapTest extends TestCase {
 
         // ALTERNATIVE:
         // you could do it without modifying the builder or reusing it,
-        // but then you need to use Agimatec proprietary APIs:
+        // but then you need to use bval-core proprietary APIs:
         ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
         // now factory's message resolver is using the english locale
     }

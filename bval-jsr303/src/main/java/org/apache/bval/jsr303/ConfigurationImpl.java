@@ -32,7 +32,7 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * Description: used to configure agimatec-validation for jsr303.
+ * Description: used to configure apache-validation for jsr303.
  * Implementation of Configuration that also implements ConfigurationState,
  * hence this can be passed to buildValidatorFactory(ConfigurationState).
  * <br/>

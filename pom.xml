@@ -667,7 +667,7 @@
                                         ${javadoc.additionalparam}
                   </additionalparam>
                                     <aggregate>true</aggregate>
-                                    <subpackages>com.agimatec</subpackages>
+                                    <subpackages>org.apache</subpackages>
                                     <verbose>false</verbose>
                                     <maxmemory>512m</maxmemory>
                                     <links>

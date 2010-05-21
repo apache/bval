@@ -16,7 +16,7 @@ which was contributed to the ASF under a software grant.
 How to compile the project
 ==========================
 Requirements:
-0. Sources require java1.5 or higher. (Tested with JDK 1.5.0_12 and 1.6.0_07)
+0. Sources require Java SE 5 or higher. (Tested with JDK 1.5.0_22 and 1.6.0_20)
 1. The project is built with maven2 (Tested with 2.0.10 and 2.2.1). 
    You need to download and install maven2 from: http://maven.apache.org/
 2. Invoke maven in the root directory or a module subdirectory.
@@ -75,5 +75,5 @@ Feedback, questions, contribution
 
 Checkout our website for more details on how to acess our mailing lists
 or open issues in JIRA:
-  http://incubator.apache.org/beanvalidation/
+  http://incubator.apache.org/bval/
 

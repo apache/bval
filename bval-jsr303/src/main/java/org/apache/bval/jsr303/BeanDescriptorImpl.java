@@ -81,6 +81,10 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         }
         MetaProperty prop = metaBean.getProperty(propertyName);
         if (prop == null) return null;
+        // If no constraints and not cascaded, return null
+        if ( prop.getValidations().length == 0 && prop.getFeature(Features.Property.REF_CASCADE) == null ) {
+            return null;
+        }
         return getPropertyDescriptor(prop);
     }
 

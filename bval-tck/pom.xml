@@ -34,12 +34,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-jsr303</artifactId>
+            <artifactId>apache-bval</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -72,9 +67,15 @@
                 </property>
             </activation>
             <dependencies>
+                <!-- Use the geronimo-validation spec instead
                 <dependency>
                     <groupId>javax.validation</groupId>
                     <artifactId>validation-api</artifactId>
+                </dependency>
+                -->
+                <dependency>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-validation_1.0_spec</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.slf4j</groupId>
@@ -133,22 +134,23 @@
                                             <classifier>suite</classifier>
                                             <overWrite>false</overWrite>
                                         </artifactItem>
+                                        <!-- use geronimo-validation spec
                                         <artifactItem>
                                             <groupId>javax.validation</groupId>
                                             <artifactId>validation-api</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
+                                        -->
                                         <artifactItem>
-                                            <groupId>org.apache.bval</groupId>
-                                            <artifactId>bval-jsr303</artifactId>
-                                            <version>${project.version}</version>
+                                            <groupId>org.apache.geronimo.specs</groupId>
+                                            <artifactId>geronimo-validation_1.0_spec</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
-                                            <artifactId>bval-core</artifactId>
+                                            <artifactId>apache-bval</artifactId>
                                             <version>${project.version}</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>

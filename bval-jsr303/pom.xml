@@ -32,7 +32,7 @@
 
     <artifactId>bval-jsr303</artifactId>
     <name>Apache Bean Validation :: bval-jsr303</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <description>Implementation specific classes for JSR 303 Bean Validation 1.0</description>
 
@@ -205,32 +205,6 @@
                 <configuration>
                     <packageName>org.apache.bval.jsr303.xml</packageName>
                     <extension>true</extension>
-                </configuration>
-            </plugin>
-
-            <!-- create an OSGi bundle -->
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Specification-Title>JSR-303 Bean Validation</Specification-Title>
-                        <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
-                        <Specification-Version>1.0</Specification-Version>
-                        <!-- OSGi Bundle Metadata -->
-                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
-                        <Bundle-Activator></Bundle-Activator>
-                        <Private-Package />
-                        <Export-Package>org.apache.bval.*</Export-Package>
-                        <!-- No export version for now...
-                        <Export-Package>org.apache.bval.*;version=${project.version}</Export-Package>
-                        -->
-                        <Import-Package>com.thoughtworks.xstream.*;resolution:=optional,freemarker.template.*;resolution:=optional,javax.persistence.*;resolution:=optional,*</Import-Package>
-                        <!-- Eclipse metadata -->
-                        <Eclipse-Autostart>false</Eclipse-Autostart>
-                        <Bundle-ClassPath>.</Bundle-ClassPath>
-                    </instructions>
                 </configuration>
             </plugin>
 

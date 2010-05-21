@@ -556,6 +556,7 @@
     <modules>
         <module>bval-core</module>
         <module>bval-jsr303</module>
+        <module>apache-bval</module>
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>

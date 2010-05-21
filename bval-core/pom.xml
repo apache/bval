@@ -32,7 +32,7 @@
 
     <artifactId>bval-core</artifactId>
     <name>Apache Bean Validation :: bval-core</name>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <description>Bean Validation Metadata Engine</description>
 

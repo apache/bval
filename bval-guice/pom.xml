@@ -39,7 +39,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>bval-jsr303</artifactId>
+            <artifactId>apache-bval</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

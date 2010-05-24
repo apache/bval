@@ -224,7 +224,7 @@ public class MetaBeanBuilder {
       try {
         return ClassUtils.getClass(className);
       } catch (ClassNotFoundException e) {
-        log.warn("class not found: " + className, e);
+        log.trace("class not found: " + className, e);
       }
     }
     return null;

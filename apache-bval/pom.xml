@@ -41,107 +41,15 @@
         <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-jsr303</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
     <build>
-        <defaultGoal>install</defaultGoal>
-
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
-
         <plugins>
-            <!--
-                 Need to disable source plugin here, as it overwrites the shade
-                 plugin created sources jar.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Create our aggregate JAR -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <createDependencyReducedPom>true</createDependencyReducedPom>
-                            <createSourcesJar>true</createSourcesJar>
-                            <keepDependenciesWithProvidedScope>true</keepDependenciesWithProvidedScope>
-                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
-                            <!--
-                                 Specify a subset of depends to include,
-                                 which must match the <dependencies> section.
-                            -->
-                            <artifactSet>
-                                <includes>
-                                    <include>org.apache.bval:bval-core</include>
-                                    <include>org.apache.bval:bval-jsr303</include>
-                                </includes>
-                            </artifactSet>
-                            <!-- BVAL unique META-INF setup -->
-                            <transformers>
-                                <!--
-                                    Need to concatinate the services resources
-                                -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                                <!-- Need to add some MANIFEST.MF metadata -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <manifestEntries>
-                                        <Main-Class>org.apache.bval.util.BeanValidationVersion</Main-Class>
-                                        <Implementation-Title>Apache Bean Validation Aggregate JAR</Implementation-Title>
-                                        <Specification-Title>JSR-303 Bean Validation</Specification-Title>
-                                        <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
-                                        <Specification-Version>1.0</Specification-Version>
-                                    </manifestEntries>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- extract the shaded jar so a bundle can be created -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <tasks>
-                                <unzip src="${project.build.directory}/${pom.artifactId}-${pom.version}.jar" dest="${project.build.directory}/classes" />
-                            </tasks>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- create an OSGi bundle -->
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -149,17 +57,16 @@
                 <configuration>
                     <instructions>
                         <!-- OSGi Bundle Metadata -->
+                        <Main-Class>org.apache.bval.util.BeanValidationVersion</Main-Class>
+                        <Implementation-Title>Apache Bean Validation Aggregate JAR</Implementation-Title>
+                        <Specification-Title>JSR-303 Bean Validation</Specification-Title>
+                        <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                        <Specification-Version>1.0</Specification-Version>
                         <Bundle-DocURL>${project.url}</Bundle-DocURL>
-                        <!-- <Bundle-Activator>org.apache.bval.osgi.BundleActivator</Bundle-Activator> -->
+                        <Embed-Dependency>*;inline=true</Embed-Dependency>
                         <Private-Package />
-                        <!-- No versions on exports for now
-                        <Export-Package>org.apache.bval.*;version=${project.version}</Export-Package>
-                        -->
                         <Export-Package>org.apache.bval.*</Export-Package>
                         <Import-Package>javax.persistence.*;resolution:=optional,*</Import-Package>
-                        <!-- Eclipse metadata -->
-                        <Eclipse-Autostart>false</Eclipse-Autostart>
-                        <Bundle-ClassPath>.</Bundle-ClassPath>
                         <!-- geronimo spec osgi services support -->
                         <SPI-Provider>true</SPI-Provider>
                     </instructions>
@@ -167,5 +74,30 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>apache-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <configuration>
+                            <attach>false</attach>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
 

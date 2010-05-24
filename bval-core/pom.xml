@@ -70,14 +70,6 @@
     </dependencies>
 
     <build>
-        <defaultGoal>install</defaultGoal>
-
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
-
         <plugins>
             <!--
                 get the svn revision number and project version
@@ -123,33 +115,28 @@ project.version=${project.version}
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                           <mainClass>org.apache.bval.util.BeanValidationVersion</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <!--
-                 Create a tests.jar so we can reuse some of the base
-                 test classes in other modules.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>default-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                   <mainClass>org.apache.bval.util.BeanValidationVersion</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>attach-tests</id>
-                        <phase>verify</phase>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 </project>

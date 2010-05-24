@@ -34,7 +34,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>apache-bval</artifactId>
+            <artifactId>org.apache.bval.bundle</artifactId>
         </dependency>
     </dependencies>
 
@@ -149,7 +149,7 @@
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
-                                            <artifactId>apache-bval</artifactId>
+                                            <artifactId>org.apache.bval.bundle</artifactId>
                                             <version>${project.version}</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>

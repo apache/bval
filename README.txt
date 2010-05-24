@@ -1,5 +1,4 @@
 Apache Bean Validation (incubating) - README.txt
-(C) Copyright 2010 The Apache Software Foundation.
 Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 --------------------------------------------------------------------------------
 

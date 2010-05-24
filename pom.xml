@@ -82,7 +82,7 @@
     <issueManagement>
         <url>https://issues.apache.org/jira/browse/BVAL</url>
     </issueManagement>
-    
+
     <developers>
         <developer>
             <id>romanstumm</id>
@@ -105,7 +105,7 @@
     <distributionManagement>
         <site>
             <id>apache-website</id>
-            <url>${site.deploy.url}/maven/${siteId}/${version}</url>
+            <url>${site.deploy.url}/maven/${siteId}/${project.version}</url>
         </site>
     </distributionManagement>
 
@@ -118,6 +118,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.6</version>
                 <configuration>
                     <show>package</show>
                     <quiet>true</quiet>
@@ -139,6 +140,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jdepend-maven-plugin</artifactId>
+                <version>2.0-beta-2</version>
             </plugin>
         </plugins>
     </reporting>
@@ -148,6 +150,44 @@
     -->
     <dependencyManagement>
         <dependencies>
+            <!-- internal -->
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>apache-bval</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-core</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-jsr303</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-json</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-tck-runner</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
             <!-- Default of Apache Geronimo version of the Spec API -->
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
@@ -180,7 +220,6 @@
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>1.1.1</version>
-                <!--<version>1.0.4</version> is also compatible-->
             </dependency>
             <dependency>
                 <groupId>log4j</groupId>
@@ -191,7 +230,6 @@
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>1.8.3</version>
-                <!-- 1.8.0 is also compatible -->
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
@@ -209,6 +247,17 @@
                 <artifactId>freemarker</artifactId>
                 <version>2.3.15</version>
             </dependency>
+            <!-- Optional - only used by bval-guice -->
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>aopalliance</groupId>
+                <artifactId>aopalliance</artifactId>
+                <version>1.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -219,51 +268,77 @@
             <resource>
                 <directory>src/main/resources</directory>
             </resource>
-            <!-- also include license and notice files -->
-            <resource>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>NOTICE.txt</include>
-                    <include>LICENSE.txt</include>
-                    <include>DISCLAIMER.txt</include>
-                </includes>
-                <targetPath>META-INF</targetPath>
-            </resource>
         </resources>
+
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
             </testResource>
-            <testResource>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>NOTICE.txt</include>
-                    <include>LICENSE.txt</include>
-                    <include>DISCLAIMER.txt</include>
-                </includes>
-                <targetPath>META-INF</targetPath>
-            </testResource>
         </testResources>
-
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-webdav</artifactId>
-                <version>1.0-beta-2</version>
-            </extension>
-        </extensions>
 
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.1</version>
                     <configuration>
                         <source>1.5</source>
                         <target>1.5</target>
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadoc</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <phase>process-classes</phase>
+                            <goals>
+                                <goal>javadoc</goal>
+                            </goals>
+                            <configuration>
+                                <additionalparam>
+                                    ${javadoc.additionalparam}
+                                </additionalparam>
+                                <aggregate>true</aggregate>
+                                <subpackages>org.apache</subpackages>
+                                <verbose>false</verbose>
+                                <maxmemory>512m</maxmemory>
+                                <links>
+                                    <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+                                    <link>http://java.sun.com/javaee/6/docs/api</link>
+                                </links>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-remote-resources-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>process</goal>
+                            </goals>
+                            <configuration>
+                                <resourceBundles>
+                                    <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                                    <!-- Include the Incubating disclaimer -->
+                                    <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
+                                </resourceBundles>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -300,9 +375,9 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>rat-maven-plugin</artifactId>
-                    <version>1.0-alpha-3</version>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.6</version>
                     <configuration>
                         <excludeSubProjects>false</excludeSubProjects>
                         <numUnapprovedLicenses>0</numUnapprovedLicenses>
@@ -312,9 +387,6 @@
                                 descriptors
                             -->
                             <exclude>**/javax.validation.spi.ValidationProvider</exclude>
-
-                            <!-- General informational files -->
-                            <exclude>README.txt</exclude>
 
                             <!-- generated content -->
                             <exclude>**/.*/**</exclude>
@@ -345,23 +417,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
@@ -372,7 +427,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>[2.0.9,)</version>
+                                    <version>[2.2.1,)</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>[1.5,)</version>
@@ -383,69 +438,16 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-remote-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <configuration>
-                            <resourceBundles>
-                                <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                                <!-- Include the Incubating disclaimer -->
-                                <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
-                            </resourceBundles>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>ianal-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>verify-legal-files</goal>
-                        </goals>
-                        <configuration>
-                            <!-- Fail the build if any artifacts are missing legal files -->
-                            <strict>true</strict>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                            <tarLongFileMode>gnu</tarLongFileMode>
-                            <descriptorRefs>
-                                <descriptorRef>
-                                    source-release
-                                </descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.apache.resources</groupId>
-                        <artifactId>apache-source-release-assembly-descriptor</artifactId>
-                        <version>1.0.2</version>
-                    </dependency>
-                </dependencies>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>ianal-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
@@ -458,129 +460,6 @@
         <module>bval-guice</module>
         <module>bval-tck</module>
     </modules>
-
-    <profiles>
-        <!-- START SNIPPET: release-profile -->
-        <profile>
-            <id>release</id>
-            <activation>
-                <property>
-                    <name>release</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <!-- sign all artifacts -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <configuration>
-                            <passphrase>${gpg.passphrase}</passphrase>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- deploy the artifacts to a staging location for perusal -->
-                    <plugin>
-                        <inherited>true</inherited>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <configuration>
-                            <updateReleaseInfo>true</updateReleaseInfo>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <configuration>
-                            <useReleaseProfile>false</useReleaseProfile>
-                            <goals>deploy</goals>
-                            <arguments>-Prelease</arguments>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <!--
-                            Javadoc plugin doesn't copy resources like
-                            the jar plugin. We need to Unzip license,etc
-                            from normal jar to add.
-                        -->
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>javadoc.resources</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                                <configuration>
-                                    <tasks>
-                                        <!-- create output dir for nested parent poms -->
-                                        <mkdir
-                                            dir="${project.build.directory}" />
-                                        <unzip
-                                            dest="${project.build.directory}/apidocs">
-                                            <patternset>
-                                                <include
-                                                    name="META-INF/*.txt" />
-                                            </patternset>
-                                            <fileset
-                                                dir="${project.build.directory}">
-                                                <include
-                                                    name="${artifactId}-${pom.version}.jar" />
-                                            </fileset>
-                                        </unzip>
-                                    </tasks>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <encoding>${project.build.sourceEncoding}</encoding>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadoc</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <phase>process-classes</phase>
-                                <goals>
-                                    <goal>javadoc</goal>
-                                </goals>
-                                <configuration>
-                                    <additionalparam>
-                                        ${javadoc.additionalparam}
-                  </additionalparam>
-                                    <aggregate>true</aggregate>
-                                    <subpackages>org.apache</subpackages>
-                                    <verbose>false</verbose>
-                                    <maxmemory>512m</maxmemory>
-                                    <links>
-                                        <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-                                        <link>http://java.sun.com/javaee/6/docs/api</link>
-                                    </links>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <!-- END SNIPPET: release-profile -->
-    </profiles>
 
 </project>
 

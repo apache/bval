@@ -153,7 +153,7 @@
             <!-- internal -->
             <dependency>
                 <groupId>org.apache.bval</groupId>
-                <artifactId>apache-bval</artifactId>
+                <artifactId>org.apache.bval.bundle</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -457,7 +457,7 @@
     <modules>
         <module>bval-core</module>
         <module>bval-jsr303</module>
-        <module>apache-bval</module>
+        <module>bundle</module>
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>

@@ -39,7 +39,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>apache-bval</artifactId>
+            <artifactId>org.apache.bval.bundle</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

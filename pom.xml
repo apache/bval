@@ -387,7 +387,9 @@
                                 descriptors
                             -->
                             <exclude>**/javax.validation.spi.ValidationProvider</exclude>
-
+                            <!-- General informational files -->
+                            <exclude>README.txt</exclude>
+                            <exclude>CHANGES.txt</exclude>
                             <!-- generated content -->
                             <exclude>**/.*/**</exclude>
                             <exclude>**/*.ftl</exclude>

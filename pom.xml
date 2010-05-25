@@ -34,7 +34,7 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache Bean Validation :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
-    <version>0.1-incubating-SNAPSHOT</version>
+    <version>0.1-incubating</version>
 
     <description>Apache BeanValidation parent pom</description>
 
@@ -47,9 +47,9 @@
     <url>http://incubator.apache.org/bval/</url>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/bval/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/bval/trunk</developerConnection>
-        <url>http://svn.apache.org/repos/asf/incubator/bval/trunk</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/bval/tags/0.1-incubating</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/bval/tags/0.1-incubating</developerConnection>
+        <url>http://svn.apache.org/repos/asf/incubator/bval/tags/0.1-incubating</url>
     </scm>
 
     <mailingLists>

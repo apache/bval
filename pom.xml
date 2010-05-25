@@ -39,8 +39,7 @@
     <description>Apache BeanValidation parent pom</description>
 
     <properties>
-        <siteId>bval</siteId>
-        <site.deploy.url>scp://people.apache.org/www/incubator.apache.org/bval</site.deploy.url>
+        <site.deploy.url>scp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -104,8 +103,8 @@
 
     <distributionManagement>
         <site>
-            <id>apache-website</id>
-            <url>${site.deploy.url}/maven/${siteId}/${project.version}</url>
+            <id>people.apache.org</id>
+            <url>${site.deploy.url}</url>
         </site>
     </distributionManagement>
 

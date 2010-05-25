@@ -413,6 +413,17 @@
                         </dependency>
                     </dependencies>
                 </plugin>
+                <!-- inherited from apache-7.pom, but need config updates -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <configuration>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <goals>deploy site site-deploy</goals>
+                        <arguments>-Papache-release -DskipTests=true</arguments>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
 

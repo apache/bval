@@ -114,6 +114,7 @@ Bug
     * [BVAL-53] - Several fixes for XML metadata processing impl
     * [BVAL-55] - Fix remaining TCK tests
     * [BVAL-58] - Clean up build before release
+    * [BVAL-62] - add missing ASL headers
 
 Improvement
 -----------

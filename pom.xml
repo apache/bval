@@ -326,6 +326,7 @@
                     <artifactId>maven-remote-resources-plugin</artifactId>
                     <executions>
                         <execution>
+                            <id>process-remote-resources</id>
                             <goals>
                                 <goal>process</goal>
                             </goals>

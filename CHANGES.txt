@@ -116,6 +116,7 @@ Bug
     * [BVAL-58] - Clean up build before release
     * [BVAL-62] - add missing ASL headers
     * [BVAL-64] - org.apache.bval.bundle needs a custom NOTICE file
+    * [BVAL-65] - Incubator required DISCLAIMER missing from jars
 
 Improvement
 -----------

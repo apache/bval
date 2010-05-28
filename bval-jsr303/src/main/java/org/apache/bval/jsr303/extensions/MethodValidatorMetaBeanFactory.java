@@ -23,6 +23,7 @@ import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang.ClassUtils;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -97,7 +98,11 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
         AppendValidationToList validations = new AppendValidationToList();
         ReturnAccess returnAccess = new ReturnAccess(method.getReturnType());
         for (Annotation anno : method.getAnnotations()) {
-          processAnnotation(anno, methodDesc, returnAccess, validations);
+          if (anno instanceof Valid) {
+            methodDesc.setCascaded(true);
+          } else {
+            processAnnotation(anno, methodDesc, returnAccess, validations);
+          }
         }
         methodDesc.getConstraintDescriptors().addAll(validations.getValidations());
 
@@ -117,13 +122,19 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                                   AccessStrategy access, int idx)
       throws InvocationTargetException, IllegalAccessException {
     AppendValidationToList validations = new AppendValidationToList();
+    boolean cascaded = false;
     for (Annotation anno : paramAnnos) {
-      processAnnotation(anno, methodDesc, access, validations);
+      if (anno instanceof Valid) {
+        cascaded = true;
+      } else {
+        processAnnotation(anno, methodDesc, access, validations);
+      }
     }
     ParameterDescriptorImpl paramDesc = new ParameterDescriptorImpl(
         methodDesc.getMetaBean(), validations.getValidations().toArray(
             new Validation[validations.getValidations().size()]));
     paramDesc.setIndex(idx);
+    paramDesc.setCascaded( cascaded );
     methodDesc.getParameterDescriptors().add(paramDesc);
   }
 
@@ -139,7 +150,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
         Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
         validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
         applyConstraint(annotation, validatorClasses, null,
-            desc.getMetaBean().getBeanClass(), access, validations);
+            ClassUtils.primitiveToWrapper((Class)access.getJavaType()), access, validations);
       } else {
         /**
          * Multi-valued constraints

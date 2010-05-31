@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.ClassValidator;
+import org.apache.bval.jsr303.extensions.ExampleMethodService.Person;
 
 import javax.validation.Validator;
 import java.lang.reflect.Constructor;
@@ -156,7 +157,6 @@ public class MethodValidatorImplTest extends TestCase {
     }
     
     public void testValidateMoreReturnValue() throws NoSuchMethodException {
-    	
     	ExampleMethodService service = new ExampleMethodService();
     	MethodValidator mv = getValidator().unwrap(MethodValidator.class);
     	Method echoMethod = service.getClass().getMethod("echo", new Class[]{String.class});
@@ -172,8 +172,48 @@ public class MethodValidatorImplTest extends TestCase {
     	returnedValue = "valid";
     	results = mv.validateReturnedValue(service.getClass(), echoMethod, returnedValue);
     	assertTrue(results.isEmpty());
-    	
-    	
+    }
+    
+    public void testValidateValidParam() throws NoSuchMethodException {
+        ExampleMethodService service = new ExampleMethodService();
+        MethodValidator mv = getValidator().unwrap(MethodValidator.class);
+        
+        Method personOp1 = service.getClass().getMethod("personOp1", new Class[]{Person.class});
+        
+        // Validate with invalid person
+        Person p = new ExampleMethodService.Person();
+        Set<?> results = mv.validateParameters(service.getClass(), personOp1, new Object[]{p});
+        assertEquals("Expected 1 violation", 1, results.size());
+        
+        // validate with valid person
+        p.name = "valid name";
+        results = mv.validateParameters(service.getClass(), personOp1, new Object[]{p});
+        assertTrue("No violations expected", results.isEmpty());
+        
+        // validate with null person
+        results = mv.validateParameters(service.getClass(), personOp1, new Object[]{null});
+        assertTrue("No violations expected", results.isEmpty());
+    }
+    
+    public void testValidateNotNullValidParam() throws NoSuchMethodException {
+        ExampleMethodService service = new ExampleMethodService();
+        MethodValidator mv = getValidator().unwrap(MethodValidator.class);
+        
+        Method personOp2 = service.getClass().getMethod("personOp2", new Class[]{Person.class});
+        
+        // Validate with null person
+        Set<?> results = mv.validateParameters(service.getClass(), personOp2, new Object[]{null});
+        assertEquals("Expected 1 violation", 1, results.size());
+        
+        // Validate with invalid person
+        Person p = new ExampleMethodService.Person();
+        results = mv.validateParameters(service.getClass(), personOp2, new Object[]{p});
+        assertEquals("Expected 1 violation", 1, results.size());
+        
+        // validate with valid person
+        p.name = "valid name";
+        results = mv.validateParameters(service.getClass(), personOp2, new Object[]{p});
+        assertTrue("No violations expected", results.isEmpty());
     }
 
     private Validator getValidator() {

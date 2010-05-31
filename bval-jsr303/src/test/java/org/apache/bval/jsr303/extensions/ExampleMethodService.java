@@ -21,6 +21,7 @@ package org.apache.bval.jsr303.extensions;
 
 import org.apache.bval.constraints.NotEmpty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -51,4 +52,18 @@ public class ExampleMethodService {
     public String echo(@NotNull @Size(min=3,max=10) String str) {
     	return str;
     }
+    
+    public void personOp1(@Valid Person p) {
+        return;
+    }
+    
+    public void personOp2(@NotNull @Valid Person p) {
+        return;
+    }
+    
+    public static class Person {
+        @NotNull
+        String name;
+    }
+    
 }

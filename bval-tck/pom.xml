@@ -101,13 +101,19 @@
             </dependencies>
             <repositories>
                 <repository>
-                    <id>jboss</id>
-                    <url>http://repository.jboss.com/maven2</url>
+                    <id>jboss-public-repository-group</id>
+                    <name>JBoss Public Maven Repository Group</name>
+                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+                    <layout>default</layout>
                     <releases>
                         <enabled>true</enabled>
+                        <updatePolicy>never</updatePolicy>
+                        <checksumPolicy>fail</checksumPolicy>
                     </releases>
                     <snapshots>
                         <enabled>false</enabled>
+                        <updatePolicy>never</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
                     </snapshots>
                 </repository>
             </repositories>

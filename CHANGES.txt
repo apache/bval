@@ -126,6 +126,7 @@ Improvement
     * [BVAL-46] - Create project source assembly
     * [BVAL-52] - ValidationParser.getInputStream() should call getResourceAsStream() for TCK suite to work
     * [BVAL-57] - Create a single apache-bval jar/bundle
+    * [BVAL-66] - Method validation parameter processing problems
 
 New Feature
 -----------

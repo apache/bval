@@ -117,6 +117,7 @@ Bug
     * [BVAL-62] - add missing ASL headers
     * [BVAL-64] - org.apache.bval.bundle needs a custom NOTICE file
     * [BVAL-65] - Incubator required DISCLAIMER missing from jars
+    * [BVAL-67] - Resolve NOTICE file issues fond during RC2 vote
 
 Improvement
 -----------

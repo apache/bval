@@ -164,10 +164,13 @@ public class PrivilegedActions {
           throws IllegalAccessException, InvocationTargetException {
         return run(new PrivilegedAction<Object>() {
             public Object run() {
-                Method valueMethod = null;
+                Method valueMethod;
                 try {
                     valueMethod = annotation.annotationType().getDeclaredMethod(name);
-                } catch (NoSuchMethodException ex) { /* do nothing */ }
+                } catch (NoSuchMethodException ex) {
+                    // do nothing
+                    valueMethod = null;
+                }
                 if (null != valueMethod) {
                     try {
                         valueMethod.setAccessible(true);

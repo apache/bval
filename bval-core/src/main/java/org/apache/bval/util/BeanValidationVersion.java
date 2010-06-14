@@ -20,6 +20,7 @@ package org.apache.bval.util;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
 import java.security.AccessController;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -52,7 +53,7 @@ public class BeanValidationVersion {
                     in.close();
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException ioe) {
         }
 
         String vers = revisionProps.getProperty("project.version");

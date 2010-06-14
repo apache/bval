@@ -100,8 +100,10 @@ final class AnnotationConstraintBuilder {
         } else {
             garr = null;
         }
-        garr = (garr == null || garr.length == 0) ? GroupsComputer.DEFAULT_GROUP_ARRAY :
-              garr;
+
+        if (garr == null || garr.length == 0) {
+            garr = GroupsComputer.getDefaultGroupArray();
+        }
         constraintValidation.setGroups(new HashSet(Arrays.asList(garr)));
     }
 

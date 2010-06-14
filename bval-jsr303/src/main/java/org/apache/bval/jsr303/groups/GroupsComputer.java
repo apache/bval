@@ -32,12 +32,15 @@ import java.util.*;
  */
 public class GroupsComputer {
     /** The default group array used in case any of the validate methods is called without a group. */
-    public static final Class<?>[] DEFAULT_GROUP_ARRAY = new Class<?>[]{Default.class};
     private static final Groups DEFAULT_GROUPS;
 
     static {
-        DEFAULT_GROUPS =
-              new GroupsComputer().computeGroups(Arrays.asList(DEFAULT_GROUP_ARRAY));
+        DEFAULT_GROUPS = new GroupsComputer().computeGroups(
+            Arrays.asList(getDefaultGroupArray()));
+    }
+
+    public static Class<?>[] getDefaultGroupArray() {
+        return new Class<?>[]{Default.class};
     }
 
     /** caching resolved groups in a thread-safe map. */
@@ -56,7 +59,6 @@ public class GroupsComputer {
 
         return computeGroups(Arrays.asList(groups));
     }
-
 
     protected Groups computeGroups(Collection<Class<?>> groups) {
         if (groups == null || groups.size() == 0) {

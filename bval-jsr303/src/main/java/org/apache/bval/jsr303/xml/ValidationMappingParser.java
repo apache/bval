@@ -268,8 +268,12 @@ public class ValidationMappingParser {
         if (converter == null && returnType.isEnum()) {
             converter = EnumerationConverter.getInstance();
         }
-        
-        return converter.convert(returnType, value);
+
+        if (converter != null) {
+            return converter.convert(returnType, value);
+        } else {
+            return converter;
+        }
     }
 
     private <A extends Annotation> Annotation createAnnotation(AnnotationType annotationType,

@@ -22,6 +22,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Description:  Check the non emptyness of an
@@ -42,7 +43,11 @@ public class NotEmptyValidator implements ConstraintValidator<NotEmpty, Object> 
                 if (isEmptyMethod != null) {
                     return !((Boolean) isEmptyMethod.invoke(value)).booleanValue();
                 }
-            } catch (Exception ex) {
+            } catch (IllegalAccessException iae) {
+                // do nothing
+            } catch (NoSuchMethodException nsme) {
+                // do nothing
+            } catch (InvocationTargetException ite) {
                 // do nothing
             }
             return value.toString().length() > 0;

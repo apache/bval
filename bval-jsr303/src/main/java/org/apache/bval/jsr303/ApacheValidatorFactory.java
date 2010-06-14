@@ -37,7 +37,7 @@ import java.util.*;
  * this instance is not thread-safe<br/>
  */
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
-    private static ApacheValidatorFactory DEFAULT_FACTORY;
+    private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
     private static final ConstraintDefaults defaultConstraints = new ConstraintDefaults();
 
     private MessageInterpolator messageResolver;

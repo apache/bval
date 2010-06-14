@@ -90,10 +90,9 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
     private PropertyDescriptor getPropertyDescriptor(MetaProperty prop) {
         PropertyDescriptorImpl edesc =
-              prop.getFeature(Jsr303Features.Property.PropertyDescriptor);
+                prop.getFeature(Jsr303Features.Property.PropertyDescriptor);
         if (edesc == null) {
-            Class<?> targetClass =
-                  prop.getFeature(Features.Property.REF_BEAN_TYPE, prop.getTypeClass());
+            prop.getFeature(Features.Property.REF_BEAN_TYPE, prop.getTypeClass());
             edesc = new PropertyDescriptorImpl(
                       metaBean,
                       prop.getName(),

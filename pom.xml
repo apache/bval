@@ -141,6 +141,10 @@
                 <artifactId>jdepend-maven-plugin</artifactId>
                 <version>2.0-beta-2</version>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
         </plugins>
     </reporting>
 
@@ -435,6 +439,11 @@
                     <artifactId>maven-surefire-report-plugin</artifactId>
                     <version>2.5</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -473,6 +482,12 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ianal-maven-plugin</artifactId>
             </plugin>
+            <!-- Don't include in all builds for now
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
+            -->
         </plugins>
     </build>
 

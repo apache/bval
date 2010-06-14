@@ -29,6 +29,10 @@ import org.apache.bval.model.Validation;
  */
 @XStreamAlias("validator")
 public class XMLMetaValidator implements Serializable {
+
+    @XStreamOmitField
+    private static final long serialVersionUID = 1L;
+
     @XStreamAsAttribute
     private String id;
     @XStreamAsAttribute
@@ -38,7 +42,7 @@ public class XMLMetaValidator implements Serializable {
     private String jsFunction; // name of java script function
 
     @XStreamOmitField
-    private Validation validation;
+    private transient Validation validation;
 
     public String getId() {
         return id;

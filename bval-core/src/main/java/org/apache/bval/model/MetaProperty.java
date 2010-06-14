@@ -108,6 +108,10 @@ public class MetaProperty extends FeaturesCapable
         this.name = name;
     }
 
+    public MetaProperty clone() throws CloneNotSupportedException {
+        return (MetaProperty) super.clone();
+    }
+
     public String toString() {
         return "MetaProperty{" + "name='" + name + '\'' + ", type=" + type + '}';
     }

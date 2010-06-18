@@ -28,7 +28,7 @@ public class MetaBeanManagerFactory {
 
     /**
      * global meta bean finder.
-     * @return
+     * @return the singleton
      */
     public static MetaBeanFinder getFinder() {
         return manager;

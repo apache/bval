@@ -32,104 +32,113 @@ import java.util.List;
  * instances.<br/>
  */
 public class ApacheFactoryContext implements ValidatorContext {
-    private final ApacheValidatorFactory factory;
-    private final MetaBeanFinder metaBeanFinder;
+  private final ApacheValidatorFactory factory;
+  private final MetaBeanFinder metaBeanFinder;
 
-    private MessageInterpolator messageInterpolator;
-    private TraversableResolver traversableResolver;
-    private ConstraintValidatorFactory constraintValidatorFactory;
+  private MessageInterpolator messageInterpolator;
+  private TraversableResolver traversableResolver;
+  private ConstraintValidatorFactory constraintValidatorFactory;
 
-    public ApacheFactoryContext(ApacheValidatorFactory factory) {
-        this.factory = factory;
-        this.metaBeanFinder = buildMetaBeanManager();
+  public ApacheFactoryContext(ApacheValidatorFactory factory) {
+    this.factory = factory;
+    this.metaBeanFinder = buildMetaBeanManager();
+  }
+
+  protected ApacheFactoryContext(ApacheValidatorFactory factory,
+                                 MetaBeanFinder metaBeanFinder) {
+    this.factory = factory;
+    this.metaBeanFinder = metaBeanFinder;
+  }
+
+  public ApacheValidatorFactory getFactory() {
+    return factory;
+  }
+
+  public final MetaBeanFinder getMetaBeanFinder() {
+    return metaBeanFinder;
+  }
+
+  public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
+    this.messageInterpolator = messageInterpolator;
+    return this;
+  }
+
+  public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
+    this.traversableResolver = traversableResolver;
+    return this;
+  }
+
+  public ValidatorContext constraintValidatorFactory(
+      ConstraintValidatorFactory constraintValidatorFactory) {
+    this.constraintValidatorFactory = constraintValidatorFactory;
+    return this;
+  }
+
+  public ConstraintValidatorFactory getConstraintValidatorFactory() {
+    return constraintValidatorFactory == null ? factory.getConstraintValidatorFactory() :
+        constraintValidatorFactory;
+  }
+
+  public Validator getValidator() {
+    ClassValidator validator = new ClassValidator(this);
+    if (Boolean.getBoolean(factory.getProperties().get(
+        ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS))) {
+      validator.setTreatMapsLikeBeans(true);
     }
+    return validator;
+  }
 
-    protected ApacheFactoryContext(ApacheValidatorFactory factory,
-                                     MetaBeanFinder metaBeanFinder) {
-        this.factory = factory;
-        this.metaBeanFinder = metaBeanFinder;
-    }
+  public MessageInterpolator getMessageInterpolator() {
+    return messageInterpolator == null ? factory.getMessageInterpolator() :
+        messageInterpolator;
+  }
 
-    public ApacheValidatorFactory getFactory() {
-        return factory;
-    }
+  public TraversableResolver getTraversableResolver() {
+    return traversableResolver == null ? factory.getTraversableResolver() :
+        traversableResolver;
+  }
 
-    public final MetaBeanFinder getMetaBeanFinder() {
-        return metaBeanFinder;
+  /**
+   * Create MetaBeanManager that
+   * uses JSR303-XML + JSR303-Annotations
+   * to build meta-data from.
+   *
+   * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
+   */
+  protected MetaBeanManager buildMetaBeanManager() {
+    // this is relevant: xml before annotations
+    // (because ignore-annotations settings in xml)
+    List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(3);
+    if (Boolean.parseBoolean(factory.getProperties().get(
+        ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
+      builders.add(new IntrospectorMetaBeanFactory());
     }
-
-    public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
-        this.messageInterpolator = messageInterpolator;
-        return this;
+    builders.add(new Jsr303MetaBeanFactory(this));
+    // as long as we support both: jsr303 and xstream-xml metabeans:
+    if (Boolean.parseBoolean(factory.getProperties().get(
+        ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
+      return XMLMetaBeanManagerCreator.createXMLMetaBeanManager(builders);
+    } else {
+      return createMetaBeanManager(builders);
     }
-
-    public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
-        this.traversableResolver = traversableResolver;
-        return this;
-    }
-
-    public ValidatorContext constraintValidatorFactory(
-          ConstraintValidatorFactory constraintValidatorFactory) {
-        this.constraintValidatorFactory = constraintValidatorFactory;
-        return this;
-    }
-
-    public ConstraintValidatorFactory getConstraintValidatorFactory() {
-        return constraintValidatorFactory == null ? factory.getConstraintValidatorFactory() :
-              constraintValidatorFactory;
-    }
-
-    public Validator getValidator() {
-        ClassValidator validator = new ClassValidator(this);
-        if (Boolean.getBoolean(factory.getProperties().get(
-              ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS))) {
-            validator.setTreatMapsLikeBeans(true);
-        }
-        return validator;
-    }
-
-    public MessageInterpolator getMessageInterpolator() {
-        return messageInterpolator == null ? factory.getMessageInterpolator() :
-              messageInterpolator;
-    }
-
-    public TraversableResolver getTraversableResolver() {
-        return traversableResolver == null ? factory.getTraversableResolver() :
-              traversableResolver;
-    }
-
-    /**
-     * Create MetaBeanManager that
-     * uses JSR303-XML + JSR303-Annotations
-     * to build meta-data from.
-     * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
-     */
-    protected MetaBeanManager buildMetaBeanManager() {
-        // this is relevant: xml before annotations
-        // (because ignore-annotations settings in xml)
-        List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(3);
-        if (Boolean.parseBoolean(factory.getProperties().get(
-              ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
-            builders.add(new IntrospectorMetaBeanFactory());
-        }
-        builders.add(new Jsr303MetaBeanFactory(this));
-        // as long as we support both: jsr303 and xstream-xml metabeans:
-        if (Boolean.parseBoolean(factory.getProperties().get(
-              ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
-          return createXMLMetaBeanManager(builders);
-        } else {
-          return createMetaBeanManager(builders);
-        }
-    }
+  }
 
   protected MetaBeanManager createMetaBeanManager(List<MetaBeanFactory> builders) {
     return new MetaBeanManager(
-      new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
+        new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
   }
 
-  protected MetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
-    builders.add(new XMLMetaBeanFactory());
-    return new XMLMetaBeanManager(
-        new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
+  /**
+   * separate class to prevent the classloader to immediately load
+   * optional classes: XMLMetaBeanManager, XMLMetaBeanFactory, XMLMetaBeanBuilder
+   * that might not be available in the classpath
+   */
+  private static class XMLMetaBeanManagerCreator {
+
+    protected static MetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
+      builders.add(new XMLMetaBeanFactory());
+      return new XMLMetaBeanManager(
+          new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
+    }
   }
 }

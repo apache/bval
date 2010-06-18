@@ -103,11 +103,6 @@
             <artifactId>bval-core</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.apache.bval</groupId>
-          <artifactId>bval-xstream</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -123,6 +118,13 @@
         </dependency>
 
         <!-- optional dependencies -->
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-xstream</artifactId>
+            <!-- don't pull into OSGi bundle -->
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-jpa_2.0_spec</artifactId>

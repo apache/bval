@@ -354,7 +354,7 @@ public class BeanValidator<T extends ValidationListener> {
 
     /**
      * the metabean finder associated with this validator.
-     * @see org.apache.bval.MetaBeanManagerFactory#getFinder() 
+     * @see org.apache.bval.MetaBeanManagerFactory#getFinder()
      * @return a MetaBeanFinder
      */
     public MetaBeanFinder getMetaBeanFinder() {

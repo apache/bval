@@ -17,8 +17,6 @@
 package org.apache.bval;
 
 
-import java.util.Map;
-
 import org.apache.bval.model.MetaBean;
 
 /**
@@ -38,9 +36,4 @@ public interface MetaBeanFinder {
      */
     MetaBean findForClass(Class<?> clazz);
 
-    /**
-     * @return all MetaBeans for classes that have a xml descriptor:
-     *         key = bean.id, value = MetaBean
-     */
-    public Map<String, MetaBean> findAll();
 }

@@ -18,9 +18,8 @@ package org.apache.bval.xml;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
-
-import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
 
 /**
  * Description: <br/>
@@ -50,7 +49,7 @@ public class XMLMetaBeanReference extends XMLMetaElement {
     public void mergeInto(MetaProperty prop) throws ClassNotFoundException {
         super.mergeInto(prop);   // call super!
         if (getBeanId() != null) {
-            prop.putFeature(REF_BEAN_ID, getBeanId());
+            prop.putFeature(Features.Property.REF_BEAN_ID, getBeanId());
         }
     }
 }

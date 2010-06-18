@@ -14,25 +14,22 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.bval;
+package org.apache.bval.xml;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import org.apache.bval.BeanValidator;
 import org.apache.bval.MetaBeanFinder;
-import org.apache.bval.MetaBeanManagerFactory;
 import org.apache.bval.ValidationResults;
 import org.apache.bval.example.BusinessObject;
 import org.apache.bval.example.BusinessObjectAddress;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.routines.Reasons;
-import org.apache.bval.xml.XMLMetaBeanURLLoader;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * BeanValidator Tester.
@@ -51,10 +48,10 @@ public class BeanValidatorTest extends TestCase {
     }
 
     public void testValidateMapAsBean() {
-        MetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
+        XMLMetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
               BusinessObject.class.getResource("test-beanInfos.xml")));
 
-        MetaBean mb = MetaBeanManagerFactory.getFinder()
+        MetaBean mb = XMLMetaBeanManagerFactory.getFinder()
               .findForId("org.apache.bval.example.Address");
 
         // 1. validate a bean
@@ -78,8 +75,8 @@ public class BeanValidatorTest extends TestCase {
     }
 
     public void testValidate() {
-        MetaBeanFinder finder = MetaBeanManagerFactory.getFinder();
-        MetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
+        MetaBeanFinder finder = XMLMetaBeanManagerFactory.getFinder();
+        XMLMetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
               BusinessObject.class.getResource("test-beanInfos.xml")));
         MetaBean info = finder.findForClass(BusinessObject.class);
         BusinessObject object = new BusinessObject();

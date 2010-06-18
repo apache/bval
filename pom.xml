@@ -172,6 +172,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.bval</groupId>
+                <artifactId>bval-xstream</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>bval-xstream</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.bval</groupId>
                 <artifactId>bval-jsr303</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -403,6 +414,7 @@
                             <exclude>**/maven-eclipse.xml</exclude>
                             <exclude>**/rat.txt</exclude>
                             <exclude>**/target/**/*</exclude>
+                            <exclude>**/*.iml</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
@@ -493,8 +505,9 @@
 
     <modules>
         <module>bval-core</module>
+        <module>bval-xstream</module>
         <module>bval-jsr303</module>
-        <module>bundle</module>
+        <module>bundle</module>        
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>

@@ -19,10 +19,9 @@ package org.apache.bval.xml;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
+import org.apache.bval.model.Validation;
 
 import java.io.Serializable;
-
-import org.apache.bval.model.Validation;
 
 /**
  * Description: <br/>

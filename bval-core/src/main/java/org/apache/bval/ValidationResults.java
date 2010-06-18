@@ -17,11 +17,11 @@
 package org.apache.bval;
 
 
-import java.io.Serializable;
-import java.util.*;
-
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Description: Implements a contains to hold and transport validation results<br/>
@@ -36,7 +36,7 @@ public class ValidationResults implements ValidationListener, Serializable {
     /**
      * API to add an error to the validation results.
      *
-     * @param reason       - Features from {@link org.apache.bval.routines.Reasons}
+     * @param reason       - Features from {@link org.apache.bval.model.Features.Property}
      *                       or custom reason of validation error
      * @param context        - context information (bean, propertyName, value, ...)
      */
@@ -64,7 +64,7 @@ public class ValidationResults implements ValidationListener, Serializable {
     /**
      * Old API to add an error to the validation results when no context is available.
      *
-     * @param reason       - Features from {@link org.apache.bval.routines.Reasons} or custom validation reason
+     * @param reason       - Features from {@link org.apache.bval.model.Features.Property} or custom validation reason
      * @param bean         - (optional) owner bean or null
      * @param propertyName - (optional) propertyName where valiation error occurred or null
      */

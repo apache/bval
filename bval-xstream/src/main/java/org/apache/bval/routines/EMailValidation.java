@@ -21,38 +21,18 @@ import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Description: example validation for email addresses using a regular expression<br/>
- * 
- * TODO RSt - could become part of optional module, depends on proprietary XML
- * support only (package org.apache.bval.xml)
  */
 public class EMailValidation implements Validation {
-    private static String ATOM =
-            "[^\\x00-\\x1F^\\(^\\)^\\<^\\>^\\@^\\,^\\;^\\:^\\\\^\\\"^\\.^\\[^\\]^\\s]";
-    private static String DOMAIN = "(" + ATOM + "+(\\." + ATOM + "+)*";
-    private static String IP_DOMAIN = "\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\]";
-    private static final java.util.regex.Pattern DEFAULT_PATTERN;
 
-    static {
-        DEFAULT_PATTERN = java.util.regex.Pattern.compile(
-                "^" + ATOM + "+(\\." + ATOM + "+)*@"
-                        + DOMAIN
-                        + "|"
-                        + IP_DOMAIN
-                        + ")$",
-                java.util.regex.Pattern.CASE_INSENSITIVE
-        );
-    }
-
-    private java.util.regex.Pattern pattern = DEFAULT_PATTERN;
+    private java.util.regex.Pattern pattern = EMailValidationUtils.DEFAULT_EMAIL_PATTERN;
 
     public <T extends ValidationListener> void validate(ValidationContext<T> context) {
         if (context.getPropertyValue() == null) return;
-        if (!isValid(context.getPropertyValue(), pattern)) {
+        if (!EMailValidationUtils.isValid(context.getPropertyValue(), getPattern())) {
             context.getListener().addError(Reasons.EMAIL_ADDRESS, context);
         }
     }
@@ -63,19 +43,6 @@ public class EMailValidation implements Validation {
 
     public void setPattern(Pattern pattern) {
         this.pattern = pattern;
-    }
-
-    public static boolean isValid(Object value) {
-        return isValid(value, DEFAULT_PATTERN);
-    }
-
-    private static boolean isValid(Object value, Pattern aPattern) {
-        if (value == null) return true;
-        if (!(value instanceof String)) return false;
-        String string = (String) value;
-        if (string.length() == 0) return true;
-        Matcher m = aPattern.matcher(string);
-        return m.matches();
     }
 
 }

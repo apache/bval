@@ -16,12 +16,11 @@
  */
 package org.apache.bval.xml;
 
-import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
-
-import org.apache.bval.model.MetaProperty;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import org.apache.bval.model.MetaProperty;
+
+import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
 
 /**
  * Description: <br/>

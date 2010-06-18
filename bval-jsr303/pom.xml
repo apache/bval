@@ -103,6 +103,11 @@
             <artifactId>bval-core</artifactId>
         </dependency>
         <dependency>
+          <groupId>org.apache.bval</groupId>
+          <artifactId>bval-xstream</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>

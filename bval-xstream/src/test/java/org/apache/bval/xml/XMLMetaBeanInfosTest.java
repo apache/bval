@@ -16,6 +16,7 @@
  */
 package org.apache.bval.xml;
 
+import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -151,7 +152,7 @@ public class XMLMetaBeanInfosTest extends TestCase {
               "  </bean></beanInfos>";
         XMLMetaBeanInfos beanInfos = (XMLMetaBeanInfos) XMLMapper.getInstance()
               .getXStream().fromXML(xml);
-        assertNotNull(beanInfos);
+        Assert.assertNotNull(beanInfos);
         assertEquals(Integer.valueOf(31),
               beanInfos.getBeans().get(0).getProperty("activationDay").getMaxValue());
         assertEquals(Integer.valueOf(1),

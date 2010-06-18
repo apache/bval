@@ -17,13 +17,13 @@
 package org.apache.bval.json;
 
 import junit.framework.TestCase;
-import org.apache.bval.MetaBeanManager;
 import org.apache.bval.example.BusinessEnum;
 import org.apache.bval.example.BusinessObject;
 import org.apache.bval.example.BusinessObjectAddress;
 import org.apache.bval.model.DynaTypeEnum;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
+import org.apache.bval.xml.XMLMetaBeanManager;
 import org.apache.bval.xml.XMLMetaBeanURLLoader;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import java.util.List;
  * Author: roman.stumm<br>
  */
 public class JSONGeneratorTest extends TestCase {
-  private MetaBeanManager mbm;
+  private XMLMetaBeanManager mbm;
 
   public JSONGeneratorTest(String name) {
     super(name);
@@ -42,8 +42,8 @@ public class JSONGeneratorTest extends TestCase {
 
   public void setUp() throws Exception {
     super.setUp();
-    mbm = new MetaBeanManager();
-    mbm.getBuilder().addLoader(new XMLMetaBeanURLLoader(
+    mbm = new XMLMetaBeanManager();
+    mbm.addLoader(new XMLMetaBeanURLLoader(
         BusinessObject.class.getResource("test-beanInfos.xml")));
   }
 
@@ -54,7 +54,7 @@ public class JSONGeneratorTest extends TestCase {
     assertTrue(mprop.isMandatory());
 
     mbm.getCache().removeFromCache(mbean);
-    mbm.getBuilder().addLoader(new XMLMetaBeanURLLoader(
+    mbm.addLoader(new XMLMetaBeanURLLoader(
         BusinessObject.class.getResource("test-beanInfos-custom.xml")));
     mbean = mbm.findForClass(BusinessObject.class);
     mprop = mbean.getProperty("lastName");

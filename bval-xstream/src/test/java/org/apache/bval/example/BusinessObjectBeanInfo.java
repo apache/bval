@@ -16,13 +16,12 @@
  */
 package org.apache.bval.example;
 
+import org.apache.bval.model.Features;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.beans.SimpleBeanInfo;
-
-import org.apache.bval.model.Features;
 
 /**
  * Description: <br/>

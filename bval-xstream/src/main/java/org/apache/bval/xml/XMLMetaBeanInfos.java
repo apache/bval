@@ -20,7 +20,6 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
-
 import org.apache.bval.model.Validation;
 import org.apache.commons.collections.FastHashMap;
 import org.apache.commons.lang.ClassUtils;

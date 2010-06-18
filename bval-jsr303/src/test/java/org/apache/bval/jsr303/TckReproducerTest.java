@@ -32,7 +32,6 @@ import java.util.Set;
  * User: roman.stumm<br>
  * Date: 21.04.2010<br>
  * Time: 14:21:45<br>
- * viaboxx GmbH, 2010
  */
 public class TckReproducerTest extends TestCase {
 

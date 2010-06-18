@@ -14,19 +14,19 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.bval;
+package org.apache.bval.xml;
+
+import org.apache.bval.MetaBeanFinder;
 
 /**
- * Description: API class to hold a singleton of a {@link MetaBeanManager}
- * that implements the finder and registry interfaces for MetaBeans<br/>
- *
- * @see org.apache.bval.model.MetaBean
- * @see MetaBeanManager
+ * Description: <br>
+ * User: roman.stumm<br>
+ * Date: 17.06.2010<br>
+ * Time: 10:06:37<br>
  */
-public class MetaBeanManagerFactory {
-    private static MetaBeanManager manager = new MetaBeanManager();
-
-    /**
+public class XMLMetaBeanManagerFactory {
+    private static XMLMetaBeanManager manager = new XMLMetaBeanManager();
+     /**
      * global meta bean finder.
      * @return
      */
@@ -40,7 +40,23 @@ public class MetaBeanManagerFactory {
      * for finding, caching, xml registry and enrichment algorithm.
      * @param finder
      */
-    public static void setManager(MetaBeanManager finder) {
+    public static void setManager(XMLMetaBeanManager finder) {
         manager = finder;
+    }
+
+    /**
+     * global meta bean registry
+     * @return
+     */
+    public static XMLMetaBeanRegistry getRegistry() {
+        return manager;
+    }
+
+    /**
+     * global meta bean enricher
+     * @return
+     */
+    public static MetaBeanEnricher getEnricher() {
+        return manager;
     }
 }

@@ -16,11 +16,7 @@
  */
 package org.apache.bval.routines;
 
-import org.apache.bval.model.Features;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.Validation;
-import org.apache.bval.model.ValidationContext;
-import org.apache.bval.model.ValidationListener;
+import org.apache.bval.model.*;
 import org.apache.bval.xml.XMLMetaValue;
 
 import java.util.Collection;
@@ -35,9 +31,9 @@ import static org.apache.bval.routines.Reasons.*;
  * You can subclass this class and replace the implementation
  * in the beanInfo-xml by providing it a validation "standard"<br/>
  * 
- * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml) 
  */
 public class StandardValidation implements Validation {
+
     /** key for this validation in the validation list of the beanInfos */
     public String getValidationId() {
         return "standard";

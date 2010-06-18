@@ -19,7 +19,9 @@
 package org.apache.bval.jsr303;
 
 import org.apache.bval.*;
+import org.apache.bval.xml.XMLMetaBeanBuilder;
 import org.apache.bval.xml.XMLMetaBeanFactory;
+import org.apache.bval.xml.XMLMetaBeanManager;
 
 import javax.validation.*;
 import java.util.ArrayList;
@@ -100,8 +102,9 @@ public class ApacheFactoryContext implements ValidatorContext {
      * Create MetaBeanManager that
      * uses JSR303-XML + JSR303-Annotations
      * to build meta-data from.
+     * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
      */
-    private MetaBeanManager buildMetaBeanManager() {
+    protected MetaBeanManager buildMetaBeanManager() {
         // this is relevant: xml before annotations
         // (because ignore-annotations settings in xml)
         List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(3);
@@ -110,16 +113,23 @@ public class ApacheFactoryContext implements ValidatorContext {
             builders.add(new IntrospectorMetaBeanFactory());
         }
         builders.add(new Jsr303MetaBeanFactory(this));
-      /**
-       * TODO RSt - decide whether to move proprietary XMLMetaBeanFactory support (currently handled with XStream) out of the core:
-       *  get rid of XStream dependency and package org.apache.bval.xml in core
-       *  this would also require a split in MetaBeanManager and MetaBeanBuilder, because parts of the code deal with classes in this package  
-       */
+        // as long as we support both: jsr303 and xstream-xml metabeans:
         if (Boolean.parseBoolean(factory.getProperties().get(
               ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
-            builders.add(new XMLMetaBeanFactory());
+          return createXMLMetaBeanManager(builders);
+        } else {
+          return createMetaBeanManager(builders);
         }
-        return new MetaBeanManager(
-              new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
     }
+
+  protected MetaBeanManager createMetaBeanManager(List<MetaBeanFactory> builders) {
+    return new MetaBeanManager(
+      new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
+  }
+
+  protected MetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
+    builders.add(new XMLMetaBeanFactory());
+    return new XMLMetaBeanManager(
+        new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
+  }
 }

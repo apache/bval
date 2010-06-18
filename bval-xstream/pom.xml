@@ -32,7 +32,7 @@
   </parent>
 
   <artifactId>bval-xstream</artifactId>
-  <name>Apache Bean Validation :: bval-xstream</name>
+  <name>Apache Bean Validation :: bval-xstream (optional)</name>
   <packaging>jar</packaging>
 
   <description>Bean Validation XML Metadata with XStream</description>

@@ -19,20 +19,17 @@ package org.apache.bval.routines;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.bval.BeanValidationContext;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
-import org.apache.bval.routines.Reasons;
-import org.apache.bval.routines.StandardValidation;
 import org.apache.bval.xml.XMLMetaValue;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * StandardValidation Tester.

@@ -16,10 +16,6 @@
  */
 package org.apache.bval.model;
 
-import org.apache.bval.example.BusinessEnum;
-import org.apache.bval.model.DynaTypeEnum;
-import org.apache.bval.model.MetaProperty;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -42,9 +38,9 @@ public class MetaPropertyTest extends TestCase {
         prop.setType(String.class);
         assertEquals(String.class, prop.getTypeClass());
         assertEquals(String.class, prop.getType());
-        prop.setType(new DynaTypeEnum(BusinessEnum.class, BusinessEnum.VALUE1.name(),
-              BusinessEnum.VALUE3.name()));
-        assertEquals(BusinessEnum.class, prop.getTypeClass());
+        prop.setType(new DynaTypeEnum(ExampleEnum.class, ExampleEnum.VALUE1.name(),
+              ExampleEnum.VALUE3.name()));
+        assertEquals(ExampleEnum.class, prop.getTypeClass());
         assertEquals(2, ((DynaTypeEnum)prop.getType()).getEnumConstants().length);
     }
 

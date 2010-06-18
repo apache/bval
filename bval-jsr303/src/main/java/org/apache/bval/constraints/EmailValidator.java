@@ -18,10 +18,11 @@
  */
 package org.apache.bval.constraints;
 
+import org.apache.bval.routines.EMailValidationUtils;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import org.apache.bval.routines.EMailValidation;
 
 /**
  * Description: <br/>
@@ -29,7 +30,7 @@ import org.apache.bval.routines.EMailValidation;
 public class EmailValidator implements ConstraintValidator<Email, String> {
 
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return EMailValidation.isValid(value);
+        return EMailValidationUtils.isValid(value);
     }
 
     public void initialize(Email parameters) {

@@ -16,12 +16,11 @@
  */
 package org.apache.bval.xml;
 
-import static org.apache.bval.model.Features.Property.*;
-
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-
 import org.apache.bval.model.MetaProperty;
 import org.apache.commons.lang.ClassUtils;
+
+import static org.apache.bval.model.Features.Property.*;
 
 /**
  * Description: <br/>

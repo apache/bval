@@ -17,12 +17,11 @@
 package org.apache.bval.xml;
 
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import org.apache.bval.model.FeaturesCapable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.bval.model.FeaturesCapable;
 
 /**
  * Description: <br/>

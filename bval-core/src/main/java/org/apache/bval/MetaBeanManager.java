@@ -16,18 +16,12 @@
  */
 package org.apache.bval;
 
-import static org.apache.bval.model.Features.Property.*;
-
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
 
 import java.util.Map;
 
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.util.PrivilegedActions;
-import org.apache.bval.xml.XMLMetaBeanInfos;
-import org.apache.bval.xml.XMLMetaBeanLoader;
-import org.apache.bval.xml.XMLMetaBeanRegistry;
-import org.apache.bval.xml.XMLMetaBeanURLLoader;
+import static org.apache.bval.model.Features.Property.*;
 
 /**
  * Description: Default implementation for the interface to find, register and
@@ -35,11 +29,11 @@ import org.apache.bval.xml.XMLMetaBeanURLLoader;
  * sufficient and you can get this instance from the {@link MetaBeanManagerFactory}.
  * <br/>
  */
-public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, MetaBeanEnricher {
+public class MetaBeanManager implements MetaBeanFinder {
 
     protected final MetaBeanCache cache = new MetaBeanCache();
     protected final MetaBeanBuilder builder;
-    private boolean complete = false;
+    protected boolean complete = false;
 
     public MetaBeanManager() {
         builder = new MetaBeanBuilder();
@@ -47,17 +41,6 @@ public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, Met
 
     public MetaBeanManager(MetaBeanBuilder builder) {
         this.builder = builder;
-    }
-
-    public void addResourceLoader(String resource) {
-        addLoader(new XMLMetaBeanURLLoader(
-              PrivilegedActions.getClassLoader(getClass()).getResource(resource)));
-    }
-
-    public synchronized void addLoader(XMLMetaBeanLoader loader) {
-        builder.addLoader(loader);
-        cache.clear(); // clear because new loaders can affect ALL MetaBeans already created!
-        complete = false;
     }
 
     public MetaBeanBuilder getBuilder() {
@@ -96,30 +79,6 @@ public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, Met
             }
         } else {
             return cache.findAll();
-        }
-    }
-
-    /**
-     * @param infos - the patches to apply
-     * @return all MetaBeans for classes that have a xml descriptor and
-     *         additional the MetaBeans loaded by the given loaders.
-     *         The given loaders may also return patches for MetaBeans that have
-     *         also been returned by other loaders. The beans with patches for
-     *         references to patched beans will be copied.
-     */
-    public Map<String, MetaBean> enrichCopies(XMLMetaBeanInfos... infos) {
-        Map<String, MetaBean> cached = findAll();
-        try {
-            Map<String, MetaBean> patched = builder.enrichCopies(cached, infos);
-            for (Object oentry : patched.values()) {
-                MetaBean meta = (MetaBean) oentry;
-                computeRelationships(meta, patched);
-            }
-            return patched;
-        } catch (RuntimeException e) {
-            throw e; // do not wrap runtime exceptions
-        } catch (Exception e) {
-            throw new IllegalArgumentException("error enriching beanInfos", e);
         }
     }
 
@@ -177,7 +136,7 @@ public class MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry, Met
         }
     }
 
-    private void computeRelationships(MetaBean beanInfo, Map<String, MetaBean> cached) {
+    protected void computeRelationships(MetaBean beanInfo, Map<String, MetaBean> cached) {
         for (MetaProperty prop : beanInfo.getProperties()) {
             String beanRef = (String) prop.getFeature(REF_BEAN_ID);
             if (beanRef != null) {

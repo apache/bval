@@ -51,6 +51,10 @@ public interface ApacheValidatorConfiguration
          * true/false. use apache metaBeans xml format additionally to
          * build metadata with JSR303.
          * default: false
+         *
+         * @deprecated we could decide to drop this feature in the future.
+         * we keep it as long as we support both: jsr303 and xstream-xml meta data at
+         * the same time (and potentially for the same domain classes)
          */
         String ENABLE_METABEANS_XML = "apache.bval.enable-metabeans-xml";
 

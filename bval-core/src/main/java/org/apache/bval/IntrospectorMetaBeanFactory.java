@@ -16,20 +16,21 @@
  */
 package org.apache.bval;
 
-import static org.apache.bval.model.Features.Property.*;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.Enumeration;
 
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
+import static org.apache.bval.model.Features.Property.*;
 
 /**
  * Description: use information from java.beans.Introspector in MetaBeans.
  * The PropertyDescriptor can contain info about HIDDEN, PREFERRED, READONLY
  * and other features<br/>
+ * NOTE: THIS IS AN OPTIONAL CLASS, TO ENABLE IT, SET Factory Property apache.bval.enable-introspector="true"
  */
 public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
 

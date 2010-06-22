@@ -59,7 +59,8 @@
                     <instructions>
                         <!-- OSGi Bundle Metadata -->
                         <Main-Class>org.apache.bval.util.BeanValidationVersion</Main-Class>
-                        <Implementation-Title>Apache Bean Validation Bundle</Implementation-Title>
+                        <Implementation-Title>Apache Bean Validation</Implementation-Title>
+                        <Implementation-Build>${buildNumber}</Implementation-Build>
                         <Specification-Title>JSR-303 Bean Validation</Specification-Title>
                         <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
                         <Specification-Version>1.0</Specification-Version>

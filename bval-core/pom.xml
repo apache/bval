@@ -80,24 +80,18 @@
                         <phase>compile</phase>
                         <configuration>
                             <tasks>
-                                <property name="tmpdir" value="${java.io.tmpdir}/bvalmvntmp" />
-                                <condition property="outdir" value="${project.build.outputDirectory}">
-                                    <available type="dir" file="${project.build.outputDirectory}" />
-                                </condition>
-                                <property name="outdir" value="${tmpdir}" />
-                                <property name="svnversion.executable" value="svnversion" />
-                                <exec outputproperty="subversion.revision" failonerror="false" failifexecutionfails="false" executable="${svnversion.executable}">
-                                    <arg line="-c ${basedir}/.." />
-                                </exec>
-                                <property name="subversion.revision" value="unknown" />
-                                <echo>Revision: ${subversion.revision}</echo>
                                 <echo>Version: ${project.version}</echo>
-                                <mkdir dir="${outdir}/META-INF" />
-                                <echo file="${outdir}/META-INF/org.apache.bval.revision.properties">
-svn.revision=${subversion.revision}
+                                <echo>Revision: ${buildNumber}</echo>
+                                <echo>Date: ${timestamp}</echo>
+                                <mkdir dir="${project.build.outputDirectory}/META-INF" />
+                                <echo file="${project.build.outputDirectory}/META-INF/org.apache.bval.revision.properties">
+# Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
+project.name=Apache Bean Validation
 project.version=${project.version}
+svn.revision=${buildNumber}
+svn.branch=${scmBranch}
+build.timestamp=${timestamp}
                                 </echo>
-                                <delete dir="${tmpdir}" />
                             </tasks>
                         </configuration>
                         <goals>
@@ -120,8 +114,12 @@ project.version=${project.version}
                         <configuration>
                             <archive>
                                 <manifest>
+                                   <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                    <mainClass>org.apache.bval.util.BeanValidationVersion</mainClass>
                                 </manifest>
+                                <manifestEntries>
+                                    <Implementation-Build>${buildNumber}</Implementation-Build>
+                                </manifestEntries>
                             </archive>
                         </configuration>
                     </execution>

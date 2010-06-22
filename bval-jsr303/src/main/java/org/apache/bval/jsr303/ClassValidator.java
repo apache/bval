@@ -57,7 +57,6 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   protected final GroupsComputer groupsComputer = new GroupsComputer();
 
   public ClassValidator(ApacheFactoryContext factoryContext) {
-//        super(factoryContext.getMetaBeanFinder());
     this.factoryContext = factoryContext;
   }
 
@@ -124,8 +123,6 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    * <p/>
    * Special code is present to manage the {@link Default} group.
    * <p/>
-   * TODO: More descriptive name and don't override method from BeanValidator.
-   *
    * @param vcontext The current context of this validation call.
    */
   @Override
@@ -161,7 +158,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
         Group currentGroup = context.getCurrentGroup();
         for (Group each : defaultGroups) {
           context.setCurrentGroup(each);
-          super.validateBean(context);
+          validateBean(context);
           // Spec 3.4.3 - Stop validation if errors already found
           if (result.violationsSize() > numViolations) {
             break;
@@ -190,7 +187,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
               context.getMetaBean().getFeature("{GroupSequence:" + owner.getCanonicalName() + "}");
           for (Group each : ownerDefaultGroups) {
             context.setCurrentGroup(each);
-            super.validateBean(context);
+            validateBean(context);
             // Spec 3.4.3 - Stop validation if errors already found
             if (result.violationsSize() > numViolations) {
               break;
@@ -206,7 +203,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     }
     // if not the default group, proceed as normal
     else {
-      super.validateBean(context);
+      validateBean(context);
     }
 
 
@@ -218,27 +215,13 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   }
 
   /**
-   * TODO: Currently, almost the same code as super.validateRelatedBean, but
-   * as it is being called at a different time, I have explicitly added the
-   * code here with a different method name.
+   * validate the related beans that are cascadable.
    *
    * @param context The current context
    * @param prop    The property to cascade from (in case it is possible).
    */
   private void validateCascadedBean(GroupValidationContext<?> context, MetaProperty prop) {
     AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
-//      TODO: Delete, never reached in JSR-303 validations
-//        if (access == null && prop.getMetaBean() != null) { // single property access strategy
-//            System.out.println("\n\n ### UNEXPECTED REACH ### \n\n");
-//            // save old values from context
-//            final Object bean = context.getBean();
-//            final MetaBean mbean = context.getMetaBean();
-//            // modify context state for relationship-target bean
-//            context.moveDown(prop, new PropertyAccess(bean.getClass(), prop.getName()));
-//            followCascadedConstraint(context);
-//            // restore old values in context
-//            context.moveUp(bean, mbean);
-//        } else
     if (access != null) { // different accesses to relation
       // save old values from context
       final Object bean = context.getBean();

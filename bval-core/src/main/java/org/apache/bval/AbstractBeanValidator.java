@@ -207,5 +207,5 @@ public abstract class AbstractBeanValidator {
         validateBeanInContext(context);
       }
     }
-  }
+  }  
 }

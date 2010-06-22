@@ -16,13 +16,10 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.BeanValidationContext;
-import org.apache.bval.ValidationResults;
-import org.apache.bval.model.MetaProperty;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.bval.model.MetaProperty;
 
 /**
  * ValidationResults Tester.

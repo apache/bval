@@ -60,7 +60,7 @@ public interface ApacheValidatorConfiguration
 
         /**
          * BeanValidator.treatMapsLikeBeans.
-         * default: false 
+         * default: false
          */
          String TREAT_MAPS_LIKE_BEANS = "apache.bval.treat-maps-like-beans";
     }

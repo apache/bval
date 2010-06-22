@@ -58,16 +58,13 @@ public abstract class AbstractBeanValidator {
    * validate a single bean only. no related beans will be validated
    */
   public <VL extends ValidationListener> void validateBean(ValidationContext<VL> context) {
-    /**
-     * execute all property level validations
-     */
+    // execute all property level validations
     for (MetaProperty prop : context.getMetaBean().getProperties()) {
       context.setMetaProperty(prop);
       validateProperty(context);
     }
-    /**
-     * execute all bean level validations
-     */
+    
+    // execute all bean level validations
     context.setMetaProperty(null);
     for (Validation validation : context.getMetaBean().getValidations()) {
       validation.validate(context);
@@ -93,6 +90,14 @@ public abstract class AbstractBeanValidator {
     validateBeanNet(context);
   }
 
+  /**
+   * Iterates the values of an array, setting the current context
+   * appropriately and validating each value.
+   * 
+   * @param <VL>
+   * @param context
+   *            The validation context, its current bean must be an array.
+   */
   protected <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context) {
     int index = 0;
     DynamicMetaBean dyn = getDynamicMetaBean(context);
@@ -109,46 +114,46 @@ public abstract class AbstractBeanValidator {
   }
 
   /**
-   * Any object implementing java.lang.Iterable is supported
+   * Iterates the values of an {@link Iterable} object, setting the current
+   * context appropriately and validating each value.
+   * 
+   * @param <VL>
+   * @param context The validation context, its current bean must implement
+   *            {@link Iterable}.
    */
-  protected <VL extends ValidationListener> void validateIteratableInContext(ValidationContext<VL> context) {
-    Iterator<?> it = ((Iterable<?>) context.getBean()).iterator();
+  protected <VL extends ValidationListener> void validateIterableInContext(ValidationContext<VL> context) {
+      
+    final boolean positional = context.getBean() instanceof List<?>;
     int index = 0;
-    // jsr303 spec: Each object provided by the iterator is validated.
-    final DynamicMetaBean dyn = getDynamicMetaBean(context);
-    while (it.hasNext()) { // to Many
-      Object each = it.next();
-      context.setCurrentIndex(index++);
-      if (each == null)
-        continue; // enhancement: throw IllegalArgumentException? (=> spec)
-      if (dyn != null) {
-        context.setBean(each, dyn.resolveMetaBean(each));
-      } else {
-        context.setBean(each);
-      }
-      validateBeanNet(context);
-    }
-  }
-
-  protected <VL extends ValidationListener> void validateNonPositionalIteratableInContext(
-      ValidationContext<VL> context) {
-    Iterator<?> it = ((Iterable<?>) context.getBean()).iterator();
-    // jsr303 spec: Each object provided by the iterator is validated.
     context.setCurrentIndex(null);
+    
+    // jsr303 spec: Each object provided by the iterator is validated.
     final DynamicMetaBean dyn = getDynamicMetaBean(context);
-    while (it.hasNext()) { // to Many
-      Object each = it.next();
-      if (each == null)
-        continue; // enhancement: throw IllegalArgumentException? (=> spec)
+    for ( Object each : (Iterable<?>) context.getBean() ) {
+      if ( positional ) {
+          context.setCurrentIndex(index++);
+      }
+      if (each == null) {
+          continue; // Null values are not validated
+      }
       if (dyn != null) {
-        context.setBean(each, dyn.resolveMetaBean(each));
+          context.setBean(each, dyn.resolveMetaBean(each));
       } else {
-        context.setBean(each);
+          context.setBean(each);
       }
       validateBeanNet(context);
     }
   }
 
+  /**
+   * Iterates the values of a {@link Map}, setting the current context
+   * appropriately and validating each value.
+   * 
+   * @param <VL>
+   * @param context
+   *            The validation context, its current bean must implement
+   *            {@link Map}.
+   */
   protected <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context) {
     // jsr303 spec: For Map, the value of each Map.Entry is validated (key is not validated).
     Iterator<Map.Entry<Object, Object>> it = ((Map<Object, Object>) context.getBean()).entrySet().iterator();
@@ -156,8 +161,9 @@ public abstract class AbstractBeanValidator {
     while (it.hasNext()) { // to Many
       Map.Entry<Object, Object> entry = it.next();
       context.setCurrentKey(entry.getKey());
-      if (entry.getValue() == null)
-        continue; // enhancement: throw IllegalArgumentException? (=> spec)
+      if (entry.getValue() == null) {
+        continue; // Null values are not validated
+      }
       if (dyn != null) {
         context.setBean(entry.getValue(), dyn.resolveMetaBean(entry.getValue()));
       } else {
@@ -197,10 +203,8 @@ public abstract class AbstractBeanValidator {
     if (context.getBean() != null) {
       if (!treatMapsLikeBeans && context.getBean() instanceof Map<?, ?>) {
         validateMapInContext(context);
-      } else if (context.getBean() instanceof List<?>) {
-        validateIteratableInContext(context);
       } else if (context.getBean() instanceof Iterable<?>) {
-        validateNonPositionalIteratableInContext(context);
+        validateIterableInContext(context);
       } else if (context.getBean() instanceof Object[]) {
         validateArrayInContext(context);
       } else { // to One Bean (or Map like Bean)

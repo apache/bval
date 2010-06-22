@@ -45,8 +45,8 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
    */
   private void patchFactoryContextForMethodValidation(ApacheFactoryContext factoryContext) {
     MetaBeanFactory[] factories = ((MetaBeanManager) getMetaBeanFinder()).getBuilder().getFactories();
-    for(int i=0;i<factories.length;i++) {
-      if(factories[i] instanceof Jsr303MetaBeanFactory && !(factories[i] instanceof MethodValidatorMetaBeanFactory)) {
+    for (int i = 0; i < factories.length; i++) {
+      if (factories[i] instanceof Jsr303MetaBeanFactory && !(factories[i] instanceof MethodValidatorMetaBeanFactory)) {
         factories[i] = new MethodValidatorMetaBeanFactory(factoryContext);
       }
     }

@@ -84,20 +84,131 @@
 
     <developers>
         <developer>
-            <id>romanstumm</id>
-            <name>Roman Stumm</name>
-            <email>romanstumm@apache.org</email>
+            <id>carlosvara</id>
+            <name>Carlos Vara</name>
+            <email>carlosvara@apache.org</email>
+            <roles>
+                <role>Committer</role>
+            </roles>
         </developer>
         <developer>
             <id>dwoods</id>
             <name>Donald Woods</name>
             <email>dwoods@apache.org</email>
+            <organization>IBM</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>IPMC</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>gpetracek</id>
+            <name>Gerhard Petracek</name>
+            <email>gpetracek@apache.org</email>
+            <organization>IRIAN Solutions GmbH</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>jrbauer</id>
+            <name>Jeremy Bauer</name>
+            <email>jrbauer@apache.org</email>
+            <organization>IBM</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>kevan</id>
+            <name>Kevan Miller</name>
+            <email>kevan@apache.org</email>
+            <organization>IBM</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Mentor</role>
+                <role>Champion</role>
+                <role>IPMC</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>lresende</id>
+            <name>Luciano Resende</name>
+            <email>lresende@apache.org</email>
+            <organization>IBM</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Mentor</role>
+                <role>IPMC</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>struberg</id>
+            <name>Mark Struberg</name>
+            <email>struberg@apache.org</email>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>matzew</id>
+            <name>Matthias Wessendorf</name>
+            <email>matzew@apache.org</email>
+            <organization>Oracle</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Mentor</role>
+                <role>IPMC</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>mnour</id>
+            <name>Mohammad Nour El-Din</name>
+            <email>mnour@apache.org</email>
+            <organization>Thebe Technology</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>niallp</id>
+            <name>Niall Pemberton</name>
+            <email>niallp@apache.org</email>
+            <organization>EMC</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Mentor</role>
+                <role>IPMC</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>romanstumm</id>
+            <name>Roman Stumm</name>
+            <email>romanstumm@apache.org</email>
+            <organization>Agimatec GmbH</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Committer</role>
+            </roles>
         </developer>
         <developer>
             <id>simonetripodi</id>
             <name>Simone Tripodi</name>
             <email>simonetripodi@apache.org</email>
             <organization>Sourcesense Srl</organization>
+            <roles>
+                <role>PPMC Member</role>
+                <role>Committer</role>
+            </roles>
         </developer>
     </developers>
 

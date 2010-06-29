@@ -27,6 +27,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -182,7 +183,7 @@ public class ConstraintCompositionTest extends TestCase {
         Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
         ConstraintViolation<Code> violation = constraintViolations.iterator().next();
         Assert.assertEquals("Wrong violation message", "Invalid code", violation.getMessage());
-        Assert.assertEquals("Wrong violation type", ElevenDigitsCode.class, violation.getConstraintDescriptor().getAnnotation().annotationType());
+        Assert.assertEquals("Wrong violation type", ElevenDigitsCode.class, ((Annotation)violation.getConstraintDescriptor().getAnnotation()).annotationType());
         
     }
     

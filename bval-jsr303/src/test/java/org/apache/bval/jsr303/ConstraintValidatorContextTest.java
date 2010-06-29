@@ -222,12 +222,12 @@ public class ConstraintValidatorContextTest extends TestCase {
             throw new IllegalStateException("Unexpected call");
         }
 
-        @Override
+        // @Override - not allowed in 1.5 for Interface methods
         public Class<?> getCurrentOwner() {
             throw new IllegalStateException("Unexpected call");
         }
 
-        @Override
+        // @Override - not allowed in 1.5 for Interface methods
         public void setCurrentOwner(Class<?> currentOwner) {
             throw new IllegalStateException("Unexpected call");
         }

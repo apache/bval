@@ -101,7 +101,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             if a non recoverable error happens
    *             during the validation process
    */
-  @Override
+  // @Override - not allowed in 1.5 for Interface methods
   public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groupArray) {
     if (object == null) throw new IllegalArgumentException("cannot validate null");
     checkGroups(groupArray);
@@ -163,7 +163,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             if a non recoverable error happens
    *             during the validation process
    */
-  @Override
+  // @Override - not allowed in 1.5 for Interface methods
   public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName,
                                                           Class<?>... groups) {
     if (object == null) throw new IllegalArgumentException("cannot validate null");
@@ -245,7 +245,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             if a non recoverable error happens
    *             during the validation process
    */
-  @Override
+  // @Override - not allowed in 1.5 for Interface methods
   public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType,
                                                        String propertyName, Object value,
                                                        Class<?>... groups) {
@@ -303,7 +303,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             during the metadata discovery or if some
    *             constraints are invalid.
    */
-  @Override
+  // @Override - not allowed in 1.5 for Interface methods
   public BeanDescriptor getConstraintsForClass(Class<?> clazz) {
     if (clazz == null) {
       throw new IllegalArgumentException("Class cannot be null");
@@ -337,7 +337,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             if the provider does not support the call.
    */
   @SuppressWarnings("unchecked")
-  @Override
+  // @Override - not allowed in 1.5 for Interface methods
   public <T> T unwrap(Class<T> type) {
     if (type.isAssignableFrom(getClass())) {
       return (T) this;

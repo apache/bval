@@ -623,7 +623,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    * @param propertyName Property name to check.
    */
   private void checkPropertyName(String propertyName) {
-    if (propertyName == null || propertyName.isEmpty()) {
+    if (propertyName == null || propertyName.trim().length() == 0) {
       throw new IllegalArgumentException("Property path cannot be null or empty.");
     }
   }

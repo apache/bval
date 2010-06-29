@@ -51,7 +51,9 @@ public class ClassHelper {
             return;
         }
         allClasses.add(clazz);
-        List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
+        // List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
+        // List<Class<?>> subClasses = new List<Class<?>>(Arrays.asList(clazz.getInterfaces()));
+        List<Class<?>> subClasses = new ArrayList(Arrays.asList(clazz.getInterfaces()));
         subClasses.add(0, clazz.getSuperclass());
         for ( Class<?> subClass : subClasses ) {
             fillFullClassHierarchyAsList(allClasses, subClass);

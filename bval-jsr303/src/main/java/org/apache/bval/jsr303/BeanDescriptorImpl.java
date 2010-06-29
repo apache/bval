@@ -76,7 +76,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      * @param propertyName property evaludated
      */
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
-        if (propertyName == null || propertyName.isEmpty()) {
+        if (propertyName == null || propertyName.trim().length() == 0) {
             throw new IllegalArgumentException("propertyName cannot be null or empty");
         }
         MetaProperty prop = metaBean.getProperty(propertyName);

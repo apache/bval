@@ -28,6 +28,7 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>7</version>
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.bval</groupId>

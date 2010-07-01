@@ -21,6 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.validation.ConstraintViolationException;
+
 import com.google.inject.BindingAnnotation;
 
 /**
@@ -54,6 +56,6 @@ public @interface Validate {
      * @return the exception re-thrown when an error occurs during the
      *         validation.
      */
-    Class<? extends Throwable> rethrowExceptionsAs() default Exception.class;
+    Class<? extends Throwable> rethrowExceptionsAs() default ConstraintViolationException.class;
 
 }

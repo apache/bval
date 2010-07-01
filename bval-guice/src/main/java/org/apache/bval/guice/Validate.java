@@ -34,17 +34,26 @@ import com.google.inject.BindingAnnotation;
 public @interface Validate {
 
     /**
-     * TODO fill me
+     * The groups have to be validated, empty by default.
      *
-     * @return
+     * @return the groups have to be validated, empty by default.
      */
     Class<?>[] groups() default {};
 
     /**
-     * TODO fill me
+     * Marks if the returned object by the intercepted method execution has to
+     * be validated, false by default.
      *
-     * @return
+     * @return false by default.
      */
     boolean validateReturnedValue() default false;
+
+    /**
+     * The exception re-thrown when an error occurs during the validation.
+     *
+     * @return the exception re-thrown when an error occurs during the
+     *         validation.
+     */
+    Class<? extends Throwable> rethrowExceptionsAs() default Exception.class;
 
 }

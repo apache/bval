@@ -15,6 +15,7 @@
  */
 package org.apache.bval.guice;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -71,10 +72,10 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
                 groups));
 
         if (!constraintViolations.isEmpty()) {
-            throw new ConstraintViolationException("Validation error when calling method '"
+            throw getException(new ConstraintViolationException("Validation error when calling method '"
                     + method
                     + "' with arguments "
-                    + Arrays.deepToString(arguments), constraintViolations);
+                    + Arrays.deepToString(arguments), constraintViolations), validate.rethrowExceptionsAs());
         }
 
         Object returnedValue = invocation.proceed();
@@ -82,14 +83,36 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
         if (validate.validateReturnedValue()) {
             constraintViolations.addAll(methodValidator.validateReturnedValue(clazz, method, returnedValue, groups));
             if (!constraintViolations.isEmpty()) {
-                throw new ConstraintViolationException("Method '"
+                throw getException(new ConstraintViolationException("Method '"
                         + method
                         + "' returned a not valid value "
-                        + returnedValue, constraintViolations);
+                        + returnedValue, constraintViolations), validate.rethrowExceptionsAs());
             }
         }
 
         return returnedValue;
+    }
+
+    private static Throwable getException(ConstraintViolationException exception,
+            Class<? extends Throwable> exceptionWrapperClass) {
+        // check the thrown exception is of same re-throw type
+        if (exceptionWrapperClass == ConstraintViolationException.class) {
+            return exception;
+        }
+
+        // re-throw the exception as new exception
+        Throwable rethrowEx = null;
+
+        try {
+            Constructor<? extends Throwable> constructor = exceptionWrapperClass.getConstructor(Throwable.class);
+            rethrowEx = constructor.newInstance(exception);
+        } catch (Exception e) {
+            rethrowEx = new RuntimeException("Impossible to re-throw '"
+                    + exceptionWrapperClass
+                    + "', it needs the constructor with <Throwable> argument.", e);
+        }
+
+        return rethrowEx;
     }
 
 }

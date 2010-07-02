@@ -78,4 +78,13 @@ public final class GuiceAwareValidationTestCase extends TestCase {
         }
     }
 
+    public void testRethrowWrappedException() {
+        try {
+            this.dummyCountryDao.updateCountry(new Country());
+            fail("org.apache.bval.guice.DummyException expected");
+        } catch (Exception e) {
+            assertEquals(DummyException.class, e.getClass());
+        }
+    }
+
 }

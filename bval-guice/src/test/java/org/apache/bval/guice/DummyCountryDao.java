@@ -16,6 +16,7 @@
  */
 package org.apache.bval.guice;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -41,6 +42,14 @@ public class DummyCountryDao {
         country.setIso2Code(iso2Code);
         country.setIso3Code(iso3Code);
         return country;
+    }
+
+    @Validate(
+            groups = { Update.class },
+            rethrowExceptionsAs = DummyException.class
+    )
+    public int updateCountry(@Valid Country country) {
+        return 0;
     }
 
 }

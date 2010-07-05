@@ -16,6 +16,7 @@
  */
 package org.apache.bval.jsr303.extensions;
 
+import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -23,7 +24,10 @@ import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.ClassValidator;
 import org.apache.bval.jsr303.extensions.ExampleMethodService.Person;
 
+import javax.validation.ValidationException;
 import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -215,6 +219,61 @@ public class MethodValidatorImplTest extends TestCase {
         results = mv.validateParameters(service.getClass(), personOp2, new Object[]{p});
         assertTrue("No violations expected", results.isEmpty());
     }
+    
+    
+    /**
+     * Validate a method defined in an interface using the following combinations:
+     * <ul>
+     *  <li>impl.class + impl.method</li>
+     *  <li>interface.class + interface.method</li>
+     *  <li>impl.class + interface.method</li>
+     *  <li>interface.class + impl.method</li>
+     * </ul>
+     */
+    public void testValidateImplementedMethod() throws NoSuchMethodException {
+        UserMethodsImpl um = new UserMethodsImpl();
+        MethodValidator mv = getValidator().unwrap(MethodValidator.class);
+        
+        Method classMethod = um.getClass().getMethod("findUser", new Class[]{String.class, String.class, Integer.class});
+        Method ifaceMethod = UserMethods.class.getMethod("findUser", new Class[]{String.class, String.class, Integer.class});
+        
+        Set<?> results;
+        
+        // Validate from class (should create violations)
+        results = mv.validateParameters(um.getClass(), classMethod, new Object[]{"", "valid", null });
+        assertEquals("Invalid number of violations", 2, results.size());
+        
+        // Validate from interface
+        results = mv.validateParameters(UserMethods.class, ifaceMethod, new Object[]{"", "valid", null });
+        assertEquals("Invalid number of violations", 0, results.size());
+        
+        // Invalid combinations
+        try {
+            results = mv.validateParameters(UserMethods.class, classMethod, new Object[]{"", "valid", null });
+            Assert.fail("Exception not thrown when validating interface.class + impl.method");
+        } catch (ValidationException e) {
+            // Expected
+        }
+        try {
+            results = mv.validateParameters(um.getClass(), ifaceMethod, new Object[]{"", "valid", null });
+            Assert.fail("Exception not thrown when validating impl.class + interface.method");
+        } catch (ValidationException e) {
+            // Expected
+        }
+        
+    }
+    
+    public static interface UserMethods {
+        void findUser(String param1, String param2, Integer param3);
+    }
+    
+    public static class UserMethodsImpl implements UserMethods {
+        @Override
+        public void findUser( @Size( min=1 ) String param1, @NotNull String param2, @NotNull Integer param3) {
+            return;
+        }        
+    }
+    
 
     private Validator getValidator() {
         return ApacheValidatorFactory.getDefault().getValidator();

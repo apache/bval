@@ -24,6 +24,7 @@ import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.model.MetaBean;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -83,6 +84,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         (MethodBeanDescriptorImpl) getConstraintsForClass(clazz);
     MethodDescriptorImpl methodDescriptor =
         (MethodDescriptorImpl) beanDesc.getConstraintsForMethod(method);
+    if ( methodDescriptor == null ) {
+        throw new ValidationException("Method " + method + " doesn't belong to class " + clazz);
+    }
     return validateParameters(methodDescriptor.getMetaBean(),
         methodDescriptor.getParameterDescriptors(), parameters, groupArray);
   }
@@ -95,6 +99,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         (MethodBeanDescriptorImpl) getConstraintsForClass(clazz);
     MethodDescriptorImpl methodDescriptor =
         (MethodDescriptorImpl) beanDesc.getConstraintsForMethod(method);
+    if ( methodDescriptor == null ) {
+        throw new ValidationException("Method " + method + " doesn't belong to class " + clazz);
+    }
     ParameterDescriptorImpl paramDesc = (ParameterDescriptorImpl) methodDescriptor
         .getParameterDescriptors().get(parameterIndex);
     return validateParameter(paramDesc, parameter, groupArray);
@@ -108,6 +115,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         (MethodBeanDescriptorImpl) getConstraintsForClass(clazz);
     ConstructorDescriptorImpl constructorDescriptor =
         (ConstructorDescriptorImpl) beanDesc.getConstraintsForConstructor(constructor);
+    if ( constructorDescriptor == null ) {
+        throw new ValidationException("Constructor " + constructor + " doesn't belong to class " + clazz);
+    }
     return validateParameters(constructorDescriptor.getMetaBean(),
         constructorDescriptor.getParameterDescriptors(), parameters, groupArray);
   }
@@ -119,9 +129,12 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
                                                            Class<?>... groupArray) {
     MethodBeanDescriptorImpl beanDesc =
         (MethodBeanDescriptorImpl) getConstraintsForClass(clazz);
-    ConstructorDescriptorImpl methodDescriptor =
+    ConstructorDescriptorImpl constructorDescriptor =
         (ConstructorDescriptorImpl) beanDesc.getConstraintsForConstructor(constructor);
-    ParameterDescriptorImpl paramDesc = (ParameterDescriptorImpl) methodDescriptor
+    if ( constructorDescriptor == null ) {
+        throw new ValidationException("Constructor " + constructor + " doesn't belong to class " + clazz);
+    }
+    ParameterDescriptorImpl paramDesc = (ParameterDescriptorImpl) constructorDescriptor
         .getParameterDescriptors().get(parameterIndex);
     return validateParameter(paramDesc, parameter, groupArray);
   }
@@ -137,6 +150,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         (MethodBeanDescriptorImpl) getConstraintsForClass(clazz);
     MethodDescriptorImpl methodDescriptor =
         (MethodDescriptorImpl) beanDesc.getConstraintsForMethod(method);
+    if ( methodDescriptor == null ) {
+        throw new ValidationException("Method " + method + " doesn't belong to class " + clazz);
+    }
     final GroupValidationContext<ConstraintValidationListener<Object>> context =
         createContext(methodDescriptor.getMetaBean(), returnedValue, null, groupArray);
     validateReturnedValueInContext(context, methodDescriptor);

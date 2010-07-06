@@ -183,8 +183,6 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
       context.setMetaProperty(nestedProp.getMetaProperty());
       if (nestedProp.isNested()) {
         context.setFixedValue(nestedProp.getValue());
-      } else {
-        context.setMetaProperty(nestedProp.getMetaProperty());
       }
       if (context.getMetaProperty() == null) throw new IllegalArgumentException(
           "Unknown property " + object.getClass().getName() + "." + propertyName);

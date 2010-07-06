@@ -268,7 +268,7 @@ public class MethodValidatorImplTest extends TestCase {
     }
     
     public static class UserMethodsImpl implements UserMethods {
-        @Override
+        // @Override - not allowed in 1.5 for Interface methods
         public void findUser( @Size( min=1 ) String param1, @NotNull String param2, @NotNull Integer param3) {
             return;
         }        

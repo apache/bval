@@ -183,9 +183,9 @@ public class ApacheFactoryContext implements ValidatorContext {
   private static class XMLMetaBeanManagerCreator {
 
     /**
-     * Create the {@link XMLMetaBeanManager}.
+     * Create the {@link MetaBeanManager} to process JSR303 XML.  Requires bval-xstream at RT.
      * @param builders
-     * @return {@link XMLMetaBeanManager}
+     * @return {@link MetaBeanManager}
      */
     // NOTE - We return MetaBeanManager instead of XMLMetaBeanManager to keep
     //        bval-xstream an optional module.

@@ -22,33 +22,57 @@ import org.apache.bval.model.Validation;
 
 
 /**
- * Description: <br/>
+ * Description: {@link ParameterDescriptor} implementation.<br/>
  */
 public class ParameterDescriptorImpl extends ElementDescriptorImpl
       implements ParameterDescriptor {
     private boolean cascaded;
     private int index;
 
+    /**
+     * Create a new ParameterDescriptorImpl instance.
+     * @param metaBean
+     * @param validations
+     */
     public ParameterDescriptorImpl(MetaBean metaBean, Validation[] validations) {
         super(metaBean, metaBean.getClass(), validations);
     }
 
+    /**
+     * Create a new ParameterDescriptorImpl instance.
+     * @param elementClass
+     * @param validations
+     */
     public ParameterDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         super(elementClass, validations);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isCascaded() {
         return cascaded;
     }
 
+    /**
+     * Set whether the referenced parameter descriptor should be validated.
+     * @param cascaded
+     */
     public void setCascaded(boolean cascaded) {
         this.cascaded = cascaded;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int getIndex() {
         return index;
     }
 
+    /**
+     * Set the index of the referenced parameter.
+     * @param index
+     */
     public void setIndex(int index) {
         this.index = index;
     }

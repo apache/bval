@@ -72,7 +72,7 @@ public interface Features {
         String TIME_LAG = "timeLag";
 
         /**
-         * INFO: Boolean, Feld visible?
+         * INFO: Boolean, Field visible?
          *
          * @see java.beans.PropertyDescriptor#isHidden()
          */

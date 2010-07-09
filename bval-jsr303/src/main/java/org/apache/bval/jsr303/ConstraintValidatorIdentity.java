@@ -41,24 +41,45 @@ final class ConstraintValidatorIdentity {
     private final Path path;
     private final ConstraintValidator<?, ?> constraintValidator;
 
+    /**
+     * Create a new ConstraintValidatorIdentity instance.
+     * @param bean
+     * @param path
+     * @param constraintValidator
+     */
     public ConstraintValidatorIdentity(Object bean, Path path, ConstraintValidator<?, ?> constraintValidator) {
         this.bean = bean;
         this.path = path;
         this.constraintValidator = constraintValidator;
     }
 
+    /**
+     * Get the referenced bean.
+     * @return Object
+     */
     public Object getBean() {
         return bean;
     }
 
+    /**
+     * Get the referenced property {@link Path}.
+     * @return Path
+     */
     public Path getPath() {
         return path;
     }
 
+    /**
+     * Get the associated {@link ConstraintValidator}.
+     * @return {@link ConstraintValidator}
+     */
     public ConstraintValidator<?, ?> getConstraintValidator() {
         return constraintValidator;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
 
@@ -94,6 +115,9 @@ final class ConstraintValidatorIdentity {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         final int prime = 31;

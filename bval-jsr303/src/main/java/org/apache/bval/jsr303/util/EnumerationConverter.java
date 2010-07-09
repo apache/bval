@@ -20,8 +20,6 @@ package org.apache.bval.jsr303.util;
 
 import org.apache.commons.beanutils.Converter;
 
-//import com.thoughtworks.xstream.converters.ConversionException;
-
 /**
  * A {@code org.apache.commons.beanutils.Converter} implementation to handle
  * Enumeration type.

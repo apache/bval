@@ -38,12 +38,20 @@ final class NestedMetaProperty {
     private boolean nested;
     private Object value;
 
+    /**
+     * Create a new NestedMetaProperty instance.
+     * @param path
+     * @param value
+     */
     public NestedMetaProperty(String path, Object value) {
         this.propertyPath = path;
         this.value = value;
     }
 
-     void parse() {
+    /**
+     * Parse this {@link NestedMetaProperty}.
+     */
+    void parse() {
         try {
             StringTokenizer tokens = new StringTokenizer(propertyPath, ".[]", true);
             while (tokens.hasMoreTokens()) {
@@ -80,18 +88,34 @@ final class NestedMetaProperty {
         }
     }
 
+    /**
+     * Get the resolved MetaProperty.
+     * @return MetaProperty
+     */
     public MetaProperty getMetaProperty() {
         return metaProperty;
     }
 
+    /**
+     * Get the property path.
+     * @return String path
+     */
     public String getPropertyPath() {
         return propertyPath;
     }
 
+    /**
+     * Learn whether the {@link MetaProperty} represented is indeed nested.
+     * @return boolean
+     */
     public boolean isNested() {
         return nested;
     }
 
+    /**
+     * Set the MetaProperty directly
+     * @param aMetaProperty to set
+     */
     public void setMetaProperty(MetaProperty aMetaProperty) {
         if (this.metaProperty != null) {
             this.nested = true;
@@ -99,18 +123,34 @@ final class NestedMetaProperty {
         this.metaProperty = aMetaProperty;
     }
 
+    /**
+     * Get the resolved MetaBean.
+     * @return MetaBean
+     */
     public MetaBean getMetaBean() {
         return metaBean;
     }
 
+    /**
+     * Set the MetaBean directly
+     * @param metaBean to set
+     */
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
     }
 
+    /**
+     * Get the property value referenced.
+     * @return Object
+     */
     public Object getValue() {
         return value;
     }
 
+    /**
+     * Set the property value directly.
+     * @param value to set
+     */
     public void setValue(Object value) {
         this.value = value;
     }
@@ -134,6 +174,11 @@ final class NestedMetaProperty {
         }
     }
 
+    /**
+     * Get the declared type of a Member.
+     * @param member
+     * @return generic type
+     */
     static Type typeOf(Member member) {
         if (member instanceof Field) {
             return ((Field) member).getGenericType();
@@ -144,6 +189,11 @@ final class NestedMetaProperty {
         throw new IllegalArgumentException("Member " + member + " is neither a field nor a method");
     }
 
+    /**
+     * Get the component type of an indexed type.
+     * @param type
+     * @return Type
+     */
     static Type getIndexedType(Type type) {
         Type indexedType = type;
         if (isCollection(type) && type instanceof ParameterizedType) {
@@ -161,6 +211,12 @@ final class NestedMetaProperty {
         return indexedType;
     }
 
+    /**
+     * Resolve the raw type of a Collection.
+     * @param type
+     * @return Class if found
+     */
+    @SuppressWarnings("unchecked")
     static Class<? extends Collection<?>> getCollectionClass(Type type) {
         if (type instanceof Class<?> && isCollectionClass((Class<?>) type)) {
             return (Class<? extends Collection<?>>) type;
@@ -178,6 +234,11 @@ final class NestedMetaProperty {
         return null;
     }
 
+    /**
+     * Learn whether a particular type represents an array.
+     * @param type
+     * @return boolean
+     */
     static boolean isArray(Type type) {
         if (type instanceof Class<?>) {
             return ((Class<?>) type).isArray();
@@ -186,6 +247,7 @@ final class NestedMetaProperty {
     }
 
     /**
+     * Learn whether <code>type</code> is a {@link Collection} type.
      * @param type the type to check.
      * @return Returns <code>true</code> if <code>type</code> is a collection type or <code>false</code> otherwise.
      */
@@ -193,6 +255,12 @@ final class NestedMetaProperty {
         return getCollectionClass(type) != null;
     }
 
+    /**
+     * Learn whether <code>clazz</code> implements either {@link Collection} or {@link Map}.
+     * @param clazz
+     * @return boolean
+     */
+    //TODO should all these Collection references be Iterable?
     static boolean isCollectionClass(Class<?> clazz) {
         return Collection.class.isAssignableFrom(clazz) || Map.class.isAssignableFrom(clazz);
     }

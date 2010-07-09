@@ -34,25 +34,41 @@ public class ReturnAccess extends AccessStrategy {
 
     private Type returnType;
 
+    /**
+     * Create a new ReturnAccess instance.
+     * @param returnType
+     */
     public ReturnAccess(Type returnType) {
         this.returnType = returnType;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object get(Object instance) {
         throw new NotImplementedException("Obtaining a method return value not yet implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ElementType getElementType() {
         return ElementType.METHOD;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type getJavaType() {
         return this.returnType;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getPropertyName() {
         return "Return value";

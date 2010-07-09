@@ -21,15 +21,22 @@ import org.apache.bval.model.FeaturesCapable;
 import java.lang.annotation.Annotation;
 
 /**
- * Description: <br/>
+ * Description: adapt any {@link FeaturesCapable} from the core meta-model to the {@link AppendValidation} interface.<br/>
  */
 public class AppendValidationToMeta extends BaseAppendValidation {
     private final FeaturesCapable feature;
 
+    /**
+     * Create a new AppendValidationToMeta instance.
+     * @param meta
+     */
     public AppendValidationToMeta(FeaturesCapable meta) {
         this.feature = meta;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         feature.addValidation(validation);
     }

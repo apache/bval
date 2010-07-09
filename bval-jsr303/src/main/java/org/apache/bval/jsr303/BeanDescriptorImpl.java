@@ -30,11 +30,20 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Description: <br/>
+ * Description: Implements {@link BeanDescriptor}.<br/>
  */
 public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDescriptor {
+    /**
+     * The {@link ApacheFactoryContext} (not) used by this {@link BeanDescriptorImpl} 
+     */
     protected final ApacheFactoryContext factoryContext;
 
+    /**
+     * Create a new BeanDescriptorImpl instance.
+     * @param factoryContext
+     * @param metaBean
+     * @param validations
+     */
     protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean,
                                  Validation[] validations) {
         super(metaBean, metaBean.getBeanClass(), validations);
@@ -105,7 +114,10 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return edesc;
     }
 
-    /** return the property descriptors having at least a constraint defined */
+    /**
+     * {@inheritDoc}
+     * @return the property descriptors having at least a constraint defined
+     */
     public Set<PropertyDescriptor> getConstrainedProperties() {
         Set<PropertyDescriptor> validatedProperties = new HashSet<PropertyDescriptor>();
         for (MetaProperty prop : metaBean.getProperties()) {
@@ -117,6 +129,9 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return validatedProperties;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return "BeanDescriptorImpl{" + "returnType=" + elementClass + '}';
     }

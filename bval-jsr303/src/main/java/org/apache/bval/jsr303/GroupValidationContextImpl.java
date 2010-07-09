@@ -46,6 +46,7 @@ final class GroupValidationContextImpl<T extends ValidationListener>
   private final MessageInterpolator messageResolver;
   private final PathImpl path;
   private final MetaBean rootMetaBean;
+
   /**
    * the groups in the sequence of validation to take place
    */
@@ -64,9 +65,16 @@ final class GroupValidationContextImpl<T extends ValidationListener>
   private HashSet<ConstraintValidatorIdentity> validatedConstraints =
       new HashSet<ConstraintValidatorIdentity>();
 
-  private ConstraintValidation constraintValidation;
+  private ConstraintValidation<?> constraintValidation;
   private final TraversableResolver traversableResolver;
 
+  /**
+   * Create a new GroupValidationContextImpl instance.
+   * @param listener
+   * @param aMessageResolver
+   * @param traversableResolver
+   * @param rootMetaBean
+   */
   public GroupValidationContextImpl(T listener, MessageInterpolator aMessageResolver,
                                     TraversableResolver traversableResolver,
                                     MetaBean rootMetaBean) {
@@ -78,22 +86,34 @@ final class GroupValidationContextImpl<T extends ValidationListener>
     this.path = PathImpl.create(null);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setCurrentIndex(Integer index) {
     path.getLeafNode().setIndex(index);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setCurrentKey(Object key) {
     path.getLeafNode().setKey(key);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void moveDown(MetaProperty prop, AccessStrategy access) {
     path.addNode(new NodeImpl(prop.getName()));
     super.moveDown(prop, access);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void moveUp(Object bean, MetaBean metaBean) {
     path.removeLeafNode();
@@ -101,13 +121,10 @@ final class GroupValidationContextImpl<T extends ValidationListener>
   }
 
   /**
-   * add the object in the current group to the collection of validated
-   * objects to keep track of them to avoid endless loops during validation.
-   * <p/>
-   * NOTE: No longer uses the inherited validatedObjects hashmap
-   *
-   * @return true when the object was not already validated in this context
+   * {@inheritDoc}
+   * Here, state equates to bean identity + group.
    */
+  @SuppressWarnings("unchecked")
   @Override
   public boolean collectValidated() {
 
@@ -134,20 +151,23 @@ final class GroupValidationContextImpl<T extends ValidationListener>
   }
 
   /**
-   * @return true when the constraint for the object in this path was not
-   *         already validated in this context
+   * {@inheritDoc}
    */
-  public boolean collectValidated(ConstraintValidator constraint) {
+  public boolean collectValidated(ConstraintValidator<?, ?> constraint) {
     ConstraintValidatorIdentity cvi = new ConstraintValidatorIdentity(getBean(), getPropertyPath(), constraint);
     return this.validatedConstraints.add(cvi);
   }
 
+  /**
+   * Reset the validated constraints.
+   */
   public void resetValidatedConstraints() {
     validatedConstraints.clear();
   }
 
   /**
-   * if an associated object is validated,
+   * {@inheritDoc}
+   * If an associated object is validated,
    * add the association field or JavaBeans property name and a dot ('.') as a prefix
    * to the previous rules.
    * uses prop[index] in property path for elements in to-many-relationships.
@@ -162,40 +182,65 @@ final class GroupValidationContextImpl<T extends ValidationListener>
     return currentPath;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public MetaBean getRootMetaBean() {
     return rootMetaBean;
   }
 
+  /**
+   * Set the Groups.
+   * @param groups
+   */
   public void setGroups(Groups groups) {
     this.groups = groups;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Groups getGroups() {
     return groups;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Group getCurrentGroup() {
     return currentGroup;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void setCurrentGroup(Group currentGroup) {
     this.currentGroup = currentGroup;
   }
 
-  public void setConstraintValidation(ConstraintValidation constraint) {
+  /**
+   * {@inheritDoc}
+   */
+  public void setConstraintValidation(ConstraintValidation<?> constraint) {
     constraintValidation = constraint;
   }
 
-  public ConstraintValidation getConstraintValidation() {
-    return constraintValidation;
-  }
-
-  public ConstraintDescriptor getConstraintDescriptor() {
+  /**
+   * {@inheritDoc}
+   */
+  public ConstraintValidation<?> getConstraintValidation() {
     return constraintValidation;
   }
 
   /**
-   * @return value being validated
+   * {@inheritDoc}
+   */
+  public ConstraintDescriptor<?> getConstraintDescriptor() {
+    return constraintValidation;
+  }
+
+  /**
+   * {@inheritDoc}
    */
   public Object getValidatedValue() {
     if (getMetaProperty() != null) {
@@ -205,19 +250,30 @@ final class GroupValidationContextImpl<T extends ValidationListener>
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public MessageInterpolator getMessageResolver() {
     return messageResolver;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public TraversableResolver getTraversableResolver() {
     return traversableResolver;
   }
 
-
+  /**
+   * {@inheritDoc}
+   */
   public Class<?> getCurrentOwner() {
     return this.currentOwner;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void setCurrentOwner(Class<?> currentOwner) {
     this.currentOwner = currentOwner;
   }

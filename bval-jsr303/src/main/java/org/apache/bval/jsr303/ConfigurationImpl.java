@@ -24,12 +24,21 @@ import org.apache.bval.jsr303.xml.ValidationParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.validation.*;
+import javax.validation.ConstraintValidatorFactory;
+import javax.validation.MessageInterpolator;
+import javax.validation.TraversableResolver;
+import javax.validation.ValidationException;
+import javax.validation.ValidationProviderResolver;
+import javax.validation.ValidatorFactory;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Description: used to configure apache-validation for jsr303.
@@ -39,12 +48,33 @@ import java.util.*;
  */
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
     private static final Log log = LogFactory.getLog(ConfigurationImpl.class);
-    
-    protected final ValidationProvider provider;
+
+    /**
+     * Configured {@link ValidationProvider}
+     */
+    //couldn't this be parameterized <ApacheValidatorConfiguration> or <? super ApacheValidatorConfiguration>?
+    protected final ValidationProvider<?> provider;
+
+    /**
+     * Configured {@link ValidationProviderResolver}
+     */
     protected final ValidationProviderResolver providerResolver;
+
+    /**
+     * Configured {@link ValidationProvider} class
+     */
     protected Class<? extends ValidationProvider<?>> providerClass;
+
+    /**
+     * Configured {@link MessageInterpolator}
+     */
     protected MessageInterpolator messageInterpolator;
+
+    /**
+     * Configured {@link ConstraintValidatorFactory}
+     */
     protected ConstraintValidatorFactory constraintValidatorFactory;
+
     private TraversableResolver traversableResolver;
 
     // BEGIN DEFAULTS
@@ -54,8 +84,13 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private boolean prepared = false;
     private final TraversableResolver defaultTraversableResolver =
           new DefaultTraversableResolver();
+
+    /**
+     * Default {@link MessageInterpolator}
+     */
     protected final MessageInterpolator defaultMessageInterpolator =
           new DefaultMessageInterpolator();
+
     private final ConstraintValidatorFactory defaultConstraintValidatorFactory =
           new DefaultConstraintValidatorFactory();
     // END DEFAULTS
@@ -64,7 +99,12 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private Map<String, String> properties = new HashMap<String, String>();
     private boolean ignoreXmlConfiguration = false;
 
-    public ConfigurationImpl(BootstrapState aState, ValidationProvider aProvider) {
+    /**
+     * Create a new ConfigurationImpl instance.
+     * @param aState
+     * @param aProvider
+     */
+    public ConfigurationImpl(BootstrapState aState, ValidationProvider<?> aProvider) {
         if (aProvider != null) {
             this.provider = aProvider;
             this.providerResolver = null;
@@ -80,6 +120,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
         traversableResolver = resolver;
         this.prepared = false;
@@ -87,6 +130,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     /**
+     * {@inheritDoc}
      * Ignore data from the <i>META-INF/validation.xml</i> file if this
      * method is called.
      *
@@ -98,12 +142,18 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConfigurationImpl messageInterpolator(MessageInterpolator resolver) {
         this.messageInterpolator = resolver;
         this.prepared = false;
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConfigurationImpl constraintValidatorFactory(
           ConstraintValidatorFactory constraintFactory) {
         this.constraintValidatorFactory = constraintFactory;
@@ -112,6 +162,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     /**
+     * {@inheritDoc}
      * Add a stream describing constraint mapping in the Bean Validation
      * XML format.
      *
@@ -123,6 +174,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     /**
+     * {@inheritDoc}
      * Add a provider specific property. This property is equivalent to
      * XML configuration properties.
      * If we do not know how to handle the property, we silently ignore it.
@@ -135,6 +187,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     /**
+     * {@inheritDoc}
      * Return a map of non type-safe custom properties.
      *
      * @return null
@@ -144,6 +197,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     /**
+     * {@inheritDoc}
      * Returns true if Configuration.ignoreXMLConfiguration() has been called.
      * In this case, we ignore META-INF/validation.xml
      *
@@ -153,30 +207,46 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return ignoreXmlConfiguration;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Set<InputStream> getMappingStreams() {
         return mappingStreams;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MessageInterpolator getMessageInterpolator() {
         return messageInterpolator;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MessageInterpolator getDefaultMessageInterpolator() {
         return defaultMessageInterpolator;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public TraversableResolver getDefaultTraversableResolver() {
         return defaultTraversableResolver;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorFactory getDefaultConstraintValidatorFactory() {
         return defaultConstraintValidatorFactory;
     }
 
     /**
+     * {@inheritDoc}
      * main factory method to build a ValidatorFactory
      *
-     * @throw ValidationException if the ValidatorFactory cannot be built
+     * @throws ValidationException if the ValidatorFactory cannot be built
      */
     public ValidatorFactory buildValidatorFactory() {
         prepare();
@@ -218,23 +288,31 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     /**
+     * {@inheritDoc}
      * @return the constraint validator factory of this configuration.
      */
     public ConstraintValidatorFactory getConstraintValidatorFactory() {
         return constraintValidatorFactory;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public TraversableResolver getTraversableResolver() {
         return traversableResolver;
     }
 
-    public ValidationProvider getProvider() {
+    /**
+     * Get the configured {@link ValidationProvider}.
+     * @return {@link ValidationProvider}
+     */
+    public ValidationProvider<?> getProvider() {
         return provider;
     }
 
-    private ValidationProvider findProvider() {
+    private ValidationProvider<?> findProvider() {
         if (providerClass != null) {
-            for (ValidationProvider provider : providerResolver
+            for (ValidationProvider<?> provider : providerResolver
                   .getValidationProviders()) {
                 if (providerClass.isAssignableFrom(provider.getClass())) {
                     return provider;
@@ -248,6 +326,10 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         }
     }
 
+    /**
+     * Set {@link ValidationProvider} class.
+     * @param providerClass
+     */
     public void setProviderClass(Class<? extends ValidationProvider<?>> providerClass) {
         this.providerClass = providerClass;
     }

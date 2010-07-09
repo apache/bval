@@ -25,30 +25,49 @@ import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
 
 /**
- * Description: <br/>
+ * Description: {@link MethodDescriptor} implementation.<br/>
  */
 public class MethodDescriptorImpl extends ElementDescriptorImpl
       implements MethodDescriptor, ProcedureDescriptor {
     private final List<ParameterDescriptor> parameterDescriptors = new ArrayList<ParameterDescriptor>();
     private boolean cascaded;
 
+    /**
+     * Create a new MethodDescriptorImpl instance.
+     * @param metaBean
+     * @param validations
+     */
     protected MethodDescriptorImpl(MetaBean metaBean, Validation[] validations) {
         super(metaBean, metaBean.getClass(), validations);
     }
 
+    /**
+     * Create a new MethodDescriptorImpl instance.
+     * @param elementClass
+     * @param validations
+     */
     protected MethodDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         super(elementClass, validations);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public List<ParameterDescriptor> getParameterDescriptors() //index aligned
     {
         return parameterDescriptors;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isCascaded() {
         return cascaded;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setCascaded(boolean cascaded) {
         this.cascaded = cascaded;
     }

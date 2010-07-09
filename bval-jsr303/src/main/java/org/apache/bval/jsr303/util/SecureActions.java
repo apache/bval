@@ -34,7 +34,7 @@ import java.security.PrivilegedAction;
 public class SecureActions extends PrivilegedActions {
 
     /**
-     * create a new instance of the class using the default no-arg constructor.
+     * Create a new instance of the class using the default no-arg constructor.
      * perform newInstance() call with AccessController.doPrivileged() if possible.
      *
      * @param cls - the class (no interface, non-abstract, has accessible default no-arg-constructor)
@@ -44,11 +44,26 @@ public class SecureActions extends PrivilegedActions {
         return newInstance(cls, ValidationException.class);
     }
 
+    /**
+     * Create a new instance of a specified class, rethrowing {@link ValidationException}.
+     *
+     * @param <T>
+     * @param cls - the class (no interface, non-abstract, has accessible matching constructor)
+     * @param paramTypes
+     * @param values
+     * @return a new instance
+     */
     public static <T> T newInstance(final Class<T> cls, final Class<?>[] paramTypes,
                                     final Object[] values) {
         return newInstance(cls, ValidationException.class, paramTypes, values);
     }
 
+    /**
+     * Load a class.
+     * @param className
+     * @param caller
+     * @return loaded Class instance
+     */
     public static Class<?> loadClass(final String className, final Class<?> caller) {
         return run(new PrivilegedAction<Class<?>>() {
             public Class<?> run() {
@@ -70,6 +85,12 @@ public class SecureActions extends PrivilegedActions {
         });
     }
 
+    /**
+     * Get a field declared on a given class.
+     * @param clazz
+     * @param fieldName
+     * @return Field found
+     */
     public static Field getDeclaredField(final Class<?> clazz, final String fieldName) {
         return run(new PrivilegedAction<Field>() {
             public Field run() {
@@ -95,6 +116,8 @@ public class SecureActions extends PrivilegedActions {
     /**
      * Returns the <b>public method</b> with the specified name or null if it does not exist.
      *
+     * @param clazz
+     * @param methodName
      * @return Returns the method or null if not found.
      */
     public static Method getGetter(final Class<?> clazz, final String methodName) {
@@ -115,6 +138,12 @@ public class SecureActions extends PrivilegedActions {
 
     }
 
+    /**
+     * Get the method of <code>methodName</code> available on <code>clazz</code>.
+     * @param clazz
+     * @param methodName
+     * @return {@link Method} found
+     */
     public static Method getMethod(final Class<?> clazz, final String methodName) {
         return run(new PrivilegedAction<Method>() {
             public Method run() {
@@ -127,6 +156,11 @@ public class SecureActions extends PrivilegedActions {
         });
     }
 
+    /**
+     * Get methods declared on <code>clazz</code>.
+     * @param clazz
+     * @return {@link Method} array
+     */
     public static Method[] getDeclaredMethods(final Class<?> clazz) {
         return run(new PrivilegedAction<Method[]>() {
             public Method[] run() {
@@ -135,6 +169,13 @@ public class SecureActions extends PrivilegedActions {
         });
     }
 
+    /**
+     * Get the constructor of <code>clazz</code> matching <code>params</code>.
+     * @param <T>
+     * @param clazz
+     * @param params
+     * @return {@link Constructor} found
+     */
     public static <T> Constructor<T> getConstructor(final Class<T> clazz,
                                                     final Class<?>... params) {
         return run(new PrivilegedAction<Constructor<T>>() {

@@ -18,10 +18,16 @@
  */
 package org.apache.bval.jsr303.resolver;
 
+import javax.validation.TraversableResolver;
+
 /**
  * Description: indicator interface to let the implementation choose
- * whether results of traversable resolver should be cached <br/>
+ * whether results of traversable resolver should be cached.<br/>
  */
 public interface CachingRelevant {
+    /**
+     * Learn whether the results of the {@link TraversableResolver} should be cached.
+     * @return boolean
+     */
     boolean needsCaching();
 }

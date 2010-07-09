@@ -36,21 +36,26 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   private final MetaBeanFinder metaBeanFinder;
 
   /**
-   * convenience method. Use the global instance of MetaBeanManagerFactory.getFinder().
+   * Create a new BeanValidator instance.
+   * Convenience constructor. Use the global instance of MetaBeanManagerFactory.getFinder().
    */
   public BeanValidator() {
     this(MetaBeanManagerFactory.getFinder());
   }
 
+  /**
+   * Create a new BeanValidator instance.
+   * @param metaBeanFinder
+   */
   public BeanValidator(MetaBeanFinder metaBeanFinder) {
     this.metaBeanFinder = metaBeanFinder;
   }
 
-
   /**
-   * convenience API. validate a root object with all related objects
+   * Convenience API. validate a root object with all related objects
    * with its default metaBean definition.
    *
+   * @param bean
    * @return results - validation results found
    */
   public T validate(Object bean) {
@@ -60,10 +65,11 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   }
 
   /**
-   * convenience API. validate a root object with all related objects
+   * Convenience API. validate a root object with all related objects
    * according to the metaBean.
    *
    * @param bean - a single bean or a collection of beans (that share the same metaBean!)
+   * @param metaBean
    * @return results - validation results found
    */
   public T validate(Object bean, MetaBean metaBean) {
@@ -74,7 +80,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   }
 
   /**
-   * validate the method parameters based on @Validate annotations.
+   * Validate the method parameters based on @Validate annotations.
    * Requirements:
    * Parameter, that are to be validated must be annotated with @Validate
    *
@@ -105,6 +111,11 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   }
 
   /**
+   * Determine the metabean for the given object.
+   * @param <VL>
+   * @param validate
+   * @param parameter
+   * @param context
    * @return true when validation should happen, false to skip it
    */
   protected <VL extends ValidationListener> boolean determineMetaBean(Validate validate, Object parameter,
@@ -131,7 +142,10 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   /**
    * factory method -
    * overwrite in subclasses
+   * 
+   * @return ValidationListener of the proper type
    */
+  @SuppressWarnings("unchecked")
   protected T createResults() {
     return (T) new ValidationResults();
   }
@@ -139,13 +153,15 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   /**
    * factory method -
    * overwrite in subclasses
+   * 
+   * @return ValidationContext parameterized with our listener type
    */
   protected ValidationContext<T> createContext() {
     return new BeanValidationContext<T>(createResults());
   }
 
   /**
-   * convenience API. validate a single property.
+   * Convenience API. validate a single property.
    *
    * @param bean         - the root object
    * @param metaProperty - metadata for the property
@@ -160,6 +176,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   }
 
   /**
+   * {@inheritDoc}
    * internal validate a bean (=not a collection of beans) and its related beans
    */
   protected <VL extends ValidationListener> void validateBeanNet(ValidationContext<VL> context) {
@@ -171,6 +188,12 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
     }
   }
 
+  /**
+   * Validate a property of a graph.
+   * @param <VL>
+   * @param context
+   * @param prop
+   */
   protected <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context, MetaProperty prop) {
     AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
     if (access == null && prop.getMetaBean() != null) { // single property access strategy
@@ -197,7 +220,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   }
 
   /**
-   * the metabean finder associated with this validator.
+   * Get the metabean finder associated with this validator.
    *
    * @return a MetaBeanFinder
    * @see org.apache.bval.MetaBeanManagerFactory#getFinder()

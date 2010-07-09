@@ -72,7 +72,13 @@ public class ValidationResults implements ValidationListener, Serializable {
         addError(createError(reason, bean, propertyName), null);
     }
 
-
+    /**
+     * Create an Error object.
+     * @param reason
+     * @param owner
+     * @param propertyName
+     * @return new {@link Error}
+     */
     protected Error createError(String reason, Object owner, String propertyName) {
         return new Error(reason, owner, propertyName);
     }
@@ -86,6 +92,11 @@ public class ValidationResults implements ValidationListener, Serializable {
         errorsByOwner = new LinkedHashMap<Object, Map<String, List<Error>>>();
     }
 
+    /**
+     * Add an Error to the set of Errors shared by a particular "reason."
+     * @param error
+     * @see {@link Error#getReason()}
+     */
     protected void addToReasonBucket(Error error) {
         if (error.getReason() == null) return;
 
@@ -97,6 +108,11 @@ public class ValidationResults implements ValidationListener, Serializable {
         errors.add(error);
     }
 
+    /**
+     * Add an Error to the property-keyed map of Errors maintained for this Error's owner.
+     * @param error
+     * @see {@link Error#getOwner()}
+     */
     protected void addToOwnerBucket(Error error) {
         if (error.getOwner() == null) return;
 
@@ -113,22 +129,31 @@ public class ValidationResults implements ValidationListener, Serializable {
         list.add(error);
     }
 
-    /** key = reason, value = list of errors for this reason */
+    /**
+     * Get the map of Errors by reason; 
+     * key = reason, value = list of errors for this reason
+     * @return map
+     */
     public Map<String, List<Error>> getErrorsByReason() {
         if (errorsByReason == null) return Collections.emptyMap();
         return errorsByReason;
     }
 
     /**
+     * Get the map of Errors by owner;
      * key = owner, value = map with:<br>
      * &nbsp;&nbsp; key = propertyName, value = list of errors for this owner.propertyName
+     * @return map
      */
     public Map<Object, Map<String, List<Error>>> getErrorsByOwner() {
         if (errorsByOwner == null) return Collections.emptyMap();
         return errorsByOwner;
     }
 
-    /** @return true when there are NO errors in this validation result */
+    /**
+     * Learn whether these results are empty/error-free.
+     * @return true when there are NO errors in this validation result
+     */
     public boolean isEmpty() {
         if (errorsByReason == null ||
               (errorsByReason.isEmpty() && errorsByOwner.isEmpty())) return true;
@@ -143,6 +168,12 @@ public class ValidationResults implements ValidationListener, Serializable {
         return true;
     }
 
+    /**
+     * Learn whether there is an Error keyed to a specified reason description.
+     * @param reason
+     * @return boolean
+     * @see {@link Error#getReason()}
+     */
     public boolean hasErrorForReason(String reason) {
         if (errorsByReason == null) return false;
         List<Error> errors = errorsByReason.get(reason);
@@ -150,8 +181,11 @@ public class ValidationResults implements ValidationListener, Serializable {
     }
 
     /**
+     * Learn whether <code>bean</code> has any errors keyed to property <code>propertyName</code>.
+     * @param bean
      * @param propertyName - may be null: any property is checked
      *                     OR the name of the property to check
+     * @return boolean
      */
     public boolean hasError(Object bean, String propertyName) {
         if (errorsByOwner == null) return false;
@@ -168,6 +202,9 @@ public class ValidationResults implements ValidationListener, Serializable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return "ValidationResults{" + errorsByOwner + "}";
     }

@@ -24,7 +24,7 @@ import javax.validation.ConstraintValidatorContext;
 import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 /**
- * Description: <br/>
+ * Description: Implementation of {@link NodeBuilderDefinedContext}.<br/>
  */
 public final class NodeBuilderDefinedContextImpl
       implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext {
@@ -32,6 +32,12 @@ public final class NodeBuilderDefinedContextImpl
     private final String messageTemplate;
     private final PathImpl propertyPath;
 
+    /**
+     * Create a new NodeBuilderDefinedContextImpl instance.
+     * @param contextImpl
+     * @param template
+     * @param path
+     */
     public NodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl contextImpl, String template,
                     PathImpl path) {
         parent = contextImpl;
@@ -39,12 +45,18 @@ public final class NodeBuilderDefinedContextImpl
         propertyPath = path;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
         // Node not yet added, wait until more information is provided
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext addConstraintViolation() {
         parent.addError(messageTemplate, propertyPath);
         return parent;

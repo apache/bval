@@ -22,12 +22,24 @@ import java.util.List;
 import org.apache.bval.model.MetaBean;
 
 /**
- * Description: <br/>
+ * Description: superinterface of {@link ConstructorDescriptor} and {@link MethodDescriptor}.<br/>
  */
 public interface ProcedureDescriptor {
+    /**
+     * Get the owning metabean.
+     * @return MetaBean
+     */
     MetaBean getMetaBean();
 
+    /**
+     * Set whether this procedure should be validated.
+     * @param b
+     */
     void setCascaded(boolean b);
 
+    /**
+     * Get the parameter descriptors of this procedure.
+     * @return {@link List} of {@link ParameterDescriptor}
+     */
     List<ParameterDescriptor> getParameterDescriptors();
 }

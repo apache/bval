@@ -47,20 +47,33 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
         createConstraintDescriptors(validations);
     }
 
-    /** @return Statically defined returned type. */
+    /**
+     * {@inheritDoc}
+     *  @return Statically defined returned type.
+     */
     public Class<?> getElementClass() {
         return elementClass;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
     public ElementDescriptor.ConstraintFinder findConstraints() {
-        return new ConstraintFinderImpl(metaBean, constraintDescriptors);
+        return new ConstraintFinderImpl(metaBean, (Set) constraintDescriptors);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
         return constraintDescriptors;
     }
 
-    /** return true if at least one constraint declaration is present on the element. */
+    /**
+     * {@inheritDoc}
+     * return true if at least one constraint declaration is present on the element.
+     */
     public boolean hasConstraints() {
         return !constraintDescriptors.isEmpty();
     }
@@ -68,18 +81,26 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
     private void createConstraintDescriptors(Validation[] validations) {
         final Set<ConstraintDescriptor<?>> cds = new HashSet<ConstraintDescriptor<?>>(validations.length);
         for (Validation validation : validations) {
-            if (validation instanceof ConstraintValidation) {
-                ConstraintValidation cval = (ConstraintValidation) validation;
+            if (validation instanceof ConstraintValidation<?>) {
+                ConstraintValidation<?> cval = (ConstraintValidation<?>) validation;
                 cds.add(cval);
             }
         }
         setConstraintDescriptors(cds);
     }
 
+    /**
+     * Set the constraintDescriptors for this element.
+     * @param constraintDescriptors to set
+     */
     public void setConstraintDescriptors(Set<ConstraintDescriptor<?>> constraintDescriptors) {
         this.constraintDescriptors = constraintDescriptors;
     }
 
+    /**
+     * Get the model {@link MetaBean} used.
+     * @return MetaBean
+     */
     public MetaBean getMetaBean() {
         return metaBean;
     }

@@ -35,19 +35,30 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 
 /**
- * Description: <br/>
+ * Description: extension to validate parameters/return values of methods/constructors.<br/>
  */
 //TODO RSt - move. this is an optional module: move the whole package. core code has no dependencies on it 
 public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
+  /**
+   * Create a new MethodValidatorMetaBeanFactory instance.
+   * @param factoryContext
+   */
   public MethodValidatorMetaBeanFactory(ApacheFactoryContext factoryContext) {
     super(factoryContext);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected boolean hasValidationConstraintsDefined(Method method) {
     return false;
   }
 
+  /**
+   * Finish building the specified {@link MethodBeanDescriptorImpl}.
+   * @param descriptor
+   */
   public void buildMethodDescriptor(MethodBeanDescriptorImpl descriptor) {
     try {
       buildMethodConstraints(descriptor);
@@ -138,7 +149,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     methodDesc.getParameterDescriptors().add(paramDesc);
   }
 
-  private void processAnnotation(Annotation annotation, ProcedureDescriptor desc,
+  private <A extends Annotation> void processAnnotation(A annotation, ProcedureDescriptor desc,
                                  AccessStrategy access, AppendValidation validations)
       throws InvocationTargetException, IllegalAccessException {
 
@@ -147,10 +158,10 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     } else {
       Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
       if (vcAnno != null) {
-        Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
+        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
         validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
         applyConstraint(annotation, validatorClasses, null,
-            ClassUtils.primitiveToWrapper((Class)access.getJavaType()), access, validations);
+            ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()), access, validations);
       } else {
         /**
          * Multi-valued constraints

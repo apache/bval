@@ -49,6 +49,7 @@ import org.xml.sax.SAXException;
 /**
  * Description: uses jaxb to parse validation.xml<br/>
  */
+@SuppressWarnings("restriction")
 public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final String VALIDATION_CONFIGURATION_XSD =
@@ -56,6 +57,10 @@ public class ValidationParser {
     private static final Log log = LogFactory.getLog(ValidationParser.class);
     private final String validationXmlFile;
 
+    /**
+     * Create a new ValidationParser instance.
+     * @param file
+     */
     public ValidationParser(String file) {
         if(file == null) {
             validationXmlFile = DEFAULT_VALIDATION_XML_FILE;
@@ -64,6 +69,10 @@ public class ValidationParser {
         }
     }
 
+    /**
+     * Process the validation configuration into <code>targetConfig</code>.
+     * @param targetConfig
+     */
     public void processValidationConfig(ConfigurationImpl targetConfig) {
         ValidationConfigType xmlConfig = parseXmlConfig();
         if (xmlConfig != null) {
@@ -122,6 +131,11 @@ public class ValidationParser {
         return getSchema(VALIDATION_CONFIGURATION_XSD);
     }
 
+    /**
+     * Get a Schema object from the specified resource name.
+     * @param xsd
+     * @return {@link Schema}
+     */
     static Schema getSchema(String xsd) {
         ClassLoader loader = PrivilegedActions.getClassLoader(ValidationParser.class);
         SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -153,6 +167,7 @@ public class ValidationParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void applyProviderClass(ValidationConfigType xmlConfig, ConfigurationImpl target) {
         String providerClassName = xmlConfig.getDefaultProvider();
         if (providerClassName != null) {
@@ -165,6 +180,7 @@ public class ValidationParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void applyMessageInterpolator(ValidationConfigType xmlConfig,
                                           ConfigurationImpl target) {
         String messageInterpolatorClass = xmlConfig.getMessageInterpolator();
@@ -180,6 +196,7 @@ public class ValidationParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void applyTraversableResolver(ValidationConfigType xmlConfig,
                                           ConfigurationImpl target) {
         String traversableResolverClass = xmlConfig.getTraversableResolver();
@@ -194,6 +211,7 @@ public class ValidationParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void applyConstraintFactory(ValidationConfigType xmlConfig,
                                         ConfigurationImpl target) {
         String constraintFactoryClass = xmlConfig.getConstraintValidatorFactory();

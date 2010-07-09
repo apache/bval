@@ -28,11 +28,17 @@ import org.apache.bval.model.Features;
  * @see org.apache.bval.model.Features
  */
 public interface Jsr303Features {
+    /**
+     * JSR303 Property features
+     */
     interface Property extends Features.Property {
         /** INFO: cached PropertyDescriptorImpl of the property */
         String PropertyDescriptor = "PropertyDescriptor";
     }
 
+    /**
+     * JSR303 bean features
+     */
     interface Bean extends Features.Bean {
         /**
          * INFO: List of Group(Class) for {@link javax.validation.GroupSequence#value()}

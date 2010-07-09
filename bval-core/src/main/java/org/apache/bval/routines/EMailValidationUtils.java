@@ -43,12 +43,25 @@ public class EMailValidationUtils {
     );
   }
 
+  /**
+   * Learn whether a given object is a valid email address.
+   * @param value to check
+   * @return <code>true</code> if the validation passes
+   */
   public static boolean isValid(Object value) {
     return isValid(value, DEFAULT_EMAIL_PATTERN);
   }
 
+  /**
+   * Learn whether a particular value matches a given pattern per {@link Matcher#matches()}.
+   * @param value
+   * @param aPattern
+   * @return <code>true</code> if <code>value</code> was a <code>String</code> matching <code>aPattern</code>
+   */
+  //TODO it would seem to make sense to move or reduce the visibility of this method as it is more general than email.
   public static boolean isValid(Object value, Pattern aPattern) {
     if (value == null) return true;
+    //TODO could effortlessly validate any CharSequence
     if (!(value instanceof String)) return false;
     String string = (String) value;
     if (string.length() == 0) return true;

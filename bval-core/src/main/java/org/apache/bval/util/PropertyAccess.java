@@ -35,11 +35,19 @@ public class PropertyAccess extends AccessStrategy {
   private final String propertyName;
   private Field rememberField;
 
+  /**
+   * Create a new PropertyAccess instance.
+   * @param clazz
+   * @param propertyName
+   */
   public PropertyAccess(Class<?> clazz, String propertyName) {
     this.beanClass = clazz;
     this.propertyName = propertyName;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public ElementType getElementType() {
     return (rememberField != null) ? ElementType.FIELD : ElementType.METHOD;
   }
@@ -53,15 +61,30 @@ public class PropertyAccess extends AccessStrategy {
     }
   }
 
+  /**
+   * Get a named property from <code>bean</code>.
+   * @param bean
+   * @param propertyName
+   * @return Object found
+   * @throws InvocationTargetException
+   * @throws NoSuchMethodException
+   * @throws IllegalAccessException
+   */
   public static Object getProperty(Object bean, String propertyName) throws
       InvocationTargetException, NoSuchMethodException, IllegalAccessException {
     return new PropertyAccess(bean.getClass(), propertyName).get(bean);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String toString() {
     return "Property{" + beanClass.getName() + '.' + propertyName + '}';
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Type getJavaType() {
     /*if(Map.class.isAssignableFrom(beanClass)) {
         return beanClass.
@@ -91,10 +114,16 @@ public class PropertyAccess extends AccessStrategy {
     return Object.class; // unknown type: allow any type??
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String getPropertyName() {
     return propertyName;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Object get(Object bean) {
     try {
       if (rememberField != null) {  // cache field of previous access
@@ -143,6 +172,9 @@ public class PropertyAccess extends AccessStrategy {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
@@ -152,6 +184,9 @@ public class PropertyAccess extends AccessStrategy {
     return beanClass.equals(that.beanClass) && propertyName.equals(that.propertyName);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public int hashCode() {
     int result;
     result = beanClass.hashCode();

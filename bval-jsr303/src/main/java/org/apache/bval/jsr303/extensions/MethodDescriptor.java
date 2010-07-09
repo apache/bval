@@ -24,8 +24,16 @@ import java.util.List;
  * functionality is part of the JSR303 specification.<br/>
  */
 public interface MethodDescriptor extends ElementDescriptor {
+    /**
+     * Get the {@link ParameterDescriptor}s for this {@link MethodDescriptor}.
+     * @return {@link List} of {@link ParameterDescriptor}
+     */
     List<ParameterDescriptor> getParameterDescriptors(); //index aligned
 
+    /**
+     * Learn whether the referenced method should be validated.
+     * @return boolean
+     */
     boolean isCascaded();
 
 }

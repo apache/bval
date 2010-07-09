@@ -52,10 +52,17 @@ import java.util.Set;
  * mappings (defined in xml)<br/>
  */
 public class Jsr303MetaBeanFactory implements MetaBeanFactory {
+    /** Shared log instance */ //of dubious utility as it's static :/
     protected static final Log log = LogFactory.getLog(Jsr303MetaBeanFactory.class);
+    /** Constant for the "value" annotation attribute specified in JSR303*/
     protected static final String ANNOTATION_VALUE = "value";
+    /** {@link ApacheFactoryContext} used */
     protected final ApacheFactoryContext factoryContext;
 
+    /**
+     * Create a new Jsr303MetaBeanFactory instance.
+     * @param factoryContext
+     */
     public Jsr303MetaBeanFactory(ApacheFactoryContext factoryContext) {
         this.factoryContext = factoryContext;
     }
@@ -66,12 +73,12 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
 
     private ConstraintDefaults getDefaultConstraints() {
         return factoryContext.getFactory().getDefaultConstraints();
-
     }
 
     /**
-     * add the validation features to the metabean that come from jsr303
-     * annotations in the beanClass
+     * {@inheritDoc}
+     * Add the validation features to the metabean that come from JSR303
+     * annotations in the beanClass.
      */
     public void buildMetaBean(MetaBean metabean) {
         try {
@@ -99,8 +106,9 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     }
 
     /**
-     * process class annotations, field and method annotations
-     *
+     * Process class annotations, field and method annotations.
+     * @param beanClass
+     * @param metabean
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
@@ -164,7 +172,12 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
 
         addXmlConstraints(beanClass, metabean);
     }
-    
+
+    /**
+     * Learn whether a given Method has validation constraints defined via JSR303 annotations.
+     * @param method
+     * @return <code>true</code> if constraints detected
+     */
     protected boolean hasValidationConstraintsDefined(Method method) {
         boolean ret = false;
         for ( Annotation annot : method.getDeclaredAnnotations() ) {
@@ -172,10 +185,9 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 break;
             }
         }
-        
         return ret;
     }
-    
+
     private boolean hasValidationConstraintsDefined(Annotation annot) {
         // If it is annotated with @Constraint
         if ( annot.annotationType().getAnnotation(Constraint.class) != null ) {
@@ -204,7 +216,14 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return ret;
     }
 
-    /** add cascade validation and constraints from xml mappings */
+    /**
+     * Add cascade validation and constraints from xml mappings
+     * @param beanClass
+     * @param metabean
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    @SuppressWarnings("unchecked")
     private void addXmlConstraints(Class<?> beanClass, MetaBean metabean)
           throws IllegalAccessException, InvocationTargetException {
         for (MetaConstraint<?, ? extends Annotation> meta : factoryContext.getFactory()
@@ -221,11 +240,14 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                           meta.getAccessStrategy().getJavaType());
                 }
             }
-            Class<? extends ConstraintValidator<?, ?>>[] constraintClasses =
+            Class<? extends ConstraintValidator<? extends Annotation, ?>>[] constraintClasses =
                   findConstraintValidatorClasses(meta.getAnnotation(), null);
-            applyConstraint(meta.getAnnotation(), constraintClasses, metaProperty, beanClass,
-                  meta.getAccessStrategy(), new AppendValidationToMeta(
-                  metaProperty == null ? metabean : metaProperty));
+            applyConstraint(
+                    (Annotation) meta.getAnnotation(),
+                    (Class<? extends ConstraintValidator<Annotation, ?>>[]) constraintClasses,
+                    metaProperty, beanClass, meta.getAccessStrategy(),
+                    new AppendValidationToMeta(metaProperty == null ? metabean
+                            : metaProperty));
         }
         for (AccessStrategy access : factoryContext.getFactory().getValidAccesses(beanClass)) {
             MetaProperty metaProperty = metabean.getProperty(access.getPropertyName());
@@ -258,7 +280,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return changed;
     }
 
-    private boolean processAnnotation(Annotation annotation, MetaProperty prop, Class<?> owner,
+    private <A extends Annotation> boolean processAnnotation(A annotation, MetaProperty prop, Class<?> owner,
                                       AccessStrategy access, AppendValidation appender)
           throws IllegalAccessException, InvocationTargetException {
         if (annotation instanceof Valid) {
@@ -272,7 +294,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
             if (vcAnno != null) {
                 ConstraintDefinitionValidator.validateConstraintDefinition(annotation);
-                Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
+                Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
                 validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
                 return applyConstraint(annotation, validatorClasses, prop, owner, access,
                       appender);
@@ -297,20 +319,28 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return false;
     }
 
-    protected Class<? extends ConstraintValidator<?, ?>>[] findConstraintValidatorClasses(
-          Annotation annotation, Constraint vcAnno) {
+    /**
+     * Find available {@link ConstraintValidation} classes for a given constraint annotation.
+     * @param annotation
+     * @param vcAnno
+     * @return {@link ConstraintValidation} implementation class array
+     */
+    @SuppressWarnings("unchecked")
+    protected <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] findConstraintValidatorClasses(
+          A annotation, Constraint vcAnno) {
         if (vcAnno == null) {
             vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
         }
-        Class<? extends ConstraintValidator<?, ?>>[] validatorClasses;
+        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
+        Class<A> annotationType = (Class<A>) annotation.annotationType();
         validatorClasses = factoryContext.getFactory()
               .getConstraintsCache()
-              .getConstraintValidators(annotation.annotationType());
+              .getConstraintValidators(annotationType);
         if (validatorClasses == null) {
-            validatorClasses = vcAnno.validatedBy();
+            validatorClasses = (Class<? extends ConstraintValidator<A, ?>>[]) vcAnno.validatedBy();
             if (validatorClasses.length == 0) {
                 validatorClasses = getDefaultConstraints()
-                      .getValidatorClasses(annotation.annotationType());
+                      .getValidatorClasses(annotationType);
             }
         }
         return validatorClasses;
@@ -380,16 +410,28 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     }
 
     /**
+     * Apply a constraint to the specified <code>appender</code>.
+     * @param annotation constraint annotation
+     * @param constraintClasses known {@link ConstraintValidator} implementation classes for <code>annotation</code>
+     * @param prop meta-property
+     * @param owner type
+     * @param access strategy
+     * @param appender
+     * @return success flag
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    protected boolean applyConstraint(Annotation annotation,
-                                      Class<? extends ConstraintValidator<?, ?>>[] constraintClasses,
+    /*
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    protected <A extends Annotation> boolean applyConstraint(A annotation,
+                                      Class<? extends ConstraintValidator<A, ?>>[] constraintClasses,
                                       MetaProperty prop, Class<?> owner, AccessStrategy access,
                                       AppendValidation appender)
           throws IllegalAccessException, InvocationTargetException {
 
-        final ConstraintValidator validator;
+        final ConstraintValidator<A, ?> validator;
         if (constraintClasses != null && constraintClasses.length > 0) {
             Type type = determineTargetedType(owner, access);
             /**
@@ -401,8 +443,8 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
              * supertype of T and not a supertype of the chosen
              * ConstraintValidator supported type.
              */
-            Map<Type, Class<? extends ConstraintValidator<?, ?>>> validatorTypes =
-                  TypeUtils.getValidatorsTypes(constraintClasses);
+            Map<Type, Class<? extends ConstraintValidator<A, ?>>> validatorTypes =
+                  (Map<Type, Class<? extends ConstraintValidator<A, ?>>>) TypeUtils.getValidatorsTypes(constraintClasses);
             final List<Type> assignableTypes = new ArrayList<Type>(constraintClasses.length);
             fillAssignableTypes(type, validatorTypes.keySet(), assignableTypes);
             reduceAssignableTypes(assignableTypes);
@@ -416,7 +458,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         } else {
             validator = null;
         }
-        final AnnotationConstraintBuilder builder = new AnnotationConstraintBuilder(
+        final AnnotationConstraintBuilder<A> builder = new AnnotationConstraintBuilder<A>(
               constraintClasses, validator, annotation, owner, access);
 
         // JSR-303 3.4.4: Add implicit groups

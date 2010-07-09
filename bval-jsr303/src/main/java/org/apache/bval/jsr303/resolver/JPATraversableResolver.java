@@ -25,6 +25,9 @@ import java.lang.annotation.ElementType;
 /** @see javax.validation.TraversableResolver */
 public class JPATraversableResolver implements TraversableResolver, CachingRelevant {
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                ElementType elementType) {
@@ -32,12 +35,18 @@ public class JPATraversableResolver implements TraversableResolver, CachingRelev
               .isLoaded(traversableObject, traversableProperty.getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean needsCaching() {
         return true; // yes
     }

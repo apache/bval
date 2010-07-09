@@ -20,11 +20,12 @@ package org.apache.bval.jsr303.util;
 
 
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder;
 
 import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 /**
- * Description: <br/>
+ * Description: Implementation of {@link NodeContextBuilder}.<br/>
  */
 final class NodeContextBuilderImpl
       implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
@@ -35,6 +36,13 @@ final class NodeContextBuilderImpl
     // The actual incorporation in the path will take place when the definition of the current leaf node is complete
     private final String lastNodeName;
 
+    /**
+     * Create a new NodeContextBuilderImpl instance.
+     * @param contextImpl
+     * @param template
+     * @param path
+     * @param name
+     */
     NodeContextBuilderImpl(ConstraintValidatorContextImpl contextImpl,
                                     String template, PathImpl path, String name) {
         parent = contextImpl;
@@ -43,6 +51,9 @@ final class NodeContextBuilderImpl
         lastNodeName = name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(
           Object key) {
         // Modifies the "previous" node in the path
@@ -51,6 +62,9 @@ final class NodeContextBuilderImpl
         return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(
           Integer index) {
         // Modifies the "previous" node in the path
@@ -59,12 +73,18 @@ final class NodeContextBuilderImpl
         return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
         addLastNodeIfNeeded();
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, lastNodeName);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext addConstraintViolation() {
         addLastNodeIfNeeded();
         parent.addError(messageTemplate, propertyPath);

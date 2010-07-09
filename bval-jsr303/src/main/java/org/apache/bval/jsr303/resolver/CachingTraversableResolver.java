@@ -36,17 +36,31 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
     private TraversableResolver delegate;
     private Map<CacheEntry, CacheEntry> cache = new HashMap<CacheEntry, CacheEntry>();
 
-    /** @return true when a CachingTraversableResolver is to be used during validation */
+    /**
+     * Convenience method to check whether caching is necessary on a given {@link TraversableResolver}.
+     * @param resolver to check
+     * @return true when a CachingTraversableResolver is to be used during validation
+     */
     public static boolean needsCaching(TraversableResolver resolver) {
         // caching, if we do not know exactly
         return !(resolver instanceof CachingRelevant) ||
               ((CachingRelevant) resolver).needsCaching();
     }
 
+    /**
+     * Create a new CachingTraversableResolver instance.
+     * @param delegate
+     */
     public CachingTraversableResolver(TraversableResolver delegate) {
         this.delegate = delegate;
     }
 
+    /**
+     * If necessary, return a caching wrapper for the specified {@link TraversableResolver}.
+     * @param traversableResolver
+     * @return {@link TraversableResolver}
+     * @see #needsCaching(TraversableResolver)
+     */
     public static TraversableResolver cacheFor(TraversableResolver traversableResolver) {
         if (needsCaching(traversableResolver)) {
             return new CachingTraversableResolver(traversableResolver);
@@ -55,6 +69,9 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                ElementType elementType) {
@@ -73,6 +90,9 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
         return cachedLH.reachable;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
@@ -91,10 +111,16 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
         return cachedLH.cascadable;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean needsCaching() {
         return false;  // I am the cache. Do not need cache for cache
     }
 
+    /**
+     * Entry in the cache.
+     */
     private static class CacheEntry {
         private final Object object;
         private final Path.Node node;
@@ -106,7 +132,14 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
         private Boolean reachable;
         private Boolean cascadable;
 
-
+        /**
+         * Create a new CacheEntry instance.
+         * @param traversableObject
+         * @param traversableProperty
+         * @param rootBeanType
+         * @param pathToTraversableObject
+         * @param elementType
+         */
         private CacheEntry(Object traversableObject, Path.Node traversableProperty,
                            Class<?> rootBeanType, Path pathToTraversableObject,
                            ElementType elementType) {
@@ -118,6 +151,9 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
             this.hashCode = buildHashCode();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -136,6 +172,9 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
 
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public int hashCode() {
             return hashCode;

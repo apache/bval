@@ -20,8 +20,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * Description: the meta description of a property of a bean. it supports a map
- * of features and multiple validations<br/>
+ * Description: the meta description of a property of a bean. It supports a map
+ * of features and multiple validations.<br/>
  *
  * @see Validation
  * @see MetaBean
@@ -36,46 +36,79 @@ public class MetaProperty extends FeaturesCapable
     private MetaBean metaBean;
     private MetaBean parentMetaBean;
 
+    /**
+     * Create a new MetaProperty instance.
+     */
     public MetaProperty() {
     }
 
-    /** the metabean of the target bean (mainly for relationships) */
+    /**
+     * Get the metabean of the target bean (mainly for relationships).
+     * @return MetaBean (may be null).
+     */
     public MetaBean getMetaBean() {
         return metaBean;
     }
 
+    /**
+     * Set the MetaBean of this {@link MetaProperty}.
+     * @param metaBean to set
+     */
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
     }
 
-  /**
-   * the metabean that owns this property (set by MetaBean.putProperty())
-   */
+    /**
+     * Get the metabean that owns this property (set by MetaBean.putProperty())
+     * @return
+     */
     public MetaBean getParentMetaBean() {
         return parentMetaBean;
     }
 
+    /**
+     * Set the metabean that owns this property (usually called by MetaBean.putProperty())
+     * @param parentMetaBean
+     */
+    //TODO could this be made package-private?
     public void setParentMetaBean(MetaBean parentMetaBean) {
         this.parentMetaBean = parentMetaBean;
-    }    
+    }
 
+    /**
+     * Learn whether this property is considered a relationship.
+     * @return <code>true</code> if it has a MetaBean of its own
+     */
     public boolean isRelationship() {
         return metaBean != null;
     }
 
+    /**
+     * Set the type of this property.
+     * @param type to set
+     */
     public void setType(Type type) {
         this.type = type;
     }
 
+    /**
+     * Get the type of this property.
+     * @return
+     */
     public Type getType() {
         return type;
     }
 
+    /**
+     * Resolve the type of this property to a class.
+     * @return Class, <code>null</code> if cannot be determined
+     */
     public Class<?> getTypeClass() {
         return getTypeClass(type);
     }
 
-    private Class<?> getTypeClass(Type rawType) {
+    //TODO can this handle variables?  Perhaps move TypeUtils up from bval-jsr303
+    private static Class<?> getTypeClass(Type rawType) {
         if (rawType instanceof Class<?>) {
             return (Class<?>) rawType;
         } else if (rawType instanceof ParameterizedType) {
@@ -87,31 +120,60 @@ public class MetaProperty extends FeaturesCapable
         }
     }
 
+    /**
+     * Get the name of this property.
+     * @return String
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Learn whether this property is considered mandatory.
+     * @return <code>true</code> if the <code>MANDATORY</code> feature is set to <code>true</code>.
+     * @see {@link Features.Property#MANDATORY}
+     */
     public boolean isMandatory() {
         return getFeature(MANDATORY, Boolean.FALSE).booleanValue();
     }
 
+    /**
+     * Set this property as being mandatory (or not).
+     * @param mandatory
+     * @see {@link Features.Property#MANDATORY}
+     */
     public void setMandatory(boolean mandatory) {
         putFeature(MANDATORY, Boolean.valueOf(mandatory));
     }
 
+    /**
+     * Get javascript validations of this property.
+     * @return String[]
+     * @deprecated
+     */
     @Deprecated // remove this method?
     public String[] getJavaScriptValidations() {
         return getFeature(JAVASCRIPT_VALIDATION_FUNCTIONS);
     }
 
+    /**
+     * Set the name of this property.
+     * @param name to set
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MetaProperty clone() throws CloneNotSupportedException {
         return (MetaProperty) super.clone();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return "MetaProperty{" + "name='" + name + '\'' + ", type=" + type + '}';
     }

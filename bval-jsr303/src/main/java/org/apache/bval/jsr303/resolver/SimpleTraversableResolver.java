@@ -23,24 +23,33 @@ import javax.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 
 /**
- * Description: traversable resolver that does always resolve<br/>
+ * Description: traversable resolver that does always resolve.<br/>
  */
 public class SimpleTraversableResolver implements TraversableResolver, CachingRelevant {
-    /** @return true */
+    /**
+     * {@inheritDoc}
+     *  @return <code>true</code>
+     */
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                java.lang.annotation.ElementType elementType) {
         return true;
     }
 
-    /** @return true */
-
+    /**
+     * {@inheritDoc}
+     * @return <code>true</code>
+     */
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * @return <code>false</code>
+     */
     public boolean needsCaching() {
         return false;  // no
     }

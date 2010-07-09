@@ -37,14 +37,11 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
     private static final String SPI_CFG =
         "META-INF/services/javax.validation.spi.ValidationProvider";
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * javax.validation.ValidationProviderResolver#getValidationProviders()
+    /**
+     * {@inheritDoc}
      */
     public List<ValidationProvider<?>> getValidationProviders() {
-        List<ValidationProvider<?>> providers = new ArrayList();
+        List<ValidationProvider<?>> providers = new ArrayList<ValidationProvider<?>>();
         try {
             // get our classloader
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -66,7 +63,7 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
                                 // try loading the specified class
                                 final Class<?> provider = cl.loadClass(line);
                                 // create an instance to return
-                                providers.add((ValidationProvider) SecureActions.newInstance(provider));
+                                providers.add((ValidationProvider<?>) SecureActions.newInstance(provider));
                             } catch (ClassNotFoundException e) {
                                 throw new ValidationException("Failed to load provider " +
                                     line + " configured in file " + url, e);

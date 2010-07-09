@@ -35,11 +35,21 @@ import java.util.TreeSet;
  * "real" source code annotation.
  * <p/>
  */
+//TODO confirm that this class must be public for RT invocation purposes, then document this fact
+//TODO move this guy up to org.apache.bval.jsr303 or org.apache.bval.jsr303.model
 public class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
+
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
 
     private final Class<? extends Annotation> annotationType;
     private final Map<String, Object> values;
 
+    /**
+     * Create a new AnnotationProxy instance.
+     * @param <A>
+     * @param descriptor
+     */
     public <A extends Annotation> AnnotationProxy(AnnotationProxyBuilder<A> descriptor) {
         this.annotationType = descriptor.getType();
         values = getAnnotationValues(descriptor);
@@ -66,6 +76,9 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (values.containsKey(method.getName())) {
             return values.get(method.getName());
@@ -73,10 +86,16 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
         return method.invoke(this, args);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Class<? extends Annotation> annotationType() {
         return annotationType;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         StringBuilder result = new StringBuilder();
         result.append('@').append(annotationType().getName()).append('(');

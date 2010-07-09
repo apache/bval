@@ -28,8 +28,8 @@ package org.apache.bval.jsr303;
  * <li>The current group being validated.</li>
  * </ul>
  * 
- * FIXME: Owner is currently not used in identity checking, and probably won't
- * never be. So it is likely to be deleted.
+ * FIXME: Owner is currently not used in identity checking, and probably
+ * never will be.  So it is likely to be deleted.
  * 
  * @author Carlos Vara
  */
@@ -39,24 +39,45 @@ public class GraphBeanIdentity {
     private final Class<?> group;
     private final Class<?> owner;
 
+    /**
+     * Create a new GraphBeanIdentity instance.
+     * @param bean
+     * @param group
+     * @param owner
+     */
     public GraphBeanIdentity(Object bean, Class<?> group, Class<?> owner) {
         this.bean = bean;
         this.group = group;
         this.owner = owner;
     }
     
+    /**
+     * Get the bean.
+     * @return Object
+     */
     public Object getBean() {
         return bean;
     }
 
+    /**
+     * Get the group being validated.
+     * @return Class
+     */
     public Class<?> getGroup() {
         return group;
     }
 
+    /**
+     * Get the owning class
+     * @return
+     */
     public Class<?> getOwner() {
         return owner;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
 
@@ -92,6 +113,9 @@ public class GraphBeanIdentity {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         final int prime = 31;

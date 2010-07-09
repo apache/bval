@@ -16,7 +16,11 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.*;
+import org.apache.bval.model.FeaturesCapable;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
 
@@ -66,34 +70,52 @@ public class BeanValidationContext<T extends ValidationListener>
     /** listener notified of validation constraint violations. */
     private T listener;
 
+    /**
+     * Create a new BeanValidationContext instance.
+     * @param listener
+     */
     public BeanValidationContext(T listener) {
         this(listener, new IdentityHashMap());
     }
 
+    /**
+     * Create a new BeanValidationContext instance.
+     * @param listener
+     * @param validatedMap
+     */
     protected BeanValidationContext(T listener, Map validatedMap) {
         this.listener = listener;
         this.validatedObjects = validatedMap;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public T getListener() {
         return listener;
     }
 
+    /**
+     * Set the listener.
+     * @param listener T
+     */
     public void setListener(T listener) {
         this.listener = listener;
     }
 
     /**
-     * add the object to the collection of validated objects to keep
-     * track of them to avoid endless loops during validation.
-     *
-     * @return true when the object was not already validated in this context
+     * {@inheritDoc}
+     * Here, state equates to a given bean reference.
      */
     public boolean collectValidated() {
         return validatedObjects.put(getBean(), Boolean.TRUE) == null;
     }
 
-    /** @return true when the object has already been validated in this context */
+    /**
+     * Learn whether a particular object has been validated.
+     * @param object
+     * @return true when the object has already been validated in this context
+     */
     public boolean isValidated(Object object) {
         return validatedObjects.containsKey(object);
     }
@@ -106,6 +128,9 @@ public class BeanValidationContext<T extends ValidationListener>
         validatedObjects.clear();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setBean(Object aBean, MetaBean aMetaBean) {
         bean = aBean;
         metaBean = aMetaBean;
@@ -114,7 +139,7 @@ public class BeanValidationContext<T extends ValidationListener>
     }
 
     /**
-     * get the cached value or access it somehow (via field or method)<br>
+     * Get the cached value or access it somehow (via field or method)<br>
      * <b>you should prefer getPropertyValue(AccessStrategy) instead of this method</b>
      *
      * @return the current value of the property accessed by reflection
@@ -130,7 +155,10 @@ public class BeanValidationContext<T extends ValidationListener>
         }
     }
 
-    /** get the value by using the given access strategy and cache it */
+    /**
+     * {@inheritDoc}
+     * Caches retrieved value.
+     */
     public Object getPropertyValue(AccessStrategy access)
           throws IllegalArgumentException, IllegalStateException {
         if (propertyValue == UNKNOWN || (this.access != access && !fixed)) {
@@ -141,7 +169,7 @@ public class BeanValidationContext<T extends ValidationListener>
     }
 
     /**
-     * convenience method to access metaProperty.name
+     * Convenience method to access metaProperty.name
      *
      * @return null or the name of the current property
      */
@@ -149,25 +177,43 @@ public class BeanValidationContext<T extends ValidationListener>
         return metaProperty == null ? null : metaProperty.getName();
     }
 
+    /**
+     * Set the current property value.
+     * @param propertyValue
+     */
     public void setPropertyValue(Object propertyValue) {
         this.propertyValue = propertyValue;
     }
 
+    /**
+     * Set the property value, fixed.
+     * @param value
+     */
     public void setFixedValue(Object value) {
         setPropertyValue(value);
-        fixed = true;
+        setFixed(true);
     }
 
+    /**
+     * Learn whether the current property value is "fixed."
+     * @return boolean
+     */
     public boolean isFixed() {
         return fixed;
     }
 
+    /**
+     * Potentially declare the current property value as being "fixed."
+     * If <code>true</code>, the context will reuse any not-<code>UNKNOWN</code>
+     * propertyValue regardless of the {@link AccessStrategy} by which it is requested.
+     * @param fixed
+     */
     public void setFixed(boolean fixed) {
         this.fixed = fixed;
     }
 
     /**
-     * depending on whether we have a metaProperty or not,
+     * Depending on whether we have a metaProperty or not,
      * this returns the metaProperty or otherwise the metaBean.
      * This is used to have a simple way to request features
      * in the Validation for both bean- and property-level validations.
@@ -179,8 +225,7 @@ public class BeanValidationContext<T extends ValidationListener>
     }
 
     /**
-     * drop cached value.
-     * mark the internal cachedValue as UNKNOWN.
+     * Drop cached value, marking the internal cachedValue as <code>UNKNOWN</code>.
      * This forces the BeanValidationContext to recompute the value
      * the next time it is accessed.
      * Use this method inside tests or when the propertyValue has been
@@ -191,54 +236,90 @@ public class BeanValidationContext<T extends ValidationListener>
         access = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MetaBean getMetaBean() {
         return metaBean;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Object getBean() {
         return bean;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MetaProperty getMetaProperty() {
         return metaProperty;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setBean(Object bean) {
         this.bean = bean;
         unknownValue();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setMetaProperty(MetaProperty metaProperty) {
         this.metaProperty = metaProperty;
         unknownValue();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return "BeanValidationContext{ bean=" + bean + ", metaProperty=" + metaProperty +
               ", propertyValue=" + propertyValue + '}';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void moveDown(MetaProperty prop, AccessStrategy access) {
         setMetaProperty(prop);
         setBean(getPropertyValue(access), prop.getMetaBean());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void moveUp(Object bean, MetaBean aMetaBean) {
         setBean(bean, aMetaBean); // reset context state
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setCurrentIndex(Integer index) {
         // do nothing
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setCurrentKey(Object key) {
         // do nothing
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
     public AccessStrategy getAccess() {
         return this.access;
     }

@@ -23,5 +23,9 @@ import java.lang.reflect.Type;
  * MetaProperty for instance-based types <br/>
  */
 public interface DynaType extends Type {
+    /**
+     * Resolve the type indirection.
+     * @return Type
+     */
     Type getRawType();
 }

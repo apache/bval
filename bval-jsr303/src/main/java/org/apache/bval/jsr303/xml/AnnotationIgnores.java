@@ -57,30 +57,44 @@ public final class AnnotationIgnores {
     private final Map<Class<?>, Boolean> ignoreAnnotationOnClass =
           new HashMap<Class<?>, Boolean>();
 
+    /**
+     * Record the ignore state for a particular annotation type.
+     * @param clazz
+     * @param b, default true if null
+     */
     public void setDefaultIgnoreAnnotation(Class<?> clazz, Boolean b) {
-        if (b == null) {
-            ignoreAnnotationDefaults.put(clazz, Boolean.TRUE);
-        } else {
-            ignoreAnnotationDefaults.put(clazz, b);
-        }
+        ignoreAnnotationDefaults.put(clazz, b == null || b.booleanValue());
     }
 
+    /**
+     * Learn whether the specified annotation type should be ignored.
+     * @param clazz
+     * @return boolean
+     */
     public boolean getDefaultIgnoreAnnotation(Class<?> clazz) {
-        return ignoreAnnotationDefaults.containsKey(clazz) &&
-              ignoreAnnotationDefaults.get(clazz);
+        return ignoreAnnotationDefaults.containsKey(clazz)
+                && ignoreAnnotationDefaults.get(clazz);
     }
 
+    /**
+     * Ignore annotations on a particular {@link Member} of a class.
+     * @param member
+     */
     public void setIgnoreAnnotationsOnMember(Member member) {
         Class<?> beanClass = member.getDeclaringClass();
-        if (ignoreAnnotationOnMember.get(beanClass) == null) {
-            List<Member> tmpList = new ArrayList<Member>();
-            tmpList.add(member);
-            ignoreAnnotationOnMember.put(beanClass, tmpList);
-        } else {
-            ignoreAnnotationOnMember.get(beanClass).add(member);
+        List<Member> memberList = ignoreAnnotationOnMember.get(beanClass);
+        if (memberList == null) {
+            memberList = new ArrayList<Member>();
+            ignoreAnnotationOnMember.put(beanClass, memberList);
         }
+        memberList.add(member);
     }
 
+    /**
+     * Learn whether annotations should be ignored on a particular {@link Member} of a class.
+     * @param member
+     * @return boolean
+     */
     public boolean isIgnoreAnnotations(Member member) {
         boolean ignoreAnnotation;
         Class<?> clazz = member.getDeclaringClass();
@@ -108,10 +122,20 @@ public final class AnnotationIgnores {
               "." + member.getName());
     }
 
+    /**
+     * Record the ignore state of a particular class. 
+     * @param clazz
+     * @param b
+     */
     public void setIgnoreAnnotationsOnClass(Class<?> clazz, boolean b) {
         ignoreAnnotationOnClass.put(clazz, b);
     }
 
+    /**
+     * Learn whether annotations should be ignored for a given class.
+     * @param clazz to check
+     * @return boolean
+     */
     public boolean isIgnoreAnnotations(Class<?> clazz) {
         boolean ignoreAnnotation;
         if (ignoreAnnotationOnClass.containsKey(clazz)) {

@@ -35,19 +35,31 @@ import javax.validation.spi.ValidationProvider;
  */
 public class ApacheValidationProvider
       implements ValidationProvider<ApacheValidatorConfiguration> {
+    /**
+     * Learn whether a particular builder class is suitable for this {@link ValidationProvider}.
+     * @param builderClass
+     * @return boolean suitability
+     */
     public boolean isSuitable(Class<? extends Configuration<?>> builderClass) {
         return ApacheValidatorConfiguration.class == builderClass;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConfigurationImpl createSpecializedConfiguration(BootstrapState state) {
         return new ConfigurationImpl(state, this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Configuration<?> createGenericConfiguration(BootstrapState state) {
         return new ConfigurationImpl(state, null);
     }
 
     /**
+     * {@inheritDoc}
      * @throws javax.validation.ValidationException
      *          if the ValidatorFactory cannot be built
      */

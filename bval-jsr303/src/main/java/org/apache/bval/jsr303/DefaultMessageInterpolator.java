@@ -52,14 +52,21 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private final Map<Locale, ResourceBundle> userBundlesMap =
           new ConcurrentHashMap<Locale, ResourceBundle>();
 
-    /** Builtin resource bundles hashed against there locale. */
+    /** Builtin resource bundles hashed against their locale. */
     private final Map<Locale, ResourceBundle> defaultBundlesMap =
           new ConcurrentHashMap<Locale, ResourceBundle>();
 
+    /**
+     * Create a new DefaultMessageInterpolator instance.
+     */
     public DefaultMessageInterpolator() {
         this(null);
     }
 
+    /**
+     * Create a new DefaultMessageInterpolator instance.
+     * @param resourceBundle
+     */
     public DefaultMessageInterpolator(ResourceBundle resourceBundle) {
 
         defaultLocale = Locale.getDefault();
@@ -82,8 +89,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     public String interpolate(String message, Context context) {
         // probably no need for caching, but it could be done by parameters since the map
         // is immutable and uniquely built per Validation definition, the comparaison has to be based on == and not equals though
-        return interpolateMessage(message,
-              context.getConstraintDescriptor().getAttributes(), defaultLocale);
+        return interpolate(message, context, defaultLocale);
     }
 
     /** {@inheritDoc} */
@@ -270,6 +276,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         return bundle;
     }
 
+    /**
+     * Set the default locale used by this {@link DefaultMessageInterpolator}.
+     * @param locale
+     */
     public void setLocale(Locale locale) {
         defaultLocale = locale;
     }

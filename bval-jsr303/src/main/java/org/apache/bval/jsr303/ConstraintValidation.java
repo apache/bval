@@ -32,6 +32,8 @@ import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
+
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
@@ -42,7 +44,8 @@ import java.util.*;
 public class ConstraintValidation<T extends Annotation>
     implements Validation, ConstraintDescriptor<T> {
   private static final String ANNOTATION_MESSAGE = "message";
-  private final ConstraintValidator validator;
+
+  private final ConstraintValidator<T, ?> validator;
   private T annotation; // for metadata request API
   private final AccessStrategy access;
   private final boolean reportFromComposite;
@@ -54,23 +57,26 @@ public class ConstraintValidation<T extends Annotation>
    * the owner is the type where the validation comes from.
    * it is used to support implicit grouping.
    */
-  private final Class owner;
+  private final Class<?> owner;
   private Set<Class<?>> groups;
   private Set<Class<? extends Payload>> payload;
   private Class<? extends ConstraintValidator<T, ?>>[] validatorClasses;
 
   /**
+   * Create a new ConstraintValidation instance.
+   * @param validatorClasses
    * @param validator  - the constraint validator
    * @param annotation - the annotation of the constraint
    * @param owner      - the type where the annotated element is placed
    *                   (class, interface, annotation type)
    * @param access     - how to access the value
+   * @param reportFromComposite
    */
   public ConstraintValidation(
       Class<? extends ConstraintValidator<T, ?>>[] validatorClasses,
-      ConstraintValidator validator, T annotation, Class owner,
+      ConstraintValidator<T, ?> validator, T annotation, Class<?> owner,
       AccessStrategy access, boolean reportFromComposite) {
-    this.attributes = new HashMap();
+    this.attributes = new HashMap<String, Object>();
     this.validatorClasses = validatorClasses;
     this.validator = validator;
     this.annotation = annotation;
@@ -79,36 +85,62 @@ public class ConstraintValidation<T extends Annotation>
     this.reportFromComposite = reportFromComposite;
   }
 
+  /**
+   * Return a {@link Serializable} {@link ConstraintDescriptor} capturing a snapshot of current state.
+   * @return {@link ConstraintDescriptor}
+   */
   public ConstraintDescriptor<T> asSerializableDescriptor() {
-    return new ConstraintDescriptorImpl(this);
+    return new ConstraintDescriptorImpl<T>(this);
   }
 
+  /**
+   * Set the applicable validation groups.
+   * @param groups
+   */
   void setGroups(Set<Class<?>> groups) {
     this.groups = groups;
     this.attributes.put("groups", groups.toArray(new Class[groups.size()]));
   }
 
+  /**
+   * Set the payload.
+   * @param payload
+   */
   void setPayload(Set<Class<? extends Payload>> payload) {
     this.payload = payload;
     this.attributes.put("payload", payload.toArray(new Class[payload.size()]));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isReportAsSingleViolation() {
     return reportFromComposite;
   }
 
-  public void addComposed(ConstraintValidation aConstraintValidation) {
+  /**
+   * Add a composing constraint.
+   * @param aConstraintValidation to add
+   */
+  public void addComposed(ConstraintValidation<?> aConstraintValidation) {
     if (composedConstraints == null) {
-      composedConstraints = new HashSet();
+      composedConstraints = new HashSet<ConstraintValidation<?>>();
     }
     composedConstraints.add(aConstraintValidation);
   }
 
-  public void validate(ValidationContext context) {
-    validate((GroupValidationContext) context);
+  /**
+   * {@inheritDoc}
+   */
+  public <L extends ValidationListener> void validate(ValidationContext<L> context) {
+    validate((GroupValidationContext<L>) context);
   }
 
-  public void validate(GroupValidationContext context) {
+  /**
+   * Validate a {@link GroupValidationContext}.
+   * @param context root
+   */
+  public <L extends ValidationListener> void validate(GroupValidationContext<L> context) {
     context.setConstraintValidation(this);
     /**
      * execute unless the given validation constraint has already been processed
@@ -155,7 +187,7 @@ public class ConstraintValidation<T extends Annotation>
         return;
       }
     } else {
-      for (ConstraintValidation composed : getComposingValidations()) {
+      for (ConstraintValidation<?> composed : getComposingValidations()) {
         composed.validate(context);
       }
 
@@ -166,7 +198,7 @@ public class ConstraintValidation<T extends Annotation>
     if (validator != null) {
       ConstraintValidatorContextImpl jsrContext =
           new ConstraintValidatorContextImpl(context, this);
-      if (!validator.isValid(context.getValidatedValue(), jsrContext)) {
+      if (!((ConstraintValidator<T, Object>) validator).isValid(context.getValidatedValue(), jsrContext)) {
         addErrors(context, jsrContext);
       }
     }
@@ -191,7 +223,7 @@ public class ConstraintValidation<T extends Annotation>
     }
   }
 
-  private boolean isReachable(GroupValidationContext context) {
+  private boolean isReachable(GroupValidationContext<?> context) {
     PathImpl path = context.getPropertyPath();
     NodeImpl node = path.getLeafNode();
     PathImpl beanPath = path.getPathWithoutLeafNode();
@@ -211,68 +243,120 @@ public class ConstraintValidation<T extends Annotation>
     return true;
   }
 
-  private void addErrors(GroupValidationContext context,
+  private void addErrors(GroupValidationContext<?> context,
                          ConstraintValidatorContextImpl jsrContext) {
     for (ValidationListener.Error each : jsrContext.getErrorMessages()) {
       context.getListener().addError(each, context);
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String toString() {
     return "ConstraintValidation{" + validator + '}';
   }
 
+  /**
+   * Get the message template used by this constraint.
+   * @return String
+   */
   public String getMessageTemplate() {
     return (String) attributes.get(ANNOTATION_MESSAGE);
   }
 
-  public ConstraintValidator getValidator() {
+  /**
+   * Get the {@link ConstraintValidator} invoked by this {@link ConstraintValidation}.
+   * @return
+   */
+  public ConstraintValidator<T, ?> getValidator() {
     return validator;
   }
 
+  /**
+   * Learn whether this {@link ConstraintValidation} belongs to the specified group.
+   * @param reqGroup
+   * @return boolean
+   */
   protected boolean isMemberOf(Class<?> reqGroup) {
     return groups.contains(reqGroup);
   }
 
-  public Class getOwner() {
+  /**
+   * Get the owning class of this {@link ConstraintValidation}.
+   * @return Class
+   */
+  public Class<?> getOwner() {
     return owner;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public T getAnnotation() {
     return annotation;
   }
 
+  /**
+   * Get the {@link AccessStrategy} used by this {@link ConstraintValidation}.
+   * @return {@link AccessStrategy}
+   */
   public AccessStrategy getAccess() {
     return access;
   }
 
+  /**
+   * Override the Annotation set at construction.
+   * @param annotation
+   */
   public void setAnnotation(T annotation) {
     this.annotation = annotation;
   }
 
   /////////////////////////// ConstraintDescriptor implementation
 
-
+  /**
+   * {@inheritDoc}
+   */
   public Map<String, Object> getAttributes() {
     return attributes;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @SuppressWarnings("unchecked")
   public Set<ConstraintDescriptor<?>> getComposingConstraints() {
     return composedConstraints == null ? Collections.EMPTY_SET : composedConstraints;
   }
 
+  /**
+   * Get the composing {@link ConstraintValidation} objects.  This is effectively
+   * an implementation-specific analogue to {@link #getComposingConstraints()}.
+   * @return {@link Set} of {@link ConstraintValidation}
+   */
+  @SuppressWarnings("unchecked")
   Set<ConstraintValidation<?>> getComposingValidations() {
     return composedConstraints == null ? Collections.EMPTY_SET : composedConstraints;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Set<Class<?>> getGroups() {
     return groups;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Set<Class<? extends Payload>> getPayload() {
     return payload;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public List<Class<? extends ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
     if (validatorClasses == null) {
       return Collections.emptyList();

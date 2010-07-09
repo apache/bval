@@ -31,6 +31,8 @@ import java.lang.reflect.Method;
 /**
  * Description: hold parsed information from xml to complete MetaBean later<br/>
  */
+//TODO move this guy up to org.apache.bval.jsr303 or org.apache.bval.jsr303.model
+//to decouple ApacheValidatorFactory from xml package and allow others to consume MetaConstraint
 public class MetaConstraint<T, A extends Annotation> {
 
     /** The member the constraint was defined on. */
@@ -45,8 +47,10 @@ public class MetaConstraint<T, A extends Annotation> {
     private final AccessStrategy accessStrategy;
 
     /**
+     * Create a new MetaConstraint instance.
      * @param beanClass The class in which the constraint is defined on
      * @param member    The member on which the constraint is defined on, {@code null} if it is a class constraint}
+     * @param annotation
      */
     public MetaConstraint(Class<T> beanClass, Member member, A annotation) {
         this.member = member;
@@ -75,18 +79,34 @@ public class MetaConstraint<T, A extends Annotation> {
         }
     }
 
+    /**
+     * Get the bean class of this constraint.
+     * @return Class
+     */
     public Class<T> getBeanClass() {
         return beanClass;
     }
 
+    /**
+     * Get the member to which this constraint applies.
+     * @return Member
+     */
     public Member getMember() {
         return member;
     }
 
+    /**
+     * Get the annotation that defines this constraint.
+     * @return Annotation
+     */
     public A getAnnotation() {
         return annotation;
     }
 
+    /**
+     * Get the access strategy used for the associated property.
+     * @return {@link AccessStrategy}
+     */
     public AccessStrategy getAccessStrategy() {
         return accessStrategy;
     }

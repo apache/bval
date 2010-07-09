@@ -30,14 +30,19 @@ public class MethodAccess extends AccessStrategy {
     private final Method method;
     private final String propertyName;
 
-    public Type getJavaType() {
-        return method.getGenericReturnType();
-    }
-
+    /**
+     * Create a new MethodAccess instance.
+     * @param method
+     */
     public MethodAccess(Method method) {
         this(getPropertyName(method), method);
     }
 
+    /**
+     * Create a new MethodAccess instance.
+     * @param propertyName
+     * @param method
+     */
     public MethodAccess(String propertyName, Method method) {
         this.method = method;
         this.propertyName = propertyName;
@@ -72,6 +77,7 @@ public class MethodAccess extends AccessStrategy {
     }
 
     /**
+     * {@inheritDoc}
      * normally the propertyName of the getter method, e.g.<br>
      * method: getName() -> propertyName: name<br>
      * method: isValid() -> propertyName: valid<br>
@@ -80,6 +86,9 @@ public class MethodAccess extends AccessStrategy {
         return propertyName;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Object get(final Object instance) {
         return PrivilegedActions.run(new PrivilegedAction<Object>() {
             public Object run() {
@@ -94,14 +103,30 @@ public class MethodAccess extends AccessStrategy {
         });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ElementType getElementType() {
         return ElementType.METHOD;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public Type getJavaType() {
+        return method.getGenericReturnType();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return method.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -111,6 +136,9 @@ public class MethodAccess extends AccessStrategy {
         return method.equals(that.method);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int hashCode() {
         return method.hashCode();
     }

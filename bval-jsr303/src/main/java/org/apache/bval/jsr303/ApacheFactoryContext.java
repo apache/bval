@@ -147,7 +147,7 @@ public class ApacheFactoryContext implements ValidatorContext {
    * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
    */
   @SuppressWarnings("deprecation")
-protected MetaBeanManager buildMetaBeanManager() {
+  protected MetaBeanManager buildMetaBeanManager() {
     // this is relevant: xml before annotations
     // (because ignore-annotations settings in xml)
     List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(3);
@@ -187,7 +187,9 @@ protected MetaBeanManager buildMetaBeanManager() {
      * @param builders
      * @return {@link XMLMetaBeanManager}
      */
-    protected static XMLMetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
+    // NOTE - We return MetaBeanManager instead of XMLMetaBeanManager to keep
+    //        bval-xstream an optional module.
+    protected static MetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
       builders.add(new XMLMetaBeanFactory());
       return new XMLMetaBeanManager(
           new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));

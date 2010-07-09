@@ -177,7 +177,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         createContext(methodDescriptor.getMetaBean(), returnedValue, null, groupArray);
     validateReturnedValueInContext(context, methodDescriptor);
     ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
-    return result.getConstaintViolations();
+    return result.getConstraintViolations();
   }
 
   @SuppressWarnings("unchecked")
@@ -197,7 +197,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
           validateParameterInContext(context, paramDesc);
         }
         ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
-        return result.getConstaintViolations();
+        return result.getConstraintViolations();
       } catch (RuntimeException ex) {
         throw unrecoverableValidationError(ex, parameters);
       }
@@ -214,7 +214,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
           createContext(paramDesc.getMetaBean(), parameter, null, groupArray);
       final ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
       validateParameterInContext(context, paramDesc);
-      return result.getConstaintViolations();
+      return result.getConstraintViolations();
     } catch (RuntimeException ex) {
       throw unrecoverableValidationError(ex, parameter);
     }

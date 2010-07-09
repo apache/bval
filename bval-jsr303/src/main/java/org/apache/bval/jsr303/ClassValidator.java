@@ -148,7 +148,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
         }
         if (!result.isEmpty()) break;
       }
-      return result.getConstaintViolations();
+      return result.getConstraintViolations();
     } catch (RuntimeException ex) {
       throw unrecoverableValidationError(ex, object);
     }
@@ -224,7 +224,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
         }
         if (!result.isEmpty()) break;
       }
-      return result.getConstaintViolations();
+      return result.getConstraintViolations();
     } catch (RuntimeException ex) {
       throw unrecoverableValidationError(ex, object);
     }
@@ -296,7 +296,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
         }
         if (!result.isEmpty()) break;
       }
-      return result.getConstaintViolations();
+      return result.getConstraintViolations();
     } catch (RuntimeException ex) {
       throw unrecoverableValidationError(ex, value);
     }

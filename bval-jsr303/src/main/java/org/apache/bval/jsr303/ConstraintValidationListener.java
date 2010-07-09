@@ -102,8 +102,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
      * Get the {@link ConstraintViolation}s accumulated by this {@link ConstraintValidationListener}.
      * @return {@link Set} of {@link ConstraintViolation}
      */
-    //TODO rename method for correct spelling
-    public Set<ConstraintViolation<T>> getConstaintViolations() {
+    public Set<ConstraintViolation<T>> getConstraintViolations() {
         return constraintViolations;
     }
 

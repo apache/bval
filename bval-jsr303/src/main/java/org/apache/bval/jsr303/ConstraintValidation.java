@@ -179,7 +179,7 @@ public class ConstraintValidation<T extends Annotation>
       context.setConstraintValidation(this);
 
       // stop validating when already failed and ReportAsSingleInvalidConstraint = true ?
-      if (!listener.getConstaintViolations().isEmpty()) {
+      if (!listener.getConstraintViolations().isEmpty()) {
         // TODO RSt - how should the composed constraint error report look like?
         ConstraintValidatorContextImpl jsrContext =
             new ConstraintValidatorContextImpl(context, this);

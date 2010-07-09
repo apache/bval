@@ -41,34 +41,58 @@ public interface ValidationListener {
     <T extends ValidationListener> void addError(Error error, ValidationContext<T> context);
 
     /**
-     * an object holding a single validation constraint violation
+     * An object holding a single validation constraint violation
      * found during the validation process.
      */
     public class Error implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        /** Reason */
         final String reason;
+        /** Owner */
         final Object owner;
+        /** Property name*/
         final String propertyName;
 
+        /**
+         * Create a new Error instance.
+         * @param aReason
+         * @param aOwner
+         * @param aPropertyName
+         */
         public Error(String aReason, Object aOwner, String aPropertyName) {
             this.reason = aReason;
             this.owner = aOwner;
             this.propertyName = aPropertyName;
         }
 
+        /**
+         * Get the reason.
+         * @return String
+         */
         public String getReason() {
             return reason;
         }
 
+        /**
+         * Get the owner.
+         * @return Object
+         */
         public Object getOwner() {
             return owner;
         }
 
+        /**
+         * Get the propertyName.
+         * @return String
+         */
         public String getPropertyName() {
             return propertyName;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public String toString() {
             return "Error{" + "reason='" + reason + '\'' + ", propertyName='" +
                   propertyName + '\'' + '}';

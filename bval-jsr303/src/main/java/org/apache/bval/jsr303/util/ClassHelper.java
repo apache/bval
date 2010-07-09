@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Common operations on classes that do not requiere an {@link AccessController}.
+ * Common operations on classes that do not require an {@link AccessController}.
  * 
  * @author Carlos Vara
  */
@@ -51,8 +51,6 @@ public class ClassHelper {
             return;
         }
         allClasses.add(clazz);
-        // List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
-        // List<Class<?>> subClasses = new List<Class<?>>(Arrays.asList(clazz.getInterfaces()));
         List<Class<?>> subClasses = new ArrayList(Arrays.asList(clazz.getInterfaces()));
         subClasses.add(0, clazz.getSuperclass());
         for ( Class<?> subClass : subClasses ) {

@@ -43,7 +43,7 @@ public class PathImpl implements Path, Serializable {
     private static final Pattern pathPattern =
           Pattern.compile("(\\w+)(\\[(\\w*)\\])?(\\.(.*))*");
 
-    private static final String PROPERTY_PATH_SEPERATOR = ".";
+    private static final String PROPERTY_PATH_SEPARATOR = ".";
 
     private final List<Node> nodeList;
 
@@ -62,6 +62,11 @@ public class PathImpl implements Path, Serializable {
         return parseProperty(propertyPath);
     }
 
+    /**
+     * Create a {@link PathImpl} instance representing the specified path.
+     * @param name
+     * @return PathImpl
+     */
     public static PathImpl create(String name) {
         PathImpl path = new PathImpl();
         NodeImpl node = new NodeImpl(name);
@@ -69,6 +74,11 @@ public class PathImpl implements Path, Serializable {
         return path;
     }
 
+    /**
+     * Copy another Path.
+     * @param path
+     * @return new {@link PathImpl}
+     */
     public static PathImpl copy(Path path) {
         return path == null ? null : new PathImpl(path);
     }
@@ -91,10 +101,19 @@ public class PathImpl implements Path, Serializable {
         }
     }
 
+    /**
+     * Learn whether this {@link PathImpl} points to the root of its graph.
+     * @return true if no child nodes
+     */
+    //our implementation stores a nameless root node.
     public boolean isRootPath() {
         return nodeList.size() == 1 && nodeList.get(0).getName() == null;
     }
 
+    /**
+     * Return a new {@link PathImpl} that represents <code>this</code> minus its leaf node (if present). 
+     * @return PathImpl
+     */
     public PathImpl getPathWithoutLeafNode() {
         List<Node> nodes = new ArrayList<Node>(nodeList);
         PathImpl path = null;
@@ -105,6 +124,10 @@ public class PathImpl implements Path, Serializable {
         return path;
     }
 
+    /**
+     * Add a node to this {@link PathImpl}.
+     * @param node to add
+     */
     public void addNode(Node node) {
     	if ( isRootPath() && nodeList.get(0).getIndex() == null ) {
     		nodeList.set(0, node);
@@ -114,13 +137,23 @@ public class PathImpl implements Path, Serializable {
     	}
     }
 
+    /**
+     * Trim the leaf node from this {@link PathImpl}.
+     * @return the node removed
+     * @throws IllegalStateException if no nodes are found
+     */
     public Node removeLeafNode() {
+        //TODO what if isRootNode()?
         if (nodeList.size() == 0) {
             throw new IllegalStateException("No nodes in path!");
         }
         return nodeList.remove(nodeList.size() - 1);
     }
 
+    /**
+     * Get the leaf node (if any) from this {@link PathImpl}
+     * @return {@link NodeImpl}
+     */
     public NodeImpl getLeafNode() {
         if (nodeList.size() == 0) {
             return null;
@@ -128,13 +161,20 @@ public class PathImpl implements Path, Serializable {
         return (NodeImpl) nodeList.get(nodeList.size() - 1);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     public Iterator<Path.Node> iterator() {
         return nodeList.iterator();
     }
 
+    /**
+     * Learn whether <code>path</code> is a parent to <code>this</code>.
+     * @param path
+     * @return <code>true</code> if our nodes begin with nodes equal to those found in <code>path</code>
+     */
     public boolean isSubPathOf(Path path) {
-        if ( ((PathImpl)path).isRootPath() ) {
+        if (path instanceof PathImpl && ((PathImpl) path).isRootPath()) {
             return true;
         }
         Iterator<Node> pathIter = path.iterator();
@@ -152,6 +192,9 @@ public class PathImpl implements Path, Serializable {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -160,12 +203,15 @@ public class PathImpl implements Path, Serializable {
             Node node = iter.next();
             builder.append(node.toString());
             if (iter.hasNext() && builder.length() > 0) {
-                builder.append(PROPERTY_PATH_SEPERATOR);
+                builder.append(PROPERTY_PATH_SEPARATOR);
             }
         }
         return builder.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -181,6 +227,9 @@ public class PathImpl implements Path, Serializable {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return nodeList != null ? nodeList.hashCode() : 0;

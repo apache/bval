@@ -21,34 +21,51 @@ package org.apache.bval.jsr303.groups;
 import javax.validation.groups.Default;
 
 /**
- * immutable object -
- * wrap an interface that represents a single group.
+ * Immutable object that wraps an interface representing a single group.
  */
 public class Group {
     /**
      * the Default Group
      */
     public static final Group DEFAULT = new Group(Default.class);
-    
+
     private final Class<?> group;
 
+    /**
+     * Create a new Group instance.
+     * @param group
+     */
     public Group(Class<?> group) {
         this.group = group;
     }
 
+    /**
+     * Get the actual group class.
+     * @return
+     */
     public Class<?> getGroup() {
         return group;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "Group{" + "group=" + group + '}';
     }
 
+    /**
+     * Learn whether the group represented is the default group.
+     * @return boolean
+     */
 	public boolean isDefault() {
 		return Default.class.equals(group);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -59,6 +76,9 @@ public class Group {
         return !(group != null ? !group.equals(group1.group) : group1.group != null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return (group != null ? group.hashCode() : 0);

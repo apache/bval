@@ -39,6 +39,10 @@ public class GroupsComputer {
             Arrays.asList(getDefaultGroupArray()));
     }
 
+    /**
+     * Get the default group array.
+     * @return <code>{@link Default}.class</code> only
+     */
     public static Class<?>[] getDefaultGroupArray() {
         return new Class<?>[]{Default.class};
     }
@@ -47,6 +51,11 @@ public class GroupsComputer {
     private final Map<Class<?>, List<Group>> resolvedSequences =
           Collections.synchronizedMap(new HashMap<Class<?>, List<Group>>());
 
+    /**
+     * Compute groups from an array of group classes.
+     * @param groups
+     * @return {@link Groups}
+     */
     public Groups computeGroups(Class<?>[] groups) {
         if (groups == null) {
             throw new IllegalArgumentException("null passed as group");
@@ -60,6 +69,11 @@ public class GroupsComputer {
         return computeGroups(Arrays.asList(groups));
     }
 
+    /**
+     * Main compute implementation.
+     * @param groups
+     * @return {@link Groups}
+     */
     protected Groups computeGroups(Collection<Class<?>> groups) {
         if (groups == null || groups.size() == 0) {
             throw new IllegalArgumentException("At least one group has to be specified.");

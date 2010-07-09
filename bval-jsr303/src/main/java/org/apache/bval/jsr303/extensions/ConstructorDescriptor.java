@@ -24,7 +24,15 @@ import java.util.List;
  * functionality is part of the JSR303 specification.<br/>
  */
 public interface ConstructorDescriptor extends ElementDescriptor {
+    /**
+     * Get the list of {@link ParameterDescriptor}s.
+     * @return {@link List} of {@link ParameterDescriptor}
+     */
     List<ParameterDescriptor> getParameterDescriptors(); //index aligned
 
+    /**
+     * Learn whether the referenced constructor should be validated.
+     * @return
+     */
     boolean isCascaded();
 }

@@ -26,36 +26,64 @@ import org.apache.bval.model.Validation;
 
 
 /**
- * Description: <br/>
+ * Description: {@link PropertyDescriptor} implementation.<br/>
  */
 class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDescriptor {
     private boolean cascaded;
     private String propertyPath;
 
+    /**
+     * Create a new PropertyDescriptorImpl instance.
+     * @param metaBean
+     * @param propertyPath
+     * @param validations
+     */
     PropertyDescriptorImpl(MetaBean metaBean, String propertyPath, Validation[] validations) {
         super(metaBean, metaBean.getProperty(propertyPath).getTypeClass(), validations);
     }
 
+    /**
+     * Create a new PropertyDescriptorImpl instance.
+     * @param elementClass
+     * @param validations
+     */
     PropertyDescriptorImpl(Class<?> elementClass, Validation[] validations) {
         super(elementClass, validations);
     }
 
+    /**
+     * Set whether the referenced property is cascaded.
+     * @param cascaded
+     */
     public void setCascaded(boolean cascaded) {
         this.cascaded = cascaded;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isCascaded() {
         return cascaded;
     }
 
+    /**
+     * Set the referenced property path.
+     * @param propertyPath
+     */
     public void setPropertyPath(String propertyPath) {
         this.propertyPath = propertyPath;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getPropertyName() {
         return propertyPath;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return "PropertyDescriptorImpl{" + "returnType=" + elementClass + ", propertyPath='" +
               propertyPath + '\'' + '}';

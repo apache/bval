@@ -36,6 +36,10 @@ import java.util.Set;
  * Description: experimental implementation of method-level-validation <br/>
  */
 class MethodValidatorImpl extends ClassValidator implements MethodValidator {
+  /**
+   * Create a new MethodValidatorImpl instance.
+   * @param factoryContext
+   */
   public MethodValidatorImpl(ApacheFactoryContext factoryContext) {
     super(factoryContext);
     patchFactoryContextForMethodValidation(factoryContext);
@@ -43,6 +47,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
 
   /**
    * experimental: replace the Jsr303MetaBeanFactory with a MethodValidatorMetaBeanFactory in the factoryContext.
+   * @param factoryContext
    */
   private void patchFactoryContextForMethodValidation(ApacheFactoryContext factoryContext) {
     MetaBeanFactory[] factories = ((MetaBeanManager) getMetaBeanFinder()).getBuilder().getFactories();
@@ -53,6 +58,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {
     MethodBeanDescriptorImpl descriptor = new MethodBeanDescriptorImpl(factoryContext,
@@ -64,6 +72,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
   }
 
   /**
+   * {@inheritDoc}
    * enhancement: method-level-validation not yet completly implemented
    * <pre>example:
    * <code>
@@ -91,6 +100,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         methodDescriptor.getParameterDescriptors(), parameters, groupArray);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public <T> Set<ConstraintViolation<T>> validateParameter(Class<T> clazz, Method method,
                                                            Object parameter,
                                                            int parameterIndex,
@@ -107,6 +119,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     return validateParameter(paramDesc, parameter, groupArray);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public <T> Set<ConstraintViolation<T>> validateParameters(Class<T> clazz,
                                                             Constructor<T> constructor,
                                                             Object[] parameters,
@@ -122,6 +137,9 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
         constructorDescriptor.getParameterDescriptors(), parameters, groupArray);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public <T> Set<ConstraintViolation<T>> validateParameter(Class<T> clazz,
                                                            Constructor<T> constructor,
                                                            Object parameter,
@@ -140,9 +158,11 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
   }
 
   /**
+   * {@inheritDoc}
    * If @Valid  is placed on the method, the constraints declared on the object
    * itself are considered.
    */
+  @SuppressWarnings("unchecked")
   public <T> Set<ConstraintViolation<T>> validateReturnedValue(Class<T> clazz, Method method,
                                                                Object returnedValue,
                                                                Class<?>... groupArray) {
@@ -156,10 +176,11 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     final GroupValidationContext<ConstraintValidationListener<Object>> context =
         createContext(methodDescriptor.getMetaBean(), returnedValue, null, groupArray);
     validateReturnedValueInContext(context, methodDescriptor);
-    ConstraintValidationListener result = context.getListener();
+    ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
     return result.getConstaintViolations();
   }
 
+  @SuppressWarnings("unchecked")
   private <T> Set<ConstraintViolation<T>> validateParameters(MetaBean metaBean,
                                                              List<ParameterDescriptor> paramDescriptors,
                                                              Object[] parameters,
@@ -175,22 +196,23 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
           context.setBean(parameters[i]);
           validateParameterInContext(context, paramDesc);
         }
-        ConstraintValidationListener result = context.getListener();
+        ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
         return result.getConstaintViolations();
       } catch (RuntimeException ex) {
         throw unrecoverableValidationError(ex, parameters);
       }
     } else {
-      return Collections.EMPTY_SET;
+      return Collections.<ConstraintViolation<T>> emptySet();
     }
   }
 
+  @SuppressWarnings("unchecked")
   private <T> Set<ConstraintViolation<T>> validateParameter(
       ParameterDescriptorImpl paramDesc, Object parameter, Class<?>... groupArray) {
     try {
       final GroupValidationContext<ConstraintValidationListener<Object>> context =
           createContext(paramDesc.getMetaBean(), parameter, null, groupArray);
-      final ConstraintValidationListener result = context.getListener();
+      final ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
       validateParameterInContext(context, paramDesc);
       return result.getConstaintViolations();
     } catch (RuntimeException ex) {
@@ -207,8 +229,8 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
 
     final Groups groups = context.getGroups();
 
-    for (ConstraintDescriptor consDesc : paramDesc.getConstraintDescriptors()) {
-      ConstraintValidation validation = (ConstraintValidation) consDesc;
+    for (ConstraintDescriptor<?> consDesc : paramDesc.getConstraintDescriptors()) {
+      ConstraintValidation<?> validation = (ConstraintValidation<?>) consDesc;
       // 1. process groups
       for (Group current : groups.getGroups()) {
         context.setCurrentGroup(current);
@@ -259,8 +281,8 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
 
     final Groups groups = context.getGroups();
 
-    for (ConstraintDescriptor consDesc : methodDescriptor.getConstraintDescriptors()) {
-      ConstraintValidation validation = (ConstraintValidation) consDesc;
+    for (ConstraintDescriptor<?> consDesc : methodDescriptor.getConstraintDescriptors()) {
+      ConstraintValidation<?> validation = (ConstraintValidation<?>) consDesc;
       // 1. process groups
       for (Group current : groups.getGroups()) {
         context.setCurrentGroup(current);

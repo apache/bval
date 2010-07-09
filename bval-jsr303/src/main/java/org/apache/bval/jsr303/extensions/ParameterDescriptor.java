@@ -30,6 +30,10 @@ public interface ParameterDescriptor extends ElementDescriptor {
      */
     boolean isCascaded();
 
+    /**
+     * Get the index of the referenced parameter.
+     * @return int
+     */
     int getIndex();
 }
 

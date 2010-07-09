@@ -67,7 +67,7 @@ public class PrivilegedActions {
     }
 
     /**
-     * create a new instance.
+     * Create a new instance of a specified class.
      *
      * @param cls - the class (no interface, non-abstract, has accessible default no-arg-constructor)
      * @return a new instance
@@ -77,6 +77,18 @@ public class PrivilegedActions {
         return newInstance(cls, IllegalArgumentException.class);
     }
 
+    /**
+     * Create a new instance of a specified class.
+     *
+     * @param <T>
+     * @param <E>
+     * @param cls - the class (no interface, non-abstract, has accessible matching constructor)
+     * @param exception type to rethrow
+     * @param paramTypes
+     * @param values
+     * @return a new instance
+     * @throws E
+     */
     public static <T, E extends RuntimeException> T newInstance(final Class<T> cls,
                                                                 final Class<E> exception,
                                                                 final Class<?>[] paramTypes,
@@ -97,7 +109,7 @@ public class PrivilegedActions {
     }
 
     /**
-     * create a new instance of the class using the default no-arg constructor.
+     * Create a new instance of the class using the default no-arg constructor.
      * perform newInstance() call with AccessController.doPrivileged() if possible.
      *
      * @param cls       - the type to create a new instance from
@@ -137,7 +149,7 @@ public class PrivilegedActions {
     }
 
     /**
-     * perform action with AccessController.doPrivileged() if possible.
+     * Perform action with AccessController.doPrivileged() if possible.
      *
      * @param action - the action to run
      * @return result of running the action

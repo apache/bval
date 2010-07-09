@@ -33,6 +33,9 @@ import java.util.Set;
  * Time: 10:21:23<br>
  */
 public class ConstraintDescriptorImpl<T extends Annotation> implements ConstraintDescriptor<T>, Serializable {
+  /** Serialization version */
+  private static final long serialVersionUID = 1L;
+
   private final T annotation;
   private final Set<Class<?>> groups;
   private final Set<Class<? extends javax.validation.Payload>> payload;
@@ -41,12 +44,26 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
   private final Set<ConstraintDescriptor<?>> composingConstraints;
   private final boolean reportAsSingleViolation;
 
+  /**
+   * Create a new ConstraintDescriptorImpl instance.
+   * @param descriptor
+   */
   public ConstraintDescriptorImpl(ConstraintDescriptor<T> descriptor) {
     this(descriptor.getAnnotation(), descriptor.getGroups(), descriptor.getPayload(),
         descriptor.getConstraintValidatorClasses(),
         descriptor.getAttributes(), descriptor.getComposingConstraints(), descriptor.isReportAsSingleViolation());
   }
 
+  /**
+   * Create a new ConstraintDescriptorImpl instance.
+   * @param annotation
+   * @param groups
+   * @param payload
+   * @param constraintValidatorClasses
+   * @param attributes
+   * @param composingConstraints
+   * @param reportAsSingleViolation
+   */
   public ConstraintDescriptorImpl(T annotation, Set<Class<?>> groups,
                                   Set<Class<? extends javax.validation.Payload>> payload,
                                   List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> constraintValidatorClasses,
@@ -61,30 +78,51 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     this.reportAsSingleViolation = reportAsSingleViolation;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public T getAnnotation() {
     return annotation;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Set<Class<?>> getGroups() {
     return groups;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Set<Class<? extends Payload>> getPayload() {
     return payload;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
     return constraintValidatorClasses;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Map<String, Object> getAttributes() {
     return attributes;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Set<ConstraintDescriptor<?>> getComposingConstraints() {
     return composingConstraints;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isReportAsSingleViolation() {
     return reportAsSingleViolation;
   }

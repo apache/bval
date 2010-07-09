@@ -24,6 +24,7 @@ import org.apache.bval.model.MetaBean;
  */
 public interface MetaBeanFinder {
     /**
+     * Find a MetaBean with a certain id.
      * @param beanInfoId - symbolic unique name of Meta Info
      * @return BeanInfo
      * @throws IllegalArgumentException - when MetaBean not found
@@ -31,6 +32,7 @@ public interface MetaBeanFinder {
     MetaBean findForId(String beanInfoId);
 
     /**
+     * Find the MetaBean for the specified class.
      * @param clazz - bean class
      * @return BeanInfo (never null)
      */

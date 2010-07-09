@@ -21,6 +21,7 @@ package org.apache.bval.jsr303.util;
 import javax.validation.ConstraintValidator;
 import javax.validation.ValidationException;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -110,11 +111,17 @@ public class TypeUtils {
         }
     }
 
-    public static Map<Type, Class<? extends ConstraintValidator<?, ?>>> getValidatorsTypes(
-          Class<? extends ConstraintValidator<?, ?>>[] validators) {
-        Map<Type, Class<? extends ConstraintValidator<?, ?>>> validatorsTypes =
-              new HashMap<Type, Class<? extends ConstraintValidator<?, ?>>>();
-        for (Class<? extends ConstraintValidator<?, ?>> validator : validators) {
+    /**
+     * Given a set of {@link ConstraintValidator} implementation classes, map those
+     * to their target types.
+     * @param validators
+     * @return {@link Map} of {@link Type} : {@link ConstraintValidator} subtype
+     */
+    public static <A extends Annotation> Map<Type, Class<? extends ConstraintValidator<A, ?>>> getValidatorsTypes(
+          Class<? extends ConstraintValidator<A, ?>>[] validators) {
+        Map<Type, Class<? extends ConstraintValidator<A, ?>>> validatorsTypes =
+              new HashMap<Type, Class<? extends ConstraintValidator<A, ?>>>();
+        for (Class<? extends ConstraintValidator<A, ?>> validator : validators) {
             validatorsTypes.put(getValidatorType(validator), validator);
         }
         return validatorsTypes;
@@ -188,6 +195,12 @@ public class TypeUtils {
         return null;
     }
 
+    /**
+     * Learn whether <code>type</code> is assignable to <code>supertype</code>.
+     * @param supertype
+     * @param type
+     * @return boolean
+     */
     public static boolean isAssignable(Type supertype, Type type) {
         if (supertype.equals(type)) {
             return true;

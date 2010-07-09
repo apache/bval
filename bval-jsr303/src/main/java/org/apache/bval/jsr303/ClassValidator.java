@@ -32,6 +32,7 @@ import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.commons.lang.ClassUtils;
 
@@ -57,14 +58,26 @@ import java.util.Set;
  * <br/>
  */
 public class ClassValidator extends AbstractBeanValidator implements Validator {
+  /**
+   * {@link ApacheFactoryContext} used
+   */
   protected final ApacheFactoryContext factoryContext;
+  /**
+   * {@link GroupsComputer} used
+   */
   protected final GroupsComputer groupsComputer = new GroupsComputer();
 
+  /**
+   * Create a new ClassValidator instance.
+   * @param factoryContext
+   */
   public ClassValidator(ApacheFactoryContext factoryContext) {
     this.factoryContext = factoryContext;
   }
 
   /**
+   * Create a new ClassValidator instance.
+   * @param factory
    * @deprecated provided for backward compatibility
    */
   public ClassValidator(ApacheValidatorFactory factory) {
@@ -72,7 +85,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   }
 
   /**
-   * the metabean finder associated with this validator.
+   * Get the metabean finder associated with this validator.
    *
    * @return a MetaBeanFinder
    * @see org.apache.bval.MetaBeanManagerFactory#getFinder()
@@ -84,6 +97,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   // Validator implementation --------------------------------------------------
   
   /**
+   * {@inheritDoc}
    * Validates all constraints on <code>object</code>.
    * 
    * @param object
@@ -102,9 +116,10 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             during the validation process
    */
   // @Override - not allowed in 1.5 for Interface methods
-  public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groupArray) {
+  @SuppressWarnings("unchecked")
+  public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groups) {
     if (object == null) throw new IllegalArgumentException("cannot validate null");
-    checkGroups(groupArray);
+    checkGroups(groups);
 
     try {
       
@@ -112,7 +127,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
       MetaBean objectMetaBean = factoryContext.getMetaBeanFinder().findForClass(objectClass);
       
       final GroupValidationContext<ConstraintValidationListener<T>> context =
-          createContext(objectMetaBean, object, objectClass, groupArray);
+          createContext(objectMetaBean, object, objectClass, groups);
       final ConstraintValidationListener<T> result = context.getListener();
       final Groups sequence = context.getGroups();
       
@@ -138,8 +153,9 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
       throw unrecoverableValidationError(ex, object);
     }
   }
-  
+
   /**
+   * {@inheritDoc}
    * Validates all constraints placed on the property of <code>object</code>
    * named <code>propertyName</code>.
    * 
@@ -164,6 +180,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *             during the validation process
    */
   // @Override - not allowed in 1.5 for Interface methods
+  @SuppressWarnings("unchecked")
   public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName,
                                                           Class<?>... groups) {
     if (object == null) throw new IllegalArgumentException("cannot validate null");
@@ -214,6 +231,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   }
 
   /**
+   * {@inheritDoc}
    * Validates all constraints placed on the property named
    * <code>propertyName</code> of the class <code>beanType</code> would the
    * property value be <code>value</code>
@@ -285,6 +303,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   }
   
   /**
+   * {@inheritDoc}
    * Return the descriptor object describing bean constraints.
    * The returned object (and associated objects including
    * <code>ConstraintDescriptor<code>s) are immutable.
@@ -321,6 +340,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   }
   
   /**
+   * {@inheritDoc}
    * Return an instance of the specified type allowing access to
    * provider-specific APIs. If the Bean Validation provider
    * implementation does not support the specified class,
@@ -362,14 +382,15 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    * <p>
    * Special code is present to manage the {@link Default} group.
    * 
-   * @param ValidationContext
+   * @param validationContext
    *            The current context of this validation call. Must have its
    *            {@link GroupValidationContext#getCurrentGroup()} field set.
    */
+  @SuppressWarnings("unchecked")
   @Override
-  protected void validateBeanNet(ValidationContext vcontext) {
+  protected <VL extends ValidationListener> void validateBeanNet(ValidationContext<VL> validationContext) {
 
-    GroupValidationContext<?> context = (GroupValidationContext<?>) vcontext;
+    GroupValidationContext<VL> context = (GroupValidationContext<VL>) validationContext;
 
     // If reached a cascaded bean which is null
     if (context.getBean() == null) {
@@ -388,7 +409,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     if (context.getCurrentGroup().isDefault()) {
 
       List<Group> defaultGroups = expandDefaultGroup(context);
-      final ConstraintValidationListener result = (ConstraintValidationListener) context.getListener();
+      final ConstraintValidationListener<VL> result = (ConstraintValidationListener<VL>) context.getListener();
 
       // If the rootBean defines a GroupSequence
       if (defaultGroups.size() > 1) {
@@ -529,7 +550,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *
    * @return null when no in default group or default group sequence not redefined
    */
-  private List<Group> expandDefaultGroup(GroupValidationContext context) {
+  private List<Group> expandDefaultGroup(GroupValidationContext<?> context) {
     if (context.getCurrentGroup().isDefault()) {
       // mention if metaBean redefines the default group
       List<Group> groupSeq =
@@ -543,7 +564,13 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     }
   }
 
-  protected RuntimeException unrecoverableValidationError(RuntimeException ex,
+  /**
+   * Generate an unrecoverable validation error
+   * @param ex
+   * @param object
+   * @return a {@link RuntimeException} of the appropriate type
+   */
+  protected static RuntimeException unrecoverableValidationError(RuntimeException ex,
                                                           Object object) {
     if (ex instanceof UnknownPropertyException) {
       // Convert to IllegalArgumentException
@@ -555,7 +582,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     }
   }
 
-  private void validatePropertyInGroup(GroupValidationContext context) {
+  private void validatePropertyInGroup(GroupValidationContext<?> context) {
     Group currentGroup = context.getCurrentGroup();
     List<Group> defaultGroups = expandDefaultGroup(context);
     if (defaultGroups != null) {
@@ -583,7 +610,15 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     return nested;
   }
 
-
+  /**
+   * Create a {@link GroupValidationContext}.
+   * @param <T>
+   * @param metaBean
+   * @param object
+   * @param objectClass
+   * @param groups
+   * @return {@link GroupValidationContext} instance
+   */
   protected <T> GroupValidationContext<ConstraintValidationListener<T>> createContext(
       MetaBean metaBean, T object, Class<T> objectClass, Class<?>[] groups) {
     ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object, objectClass);
@@ -596,11 +631,14 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     return context;
   }
 
+  /**
+   * Create a {@link BeanDescriptorImpl}
+   * @param metaBean
+   * @return {@link BeanDescriptorImpl} instance
+   */
   protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {
     return new BeanDescriptorImpl(factoryContext, metaBean, metaBean.getValidations());
   }
-
-
 
   /**
    * Checks that beanType is valid according to spec Section 4.1.1 i. Throws

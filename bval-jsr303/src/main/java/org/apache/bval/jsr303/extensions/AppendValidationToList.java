@@ -17,6 +17,7 @@
 package org.apache.bval.jsr303.extensions;
 
 
+import org.apache.bval.jsr303.AppendValidation;
 import org.apache.bval.jsr303.BaseAppendValidation;
 import org.apache.bval.jsr303.ConstraintValidation;
 
@@ -25,18 +26,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Description: <br/>
+ * Description: {@link AppendValidation} implementation that acts as an intermediate
+ * cache of validations for further processing.<br/>
  */
 public class AppendValidationToList extends BaseAppendValidation {
     private final List<ConstraintValidation<? extends Annotation>> validations = new ArrayList<ConstraintValidation<? extends Annotation>>();
 
+    /**
+     * Create a new AppendValidationToList instance.
+     */
     public AppendValidationToList() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         validations.add(validation);
     }
 
+    /**
+     * Get the list of cached validations.
+     * @return {@link List} of {@link ConstraintValidation}
+     */
     public List<ConstraintValidation<? extends Annotation>> getValidations() {
         return validations;
     }

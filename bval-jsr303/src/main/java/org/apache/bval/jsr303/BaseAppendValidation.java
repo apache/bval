@@ -29,6 +29,8 @@ import java.lang.annotation.Annotation;
 public abstract class BaseAppendValidation implements AppendValidation {
 
     /**
+     * {@inheritDoc}
+     *
      * Append operation divided in 3 stages: pre & post processing and the
      * "real" append process.
      */

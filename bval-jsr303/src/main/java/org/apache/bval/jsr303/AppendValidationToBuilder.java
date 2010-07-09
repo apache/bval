@@ -23,15 +23,22 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 /**
- * Description: <br/>
+ * Description: Adapt {@link AnnotationConstraintBuilder} to the {@link AppendValidation} interface.<br/>
  */
 public class AppendValidationToBuilder extends BaseAppendValidation {
-    private final AnnotationConstraintBuilder builder;
+    private final AnnotationConstraintBuilder<?> builder;
 
-    public AppendValidationToBuilder(AnnotationConstraintBuilder builder) {
+    /**
+     * Create a new AppendValidationToBuilder instance.
+     * @param builder
+     */
+    public AppendValidationToBuilder(AnnotationConstraintBuilder<?> builder) {
         this.builder = builder;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public <T extends Annotation> void preProcessValidation(ConstraintValidation<T> validation) {
         // JSR-303 2.3:
         // Groups from the main constraint annotation are inherited by the composing annotations.
@@ -53,23 +60,28 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
         T newAnnot = apb.createAnnotation();
         validation.setAnnotation(newAnnot);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
     public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         builder.addComposed(validation);
     }
-    
+
     /**
+     * Get inherited groups.
      * @return The set of groups from the parent constraint.
      */
     public Set<Class<?>> getInheritedGroups() {
         return builder.getConstraintValidation().getGroups();
     }
-    
+
     /**
+     * Get inherited payload.
      * @return The set of payloads from the parent constraint.
      */
     public Set<Class<? extends Payload>> getInheritedPayload() {
         return builder.getConstraintValidation().getPayload();
     }
-    
+
 }

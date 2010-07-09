@@ -20,6 +20,7 @@ package org.apache.bval.jsr303.util;
 
 import javax.validation.Path;
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Description: a node (property) as part of a Path.
@@ -36,10 +37,18 @@ public final class NodeImpl implements Path.Node, Serializable {
     private Integer index;
     private Object key;
 
+    /**
+     * Create a new NodeImpl instance.
+     * @param name
+     */
     public NodeImpl(String name) {
         this.name = name;
     }
 
+    /**
+     * Create a new NodeImpl instance.
+     * @param node
+     */
     NodeImpl(Path.Node node) {
         this.name = node.getName();
         this.isInIterable = node.isInIterable();
@@ -47,36 +56,63 @@ public final class NodeImpl implements Path.Node, Serializable {
         this.key = node.getKey();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isInIterable() {
         return isInIterable;
     }
 
+    /**
+     * Set whether this node represents a contained value of an {@link Iterable} or {@link Map}.
+     * @param inIterable
+     */
     public void setInIterable(boolean inIterable) {
         isInIterable = inIterable;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Integer getIndex() {
         return index;
     }
 
+    /**
+     * Set the index of this node, implying <code>inIterable</code>.
+     * @param index
+     */
     public void setIndex(Integer index) {
         isInIterable = true;
         this.index = index;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Object getKey() {
         return key;
     }
 
+    /**
+     * Set the map key of this node, implying <code>inIterable</code>.
+     * @param key
+     */
     public void setKey(Object key) {
         isInIterable = true;
         this.key = key;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder(name == null ? "" : name);
@@ -92,6 +128,9 @@ public final class NodeImpl implements Path.Node, Serializable {
         return builder.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -119,6 +158,9 @@ public final class NodeImpl implements Path.Node, Serializable {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;

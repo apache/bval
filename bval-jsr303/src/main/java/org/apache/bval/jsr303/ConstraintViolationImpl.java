@@ -27,6 +27,9 @@ import java.lang.annotation.ElementType;
  * From rootBean and propertyPath, it is possible to rebuild the context of the failure
  */
 class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
+
     private final String messageTemplate;
     private final String message;
     /** root bean validation was invoked on. */
@@ -37,10 +40,10 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     private final Object value;
     private final Path propertyPath;
     private final ElementType elementType;
-    private final ConstraintDescriptor constraintDescriptor;
+    private final ConstraintDescriptor<?> constraintDescriptor;
     
-
     /**
+     * Create a new ConstraintViolationImpl instance.
      * @param messageTemplate - message reason (raw message) 
      * @param message - interpolated message (locale specific)
      * @param rootBean
@@ -48,10 +51,12 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * @param propertyPath
      * @param value
      * @param constraintDescriptor
+     * @param rootBeanClass
+     * @param elementType
      */
     public ConstraintViolationImpl(String messageTemplate, String message, T rootBean, Object leafBean,
                                    Path propertyPath, Object value,
-                                   ConstraintDescriptor constraintDescriptor, Class<T> rootBeanClass, ElementType elementType) {
+                                   ConstraintDescriptor<?> constraintDescriptor, Class<T> rootBeanClass, ElementType elementType) {
         this.messageTemplate = messageTemplate;
         this.message = message;
         this.rootBean = rootBean;
@@ -64,53 +69,80 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     }
 
     /**
+     * {@inheritDoc}
      * former name getInterpolatedMessage()
      * @return The interpolated error message for this constraint violation.
-     **/
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getMessageTemplate() {
         return messageTemplate;
     }
 
-    /** Root bean being validated validated */
+    /**
+     * {@inheritDoc}
+     * @return Root bean being validated
+     */
     public T getRootBean() {
         return rootBean;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Class<T> getRootBeanClass() {
         return rootBeanClass;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Object getLeafBean() {
         return leafBean;
     }
 
-    /** The value failing to pass the constraint */
+    /**
+     * {@inheritDoc}
+     * @return The value failing to pass the constraint
+     */
     public Object getInvalidValue() {
         return value;
     }
 
     /**
-     * the property path to the value from <code>rootBean</code>
-     * Null if the value is the rootBean itself
+     * {@inheritDoc}
+     * @return the property path to the value from <code>rootBean</code>
+     *         Null if the value is the rootBean itself
      */
     public Path getPropertyPath() {
         return propertyPath;
     }
 
-    public ConstraintDescriptor getConstraintDescriptor() {
+    /**
+     * {@inheritDoc}
+     */
+    public ConstraintDescriptor<?> getConstraintDescriptor() {
         return constraintDescriptor;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
         return "ConstraintViolationImpl{" + "rootBean=" + rootBean + ", propertyPath='" +
               propertyPath + '\'' + ", message='" + message + '\'' + ", leafBean=" +
               leafBean + ", value=" + value + '}';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -133,6 +165,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     }
 
     /**
+     * {@inheritDoc}
      * NOTE: Needed to avoid duplication in the reported violations.
      * 
      * @param   obj   the reference object with which to compare.

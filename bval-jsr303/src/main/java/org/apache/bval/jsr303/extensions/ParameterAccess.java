@@ -36,26 +36,43 @@ public class ParameterAccess extends AccessStrategy {
     private Type paramType;
     private int paramIdx;
 
+    /**
+     * Create a new ParameterAccess instance.
+     * @param paramType
+     * @param paramIdx
+     */
     public ParameterAccess(Type paramType, int paramIdx ) {
         this.paramType = paramType;
         this.paramIdx = paramIdx;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object get(Object instance) {
         throw new NotImplementedException("Obtaining a parameter value not yet implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ElementType getElementType() {
         return ElementType.PARAMETER;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type getJavaType() {
         return this.paramType;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getPropertyName() {
         return "" + paramIdx;

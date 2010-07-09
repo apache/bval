@@ -23,5 +23,10 @@ import org.apache.bval.model.MetaBean;
  * with information from somewhere<br/>
  */
 public interface MetaBeanFactory {
-     void buildMetaBean(MetaBean metaBean) throws Exception;
+    /**
+     * Initialize the specified {@link MetaBean}.
+     * @param metaBean
+     * @throws Exception
+     */
+    void buildMetaBean(MetaBean metaBean) throws Exception;
 }

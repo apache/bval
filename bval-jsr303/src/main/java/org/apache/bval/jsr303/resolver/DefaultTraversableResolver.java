@@ -41,11 +41,16 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
 
     private TraversableResolver jpaTR;
 
-
+    /**
+     * Create a new DefaultTraversableResolver instance.
+     */
     public DefaultTraversableResolver() {
         initJpa();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                ElementType elementType) {
@@ -53,6 +58,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
               rootBeanType, pathToTraversableObject, elementType);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
@@ -61,6 +69,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     }
 
     /** Tries to load detect and load JPA. */
+    @SuppressWarnings("unchecked")
     private void initJpa() {
         try {
             ClassUtils.getClass(PERSISTENCE_UTIL_CLASSNAME);
@@ -88,6 +97,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean needsCaching() {
         return jpaTR != null && CachingTraversableResolver.needsCaching(jpaTR);
     }

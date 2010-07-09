@@ -38,21 +38,31 @@ import java.util.*;
  * composite constraint validations by parsing the jsr303-annotations
  * and providing information (e.g. for @OverridesAttributes) <br/>
  */
-final class AnnotationConstraintBuilder {
+final class AnnotationConstraintBuilder<A extends Annotation> {
     private static final Log log = LogFactory.getLog(AnnotationConstraintBuilder.class);
+
+    //TODO extract these to some neutral location; see AnnotationProxyBuilder
     private static final String ANNOTATION_PAYLOAD = "payload";
     private static final String ANNOTATION_GROUPS = "groups";
 
     private final ConstraintValidation<?> constraintValidation;
     private List<ConstraintOverrides> overrides;
 
+    /**
+     * Create a new AnnotationConstraintBuilder instance.
+     * @param validatorClasses
+     * @param constraintValidator
+     * @param annotation
+     * @param owner
+     * @param access
+     */
     public AnnotationConstraintBuilder(
-          Class<? extends ConstraintValidator<?, ?>>[] validatorClasses,
-          ConstraintValidator constraintValidator, Annotation annotation, Class owner,
+          Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
+          ConstraintValidator<A, ?> constraintValidator, A annotation, Class<?> owner,
           AccessStrategy access) {
         boolean reportFromComposite = annotation != null && annotation.annotationType()
               .isAnnotationPresent(ReportAsSingleViolation.class);
-        constraintValidation = new ConstraintValidation(validatorClasses,
+        constraintValidation = new ConstraintValidation<A>(validatorClasses,
               constraintValidator, annotation, owner, access, reportFromComposite);
         buildFromAnnotation();
     }
@@ -93,8 +103,8 @@ final class AnnotationConstraintBuilder {
           throws IllegalAccessException, InvocationTargetException {
         Object raw = method.invoke(constraintValidation.getAnnotation());
         Class<?>[] garr;
-        if (raw instanceof Class) {
-            garr = new Class<?>[]{(Class) raw};
+        if (raw instanceof Class<?>) {
+            garr = new Class[]{(Class<?>) raw};
         } else if (raw instanceof Class<?>[]) {
             garr = (Class<?>[]) raw;
         } else {
@@ -104,24 +114,29 @@ final class AnnotationConstraintBuilder {
         if (garr == null || garr.length == 0) {
             garr = GroupsComputer.getDefaultGroupArray();
         }
-        constraintValidation.setGroups(new HashSet(Arrays.asList(garr)));
+        constraintValidation.setGroups(new HashSet<Class<?>>(Arrays.asList(garr)));
     }
 
+    @SuppressWarnings("unchecked")
     private void buildPayload(Method method)
           throws IllegalAccessException, InvocationTargetException {
-        Class<Payload>[] payload_raw =
-              (Class<Payload>[]) method.invoke(constraintValidation.getAnnotation());
+        Class<? extends Payload>[] payload_raw =
+              (Class<? extends Payload>[]) method.invoke(constraintValidation.getAnnotation());
+        Set<Class<? extends Payload>> payloadSet;
         if (payload_raw == null) {
-            constraintValidation
-                  .setPayload(Collections.<Class<? extends Payload>>emptySet());
+            payloadSet = Collections.<Class<? extends Payload>>emptySet();
         } else {
-            Set pl = new HashSet(payload_raw.length);
-            pl.addAll(Arrays.asList(payload_raw));
-            constraintValidation.setPayload(pl);
+            payloadSet = new HashSet<Class<? extends Payload>>(payload_raw.length);
+            payloadSet.addAll(Arrays.asList(payload_raw));
         }
+        constraintValidation.setPayload(payloadSet);
     }
 
-    public ConstraintValidation getConstraintValidation() {
+    /**
+     * Get the configured {@link ConstraintValidation}.
+     * @return {@link ConstraintValidation}
+     */
+    public ConstraintValidation<?> getConstraintValidation() {
         return constraintValidation;
     }
 
@@ -129,7 +144,7 @@ final class AnnotationConstraintBuilder {
      * initialize a child composite 'validation' with @OverridesAttribute
      * from 'constraintValidation' and add to composites.
      */
-    public void addComposed(ConstraintValidation composite) {
+    public void addComposed(ConstraintValidation<?> composite) {
         applyOverridesAttributes(composite);
         constraintValidation.addComposed(composite); // add AFTER apply()
     }
@@ -234,10 +249,11 @@ final class AnnotationConstraintBuilder {
                                     int constraintIndex) {
             this.constraintType = constraintType;
             this.constraintIndex = constraintIndex;
-            values = new HashMap();
+            values = new HashMap<String, Object>();
         }
 
-        public void applyOn(ConstraintValidation composite) {
+        @SuppressWarnings("unchecked")
+        private void applyOn(ConstraintValidation<?> composite) {
             // Update the attributes
             composite.getAttributes().putAll(values);
 
@@ -248,7 +264,7 @@ final class AnnotationConstraintBuilder {
                 apb.putValue(key, values.get(key));
             }
             Annotation newAnnot = apb.createAnnotation();
-            composite.setAnnotation(newAnnot);
+            ((ConstraintValidation<Annotation>) composite).setAnnotation(newAnnot);
         }
     }
 }

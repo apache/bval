@@ -37,29 +37,49 @@ public class MetaBeanBuilder {
    */
   private MetaBeanFactory[] factories;
 
-
+  /**
+   * Create a new MetaBeanBuilder instance.
+   */
   public MetaBeanBuilder() {
     this(new MetaBeanFactory[]{new IntrospectorMetaBeanFactory()});
   }
 
+  /**
+   * Create a new MetaBeanBuilder instance.
+   * @param factories
+   */
   public MetaBeanBuilder(MetaBeanFactory[] factories) {
     setFactories(factories);
   }
 
+  /**
+   * Get the configured set of {@link MetaBeanFactory} objects.
+   * @return {@link MetaBeanFactory} array
+   */
   public MetaBeanFactory[] getFactories() {
     return factories;
   }
 
+  /**
+   * Set the array of {@link MetaBeanFactory} instances with which to enrich {@link MetaBean}s.
+   * @param factories
+   */
   public void setFactories(MetaBeanFactory[] factories) {
     this.factories = factories;
   }
 
+  /**
+   * Build a {@link MetaBean} for a given id.
+   * @param beanInfoId
+   * @return MetaBean
+   * @throws Exception if unable to build
+   */
   public MetaBean buildForId(String beanInfoId) throws Exception {
     throw new IllegalArgumentException("MetaBean " + beanInfoId + " not found");
   }
 
 /*
-    *//** convenience method *//*
+    *//* convenience method *//*
     public void addLastFactory(MetaBeanFactory metaBeanFactory) {
         if (factories == null) factories = new MetaBeanFactory[1];
         else {
@@ -73,7 +93,7 @@ public class MetaBeanBuilder {
 
     */
 
-  /**
+  /*
    * convenience method
    *//*
     public void addFirstFactory(MetaBeanFactory metaBeanFactory) {
@@ -87,11 +107,19 @@ public class MetaBeanBuilder {
         updateXmlFactory();
     }*/
 
-
+  /**
+   * Build beans for all known ids.  Default implementation returns an empty map.
+   * @return Map of String : MetaBean
+   */
   public Map<String, MetaBean> buildAll() throws Exception {
     return new HashMap<String, MetaBean>();
   }
 
+  /**
+   * Find the named class.
+   * @param className
+   * @return Class found or null
+   */
   protected Class<?> findLocalClass(String className) {
     if (className != null) {
       try {
@@ -103,6 +131,12 @@ public class MetaBeanBuilder {
     return null;
   }
 
+  /**
+   * Build a MetaBean for the specified class.
+   * @param clazz
+   * @return MetaBean
+   * @throws Exception
+   */
   public MetaBean buildForClass(Class<?> clazz) throws Exception {
     MetaBean meta = new MetaBean();
     if (clazz != null) { // local class here?

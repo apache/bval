@@ -19,8 +19,14 @@ package org.apache.bval.jsr303;
 import java.lang.annotation.Annotation;
 
 /**
- * Description: <br/>
+ * Description: unified interface to accumulate {@link ConstraintValidation}s
+ * to varied targets.<br/>
  */
 public interface AppendValidation {
+    /**
+     * Append a {@link ConstraintValidation}.
+     * @param <T>
+     * @param validation
+     */
     <T extends Annotation> void append(ConstraintValidation<T> validation);
 }

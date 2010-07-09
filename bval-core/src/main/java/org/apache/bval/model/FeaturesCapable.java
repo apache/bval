@@ -17,6 +17,7 @@
 package org.apache.bval.model;
 
 import org.apache.commons.collections.FastHashMap;
+import org.apache.commons.lang.ArrayUtils;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -31,22 +32,50 @@ public abstract class FeaturesCapable implements Serializable {
     /** key = validation id, value = the validation */
     private Validation[] validations = new Validation[0];
 
+    /**
+     * Create a new FeaturesCapable instance.
+     */
     public FeaturesCapable() {
         features.setFast(true);
     }
 
+    /**
+     * Get the (live) map of features.
+     * @return Map<String, Object>
+     */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getFeatures() {
         return features;
     }
 
+    /**
+     * Set whether to optimize read operations by accessing the
+     * features map in an unsynchronized manner.
+     * @param fast
+     */
     public void optimizeRead(boolean fast) {
         features.setFast(fast);
     }
 
+    /**
+     * Get the specified feature.
+     * @param <T>
+     * @param key
+     * @return T
+     */
+    @SuppressWarnings("unchecked")
     public <T> T getFeature(String key) {
         return (T) features.get(key);
     }
 
+    /**
+     * Get the specified feature, returning <code>defaultValue</code> if undeclared.
+     * @param <T>
+     * @param key
+     * @param defaultValue
+     * @return T
+     */
+    @SuppressWarnings("unchecked")
     public <T> T getFeature(String key, T defaultValue) {
         final T v = (T) features.get(key);
         if (v == null) {
@@ -56,12 +85,22 @@ public abstract class FeaturesCapable implements Serializable {
         }
     }
 
-    /** convenience method. */
+    /**
+     * Convenience method to set a particular feature value.
+     * @param <T>
+     * @param key
+     * @param value
+     */
     public <T> void putFeature(String key, T value) {
         features.put(key, value);
     }
 
-    /** create a deep copy! (copy receiver and copy properties) */
+    /**
+     * Create a deep copy (copy receiver and copy properties).
+     * @param <T>
+     * @return new T instance
+     */
+    @SuppressWarnings("unchecked")
     public <T extends FeaturesCapable> T copy() {
         try {
             T self = (T) clone();
@@ -72,6 +111,11 @@ public abstract class FeaturesCapable implements Serializable {
         }
     }
 
+    /**
+     * Copy this {@link FeaturesCapable} into another {@link FeaturesCapable} instance.
+     * @param <T>
+     * @param target
+     */
     protected <T extends FeaturesCapable> void copyInto(T target) {
         target.features = (FastHashMap) features.clone();
         if (validations != null) {
@@ -79,21 +123,27 @@ public abstract class FeaturesCapable implements Serializable {
         }
     }
 
+    /**
+     * Get any validations set for this {@link FeaturesCapable}.
+     * @return Validation array
+     */
     public Validation[] getValidations() {
         return validations;
     }
 
+    /**
+     * Add a validation to this {@link FeaturesCapable}.
+     * @param validation to add
+     */
     public void addValidation(Validation validation) {
-        if (validations.length == 0) {
-            validations = new Validation[1];
-        } else {
-            Validation[] newvalidations = new Validation[validations.length + 1];
-            System.arraycopy(validations, 0, newvalidations, 0, validations.length);
-            validations = newvalidations;
-        }
-        validations[validations.length - 1] = validation;
+        validations = (Validation[]) ArrayUtils.add(validations, validation);
     }
 
+    /**
+     * Search for an equivalent validation among those configured.
+     * @param aValidation
+     * @return true if found
+     */
     public boolean hasValidation(Validation aValidation) {
         if (validations == null) return false;
         for (Validation validation : validations) {

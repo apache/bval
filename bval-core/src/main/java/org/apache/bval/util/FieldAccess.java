@@ -22,16 +22,16 @@ import java.lang.reflect.Type;
 import java.security.PrivilegedAction;
 
 /**
- * Description: direct field access.<br/>
+ * Description: direct field access strategy.<br/>
  */
 public class FieldAccess extends AccessStrategy {
 
     private final Field field;
 
-    public Type getJavaType() {
-        return field.getGenericType();
-    }
-
+    /**
+     * Create a new FieldAccess instance.
+     * @param field
+     */
     public FieldAccess(Field field) {
         this.field = field;
         if(!field.isAccessible()) {
@@ -39,6 +39,9 @@ public class FieldAccess extends AccessStrategy {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Object get(final Object instance) {
         return PrivilegedActions.run(new PrivilegedAction<Object>() {
             public Object run() {
@@ -51,18 +54,37 @@ public class FieldAccess extends AccessStrategy {
         });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ElementType getElementType() {
         return ElementType.FIELD;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public Type getJavaType() {
+        return field.getGenericType();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public String getPropertyName() {
         return field.getName();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return field.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -72,6 +94,9 @@ public class FieldAccess extends AccessStrategy {
         return field.equals(that.field);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int hashCode() {
         return field.hashCode();
     }

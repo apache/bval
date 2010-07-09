@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * defines the order to validate groups during validation.
+ * Defines the order to validate groups during validation.
  * with some inspiration from reference implementation
  *
  * @author Roman Stumm
@@ -36,20 +36,36 @@ public class Groups {
     /** The list of sequences. */
     protected List<List<Group>> sequences = new LinkedList<List<Group>>();
 
+    /**
+     * Get the Groups.
+     * @return {@link List} of {@link Group}.
+     */
     public List<Group> getGroups() {
         return groups;
     }
 
+    /**
+     * Get the Group sequences.
+     * @return {@link List} of {@link List} of {@link Group}
+     */
     public List<List<Group>> getSequences() {
         return sequences;
     }
 
+    /**
+     * Insert a {@link Group}.
+     * @param group to insert
+     */
     void insertGroup(Group group) {
         if (!groups.contains(group)) {
             groups.add(group);
         }
     }
 
+    /**
+     * Insert a sequence.
+     * @param groups {@link List} of {@link Group} to insert
+     */
     void insertSequence(List<Group> groups) {
         if (groups == null || groups.isEmpty()) {
             return;
@@ -60,6 +76,10 @@ public class Groups {
         }
     }
 
+    /**
+     * Assert that the default group can be expanded to <code>defaultGroups</code>.
+     * @param defaultGroups
+     */
     public void assertDefaultGroupSequenceIsExpandable(List<Group> defaultGroups) {
         for (List<Group> groupList : sequences) {
             int idx = groupList.indexOf(Group.DEFAULT);

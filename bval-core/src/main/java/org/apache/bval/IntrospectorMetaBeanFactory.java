@@ -34,6 +34,9 @@ import static org.apache.bval.model.Features.Property.*;
  */
 public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
 
+    /**
+     * {@inheritDoc}
+     */
     public void buildMetaBean(MetaBean meta) throws Exception {
         if(meta.getBeanClass() == null) return; // handle only, when local class exists
 
@@ -50,10 +53,14 @@ public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
         }
     }
 
+    /**
+     * Create a {@link MetaProperty} from the specified {@link PropertyDescriptor}.
+     * @param pd
+     * @return MetaProperty
+     */
     protected MetaProperty buildMetaProperty(PropertyDescriptor pd) {
         MetaProperty meta = new MetaProperty();
         meta.setName(pd.getName());
-//        meta.setDisplayName(pd.getDisplayName());
         meta.setType(pd.getPropertyType());
         if (pd.isHidden()) meta.putFeature(HIDDEN, Boolean.TRUE);
         if (pd.isPreferred()) meta.putFeature(PREFERRED, Boolean.TRUE);

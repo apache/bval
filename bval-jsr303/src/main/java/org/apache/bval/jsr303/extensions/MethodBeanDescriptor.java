@@ -22,15 +22,34 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 /**
- * Description: This class will disappear when such
+ * Description: Provides method/constructor-related constraint information
+ * for a type.  This class will disappear when such
  * functionality is part of the JSR303 specification.<br/>
  */
 public interface MethodBeanDescriptor extends BeanDescriptor {
+    /**
+     * Get the constraints that apply to a particular method.
+     * @param method
+     * @return {@link MethodDescriptor}
+     */
     MethodDescriptor getConstraintsForMethod(Method method);
 
+    /**
+     * Get the constraints that apply to a particular constructor.
+     * @param constructor
+     * @return {@link ConstructorDescriptor}
+     */
     ConstructorDescriptor getConstraintsForConstructor(Constructor<?> constructor);
 
+    /**
+     * Get the set of constrained methods.
+     * @return {@link Set} of {@link MethodDescriptor}
+     */
     Set<MethodDescriptor> getConstrainedMethods();
 
+    /**
+     * Get the set of constrained constructors.
+     * @return {@link Set} of {@link ConstructorDescriptor}
+     */
     Set<ConstructorDescriptor> getConstrainedConstructors();
 }

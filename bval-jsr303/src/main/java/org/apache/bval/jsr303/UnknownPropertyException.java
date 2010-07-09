@@ -30,18 +30,34 @@ public class UnknownPropertyException extends ValidationException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Create a new UnknownPropertyException instance.
+     * @param message
+     */
     public UnknownPropertyException(String message) {
         super(message);
     }
 
+    /**
+     * Create a new UnknownPropertyException instance.
+     */
     public UnknownPropertyException() {
         super();
     }
 
+    /**
+     * Create a new UnknownPropertyException instance.
+     * @param message
+     * @param cause
+     */
     public UnknownPropertyException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * Create a new UnknownPropertyException instance.
+     * @param cause
+     */
     public UnknownPropertyException(Throwable cause) {
         super(cause);
     }

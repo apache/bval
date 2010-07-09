@@ -18,10 +18,8 @@
  */
 package org.apache.bval.util;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
-import java.security.AccessController;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -32,13 +30,21 @@ import java.util.StringTokenizer;
  */
 public class BeanValidationVersion {
 
+    /** Project name */
     public static final String PROJECT_NAME = "Apache Bean Validation";
+    /** Unique id of the current project/version/revision */
     public static final String PROJECT_ID;
+    /** Version number */
     public static final String VERSION_NUMBER;
+    /** Major release number */
     public static final int MAJOR_RELEASE;
+    /** Minor release number */
     public static final int MINOR_RELEASE;
+    /** Patch/point release number */
     public static final int PATCH_RELEASE;
+    /** Release status */
     public static final String RELEASE_STATUS;
+    /** Version control revision number */
     public static final String REVISION_NUMBER;
 
     static {
@@ -105,26 +111,49 @@ public class BeanValidationVersion {
         PROJECT_ID = PROJECT_NAME + " " + VERSION_NUMBER + "-r" + REVISION_NUMBER;
     }
 
+    /**
+     * Get the project version number.
+     * @return String
+     */
     public static String getVersion() {
         return VERSION_NUMBER;
     }
 
+    /**
+     * Get the version control revision number.
+     * @return String
+     */
     public static String getRevision() {
         return REVISION_NUMBER;
     }
 
+    /**
+     * Get the project name.
+     * @return String
+     */
     public static String getName() {
         return PROJECT_NAME;
     }
 
+    /**
+     * Get the fully-qualified project id.
+     * @return String
+     */
     public static String getID() {
         return PROJECT_ID;
     }
 
+    /**
+     * Main method of this class that prints the {@link #toString()} to <code>System.out</code>.
+     * @param args ignored
+     */
     public static void main(String [] args) {
         System.out.println(new BeanValidationVersion().toString());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         StringBuilder buf = new StringBuilder(80 * 40);
         appendBanner(buf);

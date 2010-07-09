@@ -25,33 +25,52 @@ import org.apache.commons.logging.LogFactory;
 import javax.validation.ConstraintValidator;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.security.PrivilegedAction;
 import java.util.*;
 
 /**
- * Description: hold default constraints that are build in the framework.
- * The default constraints are configured in DefaultConstraints.properties.<br/>
+ * Description: Provides access to the default constraints/validator implementation classes built into the framework.
+ * These are configured in DefaultConstraints.properties.<br/>
  */
 public class ConstraintDefaults {
     private static final Log log = LogFactory.getLog(ConstraintDefaults.class);
-    private static final String DEFAULT_CONSTAINTS =
+    private static final String DEFAULT_CONSTRAINTS =
           "org/apache/bval/jsr303/DefaultConstraints.properties";
-    protected Map<String, Class[]> defaultConstraints;
+    
+    /**
+     * The default constraint data stored herein.
+     */
+    protected Map<String, Class<? extends ConstraintValidator<?, ?>>[]> defaultConstraints;
 
+    /**
+     * Create a new ConstraintDefaults instance.
+     */
     public ConstraintDefaults() {
-        defaultConstraints = loadDefaultConstraints(DEFAULT_CONSTAINTS);
+        defaultConstraints = loadDefaultConstraints(DEFAULT_CONSTRAINTS);
     }
 
-    public Map<String, Class[]> getDefaultConstraints() {
+    /**
+     * Get the default constraint data.
+     * @return String-keyed map
+     */
+    public Map<String, Class<? extends ConstraintValidator<?, ?>>[]> getDefaultConstraints() {
         return defaultConstraints;
     }
 
-    public Class<? extends ConstraintValidator<?, ?>>[] getValidatorClasses(
-          Class<? extends java.lang.annotation.Annotation> annotationType) {
-        return getDefaultConstraints().get(annotationType.getName());
+    /**
+     * Get the default validator implementation types for the specified constraint annotation type. 
+     * @param annotationType
+     * @return array of {@link ConstraintValidator} implementation classes
+     */
+    @SuppressWarnings("unchecked")
+    public <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] getValidatorClasses(
+          Class<A> annotationType) {
+        return (Class<? extends ConstraintValidator<A, ?>>[]) getDefaultConstraints().get(annotationType.getName());
     }
-    
-    private Map<String, Class[]> loadDefaultConstraints(String resource) {
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadDefaultConstraints(String resource) {
         Properties constraintProperties = new Properties();
         final ClassLoader classloader = getClassLoader();
         InputStream stream = classloader.getResourceAsStream(resource);
@@ -64,7 +83,8 @@ public class ConstraintDefaults {
         } else {
             log.warn("cannot find " + resource);
         }
-        Map<String, Class[]> loadedConstraints = new HashMap();
+        Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadedConstraints
+                = new HashMap<String, Class<? extends ConstraintValidator<?,?>>[]>();
         for (Map.Entry entry : constraintProperties.entrySet()) {
 
             StringTokenizer tokens = new StringTokenizer((String) entry.getValue(), ", ");

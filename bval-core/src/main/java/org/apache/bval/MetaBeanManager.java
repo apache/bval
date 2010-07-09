@@ -29,26 +29,47 @@ import static org.apache.bval.model.Features.Property.*;
  */
 public class MetaBeanManager implements MetaBeanFinder {
 
+  /** MetaBean cache */
   protected final MetaBeanCache cache = new MetaBeanCache();
+  /** MetaBean builder */
   protected final MetaBeanBuilder builder;
+  /** Complete flag */
   protected boolean complete = false;
 
+  /**
+   * Create a new MetaBeanManager instance.
+   */
   public MetaBeanManager() {
     builder = new MetaBeanBuilder();
   }
 
+  /**
+   * Create a new MetaBeanManager instance.
+   * @param builder
+   */
   public MetaBeanManager(MetaBeanBuilder builder) {
     this.builder = builder;
   }
 
+  /**
+   * Get the builder used.
+   * @return {@link MetaBeanBuilder}
+   */
   public MetaBeanBuilder getBuilder() {
     return builder;
   }
 
+  /**
+   * Get the cache used.
+   * @return {@link MetaBeanCache}
+   */
   public MetaBeanCache getCache() {
     return cache;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public MetaBean findForId(String beanInfoId) {
     MetaBean beanInfo = cache.findForId(beanInfoId);
     if (beanInfo != null) return beanInfo;
@@ -65,6 +86,9 @@ public class MetaBeanManager implements MetaBeanFinder {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public MetaBean findForClass(Class<?> clazz) {
     if (clazz == null) return null;
     MetaBean beanInfo = cache.findForClass(clazz);
@@ -82,6 +106,7 @@ public class MetaBeanManager implements MetaBeanFinder {
   }
 
   /**
+   * Compute all known relationships for <code>beanInfo</code>.
    * must be called AFTER cache.cache()
    * to avoid endless loop
    *
@@ -94,6 +119,11 @@ public class MetaBeanManager implements MetaBeanFinder {
     }
   }
 
+  /**
+   * Compute a single related {@link MetaBean}.
+   * @param prop
+   * @param beanRef
+   */
   protected void computeRelatedMetaBean(MetaProperty prop, String beanRef) {
     Class<?> beanType = prop.getFeature(REF_BEAN_TYPE);
     if (beanType != null) {

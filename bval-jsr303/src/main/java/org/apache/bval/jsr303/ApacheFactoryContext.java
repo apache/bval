@@ -39,46 +39,79 @@ public class ApacheFactoryContext implements ValidatorContext {
   private TraversableResolver traversableResolver;
   private ConstraintValidatorFactory constraintValidatorFactory;
 
+  /**
+   * Create a new ApacheFactoryContext instance.
+   * @param factory
+   */
   public ApacheFactoryContext(ApacheValidatorFactory factory) {
     this.factory = factory;
     this.metaBeanFinder = buildMetaBeanManager();
   }
 
+  /**
+   * Create a new ApacheFactoryContext instance.
+   * @param factory
+   * @param metaBeanFinder
+   */
   protected ApacheFactoryContext(ApacheValidatorFactory factory,
                                  MetaBeanFinder metaBeanFinder) {
     this.factory = factory;
     this.metaBeanFinder = metaBeanFinder;
   }
 
+  /**
+   * Get the {@link ApacheValidatorFactory} used by this {@link ApacheFactoryContext}.
+   * @return {@link ApacheValidatorFactory}
+   */
   public ApacheValidatorFactory getFactory() {
     return factory;
   }
 
+  /**
+   * Get the metaBeanFinder.
+   * @return {@link MetaBeanFinder}
+   */
   public final MetaBeanFinder getMetaBeanFinder() {
     return metaBeanFinder;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
     this.messageInterpolator = messageInterpolator;
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
     this.traversableResolver = traversableResolver;
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public ValidatorContext constraintValidatorFactory(
       ConstraintValidatorFactory constraintValidatorFactory) {
     this.constraintValidatorFactory = constraintValidatorFactory;
     return this;
   }
 
+  /**
+   * Get the {@link ConstraintValidatorFactory}.
+   * @return {@link ConstraintValidatorFactory}
+   */
   public ConstraintValidatorFactory getConstraintValidatorFactory() {
     return constraintValidatorFactory == null ? factory.getConstraintValidatorFactory() :
         constraintValidatorFactory;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Validator getValidator() {
     ClassValidator validator = new ClassValidator(this);
     if (Boolean.getBoolean(factory.getProperties().get(
@@ -88,11 +121,19 @@ public class ApacheFactoryContext implements ValidatorContext {
     return validator;
   }
 
+  /**
+   * Get the {@link MessageInterpolator}.
+   * @return {@link MessageInterpolator}
+   */
   public MessageInterpolator getMessageInterpolator() {
     return messageInterpolator == null ? factory.getMessageInterpolator() :
         messageInterpolator;
   }
 
+  /**
+   * Get the {@link TraversableResolver}.
+   * @return {@link TraversableResolver}
+   */
   public TraversableResolver getTraversableResolver() {
     return traversableResolver == null ? factory.getTraversableResolver() :
         traversableResolver;
@@ -105,7 +146,8 @@ public class ApacheFactoryContext implements ValidatorContext {
    *
    * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
    */
-  protected MetaBeanManager buildMetaBeanManager() {
+  @SuppressWarnings("deprecation")
+protected MetaBeanManager buildMetaBeanManager() {
     // this is relevant: xml before annotations
     // (because ignore-annotations settings in xml)
     List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(3);
@@ -123,6 +165,11 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
   }
 
+  /**
+   * Create a {@link MetaBeanManager} using the specified builders.
+   * @param builders {@link MetaBeanFactory} {@link List}
+   * @return {@link MetaBeanManager}
+   */
   protected MetaBeanManager createMetaBeanManager(List<MetaBeanFactory> builders) {
     return new MetaBeanManager(
         new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
@@ -135,7 +182,12 @@ public class ApacheFactoryContext implements ValidatorContext {
    */
   private static class XMLMetaBeanManagerCreator {
 
-    protected static MetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
+    /**
+     * Create the {@link XMLMetaBeanManager}.
+     * @param builders
+     * @return {@link XMLMetaBeanManager}
+     */
+    protected static XMLMetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
       builders.add(new XMLMetaBeanFactory());
       return new XMLMetaBeanManager(
           new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));

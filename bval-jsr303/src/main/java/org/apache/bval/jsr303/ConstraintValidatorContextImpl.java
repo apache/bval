@@ -24,6 +24,7 @@ import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.ValidationListener;
 
+import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Path;
 import javax.validation.ValidationException;
@@ -32,31 +33,46 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Description: <br/>
+ * Description: Short-lived {@link ConstraintValidatorContext} implementation passed by
+ * a {@link ConstraintValidation} to its adapted {@link ConstraintValidator}. <br/>
  */
 public class ConstraintValidatorContextImpl implements ConstraintValidatorContext {
     private final List<ValidationListener.Error> errorMessages =
           new LinkedList<ValidationListener.Error>();
 
-    private final ConstraintValidation constraintDescriptor;
-    private final GroupValidationContext validationContext;
+    private final ConstraintValidation<?> constraintDescriptor;
+    private final GroupValidationContext<?> validationContext;
 
     private boolean defaultDisabled;
 
-    public ConstraintValidatorContextImpl(GroupValidationContext validationContext,
-                                          ConstraintValidation aConstraintValidation) {
+    /**
+     * Create a new ConstraintValidatorContextImpl instance.
+     * @param validationContext
+     * @param aConstraintValidation
+     */
+    public ConstraintValidatorContextImpl(GroupValidationContext<?> validationContext,
+                                          ConstraintValidation<?> aConstraintValidation) {
         this.validationContext = validationContext;
         this.constraintDescriptor = aConstraintValidation;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void disableDefaultConstraintViolation() {
         defaultDisabled = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getDefaultConstraintMessageTemplate() {
         return constraintDescriptor.getMessageTemplate();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintViolationBuilder buildConstraintViolationWithTemplate(
           String messageTemplate) {
         return new ConstraintViolationBuilderImpl(this, messageTemplate,
@@ -69,6 +85,12 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
         private final String messageTemplate;
         private final PathImpl propertyPath;
 
+        /**
+         * Create a new ConstraintViolationBuilderImpl instance.
+         * @param contextImpl
+         * @param template
+         * @param path
+         */
         ConstraintViolationBuilderImpl(ConstraintValidatorContextImpl contextImpl,
                                        String template, PathImpl path) {
             parent = contextImpl;
@@ -76,6 +98,9 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             propertyPath = path;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public NodeBuilderDefinedContext addNode(String name) {
             PathImpl path;
             if (propertyPath.isRootPath()) {
@@ -87,12 +112,19 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             return new NodeBuilderDefinedContextImpl(parent, messageTemplate, path);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public ConstraintValidatorContext addConstraintViolation() {
             parent.addError(messageTemplate, propertyPath);
             return parent;
         }
     }
 
+    /**
+     * Get the queued error messages.
+     * @return List
+     */
     public List<ValidationListener.Error> getErrorMessages() {
         if (defaultDisabled && errorMessages.isEmpty()) {
             throw new ValidationException(
@@ -109,10 +141,19 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
         return returnedErrorMessages;
     }
 
-    public GroupValidationContext getValidationContext() {
+    /**
+     * Get this {@link ConstraintValidatorContext}'s {@link GroupValidationContext}.
+     * @return {@link GroupValidationContext}
+     */
+    public GroupValidationContext<?> getValidationContext() {
         return validationContext;
     }
 
+    /**
+     * Add an error message to this {@link ConstraintValidatorContext}.
+     * @param messageTemplate
+     * @param propertyPath
+     */
     public void addError(String messageTemplate, Path propertyPath) {
         errorMessages.add(new ValidationListener.Error(messageTemplate, propertyPath, null));
     }

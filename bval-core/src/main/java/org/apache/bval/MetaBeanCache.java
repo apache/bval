@@ -28,9 +28,18 @@ import java.util.Map;
 public class MetaBeanCache implements MetaBeanFinder, Serializable {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Cache keyed by id.
+     */
     protected final FastHashMap cacheById;
+    /**
+     * Cache keyed by class.
+     */
     protected final FastHashMap cacheByClass;
 
+    /**
+     * Create a new MetaBeanCache instance.
+     */
     public MetaBeanCache() {
         this.cacheById = new FastHashMap();
         cacheByClass = new FastHashMap();
@@ -38,6 +47,10 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
         cacheById.setFast(true);
     }
 
+    /**
+     * Create a new MetaBeanCache instance.
+     * @param beans
+     */
     public MetaBeanCache(Map<String, MetaBean> beans) {
         this();
         for (MetaBean bean : beans.values()) {
@@ -45,23 +58,41 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
         }
     }
 
+    /**
+     * Clear the cache.
+     */
     public void clear() {
         cacheById.clear();
         cacheByClass.clear();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MetaBean findForId(String beanInfoId) {
         return (MetaBean) cacheById.get(beanInfoId);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public MetaBean findForClass(Class<?> clazz) {
         return (MetaBean) cacheByClass.get(clazz);
     }
 
+    /**
+     * Return all cached MetaBeans by id.
+     * @return live map
+     */
+    @SuppressWarnings("unchecked")
     public Map<String, MetaBean> findAll() {
         return cacheById;
     }
 
+    /**
+     * Cache the specified MetaBean.
+     * @param beanInfo
+     */
     public void cache(MetaBean beanInfo) {
         cacheById.put(beanInfo.getId(), beanInfo);
         if (beanInfo.getBeanClass() != null &&
@@ -70,6 +101,10 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
         }
     }
 
+    /**
+     * Remove a single MetaBean from the cache.
+     * @param beanInfo
+     */
     public void removeFromCache(MetaBean beanInfo) {
         cacheById.remove(beanInfo.getId());
         if (beanInfo.getBeanClass() != null &&

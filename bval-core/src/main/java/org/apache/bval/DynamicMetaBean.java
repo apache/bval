@@ -19,18 +19,23 @@ package org.apache.bval;
 import org.apache.bval.model.MetaBean;
 
 /**
- * Description: <br/>
+ * Description: Dynamic {@link MetaBean} subclass.<br/>
  */
 final class DynamicMetaBean extends MetaBean {
     private static final long serialVersionUID = 1L;
 
     private final MetaBeanFinder finder;
 
+    /**
+     * Create a new DynamicMetaBean instance.
+     * @param finder
+     */
     public DynamicMetaBean(MetaBeanFinder finder) {
         this.finder = finder;
     }
 
     /**
+     * {@inheritDoc}
      * different strategies with hints to find MetaBean of associated object can
      * be implemented here.
      */

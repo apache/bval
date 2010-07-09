@@ -24,7 +24,7 @@ import javax.validation.ConstraintValidatorContext;
 import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 /**
- * Description: <br/>
+ * Description: implementation of {@link NodeBuilderCustomizableContext}.<br/>
  */
 final class NodeBuilderCustomizableContextImpl
       implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {
@@ -35,6 +35,13 @@ final class NodeBuilderCustomizableContextImpl
     // The actual incorporation in the path will take place when the definition of the current leaf node is complete
     private String lastNodeName; // Not final as it can be re-used
 
+    /**
+     * Create a new NodeBuilderCustomizableContextImpl instance.
+     * @param contextImpl
+     * @param template
+     * @param path
+     * @param name
+     */
     NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl contextImpl, String template,
                               PathImpl path, String name) {
         parent = contextImpl;
@@ -43,12 +50,18 @@ final class NodeBuilderCustomizableContextImpl
         lastNodeName = name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder inIterable() {
         // Modifies the "previous" node in the path
         this.propertyPath.getLeafNode().setInIterable( true );
         return new NodeContextBuilderImpl(parent, messageTemplate, propertyPath, lastNodeName);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
         addLastNodeIfNeeded();
@@ -56,6 +69,9 @@ final class NodeBuilderCustomizableContextImpl
         return this; // Re-use this instance
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public ConstraintValidatorContext addConstraintViolation() {
         addLastNodeIfNeeded();
         parent.addError(messageTemplate, propertyPath);

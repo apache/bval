@@ -154,6 +154,7 @@ public abstract class AbstractBeanValidator {
    *            The validation context, its current bean must implement
    *            {@link Map}.
    */
+  @SuppressWarnings("unchecked")
   protected <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context) {
     // jsr303 spec: For Map, the value of each Map.Entry is validated (key is not validated).
     Iterator<Map.Entry<Object, Object>> it = ((Map<Object, Object>) context.getBean()).entrySet().iterator();

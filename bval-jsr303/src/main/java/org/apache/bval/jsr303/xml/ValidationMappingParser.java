@@ -54,21 +54,26 @@ import org.apache.commons.beanutils.Converter;
 /**
  * Uses JAXB to parse constraints.xml based on validation-mapping-1.0.xsd.<br>
  */
+@SuppressWarnings("restriction")
 public class ValidationMappingParser {
     //    private static final Log log = LogFactory.getLog(ValidationMappingParser.class);
     private static final String VALIDATION_MAPPING_XSD = "META-INF/validation-mapping-1.0.xsd";
     private static final String[] RESERVED_PARAMS = {"message", "groups", "payload"};
 
-    private final Set<Class> processedClasses;
+    private final Set<Class<?>> processedClasses;
     private final ApacheValidatorFactory factory;
 
+    /**
+     * Create a new ValidationMappingParser instance.
+     * @param factory
+     */
     public ValidationMappingParser(ApacheValidatorFactory factory) {
         this.factory = factory;
-        this.processedClasses = new HashSet<Class>();
+        this.processedClasses = new HashSet<Class<?>>();
     }
 
     /**
-     * parse files with constraint mappings and collect information in the factory.
+     * Parse files with constraint mappings and collect information in the factory.
      *  
      * @param xmlStreams - one or more contraints.xml file streams to parse
      */
@@ -148,6 +153,7 @@ public class ValidationMappingParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <A extends Annotation, T> MetaConstraint<?, ?> createConstraint(
           ConstraintType constraint, Class<T> beanClass, Member member,
           String defaultPackage) {
@@ -220,6 +226,7 @@ public class ValidationMappingParser {
         elementType.getContent().removeAll(contentToDelete);
     }
 
+    @SuppressWarnings("unchecked")
     private Object getSingleValue(Serializable serializable, Class<?> returnType,
                                   String defaultPackage) {
 
@@ -227,19 +234,19 @@ public class ValidationMappingParser {
         if (serializable instanceof String) {
             String value = (String) serializable;
             returnValue = convertToResultType(returnType, value, defaultPackage);
-        } else if (serializable instanceof JAXBElement &&
-              ((JAXBElement) serializable).getDeclaredType()
+        } else if (serializable instanceof JAXBElement<?> &&
+              ((JAXBElement<?>) serializable).getDeclaredType()
                     .equals(String.class)) {
             JAXBElement<?> elem = (JAXBElement<?>) serializable;
             String value = (String) elem.getValue();
             returnValue = convertToResultType(returnType, value, defaultPackage);
-        } else if (serializable instanceof JAXBElement &&
-              ((JAXBElement) serializable).getDeclaredType()
+        } else if (serializable instanceof JAXBElement<?> &&
+              ((JAXBElement<?>) serializable).getDeclaredType()
                     .equals(AnnotationType.class)) {
             JAXBElement<?> elem = (JAXBElement<?>) serializable;
             AnnotationType annotationType = (AnnotationType) elem.getValue();
             try {
-                Class<Annotation> annotationClass = (Class<Annotation>) returnType;
+                Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) returnType;
                 returnValue =
                       createAnnotation(annotationType, annotationClass, defaultPackage);
             } catch (ClassCastException e) {
@@ -302,6 +309,7 @@ public class ValidationMappingParser {
     }
 
 
+    @SuppressWarnings("unchecked")
     private Class<? extends Payload>[] getPayload(PayloadType payloadType,
                                                   String defaultPackage) {
         if (payloadType == null) {
@@ -414,6 +422,7 @@ public class ValidationMappingParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void processConstraintDefinitions(
           List<ConstraintDefinitionType> constraintDefinitionList, String defaultPackage) {
         for (ConstraintDefinitionType constraintDefinition : constraintDefinitionList) {

@@ -19,7 +19,14 @@
 package org.apache.bval.jsr303;
 
 
-import org.apache.bval.AbstractBeanValidator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.groups.Default;
+import javax.validation.metadata.BeanDescriptor;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
@@ -31,19 +38,12 @@ import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.ValidationContext;
-import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.ValidationHelper;
 import org.apache.commons.lang.ClassUtils;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+
+// TODO: centralize treatMapsLikeBeans
 
 /**
  * Objects of this class are able to validate bean instances (and the associated
@@ -57,7 +57,7 @@ import java.util.Set;
  * @author Carlos Vara
  * <br/>
  */
-public class ClassValidator extends AbstractBeanValidator implements Validator {
+public class ClassValidator implements Validator {
   /**
    * {@link ApacheFactoryContext} used
    */
@@ -387,10 +387,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    *            {@link GroupValidationContext#getCurrentGroup()} field set.
    */
   @SuppressWarnings("unchecked")
-  @Override
-  protected <VL extends ValidationListener> void validateBeanNet(ValidationContext<VL> validationContext) {
-
-    GroupValidationContext<VL> context = (GroupValidationContext<VL>) validationContext;
+  protected void validateBeanNet(GroupValidationContext<?> context) {
 
     // If reached a cascaded bean which is null
     if (context.getBean() == null) {
@@ -409,7 +406,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     if (context.getCurrentGroup().isDefault()) {
 
       List<Group> defaultGroups = expandDefaultGroup(context);
-      final ConstraintValidationListener<VL> result = (ConstraintValidationListener<VL>) context.getListener();
+      final ConstraintValidationListener<?> result = (ConstraintValidationListener<?>) context.getListener();
 
       // If the rootBean defines a GroupSequence
       if (defaultGroups.size() > 1) {
@@ -420,7 +417,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
         Group currentGroup = context.getCurrentGroup();
         for (Group each : defaultGroups) {
           context.setCurrentGroup(each);
-          validateBean(context);
+          ValidationHelper.validateBean(context);
           // Spec 3.4.3 - Stop validation if errors already found
           if (result.violationsSize() > numViolations) {
             break;
@@ -449,7 +446,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
               context.getMetaBean().getFeature("{GroupSequence:" + owner.getCanonicalName() + "}");
           for (Group each : ownerDefaultGroups) {
             context.setCurrentGroup(each);
-            validateBean(context);
+            ValidationHelper.validateBean(context);
             // Spec 3.4.3 - Stop validation if errors already found
             if (result.violationsSize() > numViolations) {
               break;
@@ -465,7 +462,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     }
     // if not the default group, proceed as normal
     else {
-      validateBean(context);
+        ValidationHelper.validateBean(context);
     }
 
 
@@ -496,7 +493,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
           // modify context state for relationship-target bean
           context.moveDown(prop, each);
           // Now, if the related bean is an instance of Map/Array/etc,
-          validateContext(context);
+          ValidationHelper.validateContext(context, new Jsr303ValidationCallback(context), treatMapsLikeBeans);
           // restore old values in context
           context.moveUp(bean, mbean);
         }
@@ -588,12 +585,12 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
     if (defaultGroups != null) {
       for (Group each : defaultGroups) {
         context.setCurrentGroup(each);
-        validateProperty(context);
+        ValidationHelper.validateProperty(context);
         // continue validation, even if errors already found: if (!result.isEmpty())
       }
       context.setCurrentGroup(currentGroup); // restore
     } else {
-      validateProperty(context);
+        ValidationHelper.validateProperty(context);
     }
   }
 
@@ -639,6 +636,28 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
   protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {
     return new BeanDescriptorImpl(factoryContext, metaBean, metaBean.getValidations());
   }
+  
+  private boolean treatMapsLikeBeans = false;
+  
+  /**
+   * Behavior configuration -
+   * <pre>
+   * parameter: treatMapsLikeBeans - true (validate maps like beans, so that
+   *                             you can use Maps to validate dynamic classes or
+   *                             beans for which you have the MetaBean but no instances)
+   *                           - false (default), validate maps like collections
+   *                             (validating the values only)
+   * </pre>
+   * (is still configuration to better in BeanValidationContext?)
+   */
+  public boolean isTreatMapsLikeBeans() {
+    return treatMapsLikeBeans;
+  }
+
+
+  public void setTreatMapsLikeBeans(boolean treatMapsLikeBeans) {
+    this.treatMapsLikeBeans = treatMapsLikeBeans;
+  }
 
   /**
    * Checks that beanType is valid according to spec Section 4.1.1 i. Throws
@@ -675,4 +694,24 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
       throw new IllegalArgumentException("Groups cannot be null.");
     }
   }
+  
+  /**
+   * Dispatches a call from {@link #validate()} to
+   * {@link ClassValidator#validateBeanNet(GroupValidationContext)} with the
+   * current context set.
+   */
+  protected class Jsr303ValidationCallback implements ValidationHelper.ValidateCallback {
+
+    private final GroupValidationContext<?> context;
+
+    public Jsr303ValidationCallback(GroupValidationContext<?> context) {
+        this.context = context;
+    }
+
+    public void validate() {
+        validateBeanNet(context);
+    }
+
+  }
+  
 }

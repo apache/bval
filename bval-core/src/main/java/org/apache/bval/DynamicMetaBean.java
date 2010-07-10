@@ -18,10 +18,12 @@ package org.apache.bval;
 
 import org.apache.bval.model.MetaBean;
 
+// TODO: Reduce visibility
+
 /**
  * Description: Dynamic {@link MetaBean} subclass.<br/>
  */
-final class DynamicMetaBean extends MetaBean {
+public final class DynamicMetaBean extends MetaBean {
     private static final long serialVersionUID = 1L;
 
     private final MetaBeanFinder finder;

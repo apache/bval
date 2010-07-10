@@ -22,6 +22,7 @@ import org.apache.bval.jsr303.*;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.model.MetaBean;
+import org.apache.bval.util.ValidationHelper;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidationException;
@@ -255,13 +256,13 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
       // 1. process groups
       for (Group current : groups.getGroups()) {
         context.setCurrentGroup(current);
-        validateContext(context);
+        ValidationHelper.validateContext(context, new Jsr303ValidationCallback(context), isTreatMapsLikeBeans());
       }
       // 2. process sequences
       for (List<Group> eachSeq : groups.getSequences()) {
         for (Group current : eachSeq) {
           context.setCurrentGroup(current);
-          validateContext(context);
+          ValidationHelper.validateContext(context, new Jsr303ValidationCallback(context), isTreatMapsLikeBeans());
           /**
            * if one of the group process in the sequence leads to one or more validation failure,
            * the groups following in the sequence must not be processed
@@ -307,13 +308,13 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
       // 1. process groups
       for (Group current : groups.getGroups()) {
         context.setCurrentGroup(current);
-        validateContext(context);
+        ValidationHelper.validateContext(context, new Jsr303ValidationCallback(context), isTreatMapsLikeBeans());
       }
       // 2. process sequences
       for (List<Group> eachSeq : groups.getSequences()) {
         for (Group current : eachSeq) {
           context.setCurrentGroup(current);
-          validateContext(context);
+          ValidationHelper.validateContext(context, new Jsr303ValidationCallback(context), isTreatMapsLikeBeans());
           /**
            * if one of the group process in the sequence leads to one or more validation failure,
            * the groups following in the sequence must not be processed

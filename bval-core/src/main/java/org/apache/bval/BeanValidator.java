@@ -19,10 +19,13 @@ package org.apache.bval;
 import org.apache.bval.model.*;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
+import org.apache.bval.util.ValidationHelper;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
+
+// TODO: centralize treatMapsLikeBeans
 
 /**
  * Description: Top-Level API-class to validate objects or object-trees.
@@ -32,7 +35,7 @@ import java.util.Collection;
  * This class supports cyclic object graphs by keeping track of
  * validated instances in the validation context.<br/>
  */
-public class BeanValidator<T extends ValidationListener> extends AbstractBeanValidator {
+public class BeanValidator<T extends ValidationListener> {
   private final MetaBeanFinder metaBeanFinder;
 
   /**
@@ -75,7 +78,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   public T validate(Object bean, MetaBean metaBean) {
     ValidationContext<T> context = createContext();
     context.setBean(bean, metaBean);
-    validateContext(context);
+    ValidationHelper.validateContext(context, new BeanValidatorCallback(context), treatMapsLikeBeans);
     return context.getListener();
   }
 
@@ -99,7 +102,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
           if (anno instanceof Validate) {
             if (context == null) context = createContext();
             if (determineMetaBean((Validate) anno, parameters[i], context)) {
-              validateContext(context);
+              ValidationHelper.validateContext(context, new BeanValidatorCallback(context), treatMapsLikeBeans);
               break; // next parameter
             }
           }
@@ -171,7 +174,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
     ValidationContext<T> context = createContext();
     context.setBean(bean);
     context.setMetaProperty(metaProperty);
-    validateProperty(context);
+    ValidationHelper.validateProperty(context);
     return context.getListener();
   }
 
@@ -181,7 +184,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
    */
   protected <VL extends ValidationListener> void validateBeanNet(ValidationContext<VL> context) {
     if (context.collectValidated()) {
-      validateBean(context);
+      ValidationHelper.validateBean(context);
       for (MetaProperty prop : context.getMetaBean().getProperties()) {
         validateRelatedBean(context, prop);
       }
@@ -202,7 +205,7 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
       final MetaBean mbean = context.getMetaBean();
       // modify context state for relationship-target bean
       context.moveDown(prop, new PropertyAccess(bean.getClass(), prop.getName()));
-      validateContext(context);
+      ValidationHelper.validateContext(context, new BeanValidatorCallback(context), treatMapsLikeBeans);
       // restore old values in context
       context.moveUp(bean, mbean);
     } else if (access != null) { // different accesses to relation
@@ -212,13 +215,23 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
       for (AccessStrategy each : access) {
         // modify context state for relationship-target bean
         context.moveDown(prop, each);
-        validateContext(context);
+        ValidationHelper.validateContext(context, new BeanValidatorCallback(context), treatMapsLikeBeans);
         // restore old values in context
         context.moveUp(bean, mbean);
       }
     }
   }
 
+  private boolean treatMapsLikeBeans = false;
+  
+  public boolean isTreatMapsLikeBeans() {
+    return treatMapsLikeBeans;
+  }
+    
+  public void setTreatMapsLikeBeans(boolean treatMapsLikeBeans) {
+    this.treatMapsLikeBeans = treatMapsLikeBeans;
+  }
+  
   /**
    * Get the metabean finder associated with this validator.
    *
@@ -228,4 +241,24 @@ public class BeanValidator<T extends ValidationListener> extends AbstractBeanVal
   public MetaBeanFinder getMetaBeanFinder() {
     return metaBeanFinder;
   }
+
+  /**
+   * Dispatches a call from {@link #validate()} to
+   * {@link BeanValidator#validateBeanNet(ValidationContext)} with the current
+   * context set.
+   */
+  private class BeanValidatorCallback implements ValidationHelper.ValidateCallback {
+
+    private final ValidationContext<?> context;
+    
+    public BeanValidatorCallback(ValidationContext<?> context) {
+        this.context = context;
+    }
+
+    public void validate() {
+        validateBeanNet(context);
+    }
+
+  }
+  
 }

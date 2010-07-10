@@ -173,7 +173,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
     if ( methodDescriptor == null ) {
         throw new ValidationException("Method " + method + " doesn't belong to class " + clazz);
     }
-    final GroupValidationContext<ConstraintValidationListener<Object>> context =
+    final GroupValidationContext<Object> context =
         createContext(methodDescriptor.getMetaBean(), returnedValue, null, groupArray);
     validateReturnedValueInContext(context, methodDescriptor);
     ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
@@ -210,7 +210,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
   private <T> Set<ConstraintViolation<T>> validateParameter(
       ParameterDescriptorImpl paramDesc, Object parameter, Class<?>... groupArray) {
     try {
-      final GroupValidationContext<ConstraintValidationListener<Object>> context =
+      final GroupValidationContext<Object> context =
           createContext(paramDesc.getMetaBean(), parameter, null, groupArray);
       final ConstraintValidationListener<T> result = (ConstraintValidationListener<T>) context.getListener();
       validateParameterInContext(context, paramDesc);
@@ -224,7 +224,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
    * validate constraints hosted on parameters of a method
    */
   private <T> void validateParameterInContext(
-      GroupValidationContext<ConstraintValidationListener<T>> context,
+      GroupValidationContext<T> context,
       ParameterDescriptorImpl paramDesc) {
 
     final Groups groups = context.getGroups();
@@ -276,7 +276,7 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
    * validate constraints hosted on parameters of a method
    */
   private <T> void validateReturnedValueInContext(
-      GroupValidationContext<ConstraintValidationListener<T>> context,
+      GroupValidationContext<T> context,
       MethodDescriptorImpl methodDescriptor) {
 
     final Groups groups = context.getGroups();

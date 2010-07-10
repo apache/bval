@@ -22,7 +22,6 @@ import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.ValidationContext;
-import org.apache.bval.model.ValidationListener;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.MessageInterpolator;
@@ -31,8 +30,8 @@ import javax.validation.TraversableResolver;
 /**
  * Description: JSR-303 {@link ValidationContext} extension. <br/>
  */
-public interface GroupValidationContext<T extends ValidationListener>
-      extends ValidationContext<T> {
+public interface GroupValidationContext<T>
+      extends ValidationContext<ConstraintValidationListener<T>> {
     
     /**
      * Get the groups of this {@link GroupValidationContext}.

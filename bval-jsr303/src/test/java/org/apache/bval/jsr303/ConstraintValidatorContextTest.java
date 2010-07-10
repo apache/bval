@@ -103,7 +103,7 @@ public class ConstraintValidatorContextTest extends TestCase {
     }
 
     // TODO: mock
-    public static class DummyContext<T extends ValidationListener> implements
+    public static class DummyContext<T> implements
             GroupValidationContext<T> {
 
         public boolean collectValidated(ConstraintValidator constraint) {
@@ -166,7 +166,7 @@ public class ConstraintValidatorContextTest extends TestCase {
             throw new IllegalStateException("Unexpected call");
         }
 
-        public T getListener() {
+        public ConstraintValidationListener<T> getListener() {
             throw new IllegalStateException("Unexpected call");
         }
 

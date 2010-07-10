@@ -126,7 +126,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
       Class<T> objectClass = (Class<T>) object.getClass();
       MetaBean objectMetaBean = factoryContext.getMetaBeanFinder().findForClass(objectClass);
       
-      final GroupValidationContext<ConstraintValidationListener<T>> context =
+      final GroupValidationContext<T> context =
           createContext(objectMetaBean, object, objectClass, groups);
       final ConstraintValidationListener<T> result = context.getListener();
       final Groups sequence = context.getGroups();
@@ -193,7 +193,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
       Class<T> objectClass = (Class<T>) object.getClass();
       MetaBean objectMetaBean = factoryContext.getMetaBeanFinder().findForClass(objectClass);
 
-      GroupValidationContext<ConstraintValidationListener<T>> context =
+      GroupValidationContext<T> context =
           createContext(objectMetaBean, object, objectClass, groups);
       ConstraintValidationListener<T> result = context.getListener();
       NestedMetaProperty nestedProp = getNestedProperty(objectMetaBean, object, propertyName);
@@ -272,7 +272,7 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
 
     try {
       MetaBean metaBean = factoryContext.getMetaBeanFinder().findForClass(beanType);
-      GroupValidationContext<ConstraintValidationListener<T>> context =
+      GroupValidationContext<T> context =
           createContext(metaBean, null, beanType, groups);
       ConstraintValidationListener<T> result = context.getListener();
       context.setMetaProperty(
@@ -619,11 +619,11 @@ public class ClassValidator extends AbstractBeanValidator implements Validator {
    * @param groups
    * @return {@link GroupValidationContext} instance
    */
-  protected <T> GroupValidationContext<ConstraintValidationListener<T>> createContext(
+  protected <T> GroupValidationContext<T> createContext(
       MetaBean metaBean, T object, Class<T> objectClass, Class<?>[] groups) {
     ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object, objectClass);
-    GroupValidationContextImpl<ConstraintValidationListener<T>> context =
-        new GroupValidationContextImpl<ConstraintValidationListener<T>>(listener,
+    GroupValidationContextImpl<T> context =
+        new GroupValidationContextImpl<T>(listener,
             this.factoryContext.getMessageInterpolator(),
             this.factoryContext.getTraversableResolver(), metaBean);
     context.setBean(object, metaBean);

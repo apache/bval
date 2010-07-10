@@ -28,6 +28,7 @@ import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Description: JSR-303 {@link ValidationListener} implementation; provides {@link ConstraintViolation}s.<br/>
@@ -36,6 +37,10 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     private final Set<ConstraintViolation<T>> constraintViolations = new HashSet<ConstraintViolation<T>>();
     private final T rootBean;
     private final Class<T> rootBeanType;
+    // TODO: Currently there is no need for atomicity here as all the validation process
+    //       is single-threaded and it's unlikely to change in the near future.
+    private final AtomicInteger compositeDepth = new AtomicInteger(0);
+    private boolean hasCompositeError;
 
     /**
      * Create a new ConstraintValidationListener instance.
@@ -67,6 +72,10 @@ public final class ConstraintValidationListener<T> implements ValidationListener
 
     private void addError(String messageTemplate, Path propPath,
                           ValidationContext<?> context) {
+        if (compositeDepth.get() > 0) {
+            hasCompositeError |= true;
+            return;
+        }
         final Object value;
 
         final ConstraintDescriptor<?> descriptor;
@@ -138,4 +147,29 @@ public final class ConstraintValidationListener<T> implements ValidationListener
         return constraintViolations.size();
     }
 
+    /**
+     * Learn whether there are violations available.
+     * If in report-as-single-violation mode, the result is scoped accordingly.
+     * Note that this means you must check before exiting report-as-single-violation mode
+     * @return boolean
+     */
+    public boolean hasViolations() {
+        return compositeDepth.get() == 0 ? !constraintViolations.isEmpty() : hasCompositeError; 
+    }
+
+    /**
+     * Signify the beginning of a report-as-single-violation composite validation.
+     * @return <code>true</code> as this call caused the listener to enter report-as-single-violation mode
+     */
+    public boolean beginReportAsSingle() {
+        return compositeDepth.incrementAndGet() == 1;
+    }
+
+    /**
+     * Signify the end of a report-as-single-violation composite validation.
+     * @return <code>true</code> as this call caused the listener to exit report-as-single-violation mode
+     */
+    public boolean endReportAsSingle() {
+        return compositeDepth.decrementAndGet() == 0;
+    }
 }

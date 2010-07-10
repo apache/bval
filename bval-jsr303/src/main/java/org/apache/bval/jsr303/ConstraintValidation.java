@@ -19,7 +19,6 @@
 package org.apache.bval.jsr303;
 
 
-import org.apache.bval.BeanValidationContext;
 import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.Validation;
@@ -133,14 +132,14 @@ public class ConstraintValidation<T extends Annotation>
    * {@inheritDoc}
    */
   public <L extends ValidationListener> void validate(ValidationContext<L> context) {
-    validate((GroupValidationContext<L>) context);
+    validate((GroupValidationContext<?>) context);
   }
 
   /**
    * Validate a {@link GroupValidationContext}.
    * @param context root
    */
-  public <L extends ValidationListener> void validate(GroupValidationContext<L> context) {
+  public void validate(GroupValidationContext<?> context) {
     context.setConstraintValidation(this);
     /**
      * execute unless the given validation constraint has already been processed
@@ -161,25 +160,23 @@ public class ConstraintValidation<T extends Annotation>
 
     // process composed constraints
     if (isReportAsSingleViolation()) {
-      BeanValidationContext gctx = (BeanValidationContext) context;
-      ConstraintValidationListener oldListener =
-          ((ConstraintValidationListener) gctx.getListener());
-      ConstraintValidationListener listener =
-          new ConstraintValidationListener(oldListener.getRootBean(), oldListener.getRootBeanType());
-      gctx.setListener(listener);
+      ConstraintValidationListener<?> listener = context.getListener();
+      listener.beginReportAsSingle();
+
+      boolean failed = false;
       try {
-        for (ConstraintValidation composed : getComposingValidations()) {
-          composed.validate(context);
-        }
+          // stop validating when already failed and ReportAsSingleInvalidConstraint = true ?
+          for (Iterator<ConstraintValidation<?>> composed = getComposingValidations().iterator(); !failed && composed.hasNext();) {
+              composed.next().validate(context);
+              failed = listener.hasViolations();
+          }
       } finally {
-        gctx.setListener(oldListener);
+          listener.endReportAsSingle();
+          // Restore current constraint validation
+          context.setConstraintValidation(this);
       }
 
-      // Restore current constraint validation
-      context.setConstraintValidation(this);
-
-      // stop validating when already failed and ReportAsSingleInvalidConstraint = true ?
-      if (!listener.getConstraintViolations().isEmpty()) {
+      if (failed) {
         // TODO RSt - how should the composed constraint error report look like?
         ConstraintValidatorContextImpl jsrContext =
             new ConstraintValidatorContextImpl(context, this);

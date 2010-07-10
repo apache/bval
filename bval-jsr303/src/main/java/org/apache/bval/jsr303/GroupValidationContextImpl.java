@@ -25,7 +25,6 @@ import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 
 import javax.validation.ConstraintValidator;
@@ -39,8 +38,8 @@ import java.util.Set;
 /**
  * Description: instance per validation process, not thread-safe<br/>
  */
-final class GroupValidationContextImpl<T extends ValidationListener>
-    extends BeanValidationContext<T>
+final class GroupValidationContextImpl<T>
+    extends BeanValidationContext<ConstraintValidationListener<T>>
     implements GroupValidationContext<T>, MessageInterpolator.Context {
 
   private final MessageInterpolator messageResolver;
@@ -75,7 +74,7 @@ final class GroupValidationContextImpl<T extends ValidationListener>
    * @param traversableResolver
    * @param rootMetaBean
    */
-  public GroupValidationContextImpl(T listener, MessageInterpolator aMessageResolver,
+  public GroupValidationContextImpl(ConstraintValidationListener<T> listener, MessageInterpolator aMessageResolver,
                                     TraversableResolver traversableResolver,
                                     MetaBean rootMetaBean) {
     // inherited variable 'validatedObjects' is of type: HashMap<GraphBeanIdentity, Set<PathImpl>> in this class 

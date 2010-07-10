@@ -36,12 +36,33 @@ import org.apache.bval.jsr303.example.Customer;
  * @since <pre>10/14/2008</pre>
  */
 public class EmailValidatorTest extends TestCase {
+    public static class EmailAddressBuilder {
+        @Email
+        private StringBuilder buffer = new StringBuilder();
+
+        /**
+         * Get the buffer.
+         * @return StringBuilder
+         */
+        public StringBuilder getBuffer() {
+            return buffer;
+        }
+
+    }
+
+    private Validator validator;
+
     public EmailValidatorTest(String name) {
         super(name);
     }
 
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = ApacheValidatorFactory.getDefault().getValidator();
+    }
+
     public void testEmail() {
-        Validator validator = ApacheValidatorFactory.getDefault().getValidator();
         Customer customer = new Customer();
         customer.setCustomerId("id-1");
         customer.setFirstName("Mary");
@@ -57,6 +78,20 @@ public class EmailValidatorTest extends TestCase {
         Assert.assertEquals(0, validator.validate(customer).size());
     }
 
+    public void testEmailCharSequence() {
+        EmailAddressBuilder emailAddressBuilder = new EmailAddressBuilder();
+        Assert.assertEquals(0, validator.validate(emailAddressBuilder).size());
+        emailAddressBuilder.getBuffer().append("foo");
+        Assert.assertEquals(1, validator.validate(emailAddressBuilder).size());
+        emailAddressBuilder.getBuffer().append('@');
+        Assert.assertEquals(1, validator.validate(emailAddressBuilder).size());
+        emailAddressBuilder.getBuffer().append("bar");
+        Assert.assertEquals(0, validator.validate(emailAddressBuilder).size());
+        emailAddressBuilder.getBuffer().append('.');
+        Assert.assertEquals(1, validator.validate(emailAddressBuilder).size());
+        emailAddressBuilder.getBuffer().append("baz");
+        Assert.assertEquals(0, validator.validate(emailAddressBuilder).size());
+    }
 
     public static Test suite() {
         return new TestSuite(EmailValidatorTest.class);

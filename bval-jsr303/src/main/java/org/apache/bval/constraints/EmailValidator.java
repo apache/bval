@@ -27,9 +27,9 @@ import javax.validation.ConstraintValidatorContext;
 /**
  * Description: <br/>
  */
-public class EmailValidator implements ConstraintValidator<Email, String> {
+public class EmailValidator implements ConstraintValidator<Email, CharSequence> {
 
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
         return EMailValidationUtils.isValid(value);
     }
 

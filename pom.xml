@@ -158,6 +158,15 @@
             </roles>
         </developer>
         <developer>
+            <id>mbenson</id>
+            <name>Matt Benson</name>
+            <email>mbenson@apache.org</email>
+            <roles>
+                <role>Committer</role>
+                <role>IPMC</role>
+            </roles>
+        </developer>
+        <developer>
             <id>matzew</id>
             <name>Matthias Wessendorf</name>
             <email>matzew@apache.org</email>

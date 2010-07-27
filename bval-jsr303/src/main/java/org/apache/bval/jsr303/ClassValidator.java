@@ -386,7 +386,6 @@ public class ClassValidator implements Validator {
    *            The current context of this validation call. Must have its
    *            {@link GroupValidationContext#getCurrentGroup()} field set.
    */
-  @SuppressWarnings("unchecked")
   protected void validateBeanNet(GroupValidationContext<?> context) {
 
     // If reached a cascaded bean which is null

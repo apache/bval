@@ -195,7 +195,9 @@ public class ConstraintValidation<T extends Annotation>
     if (validator != null) {
       ConstraintValidatorContextImpl jsrContext =
           new ConstraintValidatorContextImpl(context, this);
-      if (!((ConstraintValidator<T, Object>) validator).isValid(context.getValidatedValue(), jsrContext)) {
+      @SuppressWarnings("unchecked")
+      final ConstraintValidator<T, Object> objectValidator = (ConstraintValidator<T, Object>) validator;
+      if (!objectValidator.isValid(context.getValidatedValue(), jsrContext)) {
         addErrors(context, jsrContext);
       }
     }

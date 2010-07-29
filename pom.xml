@@ -322,7 +322,7 @@
                 <artifactId>bval-tck-runner</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+
             <!-- Default of Apache Geronimo version of the Spec API -->
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
@@ -345,6 +345,11 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>3.8.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>1.8.5</version>
             </dependency>
             <dependency>
                 <groupId>commons-lang</groupId>
@@ -666,7 +671,7 @@
         <module>bval-core</module>
         <module>bval-xstream</module>
         <module>bval-jsr303</module>
-        <module>bundle</module>        
+        <module>bundle</module>
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>

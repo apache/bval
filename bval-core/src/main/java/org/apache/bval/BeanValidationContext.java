@@ -57,6 +57,7 @@ public class BeanValidationContext<T extends ValidationListener>
     private AccessStrategy access;
 
     /** set of objects already validated to avoid endless loops. */
+    @SuppressWarnings("unchecked")
     protected Map validatedObjects;
 
     /**
@@ -74,6 +75,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * Create a new BeanValidationContext instance.
      * @param listener
      */
+    @SuppressWarnings("unchecked")
     public BeanValidationContext(T listener) {
         this(listener, new IdentityHashMap());
     }
@@ -83,6 +85,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * @param listener
      * @param validatedMap
      */
+    @SuppressWarnings("unchecked")
     protected BeanValidationContext(T listener, Map validatedMap) {
         this.listener = listener;
         this.validatedObjects = validatedMap;
@@ -107,6 +110,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      * Here, state equates to a given bean reference.
      */
+    @SuppressWarnings("unchecked")
     public boolean collectValidated() {
         return validatedObjects.put(getBean(), Boolean.TRUE) == null;
     }
@@ -292,6 +296,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      */
     public void moveDown(MetaProperty prop, AccessStrategy access) {
+        //TODO following call seems to do nothing:
         setMetaProperty(prop);
         setBean(getPropertyValue(access), prop.getMetaBean());
     }

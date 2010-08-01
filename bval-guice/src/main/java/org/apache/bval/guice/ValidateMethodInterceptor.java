@@ -39,18 +39,18 @@ import com.google.inject.Inject;
 public final class ValidateMethodInterceptor implements MethodInterceptor {
 
     /**
-     * The Validator reference.
+     * The {@link ValidatorProvider} reference.
      */
     @Inject
-    private Validator validator;
+    private ValidatorProvider validatorProvider;
 
     /**
-     * Sets the Validator reference.
+     * Sets the {@link ValidatorProvider} reference.
      *
-     * @param validator the Validator reference.
+     * @param validatorProvider the {@link ValidatorProvider} reference.
      */
-    public void setValidator(Validator validator) {
-        this.validator = validator;
+    public void setValidatorProvider(ValidatorProvider validatorProvider) {
+        this.validatorProvider = validatorProvider;
     }
 
     /**
@@ -58,7 +58,9 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
      */
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Validate validate = invocation.getMethod().getAnnotation(Validate.class);
-        MethodValidator methodValidator = this.validator.unwrap(MethodValidator.class);
+
+        Validator validator = this.validatorProvider.get();
+        MethodValidator methodValidator = validator.unwrap(MethodValidator.class);
 
         Set<ConstraintViolation<?>> constraintViolations = new HashSet<ConstraintViolation<?>>();
         Class<?> clazz = invocation.getMethod().getDeclaringClass();

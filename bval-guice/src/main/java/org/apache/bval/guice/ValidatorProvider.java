@@ -29,12 +29,12 @@ import com.google.inject.Singleton;
  * @version $Id$
  */
 @Singleton
-public final class ValidatorProvider implements Provider<Validator> {
+final class ValidatorProvider implements Provider<Validator> {
 
     /**
      * The validator reference.
      */
-    private final Validator validator;
+    private final ValidatorFactory validatorFactory;
 
     /**
      * Build a new ValidatorProvider by ValidatorFactory.
@@ -43,14 +43,14 @@ public final class ValidatorProvider implements Provider<Validator> {
      */
     @Inject
     public ValidatorProvider(ValidatorFactory validatorFactory) {
-        this.validator = validatorFactory.getValidator();
+        this.validatorFactory = validatorFactory;
     }
 
     /**
      * {@inheritDoc}
      */
     public Validator get() {
-        return this.validator;
+        return this.validatorFactory.getValidator();
     }
 
 }

@@ -31,7 +31,7 @@ import com.google.inject.Singleton;
  * @version $Id$
  */
 @Singleton
-public final class ValidatorFactoryProvider implements Provider<ValidatorFactory> {
+final class ValidatorFactoryProvider implements Provider<ValidatorFactory> {
 
     private final ApacheValidatorFactory validatorFactory;
 

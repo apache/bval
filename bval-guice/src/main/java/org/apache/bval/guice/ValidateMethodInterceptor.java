@@ -1,17 +1,18 @@
 /*
- *    Copyright 2010 The gmodules Team
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.bval.guice;
 
@@ -75,9 +76,10 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
 
         if (!constraintViolations.isEmpty()) {
             throw getException(new ConstraintViolationException("Validation error when calling method '"
-                    + method
-                    + "' with arguments "
-                    + Arrays.deepToString(arguments), constraintViolations), validate.rethrowExceptionsAs());
+                        + method
+                        + "' with arguments "
+                        + Arrays.deepToString(arguments), constraintViolations),
+                    validate.rethrowExceptionsAs());
         }
 
         Object returnedValue = invocation.proceed();
@@ -95,6 +97,14 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
         return returnedValue;
     }
 
+    /**
+     * Define the {@link Throwable} has to be thrown when a validation error
+     * occurs and the user defined the custom error wrapper.
+     *
+     * @param exception the occurred validation error.
+     * @param exceptionWrapperClass the user defined custom error wrapper.
+     * @return the {@link Throwable} has o be thrown.
+     */
     private static Throwable getException(ConstraintViolationException exception,
             Class<? extends Throwable> exceptionWrapperClass) {
         // check the thrown exception is of same re-throw type

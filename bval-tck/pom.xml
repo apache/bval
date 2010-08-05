@@ -35,6 +35,7 @@
         <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>org.apache.bval.bundle</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

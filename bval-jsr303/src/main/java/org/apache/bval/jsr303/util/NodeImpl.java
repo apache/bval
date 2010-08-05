@@ -33,7 +33,7 @@ public final class NodeImpl implements Path.Node, Serializable {
     private static final String INDEX_CLOSE = "]";
 
     private final String name;
-    private boolean isInIterable;
+    private boolean inIterable;
     private Integer index;
     private Object key;
 
@@ -51,7 +51,7 @@ public final class NodeImpl implements Path.Node, Serializable {
      */
     NodeImpl(Path.Node node) {
         this.name = node.getName();
-        this.isInIterable = node.isInIterable();
+        this.inIterable = node.isInIterable();
         this.index = node.getIndex();
         this.key = node.getKey();
     }
@@ -67,7 +67,7 @@ public final class NodeImpl implements Path.Node, Serializable {
      * {@inheritDoc}
      */
     public boolean isInIterable() {
-        return isInIterable;
+        return inIterable;
     }
 
     /**
@@ -75,7 +75,7 @@ public final class NodeImpl implements Path.Node, Serializable {
      * @param inIterable
      */
     public void setInIterable(boolean inIterable) {
-        isInIterable = inIterable;
+        this.inIterable = inIterable;
     }
 
     /**
@@ -90,7 +90,7 @@ public final class NodeImpl implements Path.Node, Serializable {
      * @param index
      */
     public void setIndex(Integer index) {
-        isInIterable = true;
+        inIterable = true;
         this.index = index;
     }
 
@@ -106,7 +106,7 @@ public final class NodeImpl implements Path.Node, Serializable {
      * @param key
      */
     public void setKey(Object key) {
-        isInIterable = true;
+        inIterable = true;
         this.key = key;
     }
 
@@ -116,7 +116,7 @@ public final class NodeImpl implements Path.Node, Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder(name == null ? "" : name);
-        if (isInIterable) {
+        if (inIterable) {
             builder.append(INDEX_OPEN);
             if (getIndex() != null) {
                 builder.append(getIndex());
@@ -142,7 +142,7 @@ public final class NodeImpl implements Path.Node, Serializable {
 
         NodeImpl node = (NodeImpl) o;
 
-        if (isInIterable != node.isInIterable) {
+        if (inIterable != node.inIterable) {
             return false;
         }
         if (index != null ? !index.equals(node.index) : node.index != null) {
@@ -164,7 +164,7 @@ public final class NodeImpl implements Path.Node, Serializable {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (isInIterable ? 1 : 0);
+        result = 31 * result + (inIterable ? 1 : 0);
         result = 31 * result + (index != null ? index.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);
         return result;

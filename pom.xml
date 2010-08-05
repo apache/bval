@@ -274,55 +274,6 @@
     -->
     <dependencyManagement>
         <dependencies>
-            <!-- internal -->
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>org.apache.bval.bundle</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-core</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-xstream</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-xstream</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-jsr303</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-json</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.bval</groupId>
-                <artifactId>bval-tck-runner</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- Default of Apache Geronimo version of the Spec API -->
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
@@ -335,7 +286,7 @@
                 <artifactId>validation-api</artifactId>
                 <version>1.0.0.GA</version>
             </dependency>
-            <!-- JPA2 spec required for JPA aware TraversableResolver support -->
+            <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-jpa_2.0_spec</artifactId>

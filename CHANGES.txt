@@ -64,6 +64,29 @@ How do I Contribute?
   * Bugs and other issues can be posted on the project JIRA.
 
 
+Release Notes for 0.2-incubating
+================================
+
+Bug
+---
+    * [BVAL-47] - Correctly follow GroupSequence definitions when validating
+    * [BVAL-70] - Remove @Override annotations from methods implementing interfaces
+    * [BVAL-71] - Compile errors with Java SE 5
+    * [BVAL-72] - NPE when doing methodvalidation
+    * [BVAL-77] - Recent changes made the bval-xstream module required, instead of optional
+
+Improvement
+-----------
+    * [BVAL-59] - Write or reuse an scm-plugin mojo to capture the svn revision
+    * [BVAL-69] - make dependency to com.thoughtworks.xstream of bval-core optional or obsolete
+    * [BVAL-73] - Alternative way of addressing code reuse issue between the validators
+    * [BVAL-74] - Remove redundant method call from ClassValidator.validateProperty()
+    * [BVAL-75] - javadocs, compiler (generics) warnings, etc.
+    * [BVAL-76] - Correct spelling error in API:  ConstraintValidationListener.getConstaintViolations()
+    * [BVAL-78] - Avoid unsafe casting and object swapping when processing @ReportAsSingleViolation composed constraints
+    * [BVAL-79] - email validation can easily work for any CharSequence rather than String only
+
+
 Release Notes for 0.1-incubating
 ================================
 

@@ -47,7 +47,7 @@ Building
 ==========================
 To build from source code:
   - Sources require Java SE 5 or higher. (Tested with JDK 1.5.0_22 and 1.6.0_20)
-  - The project is built with Apache Maven 2 (suggested are 2.0.11 and 2.2.1).
+  - The project is built with Apache Maven 2 (suggested is 2.2.1).
     You need to download and install Maven 2 from: http://maven.apache.org/
   - Invoke maven in the root directory or a module subdirectory:
       mvn install

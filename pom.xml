@@ -504,6 +504,7 @@
                             <exclude>CHANGES.txt</exclude>
                             <!-- generated content -->
                             <exclude>release.properties</exclude>
+                            <exclude>DEPENDENCIES</exclude>
                             <exclude>**/.*/**</exclude>
                             <exclude>**/*.log</exclude>
                             <exclude>**/maven-eclipse.xml</exclude>

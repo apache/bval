@@ -39,7 +39,11 @@ import java.util.Map;
 public class BeanValidationContext<T extends ValidationListener>
       implements ValidationContext<T> {
     /** represent an unknown propertyValue. */
-    private static final Object UNKNOWN = new Object();
+    private static final Object UNKNOWN = new Object() {
+        public String toString() {
+            return "unknown property value";
+        };
+    };
 
     /** metainfo of current object. */
     private MetaBean metaBean;

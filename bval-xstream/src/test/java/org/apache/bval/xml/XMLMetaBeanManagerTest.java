@@ -32,68 +32,61 @@ import java.util.Map;
  * Time: 10:28:48<br>
  */
 public class XMLMetaBeanManagerTest extends TestCase {
-  XMLMetaBeanManager mbm = new XMLMetaBeanManager();
+    XMLMetaBeanManager mbm = new XMLMetaBeanManager();
 
-  public XMLMetaBeanManagerTest(String name) {
-    super(name);
-  }
+    public XMLMetaBeanManagerTest(String name) {
+        super(name);
+    }
 
-  public void setUp() throws Exception {
-    super.setUp();
-    mbm.addLoader(new XMLMetaBeanURLLoader(
-        BusinessObject.class.getResource("test-beanInfos.xml")));
-  }
+    public void setUp() throws Exception {
+        super.setUp();
+        mbm.addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
+    }
 
-  public void tearDown() throws Exception {
-    super.tearDown();
-  }
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
 
-  public void testEnrichCopies() throws Exception {
-    Map<String, MetaBean> copies = mbm.enrichCopies(new XMLMetaBeanURLLoader(
-        BusinessObject.class.getResource("test-beanInfos-custom.xml")).load());
-    assertNotNull(copies);
-    MetaBean mb = copies.get(BusinessObject.class.getName());
-    assertFalse(mb.getProperty("lastName").isMandatory());
-    MetaBean mb2 = mbm.findForClass(BusinessObject.class);
-    assertTrue(mb2.getProperty("lastName").isMandatory());
-  }
+    public void testEnrichCopies() throws Exception {
+        Map<String, MetaBean> copies =
+            mbm.enrichCopies(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos-custom.xml"))
+                .load());
+        assertNotNull(copies);
+        MetaBean mb = copies.get(BusinessObject.class.getName());
+        assertFalse(mb.getProperty("lastName").isMandatory());
+        MetaBean mb2 = mbm.findForClass(BusinessObject.class);
+        assertTrue(mb2.getProperty("lastName").isMandatory());
+    }
 
-  public void testCopy() {
-    MetaBean mb = mbm.findForClass(BusinessObject.class);
-    MetaBean mb2 = mb.copy();
-    assertTrue(mb2 != mb);
-    assertTrue(mb2.getProperty("dateBirth") != mb.getProperty("dateBirth"));
-  }
+    public void testCopy() {
+        MetaBean mb = mbm.findForClass(BusinessObject.class);
+        MetaBean mb2 = mb.copy();
+        assertTrue(mb2 != mb);
+        assertTrue(mb2.getProperty("dateBirth") != mb.getProperty("dateBirth"));
+    }
 
-  public void testFindForClass() throws Exception {
-    MetaBeanFinder finder = mbm;
-    MetaBean info = finder.findForClass(BusinessObject.class);
-    assertNotNull(info);
-    assertTrue(info == info.getProperty("address").getMetaBean().getProperty("owner")
-        .getMetaBean());
-    assertTrue(info == info.getProperty("addresses").getMetaBean()
-        .getProperty("owner").getMetaBean());
-    assertTrue(info.getProperty("email").getJavaScriptValidations().length > 0);
-  }
+    public void testFindForClass() throws Exception {
+        MetaBeanFinder finder = mbm;
+        MetaBean info = finder.findForClass(BusinessObject.class);
+        assertNotNull(info);
+        assertTrue(info == info.getProperty("address").getMetaBean().getProperty("owner").getMetaBean());
+        assertTrue(info == info.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
+        assertTrue(info.getProperty("email").getJavaScriptValidations().length > 0);
+    }
 
+    public void testFindAll() {
+        Map<String, MetaBean> all = mbm.findAll();
+        assertNotNull(all);
+        Map<String, MetaBean> all2 = mbm.findAll();
+        assertEquals(all.size(), all2.size());
+        assertTrue(all.get(BusinessObject.class.getName()) == all2.get(BusinessObject.class.getName()));
+        assertTrue(all.get(BusinessObject.class.getName()) != null);
+        MetaBean bean = all.get(BusinessObject.class.getName());
+        assertTrue(bean == bean.getProperty("address").getMetaBean().getProperty("owner").getMetaBean());
+        assertTrue(bean == bean.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
+    }
 
-  public void testFindAll() {
-    Map<String, MetaBean> all = mbm.findAll();
-    assertNotNull(all);
-    Map<String, MetaBean> all2 = mbm.findAll();
-    assertEquals(all.size(), all2.size());
-    assertTrue(all.get(BusinessObject.class.getName()) ==
-        all2.get(BusinessObject.class.getName()));
-    assertTrue(all.get(BusinessObject.class.getName()) != null);
-    MetaBean bean = all.get(BusinessObject.class.getName());
-    assertTrue(bean == bean.getProperty("address").getMetaBean().getProperty("owner")
-        .getMetaBean());
-    assertTrue(bean == bean.getProperty("addresses").getMetaBean()
-        .getProperty("owner").getMetaBean());
-  }
-
-
-  public static Test suite() {
-    return new TestSuite(XMLMetaBeanManagerTest.class);
-  }
+    public static Test suite() {
+        return new TestSuite(XMLMetaBeanManagerTest.class);
+    }
 }

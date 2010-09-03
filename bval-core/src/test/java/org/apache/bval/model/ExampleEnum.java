@@ -23,5 +23,5 @@ package org.apache.bval.model;
  * Time: 18:00:12<br>
  */
 public enum ExampleEnum {
-  VALUE1, VALUE2, VALUE3
+    VALUE1, VALUE2, VALUE3
 }

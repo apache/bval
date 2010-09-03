@@ -78,35 +78,6 @@ public class MetaBeanBuilder {
     throw new IllegalArgumentException("MetaBean " + beanInfoId + " not found");
   }
 
-/*
-    *//* convenience method *//*
-    public void addLastFactory(MetaBeanFactory metaBeanFactory) {
-        if (factories == null) factories = new MetaBeanFactory[1];
-        else {
-            MetaBeanFactory[] facold = factories;
-            factories = new MetaBeanFactory[facold.length + 1];
-            System.arraycopy(facold, 0, factories, 0, facold.length);
-        }
-        factories[factories.length - 1] = metaBeanFactory;
-        updateXmlFactory();
-    }
-
-    */
-
-  /*
-   * convenience method
-   *//*
-    public void addFirstFactory(MetaBeanFactory metaBeanFactory) {
-        if (factories == null) factories = new MetaBeanFactory[1];
-        else {
-            MetaBeanFactory[] facold = factories;
-            factories = new MetaBeanFactory[facold.length + 1];
-            System.arraycopy(facold, 0, factories, 1, facold.length);
-        }
-        factories[0] = metaBeanFactory;
-        updateXmlFactory();
-    }*/
-
   /**
    * Build beans for all known ids.  Default implementation returns an empty map.
    * @return Map of String : MetaBean

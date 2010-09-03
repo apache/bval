@@ -33,7 +33,7 @@ public class ClassHelper {
     private ClassHelper() {
         // No instances please
     }
-    
+
     /**
      * Fill the list with the full class/interface hierarchy of the given class.
      * List is ordered from the most to less specific.
@@ -44,18 +44,18 @@ public class ClassHelper {
      *            The current class, root of the hierarchy to traverse.
      */
     static public void fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
-        if ( clazz == null || clazz == Object.class ) {
+        if (clazz == null || clazz == Object.class) {
             return;
         }
-        if ( allClasses.contains(clazz) ) {
+        if (allClasses.contains(clazz)) {
             return;
         }
         allClasses.add(clazz);
-        List<Class<?>> subClasses = new ArrayList(Arrays.asList(clazz.getInterfaces()));
+        List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
         subClasses.add(0, clazz.getSuperclass());
-        for ( Class<?> subClass : subClasses ) {
+        for (Class<?> subClass : subClasses) {
             fillFullClassHierarchyAsList(allClasses, subClass);
-        }        
+        }
     }
-    
+
 }

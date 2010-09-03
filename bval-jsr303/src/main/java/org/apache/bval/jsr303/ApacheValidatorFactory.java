@@ -30,6 +30,7 @@ import javax.validation.*;
 import javax.validation.bootstrap.ProviderSpecificBootstrap;
 import javax.validation.spi.ConfigurationState;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 /**
@@ -210,7 +211,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             @SuppressWarnings("unchecked")
             final T result = (T) this;
             return result;
-        } else if (!type.isInterface()) {
+        } else if (!(type.isInterface() || Modifier.isAbstract(type.getModifiers()))) {
             return SecureActions.newInstance(type);
         } else {
             try {

@@ -16,7 +16,6 @@
  */
 package org.apache.bval;
 
-
 import org.apache.bval.model.MetaBean;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.logging.Log;
@@ -26,98 +25,109 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Description: internal implementation class to construct 
- * metabeans with factories<br/>
+ * Description: internal implementation class to construct metabeans with
+ * factories<br/>
  */
 public class MetaBeanBuilder {
-  private static final Log log = LogFactory.getLog(MetaBeanBuilder.class);
+    private static final Log log = LogFactory.getLog(MetaBeanBuilder.class);
 
-  /**
-   * here you can install different kinds of factories to create MetaBeans from
-   */
-  private MetaBeanFactory[] factories;
+    /**
+     * here you can install different kinds of factories to create MetaBeans
+     * from
+     */
+    private MetaBeanFactory[] factories;
 
-  /**
-   * Create a new MetaBeanBuilder instance.
-   */
-  public MetaBeanBuilder() {
-    this(new MetaBeanFactory[]{new IntrospectorMetaBeanFactory()});
-  }
-
-  /**
-   * Create a new MetaBeanBuilder instance.
-   * @param factories
-   */
-  public MetaBeanBuilder(MetaBeanFactory[] factories) {
-    setFactories(factories);
-  }
-
-  /**
-   * Get the configured set of {@link MetaBeanFactory} objects.
-   * @return {@link MetaBeanFactory} array
-   */
-  public MetaBeanFactory[] getFactories() {
-    return factories;
-  }
-
-  /**
-   * Set the array of {@link MetaBeanFactory} instances with which to enrich {@link MetaBean}s.
-   * @param factories
-   */
-  public void setFactories(MetaBeanFactory[] factories) {
-    this.factories = factories;
-  }
-
-  /**
-   * Build a {@link MetaBean} for a given id.
-   * @param beanInfoId
-   * @return MetaBean
-   * @throws Exception if unable to build
-   */
-  public MetaBean buildForId(String beanInfoId) throws Exception {
-    throw new IllegalArgumentException("MetaBean " + beanInfoId + " not found");
-  }
-
-  /**
-   * Build beans for all known ids.  Default implementation returns an empty map.
-   * @return Map of String : MetaBean
-   */
-  public Map<String, MetaBean> buildAll() throws Exception {
-    return new HashMap<String, MetaBean>();
-  }
-
-  /**
-   * Find the named class.
-   * @param className
-   * @return Class found or null
-   */
-  protected Class<?> findLocalClass(String className) {
-    if (className != null) {
-      try {
-        return ClassUtils.getClass(className);
-      } catch (ClassNotFoundException e) {
-        log.trace("class not found: " + className, e);
-      }
+    /**
+     * Create a new MetaBeanBuilder instance.
+     */
+    public MetaBeanBuilder() {
+        this(new MetaBeanFactory[] { new IntrospectorMetaBeanFactory() });
     }
-    return null;
-  }
 
-  /**
-   * Build a MetaBean for the specified class.
-   * @param clazz
-   * @return MetaBean
-   * @throws Exception
-   */
-  public MetaBean buildForClass(Class<?> clazz) throws Exception {
-    MetaBean meta = new MetaBean();
-    if (clazz != null) { // local class here?
-      meta.setBeanClass(clazz);
-      meta.setId(clazz.getName()); // default id = full class name!
+    /**
+     * Create a new MetaBeanBuilder instance.
+     * 
+     * @param factories
+     */
+    public MetaBeanBuilder(MetaBeanFactory[] factories) {
+        setFactories(factories);
     }
-    for (MetaBeanFactory factory : factories) {
-      factory.buildMetaBean(meta);
+
+    /**
+     * Get the configured set of {@link MetaBeanFactory} objects.
+     * 
+     * @return {@link MetaBeanFactory} array
+     */
+    public MetaBeanFactory[] getFactories() {
+        return factories;
     }
-    return meta;
-  }
+
+    /**
+     * Set the array of {@link MetaBeanFactory} instances with which to enrich
+     * {@link MetaBean}s.
+     * 
+     * @param factories
+     */
+    public void setFactories(MetaBeanFactory[] factories) {
+        this.factories = factories;
+    }
+
+    /**
+     * Build a {@link MetaBean} for a given id.
+     * 
+     * @param beanInfoId
+     * @return MetaBean
+     * @throws Exception
+     *             if unable to build
+     */
+    public MetaBean buildForId(String beanInfoId) throws Exception {
+        throw new IllegalArgumentException("MetaBean " + beanInfoId + " not found");
+    }
+
+    /**
+     * Build beans for all known ids. Default implementation returns an empty
+     * map.
+     * 
+     * @return Map of String : MetaBean
+     */
+    public Map<String, MetaBean> buildAll() throws Exception {
+        return new HashMap<String, MetaBean>();
+    }
+
+    /**
+     * Find the named class.
+     * 
+     * @param className
+     * @return Class found or null
+     */
+    protected Class<?> findLocalClass(String className) {
+        if (className != null) {
+            try {
+                return ClassUtils.getClass(className);
+            } catch (ClassNotFoundException e) {
+                log.trace("class not found: " + className, e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Build a MetaBean for the specified class.
+     * 
+     * @param clazz
+     * @return MetaBean
+     * @throws Exception
+     */
+    public MetaBean buildForClass(Class<?> clazz) throws Exception {
+        MetaBean meta = new MetaBean();
+        if (clazz != null) { // local class here?
+            meta.setBeanClass(clazz);
+            meta.setId(clazz.getName()); // default id = full class name!
+        }
+        for (MetaBeanFactory factory : factories) {
+            factory.buildMetaBean(meta);
+        }
+        return meta;
+    }
 
 }

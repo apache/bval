@@ -34,71 +34,65 @@ import java.util.Locale;
  */
 public class DefaultMessageInterpolatorTest extends TestCase {
 
-  private DefaultMessageInterpolator interpolator;
+    private DefaultMessageInterpolator interpolator;
 
-  public DefaultMessageInterpolatorTest(String name) {
-    super(name);
-  }
+    public DefaultMessageInterpolatorTest(String name) {
+        super(name);
+    }
 
-  public static Test suite() {
-    return new TestSuite(DefaultMessageInterpolatorTest.class);
-  }
+    public static Test suite() {
+        return new TestSuite(DefaultMessageInterpolatorTest.class);
+    }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();    // call super!
-    interpolator = new DefaultMessageInterpolator();
-    interpolator.setLocale(Locale.ENGLISH);
-  }
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp(); // call super!
+        interpolator = new DefaultMessageInterpolator();
+        interpolator.setLocale(Locale.ENGLISH);
+    }
 
-  public void testCreateResolver() {
+    public void testCreateResolver() {
 
-    final Validator gvalidator = getValidator();
+        final Validator gvalidator = getValidator();
 
-    assertTrue(!gvalidator.getConstraintsForClass(PreferredGuest.class)
-        .getConstraintsForProperty("guestCreditCardNumber")
-        .getConstraintDescriptors().isEmpty());
+        assertTrue(!gvalidator.getConstraintsForClass(PreferredGuest.class).getConstraintsForProperty(
+            "guestCreditCardNumber").getConstraintDescriptors().isEmpty());
 
-    MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
+        MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
 
-      public ConstraintDescriptor<?> getConstraintDescriptor() {
-        return (ConstraintDescriptor<?>) gvalidator
-            .getConstraintsForClass(PreferredGuest.class).
-                getConstraintsForProperty("guestCreditCardNumber")
-            .getConstraintDescriptors().toArray()[0];
-      }
+            public ConstraintDescriptor<?> getConstraintDescriptor() {
+                return (ConstraintDescriptor<?>) gvalidator.getConstraintsForClass(PreferredGuest.class)
+                    .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().toArray()[0];
+            }
 
-      public Object getValidatedValue() {
-        return "12345678";
-      }
-    };
-    String msg = interpolator.interpolate("{validator.creditcard}", ctx);
-    Assert.assertEquals("credit card is not valid", msg);
+            public Object getValidatedValue() {
+                return "12345678";
+            }
+        };
+        String msg = interpolator.interpolate("{validator.creditcard}", ctx);
+        Assert.assertEquals("credit card is not valid", msg);
 
-    ctx = new MessageInterpolator.Context() {
-      public ConstraintDescriptor<?> getConstraintDescriptor() {
-        return (ConstraintDescriptor) gvalidator
-            .getConstraintsForClass(Author.class).
-                getConstraintsForProperty("lastName")
-            .getConstraintDescriptors().toArray()[0];
-      }
+        ctx = new MessageInterpolator.Context() {
+            public ConstraintDescriptor<?> getConstraintDescriptor() {
+                return (ConstraintDescriptor) gvalidator.getConstraintsForClass(Author.class)
+                    .getConstraintsForProperty("lastName").getConstraintDescriptors().toArray()[0];
+            }
 
-      public Object getValidatedValue() {
-        return "";
-      }
-    };
+            public Object getValidatedValue() {
+                return "";
+            }
+        };
 
-
-    msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
-    Assert.assertEquals("may not be empty", msg);
-  }
+        msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
+        Assert.assertEquals("may not be empty", msg);
+    }
 
     /**
      * Checks that strings containing special characters are correctly
      * substituted when interpolating.
      */
     public void testReplacementWithSpecialChars() {
-        
+
         final Validator validator = getValidator();
         MessageInterpolator.Context ctx;
 
@@ -106,10 +100,8 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         ctx = new MessageInterpolator.Context() {
 
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor<?>) validator
-                        .getConstraintsForClass(Person.class)
-                        .getConstraintsForProperty("idNumber")
-                        .getConstraintDescriptors().toArray()[0];
+                return (ConstraintDescriptor<?>) validator.getConstraintsForClass(Person.class)
+                    .getConstraintsForProperty("idNumber").getConstraintDescriptors().toArray()[0];
             }
 
             public Object getValidatedValue() {
@@ -118,28 +110,28 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         };
 
         String result = this.interpolator.interpolate("Id number should match {regexp}", ctx);
-        Assert.assertEquals("Incorrect message interpolation when $ is in an attribute", "Id number should match ....$", result);
-        
+        Assert.assertEquals("Incorrect message interpolation when $ is in an attribute",
+            "Id number should match ....$", result);
+
         // Try to interpolate an annotation attribute containing \
         ctx = new MessageInterpolator.Context() {
 
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor<?>) validator
-                        .getConstraintsForClass(Person.class)
-                        .getConstraintsForProperty("otherId")
-                        .getConstraintDescriptors().toArray()[0];
+                return (ConstraintDescriptor<?>) validator.getConstraintsForClass(Person.class)
+                    .getConstraintsForProperty("otherId").getConstraintDescriptors().toArray()[0];
             }
 
             public Object getValidatedValue() {
                 return "12345678";
             }
         };
-        
+
         result = this.interpolator.interpolate("Other id should match {regexp}", ctx);
-        Assert.assertEquals("Incorrect message interpolation when \\ is in an attribute value", "Other id should match .\\n", result);
-        
+        Assert.assertEquals("Incorrect message interpolation when \\ is in an attribute value",
+            "Other id should match .\\n", result);
+
     }
-    
+
     public static class Person {
 
         @Pattern(message = "Id number should match {regexp}", regexp = "....$")
@@ -150,8 +142,7 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
     }
 
-
-  private Validator getValidator() {
-    return ApacheValidatorFactory.getDefault().getValidator();
-  }
+    private Validator getValidator() {
+        return ApacheValidatorFactory.getDefault().getValidator();
+    }
 }

@@ -27,103 +27,106 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Description: immutable, serializable implementation of ConstraintDescriptor interface of JSR303<br>
+ * Description: immutable, serializable implementation of ConstraintDescriptor
+ * interface of JSR303<br>
  * User: roman.stumm<br>
  * Date: 22.04.2010<br>
  * Time: 10:21:23<br>
  */
 public class ConstraintDescriptorImpl<T extends Annotation> implements ConstraintDescriptor<T>, Serializable {
-  /** Serialization version */
-  private static final long serialVersionUID = 1L;
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
 
-  private final T annotation;
-  private final Set<Class<?>> groups;
-  private final Set<Class<? extends javax.validation.Payload>> payload;
-  private final List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> constraintValidatorClasses;
-  private final Map<String, Object> attributes;
-  private final Set<ConstraintDescriptor<?>> composingConstraints;
-  private final boolean reportAsSingleViolation;
+    private final T annotation;
+    private final Set<Class<?>> groups;
+    private final Set<Class<? extends javax.validation.Payload>> payload;
+    private final List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> constraintValidatorClasses;
+    private final Map<String, Object> attributes;
+    private final Set<ConstraintDescriptor<?>> composingConstraints;
+    private final boolean reportAsSingleViolation;
 
-  /**
-   * Create a new ConstraintDescriptorImpl instance.
-   * @param descriptor
-   */
-  public ConstraintDescriptorImpl(ConstraintDescriptor<T> descriptor) {
-    this(descriptor.getAnnotation(), descriptor.getGroups(), descriptor.getPayload(),
-        descriptor.getConstraintValidatorClasses(),
-        descriptor.getAttributes(), descriptor.getComposingConstraints(), descriptor.isReportAsSingleViolation());
-  }
+    /**
+     * Create a new ConstraintDescriptorImpl instance.
+     * 
+     * @param descriptor
+     */
+    public ConstraintDescriptorImpl(ConstraintDescriptor<T> descriptor) {
+        this(descriptor.getAnnotation(), descriptor.getGroups(), descriptor.getPayload(), descriptor
+            .getConstraintValidatorClasses(), descriptor.getAttributes(), descriptor.getComposingConstraints(),
+            descriptor.isReportAsSingleViolation());
+    }
 
-  /**
-   * Create a new ConstraintDescriptorImpl instance.
-   * @param annotation
-   * @param groups
-   * @param payload
-   * @param constraintValidatorClasses
-   * @param attributes
-   * @param composingConstraints
-   * @param reportAsSingleViolation
-   */
-  public ConstraintDescriptorImpl(T annotation, Set<Class<?>> groups,
-                                  Set<Class<? extends javax.validation.Payload>> payload,
-                                  List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> constraintValidatorClasses,
-                                  Map<String, Object> attributes,
-                                  Set<ConstraintDescriptor<?>> composingConstraints, boolean reportAsSingleViolation) {
-    this.annotation = annotation;
-    this.groups = groups;
-    this.payload = payload;
-    this.constraintValidatorClasses = constraintValidatorClasses;
-    this.attributes = attributes;
-    this.composingConstraints = composingConstraints;
-    this.reportAsSingleViolation = reportAsSingleViolation;
-  }
+    /**
+     * Create a new ConstraintDescriptorImpl instance.
+     * 
+     * @param annotation
+     * @param groups
+     * @param payload
+     * @param constraintValidatorClasses
+     * @param attributes
+     * @param composingConstraints
+     * @param reportAsSingleViolation
+     */
+    public ConstraintDescriptorImpl(T annotation, Set<Class<?>> groups,
+        Set<Class<? extends javax.validation.Payload>> payload,
+        List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> constraintValidatorClasses,
+        Map<String, Object> attributes, Set<ConstraintDescriptor<?>> composingConstraints,
+        boolean reportAsSingleViolation) {
+        this.annotation = annotation;
+        this.groups = groups;
+        this.payload = payload;
+        this.constraintValidatorClasses = constraintValidatorClasses;
+        this.attributes = attributes;
+        this.composingConstraints = composingConstraints;
+        this.reportAsSingleViolation = reportAsSingleViolation;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public T getAnnotation() {
-    return annotation;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public T getAnnotation() {
+        return annotation;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Set<Class<?>> getGroups() {
-    return groups;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public Set<Class<?>> getGroups() {
+        return groups;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Set<Class<? extends Payload>> getPayload() {
-    return payload;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public Set<Class<? extends Payload>> getPayload() {
+        return payload;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
-    return constraintValidatorClasses;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
+        return constraintValidatorClasses;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Map<String, Object> getAttributes() {
-    return attributes;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public Set<ConstraintDescriptor<?>> getComposingConstraints() {
-    return composingConstraints;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public Set<ConstraintDescriptor<?>> getComposingConstraints() {
+        return composingConstraints;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  public boolean isReportAsSingleViolation() {
-    return reportAsSingleViolation;
-  }
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isReportAsSingleViolation() {
+        return reportAsSingleViolation;
+    }
 }

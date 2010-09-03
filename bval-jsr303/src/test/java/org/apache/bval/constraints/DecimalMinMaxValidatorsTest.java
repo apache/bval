@@ -35,31 +35,29 @@ import java.util.Set;
  */
 public class DecimalMinMaxValidatorsTest extends TestCase {
 
-  @DecimalMin("922392239223.06")
-  public double dmin;
-  @DecimalMax("922392239223.09")
-  public double dmax;
+    @DecimalMin("922392239223.06")
+    public double dmin;
+    @DecimalMax("922392239223.09")
+    public double dmax;
 
+    public void testDecimalMinValue() {
+        Validator v = Validation.buildDefaultValidatorFactory().getValidator();
 
-  public void testDecimalMinValue() {
-    Validator v = Validation.buildDefaultValidatorFactory().getValidator();
+        this.dmin = 922392239223.05;
+        this.dmax = 922392239223.08;
 
-    this.dmin = 922392239223.05;
-    this.dmax = 922392239223.08;
+        Set<ConstraintViolation<DecimalMinMaxValidatorsTest>> res = v.validate(this);
+        assertFalse("Min validation failed", res.isEmpty());
+    }
 
-    Set<ConstraintViolation<DecimalMinMaxValidatorsTest>> res = v.validate(this);
-    assertFalse("Min validation failed", res.isEmpty());
-  }
+    public void testDecimalMaxValue() {
+        Validator v = Validation.buildDefaultValidatorFactory().getValidator();
 
-  public void testDecimalMaxValue() {
-    Validator v = Validation.buildDefaultValidatorFactory().getValidator();
+        this.dmin = Double.MAX_VALUE;
+        this.dmax = 922392239223.1;
 
-    this.dmin = Double.MAX_VALUE;
-    this.dmax = 922392239223.1;
-
-    Set<ConstraintViolation<DecimalMinMaxValidatorsTest>> res = v.validate(this);
-    assertFalse("Max validation failed", res.isEmpty());
-  }
-
+        Set<ConstraintViolation<DecimalMinMaxValidatorsTest>> res = v.validate(this);
+        assertFalse("Max validation failed", res.isEmpty());
+    }
 
 }

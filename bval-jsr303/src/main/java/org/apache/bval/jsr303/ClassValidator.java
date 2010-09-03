@@ -19,6 +19,7 @@
 package org.apache.bval.jsr303;
 
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -360,7 +361,7 @@ public class ClassValidator implements Validator {
       @SuppressWarnings("unchecked")
       final T result = (T) this;
       return result;
-    } else if (!type.isInterface()) {
+    } else if (!(type.isInterface() || Modifier.isAbstract(type.getModifiers()))) {
       return SecureActions.newInstance(type, new Class[]{ApacheFactoryContext.class},
           new Object[]{factoryContext});
     } else {

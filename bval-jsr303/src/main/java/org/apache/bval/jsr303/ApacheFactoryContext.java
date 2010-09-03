@@ -118,7 +118,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public Validator getValidator() {
         ClassValidator validator = new ClassValidator(this);
-        if (Boolean.getBoolean(factory.getProperties().get(
+        if (Boolean.parseBoolean(factory.getProperties().get(
             ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS))) {
             validator.setTreatMapsLikeBeans(true);
         }

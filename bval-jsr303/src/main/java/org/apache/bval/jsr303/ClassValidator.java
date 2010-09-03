@@ -354,22 +354,27 @@ public class ClassValidator implements Validator {
    * @throws ValidationException
    *             if the provider does not support the call.
    */
-  @SuppressWarnings("unchecked")
   // @Override - not allowed in 1.5 for Interface methods
   public <T> T unwrap(Class<T> type) {
     if (type.isAssignableFrom(getClass())) {
-      return (T) this;
+      @SuppressWarnings("unchecked")
+      final T result = (T) this;
+      return result;
     } else if (!type.isInterface()) {
       return SecureActions.newInstance(type, new Class[]{ApacheFactoryContext.class},
           new Object[]{factoryContext});
     } else {
       try {
-        Class<T> cls = ClassUtils.getClass(type.getName() + "Impl");
-        return SecureActions.newInstance(cls,
-            new Class[]{ApacheFactoryContext.class}, new Object[]{factoryContext});
+        Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+        if (type.isAssignableFrom(cls)) {
+          @SuppressWarnings("unchecked")
+          final Class<? extends T> implClass = (Class<? extends T>) cls;
+          return SecureActions.newInstance(implClass,
+              new Class[]{ApacheFactoryContext.class}, new Object[]{factoryContext});
+        }
       } catch (ClassNotFoundException e) {
-        throw new ValidationException("Type " + type + " not supported");
       }
+      throw new ValidationException("Type " + type + " not supported");
     }
   }
   

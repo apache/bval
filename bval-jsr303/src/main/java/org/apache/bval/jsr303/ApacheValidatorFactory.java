@@ -207,16 +207,22 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> type) {
         if (type.isInstance(this)) {
-            return (T) this;
+            @SuppressWarnings("unchecked")
+            final T result = (T) this;
+            return result;
         } else if (!type.isInterface()) {
             return SecureActions.newInstance(type);
         } else {
             try {
-                Class<T> cls = ClassUtils.getClass(type.getName() + "Impl");
-                return SecureActions.newInstance(cls);
+                Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+                if (type.isAssignableFrom(cls)) {
+                    @SuppressWarnings("unchecked")
+                    final Class<? extends T> implClass = (Class<? extends T>) cls;
+                    return SecureActions.newInstance(implClass);
+                }
             } catch (ClassNotFoundException e) {
-                throw new ValidationException("Type " + type + " not supported");
             }
+            throw new ValidationException("Type " + type + " not supported");
         }
     }
 

@@ -96,12 +96,13 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * Create a new ApacheValidatorFactory instance.
      */
-    public ApacheValidatorFactory() {
+    public ApacheValidatorFactory(ConfigurationState configurationState) {
         properties = new HashMap<String, String>();
         defaultSequences = new HashMap<Class<?>, Class<?>[]>();
         validAccesses = new HashMap<Class<?>, List<AccessStrategy>>();
         constraintMap =
             new HashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
+        configure(configurationState);
     }
 
     /**
@@ -110,7 +111,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * 
      * @param configuration
      */
-    public void configure(ConfigurationState configuration) {
+    protected void configure(ConfigurationState configuration) {
         getProperties().putAll(configuration.getProperties());
         setMessageInterpolator(configuration.getMessageInterpolator());
         setTraversableResolver(configuration.getTraversableResolver());

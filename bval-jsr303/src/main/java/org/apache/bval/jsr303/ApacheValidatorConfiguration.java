@@ -19,16 +19,18 @@
 package org.apache.bval.jsr303;
 
 import javax.validation.Configuration;
+import javax.validation.ValidatorFactory;
+import javax.validation.spi.ConfigurationState;
 
 /**
- * Description: Uniquely identify apache Validation in the Bean Validation bootstrap
- * strategy. Also contains apache validation specific configurations<br/>
+ * Description: Uniquely identify Apache Bean Validation in the Bean Validation bootstrap
+ * strategy. Also contains Apache Bean Validation specific configurations<br/>
  */
 public interface ApacheValidatorConfiguration
       extends Configuration<ApacheValidatorConfiguration> {
 
     /**
-     * proprietary property keys for {@link ConfigurationImpl}  
+     * Proprietary property keys for {@link ConfigurationImpl}  
      */
     public interface Properties {
         /**
@@ -63,5 +65,12 @@ public interface ApacheValidatorConfiguration
          * default: false
          */
          String TREAT_MAPS_LIKE_BEANS = "apache.bval.treat-maps-like-beans";
+
+        /**
+         * Specifies the classname of the {@link ValidatorFactory} to use: this
+         * class is presumed have a constructor that accepts a single
+         * {@link ConfigurationState} argument.
+         */
+         String VALIDATOR_FACTORY_CLASSNAME = "apache.bval.validator-factory-classname";
     }
 }

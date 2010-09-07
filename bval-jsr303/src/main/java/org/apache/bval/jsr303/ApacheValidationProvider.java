@@ -20,23 +20,31 @@ package org.apache.bval.jsr303;
 
 import javax.validation.Configuration;
 import javax.validation.ValidationException;
+import javax.validation.ValidatorFactory;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.commons.lang.ClassUtils;
+
 /**
- * Description: Implementation of {@link ValidationProvider} for jsr303 implementation of
- * the apache-validation framework.
+ * Description: Implementation of {@link ValidationProvider} for jsr303
+ * implementation of the apache-validation framework.
  * <p/>
  * <br/>
  * User: roman.stumm <br/>
  * Date: 29.10.2008 <br/>
  * Time: 14:45:41 <br/>
  */
-public class ApacheValidationProvider
-      implements ValidationProvider<ApacheValidatorConfiguration> {
+public class ApacheValidationProvider implements ValidationProvider<ApacheValidatorConfiguration> {
+
+    private static final Class<?>[] VALIDATOR_FACTORY_CONSTRUCTOR_ARGS = new Class[] { ConfigurationState.class };
+
     /**
-     * Learn whether a particular builder class is suitable for this {@link ValidationProvider}.
+     * Learn whether a particular builder class is suitable for this
+     * {@link ValidationProvider}.
+     * 
      * @param builderClass
      * @return boolean suitability
      */
@@ -60,17 +68,24 @@ public class ApacheValidationProvider
 
     /**
      * {@inheritDoc}
+     * 
      * @throws javax.validation.ValidationException
-     *          if the ValidatorFactory cannot be built
+     *             if the ValidatorFactory cannot be built
      */
-    public ApacheValidatorFactory buildValidatorFactory(ConfigurationState configuration) {
+    public ValidatorFactory buildValidatorFactory(ConfigurationState configuration) {
         try {
-            ApacheValidatorFactory factory = new ApacheValidatorFactory();
-            factory.configure(configuration);
-            return factory;
-        } catch (RuntimeException ex) {
+            String validatorFactoryClassname =
+                configuration.getProperties().get(ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME);
+            @SuppressWarnings("unchecked")
+            final Class<? extends ValidatorFactory> validatorFactoryClass =
+                validatorFactoryClassname == null ? ApacheValidatorFactory.class
+                    : (Class<? extends ValidatorFactory>) ClassUtils.getClass(validatorFactoryClassname);
+            return SecureActions.newInstance(validatorFactoryClass, VALIDATOR_FACTORY_CONSTRUCTOR_ARGS,
+                new Object[] { configuration });
+        } catch (ValidationException ex) {
+            throw ex;
+        } catch (Exception ex) {
             throw new ValidationException("error building ValidatorFactory", ex);
         }
     }
-
 }

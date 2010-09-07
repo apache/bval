@@ -240,11 +240,11 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                           meta.getAccessStrategy().getJavaType());
                 }
             }
-            Class<? extends ConstraintValidator<? extends Annotation, ?>>[] constraintClasses =
+            Class<? extends ConstraintValidator<? extends Annotation, ?>>[] validatorClasses =
                   findConstraintValidatorClasses(meta.getAnnotation(), null);
             applyConstraint(
                     (Annotation) meta.getAnnotation(),
-                    (Class<? extends ConstraintValidator<Annotation, ?>>[]) constraintClasses,
+                    (Class<? extends ConstraintValidator<Annotation, ?>>[]) validatorClasses,
                     metaProperty, beanClass, meta.getAccessStrategy(),
                     new AppendValidationToMeta(metaProperty == null ? metabean
                             : metaProperty));
@@ -418,10 +418,6 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
      * @param access strategy
      * @param appender
      * @return success flag
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     */
-    /*
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */

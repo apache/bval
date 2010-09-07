@@ -46,7 +46,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ApacheFactoryContext(ApacheValidatorFactory factory) {
         this.factory = factory;
-        this.metaBeanFinder = buildMetaBeanManager();
+        this.metaBeanFinder = buildMetaBeanFinder();
     }
 
     /**
@@ -54,6 +54,9 @@ public class ApacheFactoryContext implements ValidatorContext {
      * 
      * @param factory
      * @param metaBeanFinder
+     * @deprecated does anyone need this?  If the default {@link ApacheFactoryContext}
+     * uses a {@link Jsr303MetaBeanFactory}, which circularly refers to its owning {@link ApacheFactoryContext},
+     * it follows that this constructor can't be conveniently used with a {@link Jsr303MetaBeanFactory}.
      */
     protected ApacheFactoryContext(ApacheValidatorFactory factory, MetaBeanFinder metaBeanFinder) {
         this.factory = factory;
@@ -150,7 +153,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
      */
     @SuppressWarnings("deprecation")
-    protected MetaBeanManager buildMetaBeanManager() {
+    protected MetaBeanFinder buildMetaBeanFinder() {
         List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(2);
         if (Boolean.parseBoolean(factory.getProperties().get(
             ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {

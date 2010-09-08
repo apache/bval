@@ -30,9 +30,8 @@ import org.apache.bval.jsr303.util.PathImpl;
 import java.util.Iterator;
 
 /**
- * ErrorBuilderImpl Tester.
+ * PathImpl Tester.
  *
- * @author <Authors name>
  * @version 1.0
  * @since <pre>10/01/2009</pre>
  */

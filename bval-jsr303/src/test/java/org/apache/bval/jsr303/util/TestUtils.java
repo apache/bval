@@ -18,8 +18,12 @@
  */
 package org.apache.bval.jsr303.util;
 
-import javax.validation.ConstraintViolation;
+import java.util.Collection;
 import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+
+import org.junit.Assert;
 
 /**
  * Description: <br/>
@@ -45,4 +49,23 @@ public class TestUtils {
         }
         return null;
     }
+
+    /**
+     * assume set addition either does nothing, returning false per collection
+     * contract, or throws an Exception; in either case size should remain
+     * unchanged
+     * 
+     * @param collection
+     */
+    public static void failOnModifiable(Collection<?> collection, String description) {
+        int size = collection.size();
+        try {
+            Assert
+                .assertFalse(String.format("should not permit modification to %s", description), collection.add(null));
+        } catch (Exception e) {
+            // okay
+        }
+        Assert.assertEquals("constraint descriptor set size changed", size, collection.size());
+    }
+
 }

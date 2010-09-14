@@ -113,7 +113,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                         processAnnotation(anno, methodDesc, returnAccess, validations);
                     }
                 }
-                methodDesc.getConstraintDescriptors().addAll(validations.getValidations());
+                methodDesc.addValidations(validations.getValidations());
 
                 // parameter validations
                 Annotation[][] paramsAnnos = method.getParameterAnnotations();

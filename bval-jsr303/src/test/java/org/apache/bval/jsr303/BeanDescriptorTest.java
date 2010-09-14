@@ -36,6 +36,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -163,6 +164,10 @@ public class BeanDescriptorTest extends TestCase {
         
         constraints = nameDescriptor.findConstraints().lookingAt(Scope.LOCAL_ELEMENT).getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 0, constraints.size());
+        TestUtils.failOnModifiable(constraints, "constraintFinder constraintDescriptors");
+        //verify that changes to one ConstraintFinder don't affect the base:
+        constraints = nameDescriptor.getConstraintDescriptors();
+        Assert.assertEquals("Incorrect number of descriptors", 1, constraints.size());
     }
     
     public static class Form {

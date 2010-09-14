@@ -18,12 +18,10 @@
  */
 package org.apache.bval.jsr303;
 
-
 import javax.validation.metadata.PropertyDescriptor;
 
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.Validation;
-
+import org.apache.bval.model.Features;
+import org.apache.bval.model.MetaProperty;
 
 /**
  * Description: {@link PropertyDescriptor} implementation.<br/>
@@ -34,25 +32,18 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
 
     /**
      * Create a new PropertyDescriptorImpl instance.
-     * @param metaBean
-     * @param propertyPath
-     * @param validations
+     * 
+     * @param property
      */
-    PropertyDescriptorImpl(MetaBean metaBean, String propertyPath, Validation[] validations) {
-        super(metaBean, metaBean.getProperty(propertyPath).getTypeClass(), validations);
-    }
-
-    /**
-     * Create a new PropertyDescriptorImpl instance.
-     * @param elementClass
-     * @param validations
-     */
-    PropertyDescriptorImpl(Class<?> elementClass, Validation[] validations) {
-        super(elementClass, validations);
+    PropertyDescriptorImpl(MetaProperty property) {
+        super(property.getParentMetaBean(), property.getTypeClass(), property.getValidations());
+        setCascaded(property.getMetaBean() != null || property.getFeature(Features.Property.REF_CASCADE) != null);
+        setPropertyPath(property.getName());
     }
 
     /**
      * Set whether the referenced property is cascaded.
+     * 
      * @param cascaded
      */
     public void setCascaded(boolean cascaded) {
@@ -68,6 +59,7 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
 
     /**
      * Set the referenced property path.
+     * 
      * @param propertyPath
      */
     public void setPropertyPath(String propertyPath) {
@@ -85,7 +77,7 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
      * {@inheritDoc}
      */
     public String toString() {
-        return "PropertyDescriptorImpl{" + "returnType=" + elementClass + ", propertyPath='" +
-              propertyPath + '\'' + '}';
+        return "PropertyDescriptorImpl{" + "returnType=" + elementClass + ", propertyPath='" + propertyPath + '\''
+            + '}';
     }
 }

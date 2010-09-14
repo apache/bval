@@ -681,8 +681,7 @@ public class ClassValidator implements Validator {
      * @return {@link BeanDescriptorImpl} instance
      */
     protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {
-        return new BeanDescriptorImpl(factoryContext, metaBean, metaBean
-            .getValidations());
+        return new BeanDescriptorImpl(factoryContext, metaBean);
     }
 
     private boolean treatMapsLikeBeans = false;

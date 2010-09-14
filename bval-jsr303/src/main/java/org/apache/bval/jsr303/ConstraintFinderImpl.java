@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr303;
 
-
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.Scope;
@@ -31,6 +30,7 @@ import org.apache.bval.model.MetaBean;
 
 import java.lang.annotation.ElementType;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -46,6 +46,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
 
     /**
      * Create a new ConstraintFinderImpl instance.
+     * 
      * @param metaBean
      * @param constraintDescriptors
      */
@@ -60,21 +61,20 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
      */
     public ElementDescriptor.ConstraintFinder unorderedAndMatchingGroups(Class<?>... groups) {
         Set<ConstraintValidation<?>> matchingDescriptors =
-              new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
+            new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
         Groups groupChain = new GroupsComputer().computeGroups(groups);
         for (Group group : groupChain.getGroups()) {
-            if ( group.isDefault() ) {
+            if (group.isDefault()) {
                 // If group is default, check if it gets redefined
                 List<Group> expandedDefaultGroup = metaBean.getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
-                for ( Group defaultGroupMember : expandedDefaultGroup ) {
+                for (Group defaultGroupMember : expandedDefaultGroup) {
                     for (ConstraintValidation<?> descriptor : constraintDescriptors) {
                         if (isInScope(descriptor) && isInGroup(descriptor, defaultGroupMember)) {
                             matchingDescriptors.add(descriptor);
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 for (ConstraintValidation<?> descriptor : constraintDescriptors) {
                     if (isInScope(descriptor) && isInGroup(descriptor, group)) {
                         matchingDescriptors.add(descriptor);
@@ -91,9 +91,9 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     public ElementDescriptor.ConstraintFinder lookingAt(Scope scope) {
         if (scope.equals(Scope.LOCAL_ELEMENT)) {
             findInScopes.remove(Scope.HIERARCHY);
-            for (Iterator<ConstraintValidation<?>> it = constraintDescriptors.iterator(); it.hasNext(); ) {
+            for (Iterator<ConstraintValidation<?>> it = constraintDescriptors.iterator(); it.hasNext();) {
                 ConstraintValidation<?> cv = it.next();
-                if ( cv.getOwner() != metaBean.getBeanClass() ) {
+                if (cv.getOwner() != metaBean.getBeanClass()) {
                     it.remove();
                 }
             }
@@ -106,7 +106,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
      */
     public ElementDescriptor.ConstraintFinder declaredOn(ElementType... elementTypes) {
         Set<ConstraintValidation<?>> matchingDescriptors =
-              new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
+            new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
         for (ElementType each : elementTypes) {
             for (ConstraintValidation<?> descriptor : constraintDescriptors) {
                 if (isInScope(descriptor) && isAtElement(descriptor, each)) {
@@ -122,17 +122,20 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     }
 
     private boolean isInScope(ConstraintValidation<?> descriptor) {
-        if (findInScopes.size() == Scope.values().length) return true; // all scopes
+        if (findInScopes.size() == Scope.values().length)
+            return true; // all scopes
         if (metaBean != null) {
             Class<?> owner = descriptor.getOwner();
             for (Scope scope : findInScopes) {
                 switch (scope) {
-                    case LOCAL_ELEMENT:
-                        if (owner.equals(metaBean.getBeanClass())) return true;
-                        break;
-                    case HIERARCHY:
-                        if (!owner.equals(metaBean.getBeanClass())) return true;
-                        break;
+                case LOCAL_ELEMENT:
+                    if (owner.equals(metaBean.getBeanClass()))
+                        return true;
+                    break;
+                case HIERARCHY:
+                    if (!owner.equals(metaBean.getBeanClass()))
+                        return true;
+                    break;
                 }
             }
         }
@@ -143,8 +146,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
         return descriptor.getGroups().contains(group.getGroup());
     }
 
-    private ElementDescriptor.ConstraintFinder thisWith(
-          Set<ConstraintValidation<?>> matchingDescriptors) {
+    private ElementDescriptor.ConstraintFinder thisWith(Set<ConstraintValidation<?>> matchingDescriptors) {
         constraintDescriptors = matchingDescriptors;
         return this;
     }
@@ -152,10 +154,9 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
-        //noinspection RedundantCast
-        return (Set) constraintDescriptors;
+        return constraintDescriptors.isEmpty() ? Collections.<ConstraintDescriptor<?>> emptySet() : Collections
+            .<ConstraintDescriptor<?>> unmodifiableSet(constraintDescriptors);
     }
 
     /**

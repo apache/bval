@@ -18,14 +18,14 @@
  */
 package org.apache.bval.jsr303;
 
-
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.Validation;
 
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,81 +34,88 @@ import java.util.Set;
  */
 public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDescriptor {
     /**
-     * The {@link ApacheFactoryContext} (not) used by this {@link BeanDescriptorImpl} 
+     * The {@link ApacheFactoryContext} (not) used by this
+     * {@link BeanDescriptorImpl}
      */
     protected final ApacheFactoryContext factoryContext;
 
     /**
      * Create a new BeanDescriptorImpl instance.
+     * 
      * @param factoryContext
      * @param metaBean
-     * @param validations
      */
-    protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean,
-                                 Validation[] validations) {
-        super(metaBean, metaBean.getBeanClass(), validations);
+    protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean) {
+        super(metaBean, metaBean.getBeanClass(), metaBean.getValidations());
         this.factoryContext = factoryContext;
     }
 
     /**
      * Returns true if the bean involves validation:
-     * - a constraint is hosted on the bean itself
-     * - a constraint is hosted on one of the bean properties
-     * - or a bean property is marked for cascade (@Valid)
-     *
-     * @return true if the bean nvolves validation
+     * <ul>
+     * <li>a constraint is hosted on the bean itself</li>
+     * <li>a constraint is hosted on one of the bean properties, OR</li>
+     * <li>a bean property is marked for cascade (<code>@Valid</code>)</li>
+     * </ul>
+     * 
+     * @return true if the bean involves validation
      */
     public boolean isBeanConstrained() {
-        if (hasAnyConstraints()) return true;
+        if (hasAnyConstraints())
+            return true;
         for (MetaProperty mprop : metaBean.getProperties()) {
-            if (mprop.getMetaBean() != null ||
-                  mprop.getFeature(Features.Property.REF_CASCADE) != null) return true;
+            if (mprop.getMetaBean() != null || mprop.getFeature(Features.Property.REF_CASCADE) != null)
+                return true;
         }
         return false;
     }
 
     private boolean hasAnyConstraints() {
-        if (hasConstraints()) return true;
-        if (metaBean.getValidations().length > 0) return true;
+        if (hasConstraints())
+            return true;
         for (MetaProperty mprop : metaBean.getProperties()) {
-            if (mprop.getValidations().length > 0) return true;
+            if (getConstraintDescriptors(mprop.getValidations()).size() > 0)
+                return true;
         }
         return false;
     }
 
     /**
+<<<<<<< .working
      * Return the property level constraints for a given propertyName
      * or null if either the property does not exist or has no constraint
      * The returned object (and associated objects including ConstraintDescriptors)
      * are immutable.
      *
      * @param propertyName property evaludated
+=======
+     * Return the property level constraints for a given propertyName or null if
+     * either the property does not exist or has no constraint The returned
+     * object (and associated objects including ConstraintDescriptors) are
+     * immutable.
+     * 
+     * @param propertyName
+     *            property evaluated
+>>>>>>> .merge-right.r997084
      */
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
         if (propertyName == null || propertyName.trim().length() == 0) {
             throw new IllegalArgumentException("propertyName cannot be null or empty");
         }
         MetaProperty prop = metaBean.getProperty(propertyName);
-        if (prop == null) return null;
+        if (prop == null)
+            return null;
         // If no constraints and not cascaded, return null
-        if ( prop.getValidations().length == 0 && prop.getFeature(Features.Property.REF_CASCADE) == null ) {
+        if (prop.getValidations().length == 0 && prop.getFeature(Features.Property.REF_CASCADE) == null) {
             return null;
         }
         return getPropertyDescriptor(prop);
     }
 
     private PropertyDescriptor getPropertyDescriptor(MetaProperty prop) {
-        PropertyDescriptorImpl edesc =
-                prop.getFeature(Jsr303Features.Property.PropertyDescriptor);
+        PropertyDescriptorImpl edesc = prop.getFeature(Jsr303Features.Property.PropertyDescriptor);
         if (edesc == null) {
-            prop.getFeature(Features.Property.REF_BEAN_TYPE, prop.getTypeClass());
-            edesc = new PropertyDescriptorImpl(
-                      metaBean,
-                      prop.getName(),
-                      prop.getValidations());
-            edesc.setCascaded((prop.getMetaBean() != null ||
-                  prop.getFeature(Features.Property.REF_CASCADE) != null));
-            edesc.setPropertyPath(prop.getName());
+            edesc = new PropertyDescriptorImpl(prop);
             prop.putFeature(Jsr303Features.Property.PropertyDescriptor, edesc);
         }
         return edesc;
@@ -116,17 +123,18 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
     /**
      * {@inheritDoc}
+     * 
      * @return the property descriptors having at least a constraint defined
      */
     public Set<PropertyDescriptor> getConstrainedProperties() {
         Set<PropertyDescriptor> validatedProperties = new HashSet<PropertyDescriptor>();
         for (MetaProperty prop : metaBean.getProperties()) {
-            if (prop.getValidations().length > 0 || (prop.getMetaBean() != null ||
-                  prop.getFeature(Features.Property.REF_CASCADE) != null)) {
+            if (prop.getValidations().length > 0
+                || (prop.getMetaBean() != null || prop.getFeature(Features.Property.REF_CASCADE) != null)) {
                 validatedProperties.add(getPropertyDescriptor(prop));
             }
         }
-        return validatedProperties;
+        return Collections.unmodifiableSet(validatedProperties);
     }
 
     /**

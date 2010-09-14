@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr303.extensions;
 
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -26,29 +25,27 @@ import java.util.Set;
 import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.BeanDescriptorImpl;
 import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.Validation;
 
 /**
  * Description: {@link MethodBeanDescriptor} implementation.<br/>
  */
-class MethodBeanDescriptorImpl extends BeanDescriptorImpl
-      implements MethodBeanDescriptor {
+class MethodBeanDescriptorImpl extends BeanDescriptorImpl implements MethodBeanDescriptor {
     private Map<Method, MethodDescriptor> methodConstraints;
     private Map<Constructor<?>, ConstructorDescriptor> constructorConstraints;
 
     /**
      * Create a new MethodBeanDescriptorImpl instance.
+     * 
      * @param factoryContext
      * @param metaBean
-     * @param validations
      */
-    protected MethodBeanDescriptorImpl(ApacheFactoryContext factoryContext,
-                                       MetaBean metaBean, Validation[] validations) {
-        super(factoryContext, metaBean, validations);
+    protected MethodBeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean) {
+        super(factoryContext, metaBean);
     }
 
     /**
      * Set the map of method constraints for this bean.
+     * 
      * @param methodConstraints
      */
     public void setMethodConstraints(Map<Method, MethodDescriptor> methodConstraints) {
@@ -57,10 +54,10 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
 
     /**
      * Set the map of constructor constraints for this bean.
+     * 
      * @param constructorConstraints
      */
-    public void setConstructorConstraints(
-          Map<Constructor<?>, ConstructorDescriptor> constructorConstraints) {
+    public void setConstructorConstraints(Map<Constructor<?>, ConstructorDescriptor> constructorConstraints) {
         this.constructorConstraints = constructorConstraints;
     }
 
@@ -87,6 +84,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
 
     /**
      * Add a {@link MethodDescriptor} to this {@link MethodBeanDescriptorImpl}.
+     * 
      * @param method
      * @param desc
      */
@@ -102,7 +100,9 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
     }
 
     /**
-     * Add a {@link ConstructorDescriptor} to this {@link MethodBeanDescriptorImpl}.
+     * Add a {@link ConstructorDescriptor} to this
+     * {@link MethodBeanDescriptorImpl}.
+     * 
      * @param cons
      * @param desc
      */
@@ -112,6 +112,7 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
 
     /**
      * Get the configured method constraints.
+     * 
      * @return {@link Map} of {@link Method} : {@link MethodDescriptor}
      */
     public Map<Method, MethodDescriptor> getMethodConstraints() {
@@ -120,7 +121,9 @@ class MethodBeanDescriptorImpl extends BeanDescriptorImpl
 
     /**
      * Get the configured constructor constraints.
-     * @return {@link Map} of {@link Constructor} : {@link ConstructorDescriptor}
+     * 
+     * @return {@link Map} of {@link Constructor} :
+     *         {@link ConstructorDescriptor}
      */
     public Map<Constructor<?>, ConstructorDescriptor> getConstructorConstraints() {
         return constructorConstraints;

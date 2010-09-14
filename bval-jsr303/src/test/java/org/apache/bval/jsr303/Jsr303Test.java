@@ -102,6 +102,7 @@ public class Jsr303Test extends TestCase {
 //        assertEquals(false, bc.isCascaded());
 //        assertEquals("", bc.getPropertyPath());
         Assert.assertTrue(bc.getConstraintDescriptors() != null);
+        TestUtils.failOnModifiable(bc.getConstraintDescriptors(), "beanDescriptor constraintDescriptors");
     }
 
     public void testMetadataAPI_Engine() {
@@ -118,10 +119,11 @@ public class Jsr303Test extends TestCase {
         Assert.assertFalse(validator.getConstraintsForClass(Address.class)
               .getConstraintDescriptors().isEmpty());
 
-        Set<PropertyDescriptor> props =
-              validator.getConstraintsForClass(Address.class).getConstrainedProperties();
-        Set<String> propNames = new HashSet(props.size());
+        Set<PropertyDescriptor> props = validator.getConstraintsForClass(Address.class).getConstrainedProperties();
+        TestUtils.failOnModifiable(props, "beanDescriptor constrainedProperties");
+        Set<String> propNames = new HashSet<String>(props.size());
         for (PropertyDescriptor each : props) {
+            TestUtils.failOnModifiable(each.getConstraintDescriptors(), "propertyDescriptor constraintDescriptors");
             propNames.add(each.getPropertyName());
         }
         Assert.assertTrue(propNames.contains("addressline1")); // annotated at field level

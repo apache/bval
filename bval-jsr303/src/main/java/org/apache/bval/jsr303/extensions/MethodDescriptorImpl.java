@@ -16,10 +16,11 @@
  */
 package org.apache.bval.jsr303.extensions;
 
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import org.apache.bval.jsr303.ConstraintValidation;
 import org.apache.bval.jsr303.ElementDescriptorImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
@@ -27,13 +28,13 @@ import org.apache.bval.model.Validation;
 /**
  * Description: {@link MethodDescriptor} implementation.<br/>
  */
-public class MethodDescriptorImpl extends ElementDescriptorImpl
-      implements MethodDescriptor, ProcedureDescriptor {
+public class MethodDescriptorImpl extends ElementDescriptorImpl implements MethodDescriptor, ProcedureDescriptor {
     private final List<ParameterDescriptor> parameterDescriptors = new ArrayList<ParameterDescriptor>();
     private boolean cascaded;
 
     /**
      * Create a new MethodDescriptorImpl instance.
+     * 
      * @param metaBean
      * @param validations
      */
@@ -43,6 +44,7 @@ public class MethodDescriptorImpl extends ElementDescriptorImpl
 
     /**
      * Create a new MethodDescriptorImpl instance.
+     * 
      * @param elementClass
      * @param validations
      */
@@ -53,8 +55,8 @@ public class MethodDescriptorImpl extends ElementDescriptorImpl
     /**
      * {@inheritDoc}
      */
-    public List<ParameterDescriptor> getParameterDescriptors() //index aligned
-    {
+    public List<ParameterDescriptor> getParameterDescriptors() {
+        // index aligned
         return parameterDescriptors;
     }
 
@@ -72,4 +74,11 @@ public class MethodDescriptorImpl extends ElementDescriptorImpl
         this.cascaded = cascaded;
     }
 
+    /**
+     * Add the specified validations to this {@link MethodDescriptorImpl}.
+     * @param validations
+     */
+    void addValidations(Collection<ConstraintValidation<?>> validations) {
+        getMutableConstraintDescriptors().addAll(validations);
+    }
 }

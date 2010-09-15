@@ -18,8 +18,8 @@ package org.apache.bval.jsr303.resolver;
 
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
@@ -28,7 +28,7 @@ import java.lang.annotation.ElementType;
 
 /** @see javax.validation.TraversableResolver */
 public class DefaultTraversableResolver implements TraversableResolver, CachingRelevant {
-    private static final Log log = LogFactory.getLog(DefaultTraversableResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultTraversableResolver.class);
 
     /** Class to load to check whether JPA 2 is on the classpath. */
     private static final String PERSISTENCE_UTIL_CLASSNAME =
@@ -73,12 +73,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private void initJpa() {
         try {
             ClassUtils.getClass(PERSISTENCE_UTIL_CLASSNAME);
-            if (log.isDebugEnabled())
-                log.debug("Found " + PERSISTENCE_UTIL_CLASSNAME + " on classpath.");
+            log.debug("Found {} on classpath.", PERSISTENCE_UTIL_CLASSNAME);
         } catch (Exception e) {
-            if (log.isDebugEnabled())
-                log.debug("Cannot find " + PERSISTENCE_UTIL_CLASSNAME +
-                  " on classpath. All properties will per default be traversable.");
+            log.debug("Cannot find {} on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME);
             return;
         }
 
@@ -87,9 +84,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
                   (Class<? extends TraversableResolver>) ClassUtils
                         .getClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);
             jpaTR = SecureActions.newInstance(jpaAwareResolverClass);
-            if (log.isDebugEnabled())
-                log.debug("Instantiated an instance of " +
-                    JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME + ".");
+            log.debug("Instantiated an instance of {}.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);
         } catch (Exception e) {
             log.warn("Unable to load or instanciate JPA aware resolver " +
                   JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME +

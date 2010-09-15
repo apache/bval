@@ -18,8 +18,8 @@ package org.apache.bval;
 
 import org.apache.bval.model.MetaBean;
 import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +29,7 @@ import java.util.Map;
  * factories<br/>
  */
 public class MetaBeanBuilder {
-    private static final Log log = LogFactory.getLog(MetaBeanBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(MetaBeanBuilder.class);
 
     /**
      * here you can install different kinds of factories to create MetaBeans

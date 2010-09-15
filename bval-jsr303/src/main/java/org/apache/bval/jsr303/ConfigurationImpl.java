@@ -21,8 +21,8 @@ package org.apache.bval.jsr303;
 
 import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr303.xml.ValidationParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -47,7 +47,7 @@ import java.util.Set;
  * <br/>
  */
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
-    private static final Log log = LogFactory.getLog(ConfigurationImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationImpl.class);
 
     /**
      * Configured {@link ValidationProvider}

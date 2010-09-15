@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr303.xml;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public final class AnnotationIgnores {
 
-    private static final Log log = LogFactory.getLog(AnnotationIgnores.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnotationIgnores.class);
 
     /**
      * Keeps track whether the 'ignore-annotations' flag is set on bean level in the
@@ -118,8 +118,7 @@ public final class AnnotationIgnores {
         } else {
             type = "Property";
         }
-        log.debug(type + " level annotations are getting ignored for " + clazz.getName() +
-              "." + member.getName());
+        log.debug("{} level annotations are getting ignored for {}.{}", new Object[]{type, clazz.getName(), member.getName()});
     }
 
     /**
@@ -143,8 +142,8 @@ public final class AnnotationIgnores {
         } else {
             ignoreAnnotation = getDefaultIgnoreAnnotation(clazz);
         }
-        if (log.isDebugEnabled() && ignoreAnnotation) {
-            log.debug("Class level annotation are getting ignored for " + clazz.getName());
+        if (ignoreAnnotation) {
+            log.debug("Class level annotation are getting ignored for {}", clazz.getName());
         }
         return ignoreAnnotation;
     }

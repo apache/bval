@@ -42,8 +42,8 @@ import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.util.IOUtils;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.PrivilegedActions;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 /**
@@ -54,7 +54,7 @@ public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final String VALIDATION_CONFIGURATION_XSD =
           "META-INF/validation-configuration-1.0.xsd";
-    private static final Log log = LogFactory.getLog(ValidationParser.class);
+    private static final Logger log = LoggerFactory.getLogger(ValidationParser.class);
     private final String validationXmlFile;
 
     /**
@@ -85,12 +85,11 @@ public class ValidationParser {
         try {
             inputStream = getInputStream(validationXmlFile);
             if (inputStream == null) {
-                if (log.isDebugEnabled()) log.debug("No " + validationXmlFile +
-                      " found. Using annotation based configuration only.");
+                log.debug("No {} found. Using annotation based configuration only.", validationXmlFile);
                 return null;
             }
 
-            if (log.isDebugEnabled()) log.debug(validationXmlFile + " found.");
+            log.debug("{} found.", validationXmlFile);
 
             Schema schema = getSchema();
             JAXBContext jc = JAXBContext.newInstance(ValidationConfigType.class);
@@ -175,8 +174,7 @@ public class ValidationParser {
                   (Class<? extends ValidationProvider<?>>) SecureActions
                         .loadClass(providerClassName, this.getClass());
             target.setProviderClass(clazz);
-            if (log.isInfoEnabled())
-                log.info("Using " + providerClassName + " as validation provider.");
+            log.info("Using {} as validation provider.", providerClassName);
         }
     }
 
@@ -189,9 +187,7 @@ public class ValidationParser {
                 Class<MessageInterpolator> clazz = (Class<MessageInterpolator>) SecureActions
                       .loadClass(messageInterpolatorClass, this.getClass());
                 target.messageInterpolator(SecureActions.newInstance(clazz));
-                if (log.isInfoEnabled())
-                    log.info("Using " + messageInterpolatorClass + " as message interpolator.");
-    
+                log.info("Using {} as message interpolator.", messageInterpolatorClass);
             }
         }
     }
@@ -205,8 +201,7 @@ public class ValidationParser {
                 Class<TraversableResolver> clazz = (Class<TraversableResolver>) SecureActions
                       .loadClass(traversableResolverClass, this.getClass());
                 target.traversableResolver(SecureActions.newInstance(clazz));
-                if (log.isInfoEnabled())
-                    log.info("Using " + traversableResolverClass + " as traversable resolver.");
+                log.info("Using {} as traversable resolver.", traversableResolverClass);
             }
         }
     }
@@ -221,8 +216,7 @@ public class ValidationParser {
                       (Class<ConstraintValidatorFactory>) SecureActions
                             .loadClass(constraintFactoryClass, this.getClass());
                 target.constraintValidatorFactory(SecureActions.newInstance(clazz));
-                if (log.isInfoEnabled())
-                    log.info("Using " + constraintFactoryClass + " as constraint factory.");
+                log.info("Using {} as constraint factory.", constraintFactoryClass);
             }
         }
     }
@@ -235,10 +229,7 @@ public class ValidationParser {
                 // Classloader needs a path without a starting /
                 mappingFileName = mappingFileName.substring(1);
             }
-            if (log.isDebugEnabled()) {
-                log.debug(
-                      "Trying to open input stream for " + mappingFileName);
-            }
+            log.debug("Trying to open input stream for {}", mappingFileName);
             InputStream in = null;
             try {
                 in = getInputStream(mappingFileName);

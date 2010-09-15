@@ -34,8 +34,8 @@ import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.*;
 import javax.validation.groups.Default;
@@ -53,7 +53,7 @@ import java.util.Set;
  */
 public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     /** Shared log instance */ //of dubious utility as it's static :/
-    protected static final Log log = LogFactory.getLog(Jsr303MetaBeanFactory.class);
+    protected static final Logger log = LoggerFactory.getLogger(Jsr303MetaBeanFactory.class);
     /** Constant for the "value" annotation attribute specified in JSR303*/
     protected static final String ANNOTATION_VALUE = "value";
     /** {@link ApacheFactoryContext} used */
@@ -403,10 +403,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             throw new GroupDefinitionException(
                   "Redefined default group sequence must contain " + beanClass.getName());
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Default group sequence for bean " + beanClass.getName() + " is: " +
-                  groupSeq);
-        }
+        log.debug("Default group sequence for bean {} is: {}", beanClass.getName(), groupSeq);
     }
 
     /**

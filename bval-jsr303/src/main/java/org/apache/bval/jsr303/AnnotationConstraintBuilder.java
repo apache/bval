@@ -23,8 +23,8 @@ import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.*;
 import java.lang.annotation.Annotation;
@@ -39,7 +39,7 @@ import java.util.*;
  * and providing information (e.g. for @OverridesAttributes) <br/>
  */
 final class AnnotationConstraintBuilder<A extends Annotation> {
-    private static final Log log = LogFactory.getLog(AnnotationConstraintBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnotationConstraintBuilder.class);
 
     //TODO extract these to some neutral location; see AnnotationProxyBuilder
     private static final String ANNOTATION_PAYLOAD = "payload";

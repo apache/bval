@@ -19,8 +19,8 @@
 package org.apache.bval.jsr303;
 
 import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintValidator;
 import java.io.IOException;
@@ -34,7 +34,7 @@ import java.util.*;
  * These are configured in DefaultConstraints.properties.<br/>
  */
 public class ConstraintDefaults {
-    private static final Log log = LogFactory.getLog(ConstraintDefaults.class);
+    private static final Logger log = LoggerFactory.getLogger(ConstraintDefaults.class);
     private static final String DEFAULT_CONSTRAINTS =
           "org/apache/bval/jsr303/DefaultConstraints.properties";
     
@@ -81,7 +81,7 @@ public class ConstraintDefaults {
                 log.error("cannot load " + resource, e);
             }
         } else {
-            log.warn("cannot find " + resource);
+            log.warn("cannot find {}", resource);
         }
         Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadedConstraints
                 = new HashMap<String, Class<? extends ConstraintValidator<?,?>>[]>();

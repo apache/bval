@@ -17,8 +17,8 @@
 package org.apache.bval.jsr303;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.MessageInterpolator;
 import java.util.Locale;
@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * This class is threadsafe.<br/>
  */
 public class DefaultMessageInterpolator implements MessageInterpolator {
-    private static final Log log = LogFactory.getLog(DefaultMessageInterpolator.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultMessageInterpolator.class);
     private static final String DEFAULT_VALIDATION_MESSAGES =
           "org.apache.bval.jsr303.ValidationMessages";
     private static final String USER_VALIDATION_MESSAGES = "ValidationMessages";
@@ -169,13 +169,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             rb = loadBundle(this.getClass().getClassLoader(), locale,
                   USER_VALIDATION_MESSAGES + " not found by validator classloader");
         }
-        if (log.isDebugEnabled()) {
-            if (rb != null) {
-                log.debug(USER_VALIDATION_MESSAGES + " found");
-            } else {
-                log.debug(USER_VALIDATION_MESSAGES + " not found. Delegating to " +
-                      DEFAULT_VALIDATION_MESSAGES);
-            }
+        if (rb != null) {
+            log.debug("{} found", USER_VALIDATION_MESSAGES);
+        } else {
+            log.debug("{} not found. Delegating to {}", USER_VALIDATION_MESSAGES, DEFAULT_VALIDATION_MESSAGES);
         }
         return rb;
     }

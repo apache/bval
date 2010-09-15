@@ -21,8 +21,8 @@ import org.apache.bval.model.FeaturesCapable;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.routines.StandardValidation;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -33,7 +33,7 @@ import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNC
  * Description: Create or enrich MetaBeans from apache beanInfos xml<br/>
  */
 public class XMLMetaBeanFactory implements MetaBeanFactory {
-    private static final Log log = LogFactory.getLog(XMLMetaBeanFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(XMLMetaBeanFactory.class);
 
     // use LinkedHashMap to keep sequence of loaders
     private final Map<XMLMetaBeanLoader, XMLMetaBeanInfos> resources =

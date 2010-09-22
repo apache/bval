@@ -132,6 +132,15 @@ public abstract class FeaturesCapable implements Serializable {
     }
 
     /**
+     * Set the validations for this {@link FeaturesCapable}.
+     * 
+     * @param validations
+     */
+    public void setValidations(Validation[] validations) {
+        this.validations = validations;
+    }
+
+    /**
      * Add a validation to this {@link FeaturesCapable}.
      * @param validation to add
      */

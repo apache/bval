@@ -20,10 +20,12 @@ package org.apache.bval.jsr303.groups;
 
 import javax.validation.groups.Default;
 
+import org.apache.commons.lang.ObjectUtils;
+
 /**
  * Immutable object that wraps an interface representing a single group.
  */
-public class Group {
+public final class Group {
     /**
      * the Default Group
      */
@@ -69,11 +71,8 @@ public class Group {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Group group1 = (Group) o;
-
-        return !(group != null ? !group.equals(group1.group) : group1.group != null);
+        if (o instanceof Group == false) return false;
+        return ObjectUtils.equals(group, ((Group) o).group);
     }
 
     /**

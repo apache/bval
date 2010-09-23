@@ -152,7 +152,6 @@ public class ApacheFactoryContext implements ValidatorContext {
      * 
      * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
      */
-    @SuppressWarnings("deprecation")
     protected MetaBeanFinder buildMetaBeanFinder() {
         List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>(2);
         if (Boolean.parseBoolean(factory.getProperties().get(
@@ -160,13 +159,7 @@ public class ApacheFactoryContext implements ValidatorContext {
             builders.add(new IntrospectorMetaBeanFactory());
         }
         builders.add(new Jsr303MetaBeanFactory(this));
-        // as long as we support both: jsr303 and xstream-xml metabeans:
-        if (Boolean.parseBoolean(factory.getProperties().get(
-            ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
-            return XMLMetaBeanManagerCreator.createXMLMetaBeanManager(builders);
-        } else {
-            return createMetaBeanManager(builders);
-        }
+        return createMetaBeanManager(builders);
     }
 
     /**
@@ -176,7 +169,13 @@ public class ApacheFactoryContext implements ValidatorContext {
      *            {@link MetaBeanFactory} {@link List}
      * @return {@link MetaBeanManager}
      */
+    @SuppressWarnings("deprecation")
     protected MetaBeanManager createMetaBeanManager(List<MetaBeanFactory> builders) {
+        // as long as we support both: jsr303 (in the builders list) and xstream-xml metabeans:
+        if (Boolean.parseBoolean(factory.getProperties().get(
+            ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
+            return XMLMetaBeanManagerCreator.createXMLMetaBeanManager(builders);
+        }
         return new MetaBeanManager(new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
     }
 

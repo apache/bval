@@ -57,7 +57,7 @@ public interface Features {
         /** SECURITY, INFO: Boolean, is value or relationship unmodifiable */
         String READONLY = "readonly";
         /**
-         * SECURITY, INFO: Boolean, Feld accessible?
+         * SECURITY, INFO: Boolean, Field accessible?
          * If false, the field must not be displayed, queried, changed.
          */
         String DENIED = "denied";

@@ -50,7 +50,7 @@ public interface ApacheValidatorConfiguration
         String ENABLE_INTROSPECTOR = "apache.bval.enable-introspector";
 
         /**
-         * true/false. use apache metaBeans xml format additionally to
+         * true/false. use Apache metaBeans xml format additionally to
          * build metadata with JSR303.
          * default: false
          *
@@ -64,7 +64,7 @@ public interface ApacheValidatorConfiguration
          * BeanValidator.treatMapsLikeBeans.
          * default: false
          */
-         String TREAT_MAPS_LIKE_BEANS = "apache.bval.treat-maps-like-beans";
+        String TREAT_MAPS_LIKE_BEANS = "apache.bval.treat-maps-like-beans";
 
         /**
          * Specifies the classname of the {@link ValidatorFactory} to use: this

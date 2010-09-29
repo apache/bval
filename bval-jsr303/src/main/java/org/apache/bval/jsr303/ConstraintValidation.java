@@ -30,7 +30,6 @@ import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
-
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -40,8 +39,6 @@ import java.util.*;
  * this instance is immutable!<br/>
  */
 public class ConstraintValidation<T extends Annotation> implements Validation, ConstraintDescriptor<T> {
-    private static final String ANNOTATION_MESSAGE = "message";
-
     private final ConstraintValidator<T, ?> validator;
     private T annotation; // for metadata request API
     private final AccessStrategy access;
@@ -103,7 +100,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      */
     void setGroups(Set<Class<?>> groups) {
         this.groups = groups;
-        this.attributes.put("groups", groups.toArray(new Class[groups.size()]));
+        this.attributes.put(Jsr303MetaBeanFactory.ANNOTATION_GROUPS, groups.toArray(new Class[groups.size()]));
     }
 
     /**
@@ -113,7 +110,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      */
     void setPayload(Set<Class<? extends Payload>> payload) {
         this.payload = payload;
-        this.attributes.put("payload", payload.toArray(new Class[payload.size()]));
+        this.attributes.put(Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD, payload.toArray(new Class[payload.size()]));
     }
 
     /**
@@ -272,7 +269,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      * @return String
      */
     public String getMessageTemplate() {
-        return (String) attributes.get(ANNOTATION_MESSAGE);
+        return (String) attributes.get(Jsr303MetaBeanFactory.ANNOTATION_MESSAGE);
     }
 
     /**

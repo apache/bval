@@ -41,10 +41,6 @@ import java.util.*;
 final class AnnotationConstraintBuilder<A extends Annotation> {
     private static final Logger log = LoggerFactory.getLogger(AnnotationConstraintBuilder.class);
 
-    //TODO extract these to some neutral location; see AnnotationProxyBuilder
-    private static final String ANNOTATION_PAYLOAD = "payload";
-    private static final String ANNOTATION_GROUPS = "groups";
-
     private final ConstraintValidation<?> constraintValidation;
     private List<ConstraintOverrides> overrides;
 
@@ -78,9 +74,9 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
                         // groups + payload must also appear in attributes (also checked by TCK-Tests)
                         if (method.getParameterTypes().length == 0) {
                             try {
-                                if (ANNOTATION_PAYLOAD.equals(method.getName())) {
+                                if (Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD.equals(method.getName())) {
                                     buildPayload(method);
-                                } else if (ANNOTATION_GROUPS.equals(method.getName())) {
+                                } else if (Jsr303MetaBeanFactory.ANNOTATION_GROUPS.equals(method.getName())) {
                                     buildGroups(method);
                                 } else {
                                     constraintValidation.getAttributes()

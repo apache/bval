@@ -18,6 +18,8 @@
  */
 package org.apache.bval.jsr303.util;
 
+import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
+
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
 import java.lang.annotation.Annotation;
@@ -59,7 +61,7 @@ public class ConstraintDefinitionValidator {
      */
     private static void validGroups(Annotation annotation) {
         // Ensure that it has a groups() method...
-        Method groupsMethod = SecureActions.getMethod(annotation.annotationType(), "groups");
+        Method groupsMethod = SecureActions.getMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_GROUPS);
         if ( groupsMethod == null ) {
             throw new ConstraintDefinitionException("Constraint definition " + annotation + " has no groups() method");
         }
@@ -88,7 +90,7 @@ public class ConstraintDefinitionValidator {
      */
     private static void validPayload(Annotation annotation) {
         // Ensure that it has a payload() method...
-        Method payloadMethod = SecureActions.getMethod(annotation.annotationType(), "payload");
+        Method payloadMethod = SecureActions.getMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD);
         if ( payloadMethod == null ) {
             throw new ConstraintDefinitionException("Constraint definition " + annotation + " has no payload() method");
         }
@@ -117,7 +119,7 @@ public class ConstraintDefinitionValidator {
      */
     private static void validMessage(Annotation annotation) {
         // Ensure that it has a message() method...
-        Method messageMethod = SecureActions.getMethod(annotation.annotationType(), "message");
+        Method messageMethod = SecureActions.getMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_MESSAGE);
         if ( messageMethod == null ) {
             throw new ConstraintDefinitionException("Constraint definition " + annotation + " has no message() method");
         }

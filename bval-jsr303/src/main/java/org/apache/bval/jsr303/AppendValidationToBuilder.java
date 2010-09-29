@@ -55,8 +55,8 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
         // annotation, so it has to be substituted with a new proxy.
         T originalAnnot = validation.getAnnotation();
         AnnotationProxyBuilder<T> apb = new AnnotationProxyBuilder<T>(originalAnnot);
-        apb.putValue("groups", inheritedGroups.toArray(new Class[inheritedGroups.size()]));
-        apb.putValue("payload", inheritedPayload.toArray(new Class[inheritedPayload.size()]));
+        apb.putValue(Jsr303MetaBeanFactory.ANNOTATION_GROUPS, inheritedGroups.toArray(new Class[inheritedGroups.size()]));
+        apb.putValue(Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD, inheritedPayload.toArray(new Class[inheritedPayload.size()]));
         T newAnnot = apb.createAnnotation();
         validation.setAnnotation(newAnnot);
     }

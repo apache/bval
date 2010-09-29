@@ -56,6 +56,10 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     protected static final Logger log = LoggerFactory.getLogger(Jsr303MetaBeanFactory.class);
     /** Constant for the "value" annotation attribute specified in JSR303*/
     protected static final String ANNOTATION_VALUE = "value";
+    public static final String ANNOTATION_PAYLOAD = "payload";
+    public static final String ANNOTATION_GROUPS = "groups";
+    public static final String ANNOTATION_MESSAGE = "message";
+
     /** {@link ApacheFactoryContext} used */
     protected final ApacheFactoryContext factoryContext;
 

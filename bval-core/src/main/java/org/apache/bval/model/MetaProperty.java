@@ -70,8 +70,7 @@ public class MetaProperty extends FeaturesCapable
      * Set the metabean that owns this property (usually called by MetaBean.putProperty())
      * @param parentMetaBean
      */
-    //TODO could this be made package-private?
-    public void setParentMetaBean(MetaBean parentMetaBean) {
+    void setParentMetaBean(MetaBean parentMetaBean) {
         this.parentMetaBean = parentMetaBean;
     }
 

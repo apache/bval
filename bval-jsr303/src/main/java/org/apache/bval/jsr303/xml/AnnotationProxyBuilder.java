@@ -17,6 +17,7 @@
 package org.apache.bval.jsr303.xml;
 
 
+import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
 
 import javax.validation.Payload;
@@ -35,10 +36,6 @@ import java.util.Map;
  */
 //TODO move this guy up to org.apache.bval.jsr303 or org.apache.bval.jsr303.model
 final public class AnnotationProxyBuilder<A extends Annotation> {
-    //TODO extract these to some neutral location; see AnnotationConstraintBuilder
-    private static final String ANNOTATION_PAYLOAD = "payload";
-    private static final String ANNOTATION_GROUPS = "groups";
-    private static final String ANNOTATION_MESSAGE = "message";
 
     private final Class<A> type;
 
@@ -141,7 +138,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @param message
      */
     public void setMessage(String message) {
-        putValue(ANNOTATION_MESSAGE, message);
+        putValue(Jsr303MetaBeanFactory.ANNOTATION_MESSAGE, message);
     }
 
     /**
@@ -149,7 +146,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @param groups
      */
     public void setGroups(Class<?>[] groups) {
-        putValue(ANNOTATION_GROUPS, groups);
+        putValue(Jsr303MetaBeanFactory.ANNOTATION_GROUPS, groups);
     }
 
     /**
@@ -157,7 +154,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @param payload
      */
     public void setPayload(Class<? extends Payload>[] payload) {
-        putValue(ANNOTATION_PAYLOAD, payload);
+        putValue(Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD, payload);
     }
 
     /**

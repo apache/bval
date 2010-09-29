@@ -22,8 +22,6 @@ import org.apache.bval.model.ValidationListener;
 
 /**
  * Description: DO NOTHING VALIDATION (can be used to turn off standard validation)<br/>
- * 
- * TODO RSt - could become part of optional module, depends on proprietary XML support only (package org.apache.bval.xml)
  */
 public class NOPValidation implements Validation {
 

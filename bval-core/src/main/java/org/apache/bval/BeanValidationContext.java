@@ -16,11 +16,7 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.FeaturesCapable;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.model.ValidationContext;
-import org.apache.bval.model.ValidationListener;
+import org.apache.bval.model.*;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
 
@@ -300,8 +296,6 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      */
     public void moveDown(MetaProperty prop, AccessStrategy access) {
-        //TODO following call seems to do nothing:
-        setMetaProperty(prop);
         setBean(getPropertyValue(access), prop.getMetaBean());
     }
 

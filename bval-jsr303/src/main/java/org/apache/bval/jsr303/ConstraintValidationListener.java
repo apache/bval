@@ -28,7 +28,6 @@ import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Description: JSR-303 {@link ValidationListener} implementation; provides {@link ConstraintViolation}s.<br/>
@@ -37,9 +36,8 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     private final Set<ConstraintViolation<T>> constraintViolations = new HashSet<ConstraintViolation<T>>();
     private final T rootBean;
     private final Class<T> rootBeanType;
-    // TODO: Currently there is no need for atomicity here as all the validation process
-    //       is single-threaded and it's unlikely to change in the near future.
-    private final AtomicInteger compositeDepth = new AtomicInteger(0);
+    // the validation process is single-threaded and it's unlikely to change in the near future (otherwise use AtomicInteger).
+    private int compositeDepth = 0;
     private boolean hasCompositeError;
 
     /**
@@ -72,7 +70,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
 
     private void addError(String messageTemplate, Path propPath,
                           ValidationContext<?> context) {
-        if (compositeDepth.get() > 0) {
+        if (compositeDepth > 0) {
             hasCompositeError |= true;
             return;
         }
@@ -154,7 +152,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
      * @return boolean
      */
     public boolean hasViolations() {
-        return compositeDepth.get() == 0 ? !constraintViolations.isEmpty() : hasCompositeError; 
+        return compositeDepth == 0 ? !constraintViolations.isEmpty() : hasCompositeError;
     }
 
     /**
@@ -162,7 +160,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
      * @return <code>true</code> as this call caused the listener to enter report-as-single-violation mode
      */
     public boolean beginReportAsSingle() {
-        return compositeDepth.incrementAndGet() == 1;
+        return ++compositeDepth == 1;
     }
 
     /**
@@ -170,6 +168,6 @@ public final class ConstraintValidationListener<T> implements ValidationListener
      * @return <code>true</code> as this call caused the listener to exit report-as-single-violation mode
      */
     public boolean endReportAsSingle() {
-        return compositeDepth.decrementAndGet() == 0;
+        return --compositeDepth == 0;
     }
 }

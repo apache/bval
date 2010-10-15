@@ -20,6 +20,7 @@ import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 
 import java.beans.BeanInfo;
+import java.beans.IndexedPropertyDescriptor;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.Enumeration;
@@ -46,7 +47,7 @@ public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
                   info.getBeanDescriptor().getName()); // (display?)name = simple class name!
         }
         for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
-            if (!pd.getName().equals("class")) { // except this one!
+            if (!(pd instanceof IndexedPropertyDescriptor || pd.getName().equals("class"))) {
                 MetaProperty metaProp = buildMetaProperty(pd);
                 meta.putProperty(pd.getName(), metaProp);
             }

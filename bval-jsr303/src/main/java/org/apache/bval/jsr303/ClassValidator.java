@@ -617,8 +617,19 @@ public class ClassValidator implements Validator {
             return ex; // do not wrap specific ValidationExceptions (or
                        // instances from subclasses)
         } else {
-            return new ValidationException("error during validation of "
-                + object, ex);
+            String objectId = "";
+            try {
+                if (object != null) {
+                    objectId = object.toString();
+                } else {
+                    objectId = "<null>";
+                }
+            } catch (Exception e) {
+                objectId = "<unknown>";
+            } finally {
+                return new ValidationException("error during validation of "
+                    + objectId, ex);
+            }
         }
     }
 

@@ -70,6 +70,12 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <!-- need for testcase logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

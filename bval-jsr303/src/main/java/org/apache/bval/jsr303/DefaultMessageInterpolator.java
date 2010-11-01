@@ -88,7 +88,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     /** {@inheritDoc} */
     public String interpolate(String message, Context context) {
         // probably no need for caching, but it could be done by parameters since the map
-        // is immutable and uniquely built per Validation definition, the comparaison has to be based on == and not equals though
+        // is immutable and uniquely built per Validation definition, the comparison has to be based on == and not equals though
         return interpolate(message, context, defaultLocale);
     }
 
@@ -99,11 +99,11 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     /**
-     * Runs the message interpolation according to alogrithm specified in JSR 303.
+     * Runs the message interpolation according to algorithm specified in JSR 303.
      * <br/>
      * Note:
      * <br/>
-     * Lookups in user bundles is recursive whereas lookups in default bundle are not!
+     * Lookups in user bundles are recursive whereas lookups in default bundle are not!
      *
      * @param message              the message to interpolate
      * @param annotationParameters the parameters of the annotation for which to interpolate this message

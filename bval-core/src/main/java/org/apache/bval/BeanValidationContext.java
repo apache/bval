@@ -238,6 +238,7 @@ public class BeanValidationContext<T extends ValidationListener>
     public void unknownValue() {
         propertyValue = UNKNOWN;
         access = null;
+        fixed = false;
     }
 
     /**

@@ -126,7 +126,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                   new AppendValidationToMeta(metabean));
         }
 
-        Field[] fields = beanClass.getDeclaredFields();
+        final Field[] fields = SecureActions.getDeclaredFields(beanClass);
         for (Field field : fields) {
             MetaProperty metaProperty = metabean.getProperty(field.getName());
             // create a property for those fields for which there is not yet a MetaProperty
@@ -144,7 +144,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 }
             }
         }
-        Method[] methods = beanClass.getDeclaredMethods();
+        final Method[] methods = SecureActions.getDeclaredMethods(beanClass);
         for (Method method : methods) {
 
             String propName = null;

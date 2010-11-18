@@ -16,6 +16,7 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,13 +161,13 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
         ResourceBundle rb = null;
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        final ClassLoader classLoader = SecureActions.getContextClassLoader(Thread.currentThread());
         if (classLoader != null) {
             rb = loadBundle(classLoader, locale,
                   USER_VALIDATION_MESSAGES + " not found by thread local classloader");
         }
         if (rb == null) {
-            rb = loadBundle(this.getClass().getClassLoader(), locale,
+            rb = loadBundle(SecureActions.getClassLoader(this.getClass()), locale,
                   USER_VALIDATION_MESSAGES + " not found by validator classloader");
         }
         if (rb != null) {

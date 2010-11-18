@@ -105,6 +105,23 @@ public class SecureActions extends PrivilegedActions {
         });
     }
 
+    /**
+     * Get all fields declared on a given class.
+     * @param clazz
+     * @return Field found
+     */
+    public static Field[] getDeclaredFields(final Class<?> clazz) {
+        return run(new PrivilegedAction<Field[]>() {
+            public Field[] run() {
+                Field[] fs = clazz.getDeclaredFields();
+                for( Field f : fs ) {
+                    setAccessibility(f);
+                }
+                return fs;
+            }
+        });
+    }
+
     private static void setAccessibility(Field field) {
         if (!Modifier.isPublic(field.getModifiers()) || (
               Modifier.isPublic(field.getModifiers()) &&
@@ -165,6 +182,32 @@ public class SecureActions extends PrivilegedActions {
         return run(new PrivilegedAction<Method[]>() {
             public Method[] run() {
                 return clazz.getDeclaredMethods();
+            }
+        });
+    }
+
+    /**
+     * Get class loader of <code>clazz</code>.
+     * @param clazz
+     * @return {@link ClassLoader}
+     */
+    public static ClassLoader getClassLoader(final Class<?> clazz) {
+        return run(new PrivilegedAction<ClassLoader>() {
+            public ClassLoader run() {
+                return clazz.getClassLoader();
+            }
+        });
+    }
+
+    /**
+     * Get context class loader of <code>thread</code>.
+     * @param thread
+     * @return {@link ClassLoader}
+     */
+    public static ClassLoader getContextClassLoader(final Thread thread) {
+        return run(new PrivilegedAction<ClassLoader>() {
+            public ClassLoader run() {
+                return thread.getContextClassLoader();
             }
         });
     }

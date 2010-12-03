@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ClassUtils;
+
 /**
  * Common operations on classes that do not require an {@link AccessController}.
  * 
@@ -58,4 +60,16 @@ public class ClassHelper {
         }
     }
 
+    /**
+     * Perform ClassUtils.getClass functions with Java 2 Security enabled.
+     */
+    public static Class<?> getClass(String className) throws ClassNotFoundException {
+        return getClass(className, true);
+    }
+
+    public static Class<?> getClass(String className, boolean initialize) throws ClassNotFoundException {
+        ClassLoader ctxtCldr = SecureActions.getContextClassLoader(Thread.currentThread());
+        ClassLoader loader = (ctxtCldr != null) ? ctxtCldr : SecureActions.getClassLoader(ClassHelper.class);
+        return ClassUtils.getClass(loader, className, initialize);
+    }
 }

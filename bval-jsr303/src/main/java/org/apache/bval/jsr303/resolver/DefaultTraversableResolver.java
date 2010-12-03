@@ -16,14 +16,16 @@
  */
 package org.apache.bval.jsr303.resolver;
 
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.commons.lang.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.annotation.ElementType;
 
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
-import java.lang.annotation.ElementType;
+
+import org.apache.bval.jsr303.util.ClassHelper;
+import org.apache.bval.jsr303.util.SecureActions;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** @see javax.validation.TraversableResolver */
@@ -72,7 +74,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     @SuppressWarnings("unchecked")
     private void initJpa() {
         try {
-            ClassUtils.getClass(PERSISTENCE_UTIL_CLASSNAME);
+            ClassHelper.getClass(PERSISTENCE_UTIL_CLASSNAME);
             log.debug("Found {} on classpath.", PERSISTENCE_UTIL_CLASSNAME);
         } catch (Exception e) {
             log.debug("Cannot find {} on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME);
@@ -81,7 +83,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
 
         try {
             Class<? extends TraversableResolver> jpaAwareResolverClass =
-                  (Class<? extends TraversableResolver>) ClassUtils
+                  (Class<? extends TraversableResolver>) ClassHelper
                         .getClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);
             jpaTR = SecureActions.newInstance(jpaAwareResolverClass);
             log.debug("Instantiated an instance of {}.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);

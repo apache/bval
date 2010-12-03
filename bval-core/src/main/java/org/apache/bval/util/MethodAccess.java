@@ -43,11 +43,16 @@ public class MethodAccess extends AccessStrategy {
      * @param propertyName
      * @param method
      */
-    public MethodAccess(String propertyName, Method method) {
+    public MethodAccess(String propertyName, final Method method) {
         this.method = method;
         this.propertyName = propertyName;
         if (!method.isAccessible()) {
-            method.setAccessible(true);
+            PrivilegedActions.run( new PrivilegedAction<Object>() {
+                public Object run() {
+                    method.setAccessible(true);
+                    return (Object) null;
+                }
+            });
         }
     }
 

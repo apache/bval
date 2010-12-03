@@ -213,6 +213,19 @@ public class SecureActions extends PrivilegedActions {
     }
 
     /**
+     * Get class loader of <code>class</code>.
+     * @param clazz
+     * @return {@link ClassLoader}
+     */
+    public static ClassLoader getContextClassLoader(final Class<?> clazz) {
+        return run(new PrivilegedAction<ClassLoader>() {
+            public ClassLoader run() {
+                return clazz.getClassLoader();
+            }
+        });
+    }
+
+    /**
      * Get the constructor of <code>clazz</code> matching <code>params</code>.
      * @param <T>
      * @param clazz

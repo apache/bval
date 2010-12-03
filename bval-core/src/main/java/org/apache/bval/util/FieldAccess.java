@@ -32,10 +32,15 @@ public class FieldAccess extends AccessStrategy {
      * Create a new FieldAccess instance.
      * @param field
      */
-    public FieldAccess(Field field) {
+    public FieldAccess(final Field field) {
         this.field = field;
         if(!field.isAccessible()) {
-            field.setAccessible(true);
+            PrivilegedActions.run( new PrivilegedAction<Object>() {
+                public Object run() {
+                    field.setAccessible(true);
+                    return (Object) null;
+                }
+            });
         }
     }
 

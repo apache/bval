@@ -163,7 +163,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      */
     @SuppressWarnings("unchecked")
     public A createAnnotation() {
-        ClassLoader classLoader = SecureActions.getClassLoader(getClass());
+        ClassLoader classLoader = SecureActions.getClassLoader(getType());
         Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
         InvocationHandler handler = new AnnotationProxy(this);
         try {

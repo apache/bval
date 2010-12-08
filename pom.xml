@@ -640,6 +640,7 @@
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>
+        <module>bval-extras</module>
     </modules>
 
 </project>

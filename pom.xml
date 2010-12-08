@@ -522,6 +522,7 @@
                             <exclude>**/rat.txt</exclude>
                             <exclude>**/target/**/*</exclude>
                             <exclude>**/*.iml</exclude>
+                            <exclude>**/*.patch</exclude>
                         </excludes>
                     </configuration>
                 </plugin>

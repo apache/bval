@@ -171,12 +171,11 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             ConstraintValidationListener<?> listener = context.getListener();
             listener.beginReportAsSingle();
 
-            boolean failed = false;
+            boolean failed = listener.hasViolations();
             try {
                 // stop validating when already failed and
                 // ReportAsSingleInvalidConstraint = true ?
-                for (Iterator<ConstraintValidation<?>> composed = getComposingValidations().iterator(); !failed
-                    && composed.hasNext();) {
+                for (Iterator<ConstraintValidation<?>> composed = getComposingValidations().iterator(); !failed && composed.hasNext();) {
                     composed.next().validate(context);
                     failed = listener.hasViolations();
                 }
@@ -190,8 +189,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                 // TODO RSt - how should the composed constraint error report
                 // look like?
                 ConstraintValidatorContextImpl jsrContext = new ConstraintValidatorContextImpl(context, this);
-                addErrors(context, jsrContext); // add defaultErrorMessage
-                                                // only*/
+                addErrors(context, jsrContext); // add defaultErrorMessage only
                 return;
             }
         } else {

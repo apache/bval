@@ -18,15 +18,6 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
@@ -41,6 +32,16 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.ValidationHelper;
 import org.apache.commons.lang.ClassUtils;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.groups.Default;
+import javax.validation.metadata.BeanDescriptor;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 // TODO: centralize treatMapsLikeBeans
 
@@ -514,6 +515,8 @@ public class ClassValidator implements Validator {
             // save old values from context
             final Object bean = context.getBean();
             final MetaBean mbean = context.getMetaBean();
+            // TODO implement Validation.groups support on related bean
+//            Class[] groups = prop.getFeature(Jsr303Features.Property.REF_GROUPS);
             for (AccessStrategy each : access) {
                 if (isCascadable(context, prop, each)) {
                     // modify context state for relationship-target bean

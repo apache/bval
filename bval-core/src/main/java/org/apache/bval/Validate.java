@@ -16,18 +16,26 @@
  */
 package org.apache.bval;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Description: Annotate an element (parameter) to be validated.
  * <br>
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER, ElementType.METHOD})
+@Target({METHOD, FIELD, CONSTRUCTOR, PARAMETER})
+@Retention(RUNTIME)
 public @interface Validate {
-    /** (optional) the MetaBean.id to use */
+    /**
+     * (optional) the MetaBean.id to use
+     */
     String value() default "";
+
+    /**
+     * to Support groups on @Valid(ate) in method/return validation
+     */
+    Class<?>[] groups() default {};
 }

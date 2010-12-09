@@ -46,8 +46,8 @@ public interface Jsr303Features {
          **/
         String GROUP_SEQUENCE = "GroupSequence";
 
-        /** INFO: cached sortied Array with ValidationEntries */
-        String VALIDATION_SEQUENCE = "ValidationSequence";
+//        INFO: cached sorted Array with ValidationEntries 
+//        String VALIDATION_SEQUENCE = "ValidationSequence";
 
         /**
          * INFO: cached BeanDescriptorImpl of the bean

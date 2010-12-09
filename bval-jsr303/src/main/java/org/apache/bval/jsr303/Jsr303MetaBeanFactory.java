@@ -20,6 +20,7 @@ package org.apache.bval.jsr303;
 
 
 import org.apache.bval.MetaBeanFactory;
+import org.apache.bval.Validate;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
@@ -289,6 +290,8 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
           throws IllegalAccessException, InvocationTargetException {
         if (annotation instanceof Valid) {
             return processValid(prop, access);
+        } else if (annotation instanceof Validate) {
+            return processValid(prop, access, ((Validate)annotation).groups());
         } else {
             /**
              * An annotation is considered a constraint definition if its retention
@@ -350,9 +353,10 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return validatorClasses;
     }
 
-    private boolean processValid(MetaProperty prop, AccessStrategy access) {
+    private boolean processValid(MetaProperty prop, AccessStrategy access, Class<?>... groups) {
         if (prop != null/* && prop.getMetaBean() == null*/) {
             AccessStrategy[] strategies = prop.getFeature(Features.Property.REF_CASCADE);
+            prop.putFeature(Jsr303Features.Property.REF_GROUPS, groups);
             if (strategies == null) {
                 strategies = new AccessStrategy[]{access};
                 prop.putFeature(Features.Property.REF_CASCADE, strategies);

@@ -16,6 +16,7 @@
  */
 package org.apache.bval.jsr303.extensions;
 
+import org.apache.bval.Validate;
 import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.AppendValidation;
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
@@ -107,7 +108,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
                 AppendValidationToList validations = new AppendValidationToList();
                 ReturnAccess returnAccess = new ReturnAccess(method.getReturnType());
                 for (Annotation anno : method.getAnnotations()) {
-                    if (anno instanceof Valid) {
+                    if (anno instanceof Valid || anno instanceof Validate) {
                         methodDesc.setCascaded(true);
                     } else {
                         processAnnotation(anno, methodDesc, returnAccess, validations);
@@ -132,7 +133,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
         AppendValidationToList validations = new AppendValidationToList();
         boolean cascaded = false;
         for (Annotation anno : paramAnnos) {
-            if (anno instanceof Valid) {
+            if (anno instanceof Valid || anno instanceof Validate) {
                 cascaded = true;
             } else {
                 processAnnotation(anno, methodDesc, access, validations);
@@ -149,7 +150,7 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
     private <A extends Annotation> void processAnnotation(A annotation, ProcedureDescriptor desc,
         AccessStrategy access, AppendValidation validations) throws InvocationTargetException, IllegalAccessException {
 
-        if (annotation instanceof Valid) {
+        if (annotation instanceof Valid || annotation instanceof Validate) {
             desc.setCascaded(true);
         } else {
             Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);

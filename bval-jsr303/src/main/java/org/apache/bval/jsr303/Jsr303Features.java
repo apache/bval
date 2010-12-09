@@ -34,6 +34,10 @@ public interface Jsr303Features {
     interface Property extends Features.Property {
         /** INFO: cached PropertyDescriptorImpl of the property */
         String PropertyDescriptor = "PropertyDescriptor";
+        /**
+         * INFO: Class[] with the groups to validate a REF_CASCADE
+         */
+        String REF_GROUPS = "refGroups";
     }
 
     /**

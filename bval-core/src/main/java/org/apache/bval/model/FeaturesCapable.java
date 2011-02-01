@@ -16,60 +16,75 @@
  */
 package org.apache.bval.model;
 
-import org.apache.commons.collections.FastHashMap;
-import org.apache.commons.lang.ArrayUtils;
-
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.commons.lang.ArrayUtils;
 
 /**
- * Description: abstract superclass of meta objects that support a map of features.<br/>
+ * Description: abstract superclass of meta objects that support a map of
+ * features.<br/>
  */
 public abstract class FeaturesCapable implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -4045110242904814218L;
 
-    private FastHashMap features = new FastHashMap();
+    private ConcurrentMap<String, Object> features = createFeaturesMap();
+
     /** key = validation id, value = the validation */
     private Validation[] validations = new Validation[0];
+
+    private volatile boolean locking;
+    private ReentrantLock lock = new ReentrantLock(true);
 
     /**
      * Create a new FeaturesCapable instance.
      */
     public FeaturesCapable() {
-        features.setFast(true);
+        super();
     }
 
     /**
      * Get the (live) map of features.
+     * 
      * @return Map<String, Object>
      */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getFeatures() {
         return features;
     }
 
     /**
-     * Set whether to optimize read operations by accessing the
-     * features map in an unsynchronized manner.
+     * Set whether to optimize read operations by accessing the features map in
+     * an unsynchronized manner.
+     * 
      * @param fast
      */
     public void optimizeRead(boolean fast) {
-        features.setFast(fast);
+        lock.lock();
+        try {
+            this.locking = !fast;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
      * Get the specified feature.
+     * 
      * @param <T>
      * @param key
      * @return T
      */
-    @SuppressWarnings("unchecked")
     public <T> T getFeature(String key) {
-        return (T) features.get(key);
+        return getFeature(key, (T) null);
     }
 
     /**
-     * Get the specified feature, returning <code>defaultValue</code> if undeclared.
+     * Get the specified feature, returning <code>defaultValue</code> if
+     * undeclared.
+     * 
      * @param <T>
      * @param key
      * @param defaultValue
@@ -77,33 +92,44 @@ public abstract class FeaturesCapable implements Serializable {
      */
     @SuppressWarnings("unchecked")
     public <T> T getFeature(String key, T defaultValue) {
-        final T v = (T) features.get(key);
-        if (v == null) {
-            return (features.containsKey(key)) ? null : defaultValue;
-        } else {
-            return v;
+        boolean release = acquireLockIfNeeded();
+        try {
+            return features.containsKey(key) ? (T) features.get(key) : defaultValue;
+        } finally {
+            if (release) {
+                lock.unlock();
+            }
         }
     }
 
     /**
      * Convenience method to set a particular feature value.
+     * 
      * @param <T>
      * @param key
      * @param value
      */
     public <T> void putFeature(String key, T value) {
-        features.put(key, value);
+        boolean release = acquireLockIfNeeded();
+        try {
+            features.put(key, value);
+        } finally {
+            if (release) {
+                lock.unlock();
+            }
+        }
     }
 
     /**
      * Create a deep copy (copy receiver and copy properties).
+     * 
      * @param <T>
      * @return new T instance
      */
-    @SuppressWarnings("unchecked")
     public <T extends FeaturesCapable> T copy() {
         try {
-            T self = (T) clone();
+            @SuppressWarnings("unchecked")
+            final T self = (T) clone();
             copyInto(self);
             return self;
         } catch (CloneNotSupportedException e) {
@@ -112,12 +138,15 @@ public abstract class FeaturesCapable implements Serializable {
     }
 
     /**
-     * Copy this {@link FeaturesCapable} into another {@link FeaturesCapable} instance.
+     * Copy this {@link FeaturesCapable} into another {@link FeaturesCapable}
+     * instance.
+     * 
      * @param <T>
      * @param target
      */
     protected <T extends FeaturesCapable> void copyInto(T target) {
-        target.features = (FastHashMap) features.clone();
+        target.features = target.createFeaturesMap();
+        target.features.putAll(features);
         if (validations != null) {
             target.validations = validations.clone();
         }
@@ -125,6 +154,7 @@ public abstract class FeaturesCapable implements Serializable {
 
     /**
      * Get any validations set for this {@link FeaturesCapable}.
+     * 
      * @return Validation array
      */
     public Validation[] getValidations() {
@@ -142,7 +172,9 @@ public abstract class FeaturesCapable implements Serializable {
 
     /**
      * Add a validation to this {@link FeaturesCapable}.
-     * @param validation to add
+     * 
+     * @param validation
+     *            to add
      */
     public void addValidation(Validation validation) {
         validations = (Validation[]) ArrayUtils.add(validations, validation);
@@ -150,14 +182,38 @@ public abstract class FeaturesCapable implements Serializable {
 
     /**
      * Search for an equivalent validation among those configured.
+     * 
      * @param aValidation
      * @return true if found
      */
     public boolean hasValidation(Validation aValidation) {
-        if (validations == null) return false;
+        if (validations == null)
+            return false;
         for (Validation validation : validations) {
-            if (validation.equals(aValidation)) return true;
+            if (validation.equals(aValidation))
+                return true;
         }
         return false;
     }
+
+    /**
+     * Create a features map for this {@link FeaturesCapable} object.
+     * @return ConcurrentMap
+     */
+    protected ConcurrentMap<String, Object> createFeaturesMap() {
+        return new ConcurrentHashMap<String, Object>();
+    }
+
+    private boolean acquireLockIfNeeded() {
+        if (locking) {
+            lock.lock();
+            // double read
+            if (locking) {
+                return true;
+            }
+            lock.unlock();
+        }
+        return false;
+    }
+
 }

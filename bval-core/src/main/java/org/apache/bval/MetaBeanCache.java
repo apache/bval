@@ -16,11 +16,12 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.MetaBean;
-import org.apache.commons.collections.FastHashMap;
-
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import org.apache.bval.model.MetaBean;
 
 /**
  * Description: a cache to hold metabeans by id and by class.<br/>
@@ -31,20 +32,17 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
     /**
      * Cache keyed by id.
      */
-    protected final FastHashMap cacheById;
+    protected final ConcurrentMap<String, MetaBean> cacheById = new ConcurrentHashMap<String, MetaBean>();
     /**
      * Cache keyed by class.
      */
-    protected final FastHashMap cacheByClass;
+    protected final ConcurrentMap<Class<?>, MetaBean> cacheByClass = new ConcurrentHashMap<Class<?>, MetaBean>();
 
     /**
      * Create a new MetaBeanCache instance.
      */
     public MetaBeanCache() {
-        this.cacheById = new FastHashMap();
-        cacheByClass = new FastHashMap();
-        cacheByClass.setFast(true);
-        cacheById.setFast(true);
+        super();
     }
 
     /**
@@ -70,21 +68,20 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
      * {@inheritDoc}
      */
     public MetaBean findForId(String beanInfoId) {
-        return (MetaBean) cacheById.get(beanInfoId);
+        return cacheById.get(beanInfoId);
     }
 
     /**
      * {@inheritDoc}
      */
     public MetaBean findForClass(Class<?> clazz) {
-        return (MetaBean) cacheByClass.get(clazz);
+        return cacheByClass.get(clazz);
     }
 
     /**
      * Return all cached MetaBeans by id.
      * @return live map
      */
-    @SuppressWarnings("unchecked")
     public Map<String, MetaBean> findAll() {
         return cacheById;
     }
@@ -97,7 +94,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
         cacheById.put(beanInfo.getId(), beanInfo);
         if (beanInfo.getBeanClass() != null &&
                 beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
-            cacheByClass.put(beanInfo.getBeanClass(), beanInfo);
+            cacheByClass.putIfAbsent(beanInfo.getBeanClass(), beanInfo);
         }
     }
 

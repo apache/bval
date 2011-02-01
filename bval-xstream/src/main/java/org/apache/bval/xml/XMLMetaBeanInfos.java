@@ -16,17 +16,19 @@
  */
 package org.apache.bval.xml;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.bval.model.Validation;
+import org.apache.commons.lang.ClassUtils;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
-import org.apache.bval.model.Validation;
-import org.apache.commons.collections.FastHashMap;
-import org.apache.commons.lang.ClassUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Description: root element of a xml-beanInfos document<br/>
@@ -94,28 +96,28 @@ public class XMLMetaBeanInfos {
     }
 
     private void initBeanLookup() {
-        beanLookup = new FastHashMap();
+        final HashMap<String, XMLMetaBean> map = new HashMap<String, XMLMetaBean>(beans.size());
         for (XMLMetaBean bean : beans) {
-            beanLookup.put(bean.getId(), bean);
+            map.put(bean.getId(), bean);
         }
-        ((FastHashMap) beanLookup).setFast(true);
+        beanLookup = new ConcurrentHashMap<String, XMLMetaBean>(map);
     }
 
     private void initValidationLookup() throws Exception {
-        validationLookup = new FastHashMap();
+        final HashMap<String, XMLMetaValidator> map = new HashMap<String, XMLMetaValidator>(validators.size());
         for (XMLMetaValidator xv : validators) {
             if (xv.getJava() != null) {
                 Validation validation =
                         (Validation) ClassUtils.getClass(xv.getJava()).newInstance();
                 xv.setValidation(validation);
-                validationLookup.put(xv.getId(), xv);
+                map.put(xv.getId(), xv);
             }
         }
-        ((FastHashMap) validationLookup).setFast(true);
+        validationLookup = new ConcurrentHashMap<String, XMLMetaValidator>(map);
     }
 
     public void addBean(XMLMetaBean bean) {
-        if (beans == null) beans = new ArrayList();
+        if (beans == null) beans = new ArrayList<XMLMetaBean>();
         beans.add(bean);
     }
 
@@ -126,7 +128,7 @@ public class XMLMetaBeanInfos {
     }
 
     public void addValidator(XMLMetaValidator validator) {
-        if (validators == null) validators = new ArrayList();
+        if (validators == null) validators = new ArrayList<XMLMetaValidator>();
         validators.add(validator);
     }
 }

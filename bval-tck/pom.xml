@@ -169,19 +169,13 @@
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>commons-beanutils</groupId>
-                                            <artifactId>commons-beanutils</artifactId>
+                                            <artifactId>commons-beanutils-core</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>com.thoughtworks.xstream</groupId>
                                             <artifactId>xstream</artifactId>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>commons-collections</groupId>
-                                            <artifactId>commons-collections</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>

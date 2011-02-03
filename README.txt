@@ -46,7 +46,7 @@ Most testing has been done with Java SE 6 on Mac OS X, Windows and Linux.
 Building
 ==========================
 To build from source code:
-  - Sources require Java SE 5 or higher. (Tested with JDK 1.5.0_22 and 1.6.0_20)
+  - Sources require Java SE 5 or higher. (Tested with JDK 1.5.0_22 and 1.6.0_21)
   - The project is built with Apache Maven 2 (suggested is 2.2.1).
     You need to download and install Maven 2 from: http://maven.apache.org/
   - Invoke maven in the root directory or a module subdirectory:

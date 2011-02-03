@@ -64,6 +64,22 @@ How do I Contribute?
   * Bugs and other issues can be posted on the project JIRA.
 
 
+Release Notes for 0.3-incubating
+================================
+
+Bug
+---
+    * [BVAL-84] - CNFEX org.slf4j.impl.StaticLoggerBinder building xstream and guice
+    * [BVAL-86] - Missing DecimalMax/DecimalMin constraint messages in ValidationMessages.properties
+    * [BVAL-87] - Java 2 security violations in ClassValidator.validate
+    * [BVAL-88] - Cascaded validation adds a constraint violation for valid child property
+
+Improvement
+-----------
+    * [BVAL-60] - Use SLF4J API for logging
+    * [BVAL-85] - bval-core has no dependency on slf4j-jcl*
+
+
 Release Notes for 0.2-incubating
 ================================
 

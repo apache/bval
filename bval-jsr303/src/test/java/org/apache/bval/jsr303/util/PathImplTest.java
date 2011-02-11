@@ -146,6 +146,27 @@ public class PathImplTest extends TestCase {
         assertEquals("[2].firstName", path.toString());
     }
 
+    public void testAddRemoveNodes() {
+        PathImpl path = PathImpl.createPathFromString("");
+        assertTrue(path.isRootPath());
+        assertEquals(1, countNodes(path));
+        path.addNode(new NodeImpl("foo"));
+        assertFalse(path.isRootPath());
+        assertEquals(1, countNodes(path));
+        path.removeLeafNode();
+        assertTrue(path.isRootPath());
+        assertEquals(1, countNodes(path));
+    }
+
+    private int countNodes(Path path) {
+        int result = 0;
+        for (Iterator<Path.Node> iter = path.iterator(); iter.hasNext();) {
+            iter.next();
+            result++;
+        }
+        return result;
+    }
+
     public static Test suite() {
         return new TestSuite(PathImplTest.class);
     }

@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  * Description: object holding the property path as a list of nodes.
  * (Implementation based on reference implementation)
  * <br/>
+ * This class is not synchronized.
  */
 public class PathImpl implements Path, Serializable {
 
@@ -143,11 +144,16 @@ public class PathImpl implements Path, Serializable {
      * @throws IllegalStateException if no nodes are found
      */
     public Node removeLeafNode() {
-        //TODO what if isRootNode()?
-        if (nodeList.size() == 0) {
+        if (isRootPath() || nodeList.size() == 0) {
             throw new IllegalStateException("No nodes in path!");
         }
-        return nodeList.remove(nodeList.size() - 1);
+        try {
+            return nodeList.remove(nodeList.size() - 1);
+        } finally {
+            if (nodeList.isEmpty()) {
+                nodeList.add(new NodeImpl((String) null));
+            }
+        }
     }
 
     /**

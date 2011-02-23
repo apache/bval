@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -29,8 +30,6 @@ import javax.validation.Validator;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.bval.jsr303.extensions.MethodValidator;
-
-import com.google.inject.Inject;
 
 /**
  * Method interceptor for {@link Validate} annotation.

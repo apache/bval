@@ -16,12 +16,12 @@
  */
 package org.apache.bval.guice;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorFactory;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 
 /**
  * {@code javax.validation.ConstraintValidatorFactory} implementation that
@@ -32,10 +32,10 @@ import com.google.inject.Singleton;
 @Singleton
 final class GuiceAwareConstraintValidatorFactory implements ConstraintValidatorFactory {
 
-    private final Injector injector;
-
     @Inject
-    public GuiceAwareConstraintValidatorFactory(Injector injector) {
+    private Injector injector;
+
+    public void setInjector(Injector injector) {
         this.injector = injector;
     }
 

@@ -16,14 +16,13 @@
  */
 package org.apache.bval.guice;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 
 import org.apache.bval.jsr303.ApacheValidationProvider;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
 
 /**
  * Validator Factory guice provider implementation.
@@ -33,18 +32,18 @@ import com.google.inject.Singleton;
 @Singleton
 final class ValidatorFactoryProvider implements Provider<ValidatorFactory> {
 
-    private final ValidatorFactory validatorFactory;
-
     @Inject
-    public ValidatorFactoryProvider(ConfigurationState configurationState) {
-        this.validatorFactory = new ApacheValidationProvider().buildValidatorFactory(configurationState);
+    private ConfigurationState configurationState;
+
+    public void setConfigurationState(ConfigurationState configurationState) {
+        this.configurationState = configurationState;
     }
 
     /**
      * {@inheritDoc}
      */
     public ValidatorFactory get() {
-        return this.validatorFactory;
+        return new ApacheValidationProvider().buildValidatorFactory(this.configurationState);
     }
 
 }

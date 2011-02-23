@@ -18,6 +18,7 @@ package org.apache.bval.guice;
 
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -25,7 +26,6 @@ import javax.validation.Validator;
 import junit.framework.TestCase;
 
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**

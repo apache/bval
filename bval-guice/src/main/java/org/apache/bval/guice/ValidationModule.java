@@ -51,8 +51,8 @@ public final class ValidationModule extends AbstractModule {
         this.bind(TraversableResolver.class).to(DefaultTraversableResolver.class).in(Scopes.SINGLETON);
         this.bind(ConstraintValidatorFactory.class).to(GuiceAwareConstraintValidatorFactory.class);
         this.bind(new TypeLiteral<ValidationProvider<?>>() {}).to(ApacheValidationProvider.class).in(Scopes.SINGLETON);
-        this.bind(ConfigurationState.class).toProvider(ConfigurationStateProvider.class);
-        this.bind(ValidatorFactory.class).toProvider(ValidatorFactoryProvider.class);
+        this.bind(ConfigurationState.class).toProvider(ConfigurationStateProvider.class).in(Scopes.SINGLETON);
+        this.bind(ValidatorFactory.class).toProvider(ValidatorFactoryProvider.class).in(Scopes.SINGLETON);
         this.bind(Validator.class).toProvider(ValidatorProvider.class);
 
         // AOP stuff

@@ -16,53 +16,68 @@
  */
 package org.apache.bval.guice;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.TraversableResolver;
+import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 
 import org.apache.bval.jsr303.ConfigurationImpl;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
 
 /**
  * The {@code javax.validation.spi.ConfigurationState} provider implementation.
  *
  * @version $Id$
  */
-@Singleton
 public final class ConfigurationStateProvider implements Provider<ConfigurationState> {
 
-    private final ConfigurationImpl configurationState;
+    @com.google.inject.Inject(optional = true)
+    private BootstrapState bootstrapState;
 
     @Inject
-    public ConfigurationStateProvider(ValidationProvider<?> aProvider) {
-        this.configurationState = new ConfigurationImpl(null, aProvider);
+    private ValidationProvider<?> validationProvider;
+
+    @Inject
+    private TraversableResolver traversableResolver;
+
+    @Inject
+    private MessageInterpolator messageInterpolator;
+
+    @Inject
+    private ConstraintValidatorFactory constraintValidatorFactory;
+
+    public void setBootstrapState(BootstrapState bootstrapState) {
+        this.bootstrapState = bootstrapState;
     }
 
-    @Inject
-    public void traversableResolver(TraversableResolver traversableResolver) {
-        this.configurationState.traversableResolver(traversableResolver);
+    public void setValidationProvider(ValidationProvider<?> validationProvider) {
+        this.validationProvider = validationProvider;
     }
 
-    @Inject
-    public void messageInterpolator(MessageInterpolator messageInterpolator) {
-        this.configurationState.messageInterpolator(messageInterpolator);
+    public void setTraversableResolver(TraversableResolver traversableResolver) {
+        this.traversableResolver = traversableResolver;
     }
 
-    @Inject
-    public void constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
-        this.configurationState.constraintValidatorFactory(constraintValidatorFactory);
+    public void setMessageInterpolator(MessageInterpolator messageInterpolator) {
+        this.messageInterpolator = messageInterpolator;
+    }
+
+    public void setConstraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
+        this.constraintValidatorFactory = constraintValidatorFactory;
     }
 
     /**
      * {@inheritDoc}
      */
     public ConfigurationState get() {
-        return this.configurationState;
+        ConfigurationImpl configuration = new ConfigurationImpl(this.bootstrapState, this.validationProvider);
+        configuration.traversableResolver(this.traversableResolver);
+        configuration.messageInterpolator(this.messageInterpolator);
+        configuration.constraintValidatorFactory(this.constraintValidatorFactory);
+        return configuration;
     }
 
 }

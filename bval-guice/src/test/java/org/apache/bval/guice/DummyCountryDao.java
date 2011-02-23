@@ -16,11 +16,10 @@
  */
 package org.apache.bval.guice;
 
+import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import com.google.inject.Singleton;
 
 /**
  * 

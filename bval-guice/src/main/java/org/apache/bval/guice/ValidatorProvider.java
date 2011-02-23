@@ -16,12 +16,11 @@
  */
 package org.apache.bval.guice;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
 
 /**
  * Validator guice provider implementation.
@@ -34,15 +33,10 @@ final class ValidatorProvider implements Provider<Validator> {
     /**
      * The validator reference.
      */
-    private final ValidatorFactory validatorFactory;
-
-    /**
-     * Build a new ValidatorProvider by ValidatorFactory.
-     *
-     * @param validatorFactory the ValidatorFactory reference.
-     */
     @Inject
-    public ValidatorProvider(ValidatorFactory validatorFactory) {
+    private ValidatorFactory validatorFactory;
+
+    public void setValidatorFactory(ValidatorFactory validatorFactory) {
         this.validatorFactory = validatorFactory;
     }
 

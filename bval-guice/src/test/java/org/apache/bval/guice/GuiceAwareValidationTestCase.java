@@ -26,7 +26,6 @@ import javax.validation.Validator;
 import junit.framework.TestCase;
 
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 /**
  * 
@@ -51,8 +50,13 @@ public final class GuiceAwareValidationTestCase extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new ValidationModule());
-        injector.injectMembers(this);
+        Guice.createInjector(new ValidationModule()).injectMembers(this);
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        this.validator = null;
+        this.dummyCountryDao = null;
     }
 
     public void testInjectedValidation() {

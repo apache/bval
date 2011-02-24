@@ -58,4 +58,15 @@ public @interface Validate {
      */
     Class<? extends Throwable> rethrowExceptionsAs() default ConstraintViolationException.class;
 
+    /**
+     * A custom error message when throwing the custom exception.
+     *
+     * It supports java.util.Formatter place holders, intercepted method
+     * arguments will be used as message format arguments.
+     *
+     * @return a custom error message when throwing the custom exception.
+     * @see java.util.Formatter#format(String, Object...)
+     */
+    String exceptionMessage() default "";
+
 }

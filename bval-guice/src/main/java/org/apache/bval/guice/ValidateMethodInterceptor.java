@@ -38,6 +38,10 @@ import org.apache.bval.jsr303.extensions.MethodValidator;
  */
 public final class ValidateMethodInterceptor implements MethodInterceptor {
 
+    private static final Class<?>[] CAUSE_TYPES = new Class[]{ Throwable.class };
+
+    private static final Class<?>[] MESSAGE_CAUSE_TYPES = new Class[]{ String.class, Throwable.class };
+
     /**
      * The {@link ValidatorProvider} reference.
      */
@@ -74,22 +78,30 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
                 groups));
 
         if (!constraintViolations.isEmpty()) {
-            throw getException(new ConstraintViolationException("Validation error when calling method '"
-                        + method
-                        + "' with arguments "
-                        + Arrays.deepToString(arguments), constraintViolations),
-                    validate.rethrowExceptionsAs());
+            throw getException(new ConstraintViolationException(
+                    String.format("Validation error when calling method '%s' with arguments ",
+                            method,
+                            Arrays.deepToString(arguments)),
+                    constraintViolations),
+                    validate.rethrowExceptionsAs(),
+                    validate.exceptionMessage(),
+                    arguments);
         }
 
         Object returnedValue = invocation.proceed();
 
         if (validate.validateReturnedValue()) {
             constraintViolations.addAll(methodValidator.validateReturnedValue(clazz, method, returnedValue, groups));
+
             if (!constraintViolations.isEmpty()) {
-                throw getException(new ConstraintViolationException("Method '"
-                        + method
-                        + "' returned a not valid value "
-                        + returnedValue, constraintViolations), validate.rethrowExceptionsAs());
+                throw getException(new ConstraintViolationException(
+                        String.format("Method '%s' returned a not valid value ",
+                                method,
+                                returnedValue),
+                        constraintViolations),
+                        validate.rethrowExceptionsAs(),
+                        validate.exceptionMessage(),
+                        arguments);
             }
         }
 
@@ -105,7 +117,9 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
      * @return the {@link Throwable} has o be thrown.
      */
     private static Throwable getException(ConstraintViolationException exception,
-            Class<? extends Throwable> exceptionWrapperClass) {
+            Class<? extends Throwable> exceptionWrapperClass,
+            String exceptionMessage,
+            Object[] arguments) {
         // check the thrown exception is of same re-throw type
         if (exceptionWrapperClass == ConstraintViolationException.class) {
             return exception;
@@ -114,16 +128,53 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
         // re-throw the exception as new exception
         Throwable rethrowEx = null;
 
-        try {
-            Constructor<? extends Throwable> constructor = exceptionWrapperClass.getConstructor(Throwable.class);
-            rethrowEx = constructor.newInstance(exception);
-        } catch (Exception e) {
-            rethrowEx = new RuntimeException("Impossible to re-throw '"
-                    + exceptionWrapperClass
-                    + "', it needs the constructor with <Throwable> argument.", e);
+        String errorMessage;
+        Object[] initargs;
+        Class<?>[] initargsType;
+
+        if (exceptionMessage.length() != 0) {
+            errorMessage = String.format(exceptionMessage, arguments);
+            initargs = new Object[]{ errorMessage, exception };
+            initargsType = MESSAGE_CAUSE_TYPES;
+        } else {
+            initargs = new Object[]{ exception };
+            initargsType = CAUSE_TYPES;
+        }
+
+        Constructor<? extends Throwable> exceptionConstructor = getMatchingConstructor(exceptionWrapperClass, initargsType);
+        if (exceptionConstructor != null) {
+            try {
+                rethrowEx = exceptionConstructor.newInstance(initargs);
+            } catch (Exception e) {
+                errorMessage = String.format("Impossible to re-throw '%s', it needs the constructor with %s argument(s).",
+                        exceptionWrapperClass.getName(),
+                        Arrays.toString(initargsType));
+                rethrowEx = new RuntimeException(errorMessage, e);
+            }
+        } else {
+            errorMessage = String.format("Impossible to re-throw '%s', it needs the constructor with %s or %s argument(s).",
+                    exceptionWrapperClass.getName(),
+                    Arrays.toString(CAUSE_TYPES),
+                    Arrays.toString(MESSAGE_CAUSE_TYPES));
+            rethrowEx = new RuntimeException(errorMessage);
         }
 
         return rethrowEx;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> Constructor<E> getMatchingConstructor(Class<E> type,
+            Class<?>[] argumentsType) {
+        Class<? super E> currentType = type;
+        while (Object.class != currentType) {
+            for (Constructor<?> constructor : currentType.getConstructors()) {
+                if (Arrays.equals(argumentsType, constructor.getParameterTypes())) {
+                    return (Constructor<E>) constructor;
+                }
+            }
+            currentType = currentType.getSuperclass();
+        }
+        return null;
     }
 
 }

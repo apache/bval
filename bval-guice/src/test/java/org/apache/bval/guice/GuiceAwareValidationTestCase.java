@@ -88,6 +88,7 @@ public final class GuiceAwareValidationTestCase extends TestCase {
             fail("org.apache.bval.guice.DummyException expected");
         } catch (Exception e) {
             assertEquals(DummyException.class, e.getClass());
+            assertTrue(e.getMessage().startsWith("This is just a dummy message "));
         }
     }
 

@@ -30,8 +30,8 @@ import javax.validation.constraints.Size;
 public class DummyCountryDao {
 
     @Validate(
-            groups = { Insert.class },
-            validateReturnedValue = true
+        groups = { Insert.class },
+        validateReturnedValue = true
     )
     public Country insertCountry(@NotNull(groups = { Insert.class }) String name,
             @NotNull(groups = { Insert.class }) @Size(max = 2, groups = { Insert.class, Update.class }) String iso2Code,
@@ -44,8 +44,9 @@ public class DummyCountryDao {
     }
 
     @Validate(
-            groups = { Update.class },
-            rethrowExceptionsAs = DummyException.class
+        groups = { Update.class },
+        rethrowExceptionsAs = DummyException.class,
+        exceptionMessage = "This is just a dummy message %s"
     )
     public int updateCountry(@Valid Country country) {
         return 0;

@@ -29,4 +29,8 @@ public final class DummyException extends Exception {
         super(cause);
     }
 
+    public DummyException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

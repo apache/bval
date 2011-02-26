@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -43,18 +44,18 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
     private static final Class<?>[] MESSAGE_CAUSE_TYPES = new Class[]{ String.class, Throwable.class };
 
     /**
-     * The {@link ValidatorProvider} reference.
+     * The {@link ValidatorFactory} reference.
      */
     @Inject
-    private ValidatorProvider validatorProvider;
+    private ValidatorFactory validatorFactory;
 
     /**
-     * Sets the {@link ValidatorProvider} reference.
+     * Sets the {@link ValidatorFactory} reference.
      *
-     * @param validatorProvider the {@link ValidatorProvider} reference.
+     * @param validatorFactory the {@link ValidatorFactory} reference
      */
-    public void setValidatorProvider(ValidatorProvider validatorProvider) {
-        this.validatorProvider = validatorProvider;
+    public void setValidatorFactory(ValidatorFactory validatorFactory) {
+        this.validatorFactory = validatorFactory;
     }
 
     /**
@@ -63,7 +64,7 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Validate validate = invocation.getMethod().getAnnotation(Validate.class);
 
-        Validator validator = this.validatorProvider.get();
+        Validator validator = this.validatorFactory.getValidator();
         MethodValidator methodValidator = validator.unwrap(MethodValidator.class);
 
         Set<ConstraintViolation<?>> constraintViolations = new HashSet<ConstraintViolation<?>>();

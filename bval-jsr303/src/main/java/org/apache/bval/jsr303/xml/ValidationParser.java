@@ -44,8 +44,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Description: uses jaxb to parse validation.xml<br/>
@@ -119,12 +117,12 @@ public class ValidationParser {
             // spec says: If more than one META-INF/validation.xml file
             // is found in the classpath, a ValidationException is raised.
             Enumeration<URL> urls = loader.getResources(path);
-            Set<String> uniqueUrls = new HashSet<String>(2);
-            while (urls.hasMoreElements()) {
-                uniqueUrls.add(urls.nextElement().toString());
-                if (uniqueUrls.size() > 1){ // complain when first duplicate found
-                    throw new ValidationException("More than one " + path + " is found in the classpath"
-                            + uniqueUrls);
+            if (urls.hasMoreElements()) {
+                String url = urls.nextElement().toString();
+                while (urls.hasMoreElements()) {
+                    if (!url.equals(urls.nextElement().toString())) { // complain when first duplicate found
+                        throw new ValidationException("More than one " + path + " is found in the classpath");
+                    }
                 }
             }
         }

@@ -16,15 +16,15 @@
  */
 package org.apache.bval.jsr303.extensions;
 
+import org.apache.bval.jsr303.ApacheFactoryContext;
+import org.apache.bval.jsr303.BeanDescriptorImpl;
+import org.apache.bval.model.MetaBean;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.bval.jsr303.ApacheFactoryContext;
-import org.apache.bval.jsr303.BeanDescriptorImpl;
-import org.apache.bval.model.MetaBean;
 
 /**
  * Description: {@link MethodBeanDescriptor} implementation.<br/>

@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.MessageInterpolator;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -161,14 +163,20 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
         ResourceBundle rb = null;
-        final ClassLoader classLoader = SecureActions.getContextClassLoader(Thread.currentThread());
+        final ClassLoader classLoader = doPrivileged(SecureActions.getContextClassLoader());
         if (classLoader != null) {
             rb = loadBundle(classLoader, locale,
                   USER_VALIDATION_MESSAGES + " not found by thread local classloader");
         }
+
+        // 2011-03-27 jw: No privileged action required.
+        // A class can always access the classloader of itself and of subclasses.
         if (rb == null) {
-            rb = loadBundle(SecureActions.getClassLoader(this.getClass()), locale,
-                  USER_VALIDATION_MESSAGES + " not found by validator classloader");
+            rb = loadBundle(
+              getClass().getClassLoader(),
+              locale,
+              USER_VALIDATION_MESSAGES + " not found by validator classloader"
+            );
         }
         if (rb != null) {
             log.debug("{} found", USER_VALIDATION_MESSAGES);
@@ -192,7 +200,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private String replaceVariables(String message, ResourceBundle bundle, Locale locale,
                                     boolean recurse) {
         Matcher matcher = messageParameterPattern.matcher(message);
-        StringBuffer sb = new StringBuffer();
+        StringBuffer sb = new StringBuffer(64);
         String resolvedParameterValue;
         while (matcher.find()) {
             String parameter = matcher.group(1);
@@ -207,7 +215,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private String replaceAnnotationAttributes(String message,
                                                Map<String, Object> annotationParameters) {
         Matcher matcher = messageParameterPattern.matcher(message);
-        StringBuffer sb = new StringBuffer();
+        StringBuffer sb = new StringBuffer(64);
         while (matcher.find()) {
             String resolvedParameterValue;
             String parameter = matcher.group(1);
@@ -252,24 +260,23 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     private ResourceBundle findDefaultResourceBundle(Locale locale) {
-        if (defaultBundlesMap.containsKey(locale)) {
-            return defaultBundlesMap.get(locale);
+        ResourceBundle bundle = defaultBundlesMap.get(locale);
+        if (bundle == null)
+        {
+            bundle = ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, locale);
+            defaultBundlesMap.put(locale, bundle);
         }
-
-        ResourceBundle bundle =
-              ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, locale);
-        defaultBundlesMap.put(locale, bundle);
         return bundle;
     }
 
     private ResourceBundle findUserResourceBundle(Locale locale) {
-        if (userBundlesMap.containsKey(locale)) {
-            return userBundlesMap.get(locale);
-        }
-
-        ResourceBundle bundle = getFileBasedResourceBundle(locale);
-        if (bundle != null) {
-            userBundlesMap.put(locale, bundle);
+        ResourceBundle bundle = userBundlesMap.get(locale);
+        if (bundle == null)
+        {
+            bundle = getFileBasedResourceBundle(locale);
+            if (bundle != null) {
+                userBundlesMap.put(locale, bundle);
+            }
         }
         return bundle;
     }
@@ -292,6 +299,24 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     private String sanitizeForAppendReplacement(String src) {
         return src.replace("\\", "\\\\").replace("$", "\\$");
+    }
+
+
+
+    /**
+     * Perform action with AccessController.doPrivileged() if a security manager is installed.
+     *
+     * @param action
+     *  the action to run
+     * @return
+     *  result of the action
+     */
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 
 }

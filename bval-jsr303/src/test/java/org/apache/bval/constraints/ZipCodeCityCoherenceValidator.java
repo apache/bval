@@ -19,10 +19,10 @@
 package org.apache.bval.constraints;
 
 
+import org.apache.bval.jsr303.example.ZipCodeCityCarrier;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
-import org.apache.bval.jsr303.example.ZipCodeCityCarrier;
 
 /**
  * Description: Class not implemented! simple dummy implemenation for tests only! <br/>

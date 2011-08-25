@@ -20,23 +20,18 @@ package org.apache.bval.jsr303;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-import javax.validation.metadata.Scope;
+import javax.validation.metadata.*;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
-import org.apache.bval.jsr303.util.TestUtils;
 
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

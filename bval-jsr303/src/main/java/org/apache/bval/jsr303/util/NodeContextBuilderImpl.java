@@ -19,10 +19,10 @@
 package org.apache.bval.jsr303.util;
 
 
+import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
+
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder;
-
-import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 /**
  * Description: Implementation of {@link NodeContextBuilder}.<br/>

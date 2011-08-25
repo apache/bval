@@ -18,16 +18,15 @@
  */
 package org.apache.bval.jsr303;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
+import junit.framework.TestCase;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
-
-import junit.framework.TestCase;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Description: <br/>

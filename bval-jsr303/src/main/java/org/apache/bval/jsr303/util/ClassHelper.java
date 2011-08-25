@@ -18,12 +18,10 @@
  */
 package org.apache.bval.jsr303.util;
 
-import java.security.AccessController;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang.ClassUtils;
+
+import java.security.AccessController;
+import java.util.List;
 
 /**
  * Common operations on classes that do not require an {@link AccessController}.
@@ -53,23 +51,32 @@ public class ClassHelper {
             return;
         }
         allClasses.add(clazz);
-        List<Class<?>> subClasses = new ArrayList<Class<?>>(Arrays.asList(clazz.getInterfaces()));
-        subClasses.add(0, clazz.getSuperclass());
-        for (Class<?> subClass : subClasses) {
+        fillFullClassHierarchyAsList(allClasses, clazz.getSuperclass());
+        for (Class<?> subClass : clazz.getInterfaces()) {
             fillFullClassHierarchyAsList(allClasses, subClass);
         }
     }
 
     /**
+     * @deprecated Will be removed for security reasons.
+     *
      * Perform ClassUtils.getClass functions with Java 2 Security enabled.
      */
+    @Deprecated
     public static Class<?> getClass(String className) throws ClassNotFoundException {
         return getClass(className, true);
     }
 
+    /**
+     * @deprecated Will be removed for security reasons.
+     *
+     * Perform ClassUtils.getClass functions with Java 2 Security enabled.
+     */
+    @Deprecated
     public static Class<?> getClass(String className, boolean initialize) throws ClassNotFoundException {
-        ClassLoader ctxtCldr = SecureActions.getContextClassLoader(Thread.currentThread());
-        ClassLoader loader = (ctxtCldr != null) ? ctxtCldr : SecureActions.getClassLoader(ClassHelper.class);
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null)
+          loader = ClassHelper.class.getClassLoader();
         return ClassUtils.getClass(loader, className, initialize);
     }
 }

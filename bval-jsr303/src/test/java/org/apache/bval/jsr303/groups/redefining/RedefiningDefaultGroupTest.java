@@ -19,14 +19,12 @@
 package org.apache.bval.jsr303.groups.redefining;
 
 import junit.framework.TestCase;
+import org.apache.bval.jsr303.ApacheValidatorFactory;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.GroupDefinitionException;
 import javax.validation.Validator;
-
-import org.apache.bval.jsr303.ApacheValidatorFactory;
-import org.apache.bval.jsr303.util.TestUtils;
-
 import java.util.Set;
 
 /**

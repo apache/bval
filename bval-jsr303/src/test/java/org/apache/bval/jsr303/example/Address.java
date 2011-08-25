@@ -19,13 +19,13 @@
 package org.apache.bval.jsr303.example;
 
 
+import org.apache.bval.constraints.ZipCodeCityCoherence;
+
 import javax.validation.GroupSequence;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
-
-import org.apache.bval.constraints.ZipCodeCityCoherence;
 
 @ZipCodeCityCoherence
 public class Address implements ZipCodeCityCarrier {

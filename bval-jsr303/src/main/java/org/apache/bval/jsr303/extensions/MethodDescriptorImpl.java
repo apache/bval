@@ -16,14 +16,14 @@
  */
 package org.apache.bval.jsr303.extensions;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.bval.jsr303.ConstraintValidation;
 import org.apache.bval.jsr303.ElementDescriptorImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Description: {@link MethodDescriptor} implementation.<br/>

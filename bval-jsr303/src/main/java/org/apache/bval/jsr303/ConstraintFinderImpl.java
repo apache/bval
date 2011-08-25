@@ -18,23 +18,17 @@
  */
 package org.apache.bval.jsr303;
 
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.Scope;
-import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
-
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
 import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.model.MetaBean;
 
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
+import javax.validation.metadata.Scope;
 import java.lang.annotation.ElementType;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Description: Implementation of the fluent {@link ConstraintFinder} interface.<br/>

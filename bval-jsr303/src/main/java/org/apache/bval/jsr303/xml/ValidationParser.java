@@ -43,6 +43,8 @@ import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Enumeration;
 
 /**
@@ -176,8 +178,7 @@ public class ValidationParser {
         String providerClassName = xmlConfig.getDefaultProvider();
         if (providerClassName != null) {
             Class<? extends ValidationProvider<?>> clazz =
-                    (Class<? extends ValidationProvider<?>>) SecureActions
-                            .loadClass(providerClassName, this.getClass());
+                    (Class<? extends ValidationProvider<?>>) loadClass(providerClassName);
             target.setProviderClass(clazz);
             log.info("Using {} as validation provider.", providerClassName);
         }
@@ -189,9 +190,9 @@ public class ValidationParser {
         String messageInterpolatorClass = xmlConfig.getMessageInterpolator();
         if (target.getMessageInterpolator() == null) {
             if (messageInterpolatorClass != null) {
-                Class<MessageInterpolator> clazz = (Class<MessageInterpolator>) SecureActions
-                        .loadClass(messageInterpolatorClass, this.getClass());
-                target.messageInterpolator(SecureActions.newInstance(clazz));
+                Class<MessageInterpolator> clazz = (Class<MessageInterpolator>)
+                        loadClass(messageInterpolatorClass);
+                target.messageInterpolator(newInstance(clazz));
                 log.info("Using {} as message interpolator.", messageInterpolatorClass);
             }
         }
@@ -203,12 +204,24 @@ public class ValidationParser {
         String traversableResolverClass = xmlConfig.getTraversableResolver();
         if (target.getTraversableResolver() == null) {
             if (traversableResolverClass != null) {
-                Class<TraversableResolver> clazz = (Class<TraversableResolver>) SecureActions
-                        .loadClass(traversableResolverClass, this.getClass());
-                target.traversableResolver(SecureActions.newInstance(clazz));
+                Class<TraversableResolver> clazz = (Class<TraversableResolver>)
+                        loadClass(traversableResolverClass);
+                target.traversableResolver(newInstance(clazz));
                 log.info("Using {} as traversable resolver.", traversableResolverClass);
             }
         }
+    }
+
+    private <T> T newInstance(final Class<T> cls) {
+        return AccessController.doPrivileged(new PrivilegedAction<T>() {
+            public T run() {
+                try {
+                    return cls.newInstance();
+                } catch (final Exception ex) {
+                    throw new ValidationException("Cannot instantiate : " + cls, ex);
+                }
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -217,10 +230,9 @@ public class ValidationParser {
         String constraintFactoryClass = xmlConfig.getConstraintValidatorFactory();
         if (target.getConstraintValidatorFactory() == null) {
             if (constraintFactoryClass != null) {
-                Class<ConstraintValidatorFactory> clazz =
-                        (Class<ConstraintValidatorFactory>) SecureActions
-                                .loadClass(constraintFactoryClass, this.getClass());
-                target.constraintValidatorFactory(SecureActions.newInstance(clazz));
+                Class<ConstraintValidatorFactory> clazz = (Class<ConstraintValidatorFactory>)
+                        loadClass(constraintFactoryClass);
+                target.constraintValidatorFactory(newInstance(clazz));
                 log.info("Using {} as constraint factory.", constraintFactoryClass);
             }
         }
@@ -250,4 +262,26 @@ public class ValidationParser {
             target.addMapping(in);
         }
     }
+
+
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
+    }
+
+    private Class<?> loadClass(final String className) {
+        ClassLoader loader = doPrivileged(SecureActions.getContextClassLoader());
+        if (loader == null)
+            loader = getClass().getClassLoader();
+
+        try {
+            return Class.forName(className, true, loader);
+        } catch (ClassNotFoundException ex) {
+            throw new ValidationException("Unable to load class: " + className, ex);
+        }
+    }
+
 }

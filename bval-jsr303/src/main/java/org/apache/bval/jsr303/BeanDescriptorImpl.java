@@ -24,7 +24,6 @@ import org.apache.bval.model.MetaProperty;
 
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

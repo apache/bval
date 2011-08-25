@@ -18,30 +18,20 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.bootstrap.ProviderSpecificBootstrap;
-import javax.validation.spi.ConfigurationState;
-
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.AnnotationIgnores;
 import org.apache.bval.jsr303.xml.MetaConstraint;
 import org.apache.bval.jsr303.xml.ValidationMappingParser;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.commons.lang.ClassUtils;
+
+import javax.validation.*;
+import javax.validation.bootstrap.ProviderSpecificBootstrap;
+import javax.validation.spi.ConfigurationState;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.*;
 
 /**
  * Description: a factory is a complete configurated object that can create
@@ -51,14 +41,16 @@ import org.apache.commons.lang.ClassUtils;
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
     private static final ConstraintDefaults defaultConstraints =
-        new ConstraintDefaults();
+            new ConstraintDefaults();
 
     private MessageInterpolator messageResolver;
     private TraversableResolver traversableResolver;
     private ConstraintValidatorFactory constraintValidatorFactory;
     private final Map<String, String> properties;
 
-    /** information from xml parsing */
+    /**
+     * information from xml parsing
+     */
     private final AnnotationIgnores annotationIgnores = new AnnotationIgnores();
     private final ConstraintCached constraintsCache = new ConstraintCached();
     private final Map<Class<?>, Class<?>[]> defaultSequences;
@@ -70,23 +62,23 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Convenience method to retrieve a default global ApacheValidatorFactory
-     * 
+     *
      * @return {@link ApacheValidatorFactory}
      */
     public static synchronized ApacheValidatorFactory getDefault() {
         if (DEFAULT_FACTORY == null) {
             ProviderSpecificBootstrap<ApacheValidatorConfiguration> provider =
-                Validation.byProvider(ApacheValidationProvider.class);
+                    Validation.byProvider(ApacheValidationProvider.class);
             ApacheValidatorConfiguration configuration = provider.configure();
             DEFAULT_FACTORY =
-                (ApacheValidatorFactory) configuration.buildValidatorFactory();
+                    (ApacheValidatorFactory) configuration.buildValidatorFactory();
         }
         return DEFAULT_FACTORY;
     }
 
     /**
      * Set a particular {@link ApacheValidatorFactory} instance as the default.
-     * 
+     *
      * @param aDefaultFactory
      */
     public static void setDefault(ApacheValidatorFactory aDefaultFactory) {
@@ -101,14 +93,14 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         defaultSequences = new HashMap<Class<?>, Class<?>[]>();
         validAccesses = new HashMap<Class<?>, List<AccessStrategy>>();
         constraintMap =
-            new HashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
+                new HashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
         configure(configurationState);
     }
 
     /**
      * Configure this {@link ApacheValidatorFactory} from a
      * {@link ConfigurationState}.
-     * 
+     *
      * @param configuration
      */
     protected void configure(ConfigurationState configuration) {
@@ -116,14 +108,14 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         setMessageInterpolator(configuration.getMessageInterpolator());
         setTraversableResolver(configuration.getTraversableResolver());
         setConstraintValidatorFactory(configuration
-            .getConstraintValidatorFactory());
+                .getConstraintValidatorFactory());
         ValidationMappingParser parser = new ValidationMappingParser(this);
         parser.processMappingConfig(configuration.getMappingStreams());
     }
 
     /**
      * Get the property map of this {@link ApacheValidatorFactory}.
-     * 
+     *
      * @return Map<String, String>
      */
     public Map<String, String> getProperties() {
@@ -133,7 +125,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * Get the default {@link MessageInterpolator} used by this
      * {@link ApacheValidatorFactory}.
-     * 
+     *
      * @return {@link MessageInterpolator}
      */
     protected MessageInterpolator getDefaultMessageInterpolator() {
@@ -143,7 +135,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * Shortcut method to create a new Validator instance with factory's
      * settings
-     * 
+     *
      * @return the new validator instance
      */
     public Validator getValidator() {
@@ -152,7 +144,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @return the validator factory's context
      */
     public ApacheFactoryContext usingContext() {
@@ -173,7 +165,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Set the {@link MessageInterpolator} used.
-     * 
+     *
      * @param messageResolver
      */
     public final void setMessageInterpolator(MessageInterpolator messageResolver) {
@@ -185,16 +177,16 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public MessageInterpolator getMessageInterpolator() {
         return ((messageResolver != null) ? messageResolver
-            : getDefaultMessageInterpolator());
+                : getDefaultMessageInterpolator());
     }
 
     /**
      * Set the {@link TraversableResolver} used.
-     * 
+     *
      * @param traversableResolver
      */
     public final void setTraversableResolver(
-        TraversableResolver traversableResolver) {
+            TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
     }
 
@@ -207,11 +199,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Set the {@link ConstraintValidatorFactory} used.
-     * 
+     *
      * @param constraintValidatorFactory
      */
     public final void setConstraintValidatorFactory(
-        ConstraintValidatorFactory constraintValidatorFactory) {
+            ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
     }
 
@@ -226,39 +218,52 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * Return an object of the specified type to allow access to the
      * provider-specific API. If the Bean Validation provider implementation
      * does not support the specified class, the ValidationException is thrown.
-     * 
-     * @param type
-     *            the class of the object to be returned.
+     *
+     * @param type the class of the object to be returned.
      * @return an instance of the specified class
-     * @throws ValidationException
-     *             if the provider does not support the call.
+     * @throws ValidationException if the provider does not support the call.
      */
-    public <T> T unwrap(Class<T> type) {
+    public <T> T unwrap(final Class<T> type) {
+        // FIXME 2011-03-27 jw:
+        // This code is unsecure.
+        // It should allow only a fixed set of classes.
+        // Can't fix this because don't know which classes this method should support.
+
         if (type.isInstance(this)) {
-            @SuppressWarnings("unchecked")
-            final T result = (T) this;
-            return result;
+            //noinspection unchecked
+            return (T) this;
         } else if (!(type.isInterface() || Modifier.isAbstract(type
-            .getModifiers()))) {
-            return SecureActions.newInstance(type);
+                .getModifiers()))) {
+            return newInstance(type);
         } else {
             try {
                 Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
                 if (type.isAssignableFrom(cls)) {
-                    @SuppressWarnings("unchecked")
-                    final Class<? extends T> implClass =
-                        (Class<? extends T>) cls;
-                    return SecureActions.newInstance(implClass);
+                    //noinspection unchecked
+                    return (T) newInstance(cls);
                 }
             } catch (ClassNotFoundException e) {
+                // do nothing
             }
             throw new ValidationException("Type " + type + " not supported");
         }
     }
 
+    private <T> T newInstance(final Class<T> cls) {
+        return AccessController.doPrivileged(new PrivilegedAction<T>() {
+            public T run() {
+                try {
+                    return cls.newInstance();
+                } catch (final Exception ex) {
+                    throw new ValidationException("Cannot instantiate : " + cls, ex);
+                }
+            }
+        });
+    }
+
     /**
      * Get the detected {@link ConstraintDefaults}.
-     * 
+     *
      * @return ConstraintDefaults
      */
     public ConstraintDefaults getDefaultConstraints() {
@@ -267,7 +272,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Get the detected {@link AnnotationIgnores}.
-     * 
+     *
      * @return AnnotationIgnores
      */
     public AnnotationIgnores getAnnotationIgnores() {
@@ -276,7 +281,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Get the constraint cache used.
-     * 
+     *
      * @return {@link ConstraintCached}
      */
     public ConstraintCached getConstraintsCache() {
@@ -286,19 +291,19 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * Add a meta-constraint to this {@link ApacheValidatorFactory}'s runtime
      * customizations.
-     * 
+     *
      * @param beanClass
      * @param metaConstraint
      */
     public void addMetaConstraint(Class<?> beanClass,
-        MetaConstraint<?, ?> metaConstraint) {
+                                  MetaConstraint<?, ?> metaConstraint) {
         List<MetaConstraint<?, ? extends Annotation>> slot =
-            constraintMap.get(beanClass);
+                constraintMap.get(beanClass);
         if (slot != null) {
             slot.add(metaConstraint);
         } else {
             List<MetaConstraint<?, ? extends Annotation>> constraintList =
-                new ArrayList<MetaConstraint<?, ? extends Annotation>>();
+                    new ArrayList<MetaConstraint<?, ? extends Annotation>>();
             constraintList.add(metaConstraint);
             constraintMap.put(beanClass, constraintList);
         }
@@ -306,10 +311,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Mark a property of <code>beanClass</code> for nested validation.
-     * 
+     *
      * @param beanClass
-     * @param accessStrategy
-     *            defining the property to validate
+     * @param accessStrategy defining the property to validate
      */
     public void addValid(Class<?> beanClass, AccessStrategy accessStrategy) {
         List<AccessStrategy> slot = validAccesses.get(beanClass);
@@ -324,7 +328,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Set the default group sequence for a particular bean class.
-     * 
+     *
      * @param beanClass
      * @param groupSequence
      */
@@ -334,7 +338,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     /**
      * Retrieve the runtime constraint configuration for a given class.
-     * 
+     *
      * @param <T>
      * @param beanClass
      * @return List of {@link MetaConstraint}s applicable to
@@ -342,9 +346,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     @SuppressWarnings("unchecked")
     public <T> List<MetaConstraint<T, ? extends Annotation>> getMetaConstraints(
-        Class<T> beanClass) {
+            Class<T> beanClass) {
         List<MetaConstraint<?, ? extends Annotation>> slot =
-            constraintMap.get(beanClass);
+                constraintMap.get(beanClass);
         if (slot != null) {
             // noinspection RedundantCast
             return (List) slot;
@@ -357,7 +361,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * Get the {@link AccessStrategy} {@link List} indicating nested bean
      * validations that must be triggered in the course of validating a
      * <code>beanClass</code> graph.
-     * 
+     *
      * @param beanClass
      * @return {@link List} of {@link AccessStrategy}
      */
@@ -366,13 +370,13 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         if (slot != null) {
             return slot;
         } else {
-            return Collections.<AccessStrategy> emptyList();
+            return Collections.<AccessStrategy>emptyList();
         }
     }
 
     /**
      * Get the default group sequence configured for <code>beanClass</code>.
-     * 
+     *
      * @param beanClass
      * @return group Class array
      */

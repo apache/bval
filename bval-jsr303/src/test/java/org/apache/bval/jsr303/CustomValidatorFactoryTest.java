@@ -18,17 +18,10 @@
  */
 package org.apache.bval.jsr303;
 
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorContext;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ConfigurationState;
-
 import junit.framework.TestCase;
+
+import javax.validation.*;
+import javax.validation.spi.ConfigurationState;
 
 /**
  * Test the ability to force a particular {@link ValidatorFactory}

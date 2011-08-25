@@ -19,11 +19,11 @@
 package org.apache.bval.jsr303.groups.inheritance;
 
 
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-
 import org.apache.bval.jsr303.groups.Billable;
 import org.apache.bval.jsr303.groups.BillableCreditCard;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 
 /**
  * Description: <br/>

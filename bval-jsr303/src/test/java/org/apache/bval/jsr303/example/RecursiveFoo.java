@@ -19,10 +19,9 @@
 package org.apache.bval.jsr303.example;
 
 
-import javax.validation.Valid;
-
 import org.apache.bval.constraints.NotEmpty;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 

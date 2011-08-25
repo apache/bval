@@ -18,23 +18,33 @@
  */
 package org.apache.bval.jsr303;
 
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorFactory;
+import javax.validation.ValidationException;
 
-import org.apache.bval.jsr303.util.SecureActions;
 
 /**
  * Description: create constraint instances with the default / no-arg constructor <br/>
  */
 public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory {
+
     /**
      * Instantiate a Constraint.
      *
      * @return Returns a new Constraint instance
      *         The ConstraintFactory is <b>not</b> responsible for calling Constraint#initialize
      */
-    public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> constraintClass) {
-        return SecureActions.newInstance(constraintClass);
+    public <T extends ConstraintValidator<?, ?>> T getInstance(final Class<T> constraintClass)
+    {
+      // 2011-03-27 jw: Do not use PrivilegedAction.
+      // Otherwise any user code would be executed with the privileges of this class.
+      try
+      {
+        return constraintClass.newInstance();
+      }
+      catch (final Exception ex)
+      {
+        throw new ValidationException("Cannot instantiate : " + constraintClass, ex);
+      }
     }
 }

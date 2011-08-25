@@ -17,12 +17,11 @@
 package org.apache.bval.jsr303.xml;
 
 
-import javax.validation.ValidationException;
-
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
 
+import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;

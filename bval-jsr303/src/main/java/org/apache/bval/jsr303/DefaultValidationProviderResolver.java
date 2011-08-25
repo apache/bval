@@ -20,13 +20,12 @@ package org.apache.bval.jsr303;
 import javax.validation.ValidationException;
 import javax.validation.ValidationProviderResolver;
 import javax.validation.spi.ValidationProvider;
-
-import org.apache.bval.jsr303.util.SecureActions;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -35,7 +34,7 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
 
     //TODO - Spec recommends caching per classloader
     private static final String SPI_CFG =
-        "META-INF/services/javax.validation.spi.ValidationProvider";
+            "META-INF/services/javax.validation.spi.ValidationProvider";
 
     /**
      * {@inheritDoc}
@@ -63,10 +62,21 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
                                 // try loading the specified class
                                 final Class<?> provider = cl.loadClass(line);
                                 // create an instance to return
-                                providers.add((ValidationProvider<?>) SecureActions.newInstance(provider));
+                                ValidationProvider<?> vp =
+                                        AccessController.doPrivileged(new PrivilegedAction<ValidationProvider<?>>() {
+                                            public ValidationProvider<?> run() {
+                                                try {
+                                                    return (ValidationProvider<?>) provider.newInstance();
+                                                } catch (final Exception ex) {
+                                                    throw new ValidationException("Cannot instantiate : " + provider, ex);
+                                                }
+                                            }
+                                        });
+                                 providers.add(vp);
+
                             } catch (ClassNotFoundException e) {
                                 throw new ValidationException("Failed to load provider " +
-                                    line + " configured in file " + url, e);
+                                        line + " configured in file " + url, e);
                             }
                         }
                         line = br.readLine();

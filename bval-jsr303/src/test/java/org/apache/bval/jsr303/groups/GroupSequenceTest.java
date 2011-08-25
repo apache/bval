@@ -27,11 +27,7 @@ import org.apache.bval.jsr303.example.*;
 import org.apache.bval.jsr303.util.TestUtils;
 import org.apache.bval.model.MetaBean;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.GroupSequence;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Locale;

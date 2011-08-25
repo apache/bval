@@ -46,7 +46,7 @@ public class ValidationParserTest extends TestCase
 
     public void testGetInputStream() throws IOException {
         ValidationParser vp = new ValidationParser("sample-validation.xml");
-        assertNotNull(vp.getInputStream(vp.validationXmlFile));
+        assertNotNull(vp.getInputStream("sample-validation.xml"));
 
         try {
             vp.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully

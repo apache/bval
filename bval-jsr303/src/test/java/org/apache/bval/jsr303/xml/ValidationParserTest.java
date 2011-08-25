@@ -27,10 +27,8 @@ import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.example.XmlEntitySampleBean;
 import org.apache.bval.jsr303.resolver.SimpleTraversableResolver;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import javax.validation.*;
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -44,6 +42,18 @@ public class ValidationParserTest extends TestCase
       implements ApacheValidatorConfiguration.Properties {
     public ValidationParserTest(String name) {
         super(name);
+    }
+
+    public void testGetInputStream() throws IOException {
+        ValidationParser vp = new ValidationParser("sample-validation.xml");
+        assertNotNull(vp.getInputStream(vp.validationXmlFile));
+
+        try {
+            vp.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
+            fail("exception not thrown");
+        } catch(ValidationException vex) {
+            assertTrue(vex.getMessage().startsWith("More than "));
+        }
     }
 
     public void testParse() {

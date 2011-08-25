@@ -19,13 +19,12 @@
 package org.apache.bval.jsr303.util;
 
 import org.apache.bval.util.PrivilegedActions;
-import org.apache.commons.lang.StringUtils;
 
-import javax.validation.ValidationException;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
@@ -34,95 +33,86 @@ import java.security.PrivilegedAction;
 public class SecureActions extends PrivilegedActions {
 
     /**
-     * Create a new instance of the class using the default no-arg constructor.
-     * perform newInstance() call with AccessController.doPrivileged() if possible.
+     * Create a privileged action to get the context classloader of the current thread.
      *
-     * @param cls - the class (no interface, non-abstract, has accessible default no-arg-constructor)
-     * @return a new instance
+     * @see Thread#getContextClassLoader()
      */
-    public static <T> T newInstance(final Class<T> cls) {
-        return newInstance(cls, ValidationException.class);
+    public static PrivilegedAction<ClassLoader> getContextClassLoader()
+    {
+        return SecureActions.GetContextClassLoader.instance;
     }
 
-    /**
-     * Create a new instance of a specified class, rethrowing {@link ValidationException}.
-     *
-     * @param <T>
-     * @param cls - the class (no interface, non-abstract, has accessible matching constructor)
-     * @param paramTypes
-     * @param values
-     * @return a new instance
-     */
-    public static <T> T newInstance(final Class<T> cls, final Class<?>[] paramTypes,
-                                    final Object[] values) {
-        return newInstance(cls, ValidationException.class, paramTypes, values);
-    }
 
     /**
-     * Load a class.
-     * @param className
-     * @param caller
-     * @return loaded Class instance
+     * Create a privileged action to get the named field declared by the specified class.
+     * The result of the action will be {@code null} if there is no such field.
      */
-    public static Class<?> loadClass(final String className, final Class<?> caller) {
-        return run(new PrivilegedAction<Class<?>>() {
-            public Class<?> run() {
-                try {
-                    ClassLoader contextClassLoader =
-                          Thread.currentThread().getContextClassLoader();
-                    if (contextClassLoader != null) {
-                        return contextClassLoader.loadClass(className);
-                    }
-                } catch (Throwable e) {
-                    // ignore
-                }
-                try {
-                    return Class.forName(className, true, caller.getClassLoader());
-                } catch (ClassNotFoundException e) {
-                    throw new ValidationException("Unable to load class: " + className, e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Get a field declared on a given class.
-     * @param clazz
-     * @param fieldName
-     * @return Field found
-     */
-    public static Field getDeclaredField(final Class<?> clazz, final String fieldName) {
-        return run(new PrivilegedAction<Field>() {
+    public static PrivilegedAction<Field> getDeclaredField(final Class<?> clazz, final String fieldName) {
+        return new PrivilegedAction<Field>() {
             public Field run() {
                 try {
-                    Field f = clazz.getDeclaredField(fieldName);
+                    final Field f = clazz.getDeclaredField(fieldName);
                     setAccessibility(f);
                     return f;
-                } catch (NoSuchFieldException e) {
+                } catch (final NoSuchFieldException ex) {
                     return null;
                 }
             }
-        });
+        };
+    }
+
+
+
+    /**
+     * Create a privileged action to get all fields declared by the specified class.
+     */
+    public static PrivilegedAction<Field[]> getDeclaredFields(final Class<?> clazz) {
+        return new PrivilegedAction<Field[]>() {
+            public Field[] run() {
+                final Field[] fields = clazz.getDeclaredFields();
+                if (fields.length > 0)
+                    AccessibleObject.setAccessible(fields, true);
+                return fields;
+            }
+        };
+    }
+
+
+
+    /**
+     * Create a privileged action to get all methods declared by the specified class.
+     */
+    public static PrivilegedAction<Method[]> getDeclaredMethods(final Class<?> clazz) {
+      // XXX 2011-03-27 jw: Inconsistent behaviour.
+      // doGetDeclaredFields() is setting fields accessible, but here we don't.
+      return new PrivilegedAction<Method[]>() {
+          public Method[] run() {
+            return clazz.getDeclaredMethods();
+        }
+      };
     }
 
     /**
-     * Get all fields declared on a given class.
-     * @param clazz
-     * @return Field found
+     * Create a privileged action to get the named method declared by the specified class
+     * or by one of its ancestors.
+     * The result of the action will be {@code null} if there is no such method.
      */
-    public static Field[] getDeclaredFields(final Class<?> clazz) {
-        return run(new PrivilegedAction<Field[]>() {
-            public Field[] run() {
-                Field[] fs = clazz.getDeclaredFields();
-                for( Field f : fs ) {
-                    setAccessibility(f);
-                }
-                return fs;
-            }
-        });
+    public static PrivilegedAction<Method> getPublicMethod(final Class<?> clazz, final String methodName) {
+      return new PrivilegedAction<Method>() {
+          public Method run() {
+              try {
+                  return clazz.getMethod(methodName, (Class[]) null);
+              } catch (final NoSuchMethodException ex) {
+                  return null;
+              }
+          }
+      };
     }
 
     private static void setAccessibility(Field field) {
+      // FIXME 2011-03-27 jw:
+      // - Why not simply call field.setAccessible(true)?
+      // - Fields can not be abstract.
         if (!Modifier.isPublic(field.getModifiers()) || (
               Modifier.isPublic(field.getModifiers()) &&
                     Modifier.isAbstract(field.getModifiers()))) {
@@ -130,106 +120,27 @@ public class SecureActions extends PrivilegedActions {
         }
     }
 
-    /**
-     * Returns the <b>public method</b> with the specified name or null if it does not exist.
-     *
-     * @param clazz
-     * @param methodName
-     * @return Returns the method or null if not found.
-     */
-    public static Method getGetter(final Class<?> clazz, final String methodName) {
-        return run(new PrivilegedAction<Method>() {
-            public Method run() {
-                try {
-                    String methodName0 = StringUtils.capitalize(methodName);
-                    try {
-                        return clazz.getMethod("get" + methodName0);
-                    } catch (NoSuchMethodException e) {
-                        return clazz.getMethod("is" + methodName0);
-                    }
-                } catch (NoSuchMethodException e) {
-                    return null;
-                }
-            }
-        });
-
+    static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 
-    /**
-     * Get the method of <code>methodName</code> available on <code>clazz</code>.
-     * @param clazz
-     * @param methodName
-     * @return {@link Method} found
-     */
-    public static Method getMethod(final Class<?> clazz, final String methodName) {
-        return run(new PrivilegedAction<Method>() {
-            public Method run() {
-                try {
-                    return clazz.getMethod(methodName);
-                } catch (NoSuchMethodException e) {
-                    return null;
-                }
-            }
-        });
-    }
+    private static final class GetContextClassLoader extends Object implements PrivilegedAction<ClassLoader> {
 
-    /**
-     * Get methods declared on <code>clazz</code>.
-     * @param clazz
-     * @return {@link Method} array
-     */
-    public static Method[] getDeclaredMethods(final Class<?> clazz) {
-        return run(new PrivilegedAction<Method[]>() {
-            public Method[] run() {
-                return clazz.getDeclaredMethods();
-            }
-        });
-    }
+      static final GetContextClassLoader instance = new GetContextClassLoader();
 
-    /**
-     * Get class loader of <code>clazz</code>.
-     * @param clazz
-     * @return {@link ClassLoader}
-     */
-    public static ClassLoader getClassLoader(final Class<?> clazz) {
-        return run(new PrivilegedAction<ClassLoader>() {
-            public ClassLoader run() {
-                return clazz.getClassLoader();
-            }
-        });
-    }
+      private GetContextClassLoader()
+      {
+        super();
+      }
 
-    /**
-     * Get context class loader of <code>thread</code>.
-     * @param thread
-     * @return {@link ClassLoader}
-     */
-    public static ClassLoader getContextClassLoader(final Thread thread) {
-        return run(new PrivilegedAction<ClassLoader>() {
-            public ClassLoader run() {
-                return thread.getContextClassLoader();
-            }
-        });
-    }
+      public final ClassLoader run() {
+          return Thread.currentThread().getContextClassLoader();
+      }
 
-    /**
-     * Get the constructor of <code>clazz</code> matching <code>params</code>.
-     * @param <T>
-     * @param clazz
-     * @param params
-     * @return {@link Constructor} found
-     */
-    public static <T> Constructor<T> getConstructor(final Class<T> clazz,
-                                                    final Class<?>... params) {
-        return run(new PrivilegedAction<Constructor<T>>() {
-            public Constructor<T> run() {
-                try {
-                    return clazz.getConstructor(params);
-                } catch (NoSuchMethodException e) {
-                    return null;
-                }
-            }
-        });
     }
 
 }

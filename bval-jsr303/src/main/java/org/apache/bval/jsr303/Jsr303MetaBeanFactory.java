@@ -42,6 +42,8 @@ import javax.validation.*;
 import javax.validation.groups.Default;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +129,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                   new AppendValidationToMeta(metabean));
         }
 
-        final Field[] fields = SecureActions.getDeclaredFields(beanClass);
+        final Field[] fields = doPrivileged(SecureActions.getDeclaredFields(beanClass));
         for (Field field : fields) {
             MetaProperty metaProperty = metabean.getProperty(field.getName());
             // create a property for those fields for which there is not yet a MetaProperty
@@ -145,7 +147,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 }
             }
         }
-        final Method[] methods = SecureActions.getDeclaredMethods(beanClass);
+        final Method[] methods = doPrivileged(SecureActions.getDeclaredMethods(beanClass));
         for (Method method : methods) {
 
             String propName = null;
@@ -594,5 +596,23 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 }
             }
         } while (removed && assignableTypes.size() > 1);
+    }
+
+
+
+    /**
+     * Perform action with AccessController.doPrivileged() if a security manager is installed.
+     *
+     * @param action
+     *  the action to run
+     * @return
+     *  result of the action
+     */
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 }

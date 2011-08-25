@@ -22,11 +22,10 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import javax.validation.Validator;
-
 import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.example.Customer;
+
+import javax.validation.Validator;
 
 /**
  * EmailValidator Tester.

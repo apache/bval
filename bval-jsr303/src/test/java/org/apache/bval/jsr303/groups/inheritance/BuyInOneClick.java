@@ -19,9 +19,9 @@
 package org.apache.bval.jsr303.groups.inheritance;
 
 
-import javax.validation.groups.Default;
-
 import org.apache.bval.jsr303.groups.Billable;
+
+import javax.validation.groups.Default;
 
 /**
  * Customer can buy without harrassing checking process.

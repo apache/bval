@@ -19,10 +19,10 @@
 package org.apache.bval.jsr303.example;
 
 
-import javax.validation.constraints.NotNull;
-
 import org.apache.bval.constraints.Email;
 import org.apache.bval.constraints.Password;
+
+import javax.validation.constraints.NotNull;
 
 public class Customer implements Person {
     private String firstName;

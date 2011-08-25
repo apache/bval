@@ -18,12 +18,11 @@
  */
 package org.apache.bval.jsr303.util;
 
-import java.util.Collection;
-import java.util.Set;
+import org.junit.Assert;
 
 import javax.validation.ConstraintViolation;
-
-import org.junit.Assert;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Description: <br/>

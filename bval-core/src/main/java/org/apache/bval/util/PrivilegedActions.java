@@ -17,7 +17,6 @@
 package org.apache.bval.util;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
@@ -36,6 +35,7 @@ public class PrivilegedActions {
      * Requires security policy: 
      *   'permission java.util.PropertyPermission "read";'
      */
+    @Deprecated // unused method - will remove in future release
     public static final String getLineSeparator() {
         if (lineSeparator == null) {
             lineSeparator =
@@ -54,6 +54,7 @@ public class PrivilegedActions {
      * Requires security policy:
      *   'permission java.util.PropertyPermission "read";'
      */
+    @Deprecated // unused method - will remove in future release
     public static final String getPathSeparator() {
         if (pathSeparator == null) {
             pathSeparator =
@@ -64,88 +65,6 @@ public class PrivilegedActions {
                 });
         }
         return pathSeparator;
-    }
-
-    /**
-     * Create a new instance of a specified class.
-     *
-     * @param cls - the class (no interface, non-abstract, has accessible default no-arg-constructor)
-     * @return a new instance
-     * @throws IllegalArgumentException on any error to wrap target exceptions.
-     */
-    public static <T> T newInstance(final Class<T> cls) {
-        return newInstance(cls, IllegalArgumentException.class);
-    }
-
-    /**
-     * Create a new instance of a specified class.
-     *
-     * @param <T>
-     * @param <E>
-     * @param cls - the class (no interface, non-abstract, has accessible matching constructor)
-     * @param exception type to rethrow
-     * @param paramTypes
-     * @param values
-     * @return a new instance
-     * @throws E
-     */
-    public static <T, E extends RuntimeException> T newInstance(final Class<T> cls,
-                                                                final Class<E> exception,
-                                                                final Class<?>[] paramTypes,
-                                                                final Object[] values) {
-        return run(new PrivilegedAction<T>() {
-            public T run() {
-                try {
-                    Constructor<T> cons = cls.getConstructor(paramTypes);
-                    if (!cons.isAccessible()) {
-                        cons.setAccessible(true);
-                    }
-                    return cons.newInstance(values);
-                } catch (Exception e) {
-                    throw newException("Cannot instantiate : " + cls, exception, e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Create a new instance of the class using the default no-arg constructor.
-     * perform newInstance() call with AccessController.doPrivileged() if possible.
-     *
-     * @param cls       - the type to create a new instance from
-     * @param exception - type of exception to throw when newInstance() call fails
-     * @return the new instance of 'cls'
-     */
-    public static <T, E extends RuntimeException> T newInstance(final Class<T> cls,
-                                                                final Class<E> exception) {
-        return run(new PrivilegedAction<T>() {
-            public T run() {
-                try {
-                    return cls.newInstance();
-                } catch (Exception e) {
-                    throw newException("Cannot instantiate : " + cls, exception, e);
-                }
-            }
-
-
-        });
-    }
-
-    private static <E extends RuntimeException> RuntimeException newException(String msg,
-                                                                              final Class<E> exception,
-                                                                              Throwable e) {
-        try {
-            Constructor<E> co = exception.getConstructor(String.class, Throwable.class);
-            try {
-                return co.newInstance(msg, e);
-            } catch (Exception e1) {
-                //noinspection ThrowableInstanceNeverThrown
-                return new RuntimeException(msg, e); // fallback
-            }
-        } catch (NoSuchMethodException e1) {
-            //noinspection ThrowableInstanceNeverThrown
-            return new RuntimeException(msg, e); // fallback
-        }
     }
 
     /**
@@ -174,7 +93,7 @@ public class PrivilegedActions {
      */
     public static Object getAnnotationValue(final Annotation annotation, final String name)
           throws IllegalAccessException, InvocationTargetException {
-        return run(new PrivilegedAction<Object>() {
+        return doPrivileged(new PrivilegedAction<Object>() {
             public Object run() {
                 Method valueMethod;
                 try {
@@ -205,7 +124,7 @@ public class PrivilegedActions {
      * @return Classloader
      */
     public static ClassLoader getClassLoader(final Class<?> clazz) {
-        return run(new PrivilegedAction<ClassLoader>() {
+        return doPrivileged(new PrivilegedAction<ClassLoader>() {
             public ClassLoader run() {
                 ClassLoader cl = Thread.currentThread().getContextClassLoader();
                 if (cl == null) {
@@ -230,6 +149,22 @@ public class PrivilegedActions {
                 return System.getProperty(name);
             }
         });
+    }
+
+
+
+    /**
+     * Perform action with AccessController.doPrivileged() if possible.
+     *
+     * @param action - the action to run
+     * @return result of running the action
+     */
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 
 }

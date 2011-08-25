@@ -21,7 +21,6 @@ package org.apache.bval.jsr303.util;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.apache.commons.beanutils.Converter;
 
 /**

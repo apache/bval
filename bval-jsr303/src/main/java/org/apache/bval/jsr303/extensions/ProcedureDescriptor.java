@@ -17,9 +17,9 @@
 package org.apache.bval.jsr303.extensions;
 
 
-import java.util.List;
-
 import org.apache.bval.model.MetaBean;
+
+import java.util.List;
 
 /**
  * Description: superinterface of {@link ConstructorDescriptor} and {@link MethodDescriptor}.<br/>

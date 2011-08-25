@@ -16,16 +16,16 @@
  */
 package org.apache.bval.jsr303.resolver;
 
-import java.lang.annotation.ElementType;
+import org.apache.bval.jsr303.util.ClassHelper;
+import org.apache.commons.lang.ClassUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
-
-import org.apache.bval.jsr303.util.ClassHelper;
-import org.apache.bval.jsr303.util.SecureActions;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.annotation.ElementType;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 
 /** @see javax.validation.TraversableResolver */
@@ -73,8 +73,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     /** Tries to load detect and load JPA. */
     @SuppressWarnings("unchecked")
     private void initJpa() {
+        final ClassLoader classLoader = getClassLoader();
         try {
-            ClassHelper.getClass(PERSISTENCE_UTIL_CLASSNAME);
+            ClassUtils.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME, true);
             log.debug("Found {} on classpath.", PERSISTENCE_UTIL_CLASSNAME);
         } catch (Exception e) {
             log.debug("Cannot find {} on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME);
@@ -83,9 +84,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
 
         try {
             Class<? extends TraversableResolver> jpaAwareResolverClass =
-                  (Class<? extends TraversableResolver>) ClassHelper
-                        .getClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);
-            jpaTR = SecureActions.newInstance(jpaAwareResolverClass);
+              (Class<? extends TraversableResolver>)
+                ClassUtils.getClass(classLoader, JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, true);
+            jpaTR = jpaAwareResolverClass.newInstance();
             log.debug("Instantiated an instance of {}.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME);
         } catch (Exception e) {
             log.warn("Unable to load or instanciate JPA aware resolver " +
@@ -100,4 +101,25 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     public boolean needsCaching() {
         return jpaTR != null && CachingTraversableResolver.needsCaching(jpaTR);
     }
+
+
+    
+    private static ClassLoader getClassLoader()
+    {
+      return (System.getSecurityManager() == null)
+        ? getClassLoader0()
+        : AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
+              public ClassLoader run() {
+                return getClassLoader0();
+              }
+          });
+    }
+
+    private static ClassLoader getClassLoader0()
+    {
+      final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      return (loader != null) ? loader : ClassHelper.class.getClassLoader();
+    }
+
+
 }

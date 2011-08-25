@@ -18,10 +18,10 @@
  */
 package org.apache.bval.jsr303;
 
-import javax.validation.metadata.PropertyDescriptor;
-
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
+
+import javax.validation.metadata.PropertyDescriptor;
 
 /**
  * Description: {@link PropertyDescriptor} implementation.<br/>

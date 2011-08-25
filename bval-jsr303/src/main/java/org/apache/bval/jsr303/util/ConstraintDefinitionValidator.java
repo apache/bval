@@ -59,17 +59,19 @@ public class ConstraintDefinitionValidator {
      * @param annotation
      *            The annotation to check.
      */
-    private static void validGroups(Annotation annotation) {
+    private static void validGroups(final Annotation annotation) {
         // Ensure that it has a groups() method...
-        Method groupsMethod = SecureActions.getMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_GROUPS);
-        if ( groupsMethod == null ) {
+        final Method groupsMethod = SecureActions.doPrivileged(
+            SecureActions.getPublicMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_GROUPS)
+        );
+        if (groupsMethod == null) {
             throw new ConstraintDefinitionException("Constraint definition " + annotation + " has no groups() method");
         }
         
         // ...whose default value is an empty array
-        Object defaultGroupsValue = groupsMethod.getDefaultValue();
-        if ( defaultGroupsValue instanceof Class<?>[] ) {
-            if ( ((Class[]) defaultGroupsValue).length != 0 ) {
+        final Object defaultGroupsValue = groupsMethod.getDefaultValue();
+        if (defaultGroupsValue instanceof Class<?>[]) {
+            if (((Class[]) defaultGroupsValue).length != 0) {
                 throw new ConstraintDefinitionException("Default value for groups() must be an empty array");
             }
         }
@@ -88,17 +90,19 @@ public class ConstraintDefinitionValidator {
      * @param annotation
      *            The annotation to check.
      */
-    private static void validPayload(Annotation annotation) {
+    private static void validPayload(final Annotation annotation) {
         // Ensure that it has a payload() method...
-        Method payloadMethod = SecureActions.getMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD);
-        if ( payloadMethod == null ) {
+        final Method payloadMethod = SecureActions.doPrivileged(
+            SecureActions.getPublicMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD)
+        );
+        if (payloadMethod == null) {
             throw new ConstraintDefinitionException("Constraint definition " + annotation + " has no payload() method");
         }
         
         // ...whose default value is an empty array
-        Object defaultPayloadValue = payloadMethod.getDefaultValue();
-        if ( defaultPayloadValue instanceof Class<?>[] ) {
-            if ( ((Class[]) defaultPayloadValue).length != 0 ) {
+        final Object defaultPayloadValue = payloadMethod.getDefaultValue();
+        if (defaultPayloadValue instanceof Class<?>[]) {
+            if (((Class[]) defaultPayloadValue).length != 0) {
                 throw new ConstraintDefinitionException("Default value for payload() must be an empty array");
             }
         }
@@ -117,16 +121,18 @@ public class ConstraintDefinitionValidator {
      * @param annotation
      *            The annotation to check.
      */
-    private static void validMessage(Annotation annotation) {
+    private static void validMessage(final Annotation annotation) {
         // Ensure that it has a message() method...
-        Method messageMethod = SecureActions.getMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_MESSAGE);
-        if ( messageMethod == null ) {
+        final Method messageMethod = SecureActions.doPrivileged(
+            SecureActions.getPublicMethod(annotation.annotationType(), Jsr303MetaBeanFactory.ANNOTATION_MESSAGE)
+        );
+        if (messageMethod == null) {
             throw new ConstraintDefinitionException("Constraint definition " + annotation + " has no message() method");
         }
         
         // ...whose default value is a String
-        Object defaultMessageValue = messageMethod.getDefaultValue();
-        if ( !(defaultMessageValue instanceof String) ) {
+        final Object defaultMessageValue = messageMethod.getDefaultValue();
+        if (!(defaultMessageValue instanceof String)) {
             throw new ConstraintDefinitionException("Return type for message() must be of type String");
         }
     }
@@ -137,9 +143,11 @@ public class ConstraintDefinitionValidator {
      * @param annotation
      *            The annotation to check.
      */
-    private static void validAttributes(Annotation annotation) {
-        Method[] methods = SecureActions.getDeclaredMethods(annotation.annotationType());
-        for ( Method method : methods ) {
+    private static void validAttributes(final Annotation annotation) {
+        final Method[] methods = SecureActions.doPrivileged(
+            SecureActions.getDeclaredMethods(annotation.annotationType())
+        );
+        for (Method method : methods ){
             // Currently case insensitive, the spec is unclear about this
             if ( method.getName().toLowerCase(Locale.ENGLISH).startsWith("valid") ) {
                 throw new ConstraintDefinitionException("A constraint annotation cannot have methods which start with 'valid'");

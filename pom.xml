@@ -265,6 +265,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
+                <version>2.3.2</version>
             </plugin>
         </plugins>
     </reporting>
@@ -497,7 +498,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.6</version>
+                    <version>0.7</version>
                     <executions>
                         <execution>
                             <phase>verify</phase>
@@ -523,6 +524,8 @@
                             <exclude>**/target/**/*</exclude>
                             <exclude>**/*.iml</exclude>
                             <exclude>**/*.patch</exclude>
+                            <exclude>**/*.ipr</exclude>
+                            <exclude>**/*.iws</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
@@ -602,6 +605,7 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
+                <version>0.7</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

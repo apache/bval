@@ -22,10 +22,6 @@ import junit.framework.TestCase;
 
 import javax.validation.GroupDefinitionException;
 import javax.validation.groups.Default;
-
-import org.apache.bval.jsr303.groups.Group;
-import org.apache.bval.jsr303.groups.Groups;
-
 import java.util.ArrayList;
 import java.util.List;
 

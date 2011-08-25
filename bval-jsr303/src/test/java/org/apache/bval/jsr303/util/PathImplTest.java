@@ -23,10 +23,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import javax.validation.Path;
-
-import org.apache.bval.jsr303.util.NodeImpl;
-import org.apache.bval.jsr303.util.PathImpl;
-
 import java.util.Iterator;
 
 /**

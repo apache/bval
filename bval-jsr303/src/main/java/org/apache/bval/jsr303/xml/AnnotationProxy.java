@@ -23,6 +23,8 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
@@ -58,7 +60,9 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
     private <A extends Annotation> Map<String, Object> getAnnotationValues(AnnotationProxyBuilder<A> descriptor) {
         Map<String, Object> result = new HashMap<String, Object>();
         int processedValuesFromDescriptor = 0;
-        final Method[] declaredMethods = SecureActions.getDeclaredMethods(annotationType);
+        final Method[] declaredMethods = doPrivileged(
+          SecureActions.getDeclaredMethods(annotationType)
+        );
         for (Method m : declaredMethods) {
             if (descriptor.contains(m.getName())) {
                 result.put(m.getName(), descriptor.getValue(m.getName()));
@@ -113,6 +117,16 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
         SortedSet<String> result = new TreeSet<String>();
         result.addAll(values.keySet());
         return result;
+    }
+
+
+
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 }
 

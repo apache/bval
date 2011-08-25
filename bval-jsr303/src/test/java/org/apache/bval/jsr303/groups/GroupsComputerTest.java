@@ -21,19 +21,14 @@ package org.apache.bval.jsr303.groups;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import javax.validation.GroupDefinitionException;
-import javax.validation.ValidationException;
-import javax.validation.groups.Default;
-
 import org.apache.bval.jsr303.example.Address;
 import org.apache.bval.jsr303.example.First;
 import org.apache.bval.jsr303.example.Last;
 import org.apache.bval.jsr303.example.Second;
-import org.apache.bval.jsr303.groups.Group;
-import org.apache.bval.jsr303.groups.Groups;
-import org.apache.bval.jsr303.groups.GroupsComputer;
 
+import javax.validation.GroupDefinitionException;
+import javax.validation.ValidationException;
+import javax.validation.groups.Default;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;

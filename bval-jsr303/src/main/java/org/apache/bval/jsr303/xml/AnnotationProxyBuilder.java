@@ -19,14 +19,14 @@ package org.apache.bval.jsr303.xml;
 
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.PrivilegedActions;
 
 import javax.validation.Payload;
 import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +43,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Create a new AnnotationProxyBuilder instance.
+     *
      * @param annotationType
      */
     public AnnotationProxyBuilder(Class<A> annotationType) {
@@ -51,6 +52,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Create a new AnnotationProxyBuilder instance.
+     *
      * @param annotationType
      * @param elements
      */
@@ -64,16 +66,15 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
     /**
      * Create a builder initially configured to create an annotation equivalent to <code>annot</code>.
      *
-     * @param annot
-     *            Annotation to be replicated.
+     * @param annot Annotation to be replicated.
      */
     @SuppressWarnings("unchecked")
     public AnnotationProxyBuilder(A annot) {
         this((Class<A>) annot.annotationType());
         // Obtain the "elements" of the annotation
-        Method[] methods = SecureActions.getDeclaredMethods(annot.annotationType());
-        for ( Method m : methods ) {
-            if ( !m.isAccessible() ) {
+        final Method[] methods = doPrivileged(SecureActions.getDeclaredMethods(annot.annotationType()));
+        for (Method m : methods) {
+            if (!m.isAccessible()) {
                 m.setAccessible(true);
             }
             try {
@@ -92,6 +93,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Add an element to the configuration.
+     *
      * @param elementName
      * @param value
      */
@@ -101,6 +103,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Get the specified element value from the current configuration.
+     *
      * @param elementName
      * @return Object value
      */
@@ -110,6 +113,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Learn whether a given element has been configured.
+     *
      * @param elementName
      * @return <code>true</code> if an <code>elementName</code> element is found on this annotation
      */
@@ -119,6 +123,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Get the number of configured elements.
+     *
      * @return int
      */
     public int size() {
@@ -127,6 +132,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Get the configured Annotation type.
+     *
      * @return Class<A>
      */
     public Class<A> getType() {
@@ -135,6 +141,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Configure the well-known JSR303 "message" element.
+     *
      * @param message
      */
     public void setMessage(String message) {
@@ -143,6 +150,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Configure the well-known JSR303 "groups" element.
+     *
      * @param groups
      */
     public void setGroups(Class<?>[] groups) {
@@ -151,6 +159,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Configure the well-known JSR303 "payload" element.
+     *
      * @param payload
      */
     public void setPayload(Class<? extends Payload>[] payload) {
@@ -159,21 +168,31 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
 
     /**
      * Create the annotation represented by this builder.
+     *
      * @return {@link Annotation}
      */
     @SuppressWarnings("unchecked")
     public A createAnnotation() {
         ClassLoader classLoader = SecureActions.getClassLoader(getType());
-        Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
-        InvocationHandler handler = new AnnotationProxy(this);
-        try {
-            return SecureActions.getConstructor(proxyClass, InvocationHandler.class)
-                  .newInstance(handler);
-        } catch (ValidationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ValidationException(
-                  "Unable to create annotation for configured constraint", e);
+        final Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
+        final InvocationHandler handler = new AnnotationProxy(this);
+        return PrivilegedActions.run(new PrivilegedAction<A>() {
+            public A run() {
+                try {
+                    Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
+                    return constructor.newInstance(handler);
+                } catch (Exception e) {
+                    throw new ValidationException("Unable to create annotation for configured constraint", e);
+                }
+            }
+        });
+    }
+
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
         }
     }
 }

@@ -25,9 +25,6 @@ import junit.framework.TestSuite;
 
 import java.math.BigDecimal;
 
-import org.apache.bval.constraints.DigitsValidatorForNumber;
-import org.apache.bval.constraints.DigitsValidatorForString;
-
 /**
  * DigitsConstraintValidator Tester.
  *

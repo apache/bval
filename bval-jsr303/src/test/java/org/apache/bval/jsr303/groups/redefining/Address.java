@@ -19,12 +19,12 @@
 package org.apache.bval.jsr303.groups.redefining;
 
 
+import org.apache.bval.constraints.ZipCodeCityCoherence;
+import org.apache.bval.jsr303.example.ZipCodeCityCarrier;
+
 import javax.validation.GroupSequence;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.apache.bval.constraints.ZipCodeCityCoherence;
-import org.apache.bval.jsr303.example.ZipCodeCityCarrier;
 
 /**
  * Example 3.6. Redefining Default group for Address:

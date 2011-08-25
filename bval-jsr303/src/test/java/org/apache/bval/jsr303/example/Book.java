@@ -19,12 +19,12 @@
 package org.apache.bval.jsr303.example;
 
 
+import org.apache.bval.constraints.NotEmpty;
+
 import javax.validation.GroupSequence;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.apache.bval.constraints.NotEmpty;
 
 @GroupSequence({First.class, Second.class, Book.class, Last.class})
 public class Book {

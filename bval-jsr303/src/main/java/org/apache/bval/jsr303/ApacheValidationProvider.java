@@ -18,15 +18,16 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.commons.lang.ClassUtils;
+
 import javax.validation.Configuration;
 import javax.validation.ValidationException;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.commons.lang.ClassUtils;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr303
@@ -38,8 +39,6 @@ import org.apache.commons.lang.ClassUtils;
  * Time: 14:45:41 <br/>
  */
 public class ApacheValidationProvider implements ValidationProvider<ApacheValidatorConfiguration> {
-
-    private static final Class<?>[] VALIDATOR_FACTORY_CONSTRUCTOR_ARGS = new Class[] { ConfigurationState.class };
 
     /**
      * Learn whether a particular builder class is suitable for this
@@ -72,20 +71,59 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
      * @throws javax.validation.ValidationException
      *             if the ValidatorFactory cannot be built
      */
-    public ValidatorFactory buildValidatorFactory(ConfigurationState configuration) {
+    @SuppressWarnings("unchecked")
+    public ValidatorFactory buildValidatorFactory(final ConfigurationState configuration) {
+        final Class<? extends ValidatorFactory> validatorFactoryClass;
         try {
             String validatorFactoryClassname =
                 configuration.getProperties().get(ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME);
-            @SuppressWarnings("unchecked")
-            final Class<? extends ValidatorFactory> validatorFactoryClass =
-                validatorFactoryClassname == null ? ApacheValidatorFactory.class
-                    : (Class<? extends ValidatorFactory>) ClassUtils.getClass(validatorFactoryClassname);
-            return SecureActions.newInstance(validatorFactoryClass, VALIDATOR_FACTORY_CONSTRUCTOR_ARGS,
-                new Object[] { configuration });
+
+            if (validatorFactoryClassname == null)
+                validatorFactoryClass = ApacheValidatorFactory.class;
+            else
+            {
+                validatorFactoryClass
+                  = (Class<? extends ValidatorFactory>) ClassUtils.getClass(validatorFactoryClassname);
+                validatorFactoryClass.asSubclass(ValidatorFactory.class);
+            }
         } catch (ValidationException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new ValidationException("error building ValidatorFactory", ex);
         }
+
+        // FIXME 2011-03-27 jw:
+        // Should not use privileged action, but to avoid breaking things
+        // doing it here like the former version of this class did.
+        //
+        // The privileged action should be applied by the ValidatorFactory
+        // itself, if required.
+        // No privileges should be required to access the constructor,
+        // because the classloader of ApacheValidationProvider will always
+        // be an ancestor of the loader of validatorFactoryClass.
+        return (System.getSecurityManager() == null)
+            ? instantiateValidatorFactory(validatorFactoryClass, configuration)
+            : AccessController.doPrivileged(new PrivilegedAction<ValidatorFactory>() {
+                  public ValidatorFactory run() {
+                      return instantiateValidatorFactory(validatorFactoryClass, configuration);
+                  }
+              });
     }
+
+
+
+    private static ValidatorFactory instantiateValidatorFactory(
+        final Class<? extends ValidatorFactory> validatorFactoryClass,
+        final ConfigurationState                configuration
+    ) {
+      try
+      {
+          return validatorFactoryClass.getConstructor(ConfigurationState.class).newInstance(configuration);
+      }
+      catch (final Exception ex)
+      {
+          throw new ValidationException("Cannot instantiate : " + validatorFactoryClass, ex);
+      }
+    }
+
 }

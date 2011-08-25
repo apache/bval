@@ -26,6 +26,7 @@ import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.Converter;
+import org.apache.commons.lang.StringUtils;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -44,6 +45,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 
@@ -185,8 +188,8 @@ public class ValidationMappingParser {
     }
 
     private <A extends Annotation> Class<?> getAnnotationParameterType(
-          Class<A> annotationClass, String name) {
-        Method m = SecureActions.getMethod(annotationClass, name);
+          final Class<A> annotationClass, final String name) {
+        final Method m = doPrivileged(SecureActions.getPublicMethod(annotationClass, name));
         if (m == null) {
             throw new ValidationException("Annotation of type " + annotationClass.getName() +
                   " does not contain a parameter " + name + ".");
@@ -355,7 +358,7 @@ public class ValidationMappingParser {
             } else {
                 fieldNames.add(fieldName);
             }
-            final Field field = SecureActions.getDeclaredField(beanClass, fieldName);
+            final Field field = doPrivileged(SecureActions.getDeclaredField(beanClass, fieldName));
             if (field == null) {
                 throw new ValidationException(
                       beanClass.getName() + " does not contain the fieldType  " + fieldName);
@@ -394,7 +397,7 @@ public class ValidationMappingParser {
             } else {
                 getterNames.add(getterName);
             }
-            final Method method = SecureActions.getGetter(beanClass, getterName);
+            final Method method = getGetter(beanClass, getterName);
             if (method == null) {
                 throw new ValidationException(
                       beanClass.getName() + " does not contain the property  " + getterName);
@@ -450,8 +453,8 @@ public class ValidationMappingParser {
             }
             for (JAXBElement<String> validatorClassName : validatedByType.getValue()) {
                 Class<? extends ConstraintValidator<?, ?>> validatorClass;
-                validatorClass = (Class<? extends ConstraintValidator<?, ?>>) SecureActions
-                      .loadClass(validatorClassName.getValue(), this.getClass());
+                validatorClass = (Class<? extends ConstraintValidator<?, ?>>)
+                      loadClass(validatorClassName.getValue());
 
 
                 if (!ConstraintValidator.class.isAssignableFrom(validatorClass)) {
@@ -496,8 +499,7 @@ public class ValidationMappingParser {
     }
 
     private Class<?> loadClass(String className, String defaultPackage) {
-        return SecureActions
-              .loadClass(toQualifiedClassName(className, defaultPackage), this.getClass());
+        return loadClass(toQualifiedClassName(className, defaultPackage));
     }
 
     private String toQualifiedClassName(String className, String defaultPackage) {
@@ -509,6 +511,50 @@ public class ValidationMappingParser {
 
     private boolean isQualifiedClass(String clazz) {
         return clazz.contains(".");
+    }
+
+
+
+    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
+    }
+
+
+
+    private static Method getGetter(final Class<?> clazz, final String propertyName) {
+        return doPrivileged(new PrivilegedAction<Method>() {
+            public Method run() {
+                try {
+                    final String p = StringUtils.capitalize(propertyName);
+                    try {
+                        return clazz.getMethod("get" + p);
+                    } catch (NoSuchMethodException e) {
+                        return clazz.getMethod("is" + p);
+                    }
+                } catch (NoSuchMethodException e) {
+                    return null;
+                }
+            }
+        });
+
+    }
+
+
+
+    private Class<?> loadClass(final String className) {
+        ClassLoader loader = doPrivileged(SecureActions.getContextClassLoader());
+        if (loader == null)
+            loader = getClass().getClassLoader();
+
+        try {
+            return Class.forName(className, true, loader);
+        } catch (ClassNotFoundException ex) {
+            throw new ValidationException("Unable to load class: " + className, ex);
+        }
     }
 
 }

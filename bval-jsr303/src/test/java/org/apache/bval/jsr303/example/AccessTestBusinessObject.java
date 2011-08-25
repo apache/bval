@@ -19,9 +19,9 @@
 package org.apache.bval.jsr303.example;
 
 
-import javax.validation.Valid;
-
 import org.apache.bval.constraints.HasValue;
+
+import javax.validation.Valid;
 
 /**
  * Description: <br/>

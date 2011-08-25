@@ -19,13 +19,11 @@
 package org.apache.bval.jsr303.groups.inheritance;
 
 import junit.framework.TestCase;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-
 import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.util.TestUtils;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.util.Set;
 
 /**

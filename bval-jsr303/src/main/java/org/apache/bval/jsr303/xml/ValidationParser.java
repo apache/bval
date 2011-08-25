@@ -19,10 +19,13 @@
 package org.apache.bval.jsr303.xml;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Enumeration;
+import org.apache.bval.jsr303.ConfigurationImpl;
+import org.apache.bval.jsr303.util.IOUtils;
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.PrivilegedActions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -37,14 +40,12 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-
-import org.apache.bval.jsr303.ConfigurationImpl;
-import org.apache.bval.jsr303.util.IOUtils;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.util.PrivilegedActions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Description: uses jaxb to parse validation.xml<br/>
@@ -53,16 +54,17 @@ import org.xml.sax.SAXException;
 public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final String VALIDATION_CONFIGURATION_XSD =
-          "META-INF/validation-configuration-1.0.xsd";
+            "META-INF/validation-configuration-1.0.xsd";
     private static final Logger log = LoggerFactory.getLogger(ValidationParser.class);
-    private final String validationXmlFile;
+    protected final String validationXmlFile;
 
     /**
      * Create a new ValidationParser instance.
+     *
      * @param file
      */
     public ValidationParser(String file) {
-        if(file == null) {
+        if (file == null) {
             validationXmlFile = DEFAULT_VALIDATION_XML_FILE;
         } else {
             validationXmlFile = file;
@@ -71,6 +73,7 @@ public class ValidationParser {
 
     /**
      * Process the validation configuration into <code>targetConfig</code>.
+     *
      * @param targetConfig
      */
     public void processValidationConfig(ConfigurationImpl targetConfig) {
@@ -97,7 +100,7 @@ public class ValidationParser {
             unmarshaller.setSchema(schema);
             StreamSource stream = new StreamSource(inputStream);
             JAXBElement<ValidationConfigType> root =
-                  unmarshaller.unmarshal(stream, ValidationConfigType.class);
+                    unmarshaller.unmarshal(stream, ValidationConfigType.class);
             return root.getValue();
         } catch (JAXBException e) {
             throw new ValidationException("Unable to parse " + validationXmlFile, e);
@@ -108,21 +111,24 @@ public class ValidationParser {
         }
     }
 
-    private InputStream getInputStream(String path) throws IOException {
+    protected InputStream getInputStream(String path) throws IOException {
         ClassLoader loader = PrivilegedActions.getClassLoader(getClass());
-        InputStream inputStream = loader.getResourceAsStream( path );
-        
-        if ( inputStream != null ) {
+        InputStream inputStream = loader.getResourceAsStream(path);
+
+        if (inputStream != null) {
             // spec says: If more than one META-INF/validation.xml file
             // is found in the classpath, a ValidationException is raised.
-            if ( path.equals("META-INF/validation.xml") ) {
-                Enumeration<URL> urls = loader.getResources(path);
-                if ( urls.hasMoreElements() && (urls.nextElement() != null) && urls.hasMoreElements() ) {
-                    throw new ValidationException("More than one " + path + " is found in the classpath");
+            Enumeration<URL> urls = loader.getResources(path);
+            Set<String> uniqueUrls = new HashSet<String>(2);
+            while (urls.hasMoreElements()) {
+                uniqueUrls.add(urls.nextElement().toString());
+                if (uniqueUrls.size() > 1){ // complain when first duplicate found
+                    throw new ValidationException("More than one " + path + " is found in the classpath"
+                            + uniqueUrls);
                 }
             }
         }
-        
+
         return inputStream;
     }
 
@@ -132,6 +138,7 @@ public class ValidationParser {
 
     /**
      * Get a Schema object from the specified resource name.
+     *
      * @param xsd
      * @return {@link Schema}
      */
@@ -160,7 +167,7 @@ public class ValidationParser {
         for (PropertyType property : xmlConfig.getProperty()) {
             if (log.isDebugEnabled()) {
                 log.debug("Found property '" + property.getName() + "' with value '" +
-                      property.getValue() + "' in " + validationXmlFile);
+                        property.getValue() + "' in " + validationXmlFile);
             }
             target.addProperty(property.getName(), property.getValue());
         }
@@ -171,8 +178,8 @@ public class ValidationParser {
         String providerClassName = xmlConfig.getDefaultProvider();
         if (providerClassName != null) {
             Class<? extends ValidationProvider<?>> clazz =
-                  (Class<? extends ValidationProvider<?>>) SecureActions
-                        .loadClass(providerClassName, this.getClass());
+                    (Class<? extends ValidationProvider<?>>) SecureActions
+                            .loadClass(providerClassName, this.getClass());
             target.setProviderClass(clazz);
             log.info("Using {} as validation provider.", providerClassName);
         }
@@ -182,10 +189,10 @@ public class ValidationParser {
     private void applyMessageInterpolator(ValidationConfigType xmlConfig,
                                           ConfigurationImpl target) {
         String messageInterpolatorClass = xmlConfig.getMessageInterpolator();
-        if ( target.getMessageInterpolator() == null ) {
+        if (target.getMessageInterpolator() == null) {
             if (messageInterpolatorClass != null) {
                 Class<MessageInterpolator> clazz = (Class<MessageInterpolator>) SecureActions
-                      .loadClass(messageInterpolatorClass, this.getClass());
+                        .loadClass(messageInterpolatorClass, this.getClass());
                 target.messageInterpolator(SecureActions.newInstance(clazz));
                 log.info("Using {} as message interpolator.", messageInterpolatorClass);
             }
@@ -196,10 +203,10 @@ public class ValidationParser {
     private void applyTraversableResolver(ValidationConfigType xmlConfig,
                                           ConfigurationImpl target) {
         String traversableResolverClass = xmlConfig.getTraversableResolver();
-        if ( target.getTraversableResolver() == null ) {
+        if (target.getTraversableResolver() == null) {
             if (traversableResolverClass != null) {
                 Class<TraversableResolver> clazz = (Class<TraversableResolver>) SecureActions
-                      .loadClass(traversableResolverClass, this.getClass());
+                        .loadClass(traversableResolverClass, this.getClass());
                 target.traversableResolver(SecureActions.newInstance(clazz));
                 log.info("Using {} as traversable resolver.", traversableResolverClass);
             }
@@ -210,11 +217,11 @@ public class ValidationParser {
     private void applyConstraintFactory(ValidationConfigType xmlConfig,
                                         ConfigurationImpl target) {
         String constraintFactoryClass = xmlConfig.getConstraintValidatorFactory();
-        if ( target.getConstraintValidatorFactory() == null ) {
+        if (target.getConstraintValidatorFactory() == null) {
             if (constraintFactoryClass != null) {
                 Class<ConstraintValidatorFactory> clazz =
-                      (Class<ConstraintValidatorFactory>) SecureActions
-                            .loadClass(constraintFactoryClass, this.getClass());
+                        (Class<ConstraintValidatorFactory>) SecureActions
+                                .loadClass(constraintFactoryClass, this.getClass());
                 target.constraintValidatorFactory(SecureActions.newInstance(clazz));
                 log.info("Using {} as constraint factory.", constraintFactoryClass);
             }
@@ -225,7 +232,7 @@ public class ValidationParser {
                                      ConfigurationImpl target) {
         for (JAXBElement<String> mappingFileNameElement : xmlConfig.getConstraintMapping()) {
             String mappingFileName = mappingFileNameElement.getValue();
-            if ( mappingFileName.startsWith("/") ) {
+            if (mappingFileName.startsWith("/")) {
                 // Classloader needs a path without a starting /
                 mappingFileName = mappingFileName.substring(1);
             }
@@ -235,12 +242,12 @@ public class ValidationParser {
                 in = getInputStream(mappingFileName);
                 if (in == null) {
                     throw new ValidationException(
-                          "Unable to open input stream for mapping file " +
-                                mappingFileName);
+                            "Unable to open input stream for mapping file " +
+                                    mappingFileName);
                 }
             } catch (IOException e) {
                 throw new ValidationException("Unable to open input stream for mapping file " +
-                      mappingFileName, e);
+                        mappingFileName, e);
             }
             target.addMapping(in);
         }

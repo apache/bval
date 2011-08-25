@@ -95,17 +95,13 @@ public class MethodAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public Object get(final Object instance) {
-        return PrivilegedActions.run(new PrivilegedAction<Object>() {
-            public Object run() {
-                try {
-                    return method.invoke(instance);
-                } catch (IllegalAccessException e) {
-                    throw new IllegalArgumentException(e);
-                } catch (InvocationTargetException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            }
-        });
+        try {
+            return method.invoke(instance);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     /**

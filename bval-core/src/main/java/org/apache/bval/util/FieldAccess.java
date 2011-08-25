@@ -48,15 +48,11 @@ public class FieldAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public Object get(final Object instance) {
-        return PrivilegedActions.run(new PrivilegedAction<Object>() {
-            public Object run() {
-                try {
-                    return field.get(instance);
-                } catch (IllegalAccessException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            }
-        });
+        try {
+            return field.get(instance);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     /**

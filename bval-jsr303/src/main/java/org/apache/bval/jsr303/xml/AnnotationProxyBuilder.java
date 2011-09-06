@@ -19,7 +19,6 @@ package org.apache.bval.jsr303.xml;
 
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.util.PrivilegedActions;
 
 import javax.validation.Payload;
 import javax.validation.ValidationException;
@@ -171,12 +170,12 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      *
      * @return {@link Annotation}
      */
-    @SuppressWarnings("unchecked")
     public A createAnnotation() {
         ClassLoader classLoader = SecureActions.getClassLoader(getType());
+        @SuppressWarnings("unchecked")
         final Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
         final InvocationHandler handler = new AnnotationProxy(this);
-        return PrivilegedActions.run(new PrivilegedAction<A>() {
+        return doPrivileged(new PrivilegedAction<A>() {
             public A run() {
                 try {
                     Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);

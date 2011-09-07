@@ -18,7 +18,7 @@ package org.apache.bval.xml;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import org.apache.bval.model.MetaProperty;
-import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang3.ClassUtils;
 
 import static org.apache.bval.model.Features.Property.*;
 

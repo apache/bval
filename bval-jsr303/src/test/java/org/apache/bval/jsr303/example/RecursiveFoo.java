@@ -31,7 +31,7 @@ import java.util.Collection;
 public class RecursiveFoo {
     @NotEmpty
     @Valid
-    Collection<RecursiveFoo> foos = new ArrayList();
+    Collection<RecursiveFoo> foos = new ArrayList<RecursiveFoo>();
 
     public Collection<RecursiveFoo> getFoos() {
         return foos;

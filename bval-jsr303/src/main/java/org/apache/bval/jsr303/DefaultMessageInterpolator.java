@@ -16,12 +16,6 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.commons.lang.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.validation.MessageInterpolator;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Locale;
@@ -31,6 +25,13 @@ import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.validation.MessageInterpolator;
+
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Description: Resource bundle backed message interpolator.
@@ -144,10 +145,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         // resolve annotation attributes (step 4)
         resolvedMessage =
               replaceAnnotationAttributes(resolvedMessage, annotationParameters);
-        
+
         // curly braces need to be scaped in the original msg, so unescape them now
         resolvedMessage = resolvedMessage.replace( "\\{", "{" ).replace( "\\}", "}" ).replace( "\\\\", "\\" );
-        
+
         return resolvedMessage;
     }
 
@@ -288,11 +289,11 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     public void setLocale(Locale locale) {
         defaultLocale = locale;
     }
-    
+
     /**
      * Escapes the string to comply with
      * {@link Matcher#appendReplacement(StringBuffer, String)} requirements.
-     * 
+     *
      * @param src
      *            The original string.
      * @return The sanitized string.

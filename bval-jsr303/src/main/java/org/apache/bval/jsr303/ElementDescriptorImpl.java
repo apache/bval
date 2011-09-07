@@ -22,6 +22,7 @@ import org.apache.bval.model.Validation;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import java.util.Collections;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,7 +91,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public ElementDescriptor.ConstraintFinder findConstraints() {
         return new ConstraintFinderImpl(metaBean, new HashSet((Set) constraintDescriptors));
     }

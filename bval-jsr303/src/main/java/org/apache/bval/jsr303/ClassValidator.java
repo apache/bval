@@ -18,6 +18,21 @@
  */
 package org.apache.bval.jsr303;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
+import javax.validation.groups.Default;
+import javax.validation.metadata.BeanDescriptor;
+
+import org.apache.bval.DynamicMetaBean;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.Groups;
@@ -25,44 +40,45 @@ import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
+import org.apache.bval.jsr303.util.PathNavigation;
+import org.apache.bval.jsr303.util.ValidationContextTraversal;
 import org.apache.bval.model.Features;
+import org.apache.bval.model.FeaturesCapable;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.ValidationHelper;
-import org.apache.commons.lang.ClassUtils;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 // TODO: centralize treatMapsLikeBeans
 
 /**
- * Objects of this class are able to validate bean instances (and the associated
- * object graphs).
+ * Objects of this class are able to validate bean instances (and the associated object graphs).
  * <p/>
  * Implementation is thread-safe.
  * <p/>
  * API class
  *
+ * @version $Rev$ $Date$
+ * 
  * @author Roman Stumm
- * @author Carlos Vara <br/>
+ * @author Carlos Vara
  */
-public class ClassValidator implements Validator {
+public class ClassValidator implements CascadingPropertyValidator {
+    private static final Object VALIDATE_PROPERTY = new Object() {
+        public String toString() {
+            return "VALIDATE_PROPERTY";
+        }
+    };
+
     /**
      * {@link ApacheFactoryContext} used
      */
     protected final ApacheFactoryContext factoryContext;
+
     /**
      * {@link GroupsComputer} used
      */
@@ -93,7 +109,7 @@ public class ClassValidator implements Validator {
      * @return a MetaBeanFinder
      * @see org.apache.bval.MetaBeanManagerFactory#getFinder()
      */
-    public MetaBeanFinder getMetaBeanFinder() {
+    protected MetaBeanFinder getMetaBeanFinder() {
         return factoryContext.getMetaBeanFinder();
     }
 
@@ -113,8 +129,7 @@ public class ClassValidator implements Validator {
      */
     // @Override - not allowed in 1.5 for Interface methods
     @SuppressWarnings("unchecked")
-    public <T> Set<ConstraintViolation<T>> validate(T object,
-                                                    Class<?>... groups) {
+    public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groups) {
         if (object == null)
             throw new IllegalArgumentException("cannot validate null");
         checkGroups(groups);
@@ -122,13 +137,10 @@ public class ClassValidator implements Validator {
         try {
 
             Class<T> objectClass = (Class<T>) object.getClass();
-            MetaBean objectMetaBean =
-                    factoryContext.getMetaBeanFinder().findForClass(objectClass);
+            MetaBean objectMetaBean = getMetaBeanFinder().findForClass(objectClass);
 
-            final GroupValidationContext<T> context =
-                    createContext(objectMetaBean, object, objectClass, groups);
-            final ConstraintValidationListener<T> result =
-                    context.getListener();
+            final GroupValidationContext<T> context = createContext(objectMetaBean, object, objectClass, groups);
+            final ConstraintValidationListener<T> result = context.getListener();
             final Groups sequence = context.getGroups();
 
             // 1. process groups
@@ -159,8 +171,8 @@ public class ClassValidator implements Validator {
     }
 
     /**
-     * {@inheritDoc} Validates all constraints placed on the property of
-     * <code>object</code> named <code>propertyName</code>.
+     * {@inheritDoc} Validates all constraints placed on the property of <code>object</code> named
+     * <code>propertyName</code>.
      *
      * @param object       object to validate
      * @param propertyName property to validate (ie field and getter constraints). Nested
@@ -175,70 +187,30 @@ public class ClassValidator implements Validator {
      *                                  process
      */
     // @Override - not allowed in 1.5 for Interface methods
-    @SuppressWarnings("unchecked")
-    public <T> Set<ConstraintViolation<T>> validateProperty(T object,
-                                                            String propertyName, Class<?>... groups) {
-        if (object == null)
-            throw new IllegalArgumentException("cannot validate null");
-
-        checkPropertyName(propertyName);
-        checkGroups(groups);
-
-        try {
-
-            Class<T> objectClass = (Class<T>) object.getClass();
-            MetaBean objectMetaBean =
-                    factoryContext.getMetaBeanFinder().findForClass(objectClass);
-
-            GroupValidationContext<T> context =
-                    createContext(objectMetaBean, object, objectClass, groups);
-            ConstraintValidationListener<T> result = context.getListener();
-            NestedMetaProperty nestedProp =
-                    getNestedProperty(objectMetaBean, object, propertyName);
-            context.setMetaProperty(nestedProp.getMetaProperty());
-            if (nestedProp.isNested()) {
-                context.setFixedValue(nestedProp.getValue());
-            }
-            if (context.getMetaProperty() == null)
-                throw new IllegalArgumentException("Unknown property "
-                        + object.getClass().getName() + "." + propertyName);
-            Groups sequence = context.getGroups();
-
-            // 1. process groups
-            for (Group current : sequence.getGroups()) {
-                context.setCurrentGroup(current);
-                validatePropertyInGroup(context);
-            }
-
-            // 2. process sequences
-            for (List<Group> eachSeq : sequence.getSequences()) {
-                for (Group current : eachSeq) {
-                    context.setCurrentGroup(current);
-                    validatePropertyInGroup(context);
-                    /**
-                     * if one of the group process in the sequence leads to one
-                     * or more validation failure, the groups following in the
-                     * sequence must not be processed
-                     */
-                    if (!result.isEmpty())
-                        break;
-                }
-                if (!result.isEmpty())
-                    break;
-            }
-            return result.getConstraintViolations();
-        } catch (RuntimeException ex) {
-            throw unrecoverableValidationError(ex, object);
-        }
+    public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName, Class<?>... groups) {
+        return validateProperty(object, propertyName, false, groups);
     }
 
     /**
-     * {@inheritDoc} Validates all constraints placed on the property named
-     * <code>propertyName</code> of the class <code>beanType</code> would the
-     * property value be <code>value</code>
+     * {@inheritDoc}
+     */
+    public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName, boolean cascade,
+        Class<?>... groups) {
+
+        if (object == null)
+            throw new IllegalArgumentException("cannot validate null");
+
+        @SuppressWarnings("unchecked")
+        Set<ConstraintViolation<T>> result =
+            validateValueImpl((Class<T>) object.getClass(), object, propertyName, VALIDATE_PROPERTY, cascade, groups);
+        return result;
+    }
+
+    /**
+     * {@inheritDoc} Validates all constraints placed on the property named <code>propertyName</code> of the class
+     * <code>beanType</code> would the property value be <code>value</code>
      * <p/>
-     * <code>ConstraintViolation</code> objects return null for
-     * {@link ConstraintViolation#getRootBean()} and
+     * <code>ConstraintViolation</code> objects return null for {@link ConstraintViolation#getRootBean()} and
      * {@link ConstraintViolation#getLeafBean()}
      *
      * @param beanType     the bean type
@@ -254,54 +226,22 @@ public class ClassValidator implements Validator {
      *                                  process
      */
     // @Override - not allowed in 1.5 for Interface methods
-    public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType,
-                                                         String propertyName, Object value, Class<?>... groups) {
-
-        checkBeanType(beanType);
-        checkPropertyName(propertyName);
-        checkGroups(groups);
-
-        try {
-            MetaBean metaBean =
-                    factoryContext.getMetaBeanFinder().findForClass(beanType);
-            GroupValidationContext<T> context =
-                    createContext(metaBean, null, beanType, groups);
-            ConstraintValidationListener<T> result = context.getListener();
-            context.setMetaProperty(getNestedProperty(metaBean, null,
-                    propertyName).getMetaProperty());
-            context.setFixedValue(value);
-            Groups sequence = context.getGroups();
-
-            // 1. process groups
-            for (Group current : sequence.getGroups()) {
-                context.setCurrentGroup(current);
-                validatePropertyInGroup(context);
-            }
-            // 2. process sequences
-            for (List<Group> eachSeq : sequence.getSequences()) {
-                for (Group current : eachSeq) {
-                    context.setCurrentGroup(current);
-                    validatePropertyInGroup(context);
-                    // if one of the group process in the sequence leads to one
-                    // or more validation failure,
-                    // the groups following in the sequence must not be
-                    // processed
-                    if (!result.isEmpty())
-                        break;
-                }
-                if (!result.isEmpty())
-                    break;
-            }
-            return result.getConstraintViolations();
-        } catch (RuntimeException ex) {
-            throw unrecoverableValidationError(ex, value);
-        }
+    public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
+        Class<?>... groups) {
+        return validateValue(beanType, propertyName, value, false, groups);
     }
 
     /**
-     * {@inheritDoc} Return the descriptor object describing bean constraints.
-     * The returned object (and associated objects including
-     * <code>ConstraintDescriptor<code>s) are immutable.
+     * {@inheritDoc}
+     */
+    public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
+        boolean cascade, Class<?>... groups) {
+        return validateValueImpl(checkBeanType(beanType), null, propertyName, value, cascade, groups);
+    }
+
+    /**
+     * {@inheritDoc} Return the descriptor object describing bean constraints. The returned object (and associated
+     * objects including <code>ConstraintDescriptor<code>s) are immutable.
      *
      * @param clazz class or interface type evaluated
      * @return the bean descriptor for the specified class.
@@ -315,25 +255,21 @@ public class ClassValidator implements Validator {
             throw new IllegalArgumentException("Class cannot be null");
         }
         try {
-            MetaBean metaBean =
-                    factoryContext.getMetaBeanFinder().findForClass(clazz);
-            BeanDescriptorImpl edesc =
-                    metaBean.getFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR);
+            MetaBean metaBean = getMetaBeanFinder().findForClass(clazz);
+            BeanDescriptorImpl edesc = metaBean.getFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR);
             if (edesc == null) {
                 edesc = createBeanDescriptor(metaBean);
                 metaBean.putFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR, edesc);
             }
             return edesc;
         } catch (RuntimeException ex) {
-            throw new ValidationException("error retrieving constraints for "
-                    + clazz, ex);
+            throw new ValidationException("error retrieving constraints for " + clazz, ex);
         }
     }
 
     /**
-     * {@inheritDoc} Return an instance of the specified type allowing access to
-     * provider-specific APIs. If the Bean Validation provider implementation
-     * does not support the specified class, <code>ValidationException</code> is
+     * {@inheritDoc} Return an instance of the specified type allowing access to provider-specific APIs. If the Bean
+     * Validation provider implementation does not support the specified class, <code>ValidationException</code> is
      * thrown.
      *
      * @param type the class of the object to be returned.
@@ -351,16 +287,14 @@ public class ClassValidator implements Validator {
             @SuppressWarnings("unchecked")
             final T result = (T) this;
             return result;
-        } else if (!(type.isInterface() || Modifier.isAbstract(type
-                .getModifiers()))) {
+        } else if (!(type.isInterface() || Modifier.isAbstract(type.getModifiers()))) {
             return newInstance(type);
         } else {
             try {
                 Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
                 if (type.isAssignableFrom(cls)) {
                     @SuppressWarnings("unchecked")
-                    final Class<? extends T> implClass =
-                            (Class<? extends T>) cls;
+                    final Class<? extends T> implClass = (Class<? extends T>) cls;
                     return newInstance(implClass);
                 }
             } catch (ClassNotFoundException e) {
@@ -389,8 +323,7 @@ public class ClassValidator implements Validator {
     // -------------------------------------------------------------------
 
     /**
-     * Validates a bean and all its cascaded related beans for the currently
-     * defined group.
+     * Validates a bean and all its cascaded related beans for the currently defined group.
      * <p/>
      * Special code is present to manage the {@link Default} group.
      *
@@ -416,11 +349,10 @@ public class ClassValidator implements Validator {
         if (context.getCurrentGroup().isDefault()) {
 
             List<Group> defaultGroups = expandDefaultGroup(context);
-            final ConstraintValidationListener<?> result =
-                    (ConstraintValidationListener<?>) context.getListener();
+            final ConstraintValidationListener<?> result = (ConstraintValidationListener<?>) context.getListener();
 
             // If the rootBean defines a GroupSequence
-            if (defaultGroups.size() > 1) {
+            if (defaultGroups != null && defaultGroups.size() > 1) {
 
                 int numViolations = result.violationsSize();
 
@@ -443,8 +375,7 @@ public class ClassValidator implements Validator {
 
                 // Obtain the full class hierarchy
                 List<Class<?>> classHierarchy = new ArrayList<Class<?>>();
-                ClassHelper.fillFullClassHierarchyAsList(classHierarchy,
-                        context.getMetaBean().getBeanClass());
+                ClassHelper.fillFullClassHierarchyAsList(classHierarchy, context.getMetaBean().getBeanClass());
                 Class<?> initialOwner = context.getCurrentOwner();
 
                 // For each owner in the hierarchy
@@ -456,8 +387,7 @@ public class ClassValidator implements Validator {
                     // Obtain the group sequence of the owner, and use it for
                     // the constraints that belong to it
                     List<Group> ownerDefaultGroups =
-                            context.getMetaBean().getFeature(
-                                    "{GroupSequence:" + owner.getCanonicalName() + "}");
+                        context.getMetaBean().getFeature("{GroupSequence:" + owner.getCanonicalName() + "}");
                     for (Group each : ownerDefaultGroups) {
                         context.setCurrentGroup(each);
                         ValidationHelper.validateBean(context);
@@ -487,16 +417,13 @@ public class ClassValidator implements Validator {
     }
 
     /**
-     * Checks if the the meta property <code>prop</code> defines a cascaded
-     * bean, and in case it does, validates it.
+     * Checks if the the meta property <code>prop</code> defines a cascaded bean, and in case it does, validates it.
      *
      * @param context The current validation context.
      * @param prop    The property to cascade from (in case it is possible).
      */
-    private void validateCascadedBean(GroupValidationContext<?> context,
-                                      MetaProperty prop) {
-        AccessStrategy[] access =
-                prop.getFeature(Features.Property.REF_CASCADE);
+    private void validateCascadedBean(GroupValidationContext<?> context, MetaProperty prop) {
+        AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
         if (access != null) { // different accesses to relation
             // save old values from context
             final Object bean = context.getBean();
@@ -508,9 +435,8 @@ public class ClassValidator implements Validator {
                     // modify context state for relationship-target bean
                     context.moveDown(prop, each);
                     // Now, if the related bean is an instance of Map/Array/etc,
-                    ValidationHelper.validateContext(context,
-                            new Jsr303ValidationCallback(context),
-                            treatMapsLikeBeans);
+                    ValidationHelper
+                        .validateContext(context, new Jsr303ValidationCallback(context), treatMapsLikeBeans);
                     // restore old values in context
                     context.moveUp(bean, mbean);
                 }
@@ -519,18 +445,15 @@ public class ClassValidator implements Validator {
     }
 
     /**
-     * Before accessing a related bean (marked with
-     * {@link javax.validation.Valid}), the validator has to check if it is
+     * Before accessing a related bean (marked with {@link javax.validation.Valid}), the validator has to check if it is
      * reachable and cascadable.
      *
      * @param context The current validation context.
      * @param prop    The property of the related bean.
      * @param access  The access strategy used to get the related bean value.
-     * @return <code>true</code> if the validator can access the related bean,
-     *         <code>false</code> otherwise.
+     * @return <code>true</code> if the validator can access the related bean, <code>false</code> otherwise.
      */
-    private boolean isCascadable(GroupValidationContext<?> context,
-                                 MetaProperty prop, AccessStrategy access) {
+    private boolean isCascadable(GroupValidationContext<?> context, MetaProperty prop, AccessStrategy access) {
 
         PathImpl beanPath = context.getPropertyPath();
         NodeImpl node = new NodeImpl(prop.getName());
@@ -538,48 +461,35 @@ public class ClassValidator implements Validator {
             beanPath = PathImpl.create(null);
         }
         try {
-            if (!context.getTraversableResolver().isReachable(
-                    context.getBean(), node,
-                    context.getRootMetaBean().getBeanClass(), beanPath,
-                    access.getElementType()))
+            if (!context.getTraversableResolver().isReachable(context.getBean(), node,
+                context.getRootMetaBean().getBeanClass(), beanPath, access.getElementType()))
                 return false;
         } catch (RuntimeException e) {
-            throw new ValidationException(
-                    "Error in TraversableResolver.isReachable() for "
-                            + context.getBean(), e);
+            throw new ValidationException("Error in TraversableResolver.isReachable() for " + context.getBean(), e);
         }
 
         try {
-            if (!context.getTraversableResolver().isCascadable(
-                    context.getBean(), node,
-                    context.getRootMetaBean().getBeanClass(), beanPath,
-                    access.getElementType()))
+            if (!context.getTraversableResolver().isCascadable(context.getBean(), node,
+                context.getRootMetaBean().getBeanClass(), beanPath, access.getElementType()))
                 return false;
         } catch (RuntimeException e) {
-            throw new ValidationException(
-                    "Error TraversableResolver.isCascadable() for "
-                            + context.getBean(), e);
+            throw new ValidationException("Error TraversableResolver.isCascadable() for " + context.getBean(), e);
         }
 
         return true;
     }
 
     /**
-     * in case of a default group return the list of groups for a redefined
-     * default GroupSequence
+     * in case of a default group return the list of groups for a redefined default GroupSequence
      *
-     * @return null when no in default group or default group sequence not
-     *         redefined
+     * @return null when no in default group or default group sequence not redefined
      */
     private List<Group> expandDefaultGroup(GroupValidationContext<?> context) {
         if (context.getCurrentGroup().isDefault()) {
             // mention if metaBean redefines the default group
-            List<Group> groupSeq =
-                    context.getMetaBean().getFeature(
-                            Jsr303Features.Bean.GROUP_SEQUENCE);
+            List<Group> groupSeq = context.getMetaBean().getFeature(Jsr303Features.Bean.GROUP_SEQUENCE);
             if (groupSeq != null) {
-                context.getGroups().assertDefaultGroupSequenceIsExpandable(
-                        groupSeq);
+                context.getGroups().assertDefaultGroupSequenceIsExpandable(groupSeq);
             }
             return groupSeq;
         } else {
@@ -594,9 +504,9 @@ public class ClassValidator implements Validator {
      * @param object
      * @return a {@link RuntimeException} of the appropriate type
      */
-    protected static RuntimeException unrecoverableValidationError(
-            RuntimeException ex, Object object) {
-        if (ex instanceof UnknownPropertyException) {
+    @SuppressWarnings("finally")
+    protected static RuntimeException unrecoverableValidationError(RuntimeException ex, Object object) {
+        if (ex instanceof UnknownPropertyException || ex instanceof IncompatiblePropertyValueException) {
             // Convert to IllegalArgumentException
             return new IllegalArgumentException(ex.getMessage(), ex);
         } else if (ex instanceof ValidationException) {
@@ -619,33 +529,35 @@ public class ClassValidator implements Validator {
         }
     }
 
-    private void validatePropertyInGroup(GroupValidationContext<?> context) {
+    private void validatePropertyInGroup(final GroupValidationContext<?> context) {
+        final Runnable helper;
+        if (context.getMetaProperty() == null) {
+            helper = new Runnable() {
+
+                public void run() {
+                    ValidationHelper.validateBean(context);
+                }
+            };
+        } else {
+            helper = new Runnable() {
+
+                public void run() {
+                    ValidationHelper.validateProperty(context);
+                }
+            };
+        }
         Group currentGroup = context.getCurrentGroup();
         List<Group> defaultGroups = expandDefaultGroup(context);
         if (defaultGroups != null) {
             for (Group each : defaultGroups) {
                 context.setCurrentGroup(each);
-                ValidationHelper.validateProperty(context);
-                // continue validation, even if errors already found: if
-                // (!result.isEmpty())
+                helper.run();
+                // continue validation, even if errors already found
             }
             context.setCurrentGroup(currentGroup); // restore
         } else {
-            ValidationHelper.validateProperty(context);
+            helper.run();
         }
-    }
-
-    /**
-     * find the MetaProperty for the given propertyName, which could contain a
-     * path, following the path on a given object to resolve types at runtime
-     * from the instance
-     */
-    private NestedMetaProperty getNestedProperty(MetaBean metaBean, Object t,
-                                                 String propertyName) {
-        NestedMetaProperty nested = new NestedMetaProperty(propertyName, t);
-        nested.setMetaBean(metaBean);
-        nested.parse();
-        return nested;
     }
 
     /**
@@ -658,14 +570,12 @@ public class ClassValidator implements Validator {
      * @param groups
      * @return {@link GroupValidationContext} instance
      */
-    protected <T> GroupValidationContext<T> createContext(MetaBean metaBean,
-                                                          T object, Class<T> objectClass, Class<?>[] groups) {
-        ConstraintValidationListener<T> listener =
-                new ConstraintValidationListener<T>(object, objectClass);
+    protected <T> GroupValidationContext<T> createContext(MetaBean metaBean, T object, Class<T> objectClass,
+        Class<?>... groups) {
+        ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object, objectClass);
         GroupValidationContextImpl<T> context =
-                new GroupValidationContextImpl<T>(listener, this.factoryContext
-                        .getMessageInterpolator(), this.factoryContext
-                        .getTraversableResolver(), metaBean);
+            new GroupValidationContextImpl<T>(listener, this.factoryContext.getMessageInterpolator(),
+                this.factoryContext.getTraversableResolver(), metaBean);
         context.setBean(object, metaBean);
         context.setGroups(groupsComputer.computeGroups(groups));
         return context;
@@ -687,11 +597,11 @@ public class ClassValidator implements Validator {
      * Behavior configuration -
      * <p/>
      * <pre>
-     * parameter: treatMapsLikeBeans - true (validate maps like beans, so that
-     *                             you can use Maps to validate dynamic classes or
-     *                             beans for which you have the MetaBean but no instances)
-     *                           - false (default), validate maps like collections
-     *                             (validating the values only)
+     * @return treatMapsLikeBeans - true (validate maps like beans, so that
+     *                              you can use Maps to validate dynamic classes or
+     *                              beans for which you have the MetaBean but no instances)
+     *                            - false (default), validate maps like collections
+     *                              (validating the values only)
      * </pre>
      * <p/>
      * (is still configuration to better in BeanValidationContext?)
@@ -700,38 +610,49 @@ public class ClassValidator implements Validator {
         return treatMapsLikeBeans;
     }
 
+    /**
+     * Set whether maps are to be treated like beans.
+     * 
+     * <pre>
+     * @param treatMapsLikeBeans - true (validate maps like beans, so that
+     *                             you can use Maps to validate dynamic classes or
+     *                             beans for which you have the MetaBean but no instances)
+     *                           - false (default), validate maps like collections
+     *                             (validating the values only)
+     * </pre>
+     */
     public void setTreatMapsLikeBeans(boolean treatMapsLikeBeans) {
         this.treatMapsLikeBeans = treatMapsLikeBeans;
     }
 
     /**
-     * Checks that beanType is valid according to spec Section 4.1.1 i. Throws
-     * an {@link IllegalArgumentException} if it is not.
+     * Checks that beanType is valid according to spec Section 4.1.1 i. Throws an {@link IllegalArgumentException} if it
+     * is not.
      *
      * @param beanType Bean type to check.
      */
-    private void checkBeanType(Class<?> beanType) {
+    private <T> Class<T> checkBeanType(Class<T> beanType) {
         if (beanType == null) {
             throw new IllegalArgumentException("Bean type cannot be null.");
         }
+        return beanType;
     }
 
     /**
-     * Checks that the property name is valid according to spec Section 4.1.1 i.
-     * Throws an {@link IllegalArgumentException} if it is not.
+     * Checks that the property name is valid according to spec Section 4.1.1 i. Throws an
+     * {@link IllegalArgumentException} if it is not.
      *
      * @param propertyName Property name to check.
      */
     private void checkPropertyName(String propertyName) {
         if (propertyName == null || propertyName.trim().length() == 0) {
-            throw new IllegalArgumentException(
-                    "Property path cannot be null or empty.");
+            throw new IllegalArgumentException("Property path cannot be null or empty.");
         }
     }
 
     /**
-     * Checks that the groups array is valid according to spec Section 4.1.1 i.
-     * Throws an {@link IllegalArgumentException} if it is not.
+     * Checks that the groups array is valid according to spec Section 4.1.1 i. Throws an
+     * {@link IllegalArgumentException} if it is not.
      *
      * @param groups The groups to check.
      */
@@ -742,12 +663,10 @@ public class ClassValidator implements Validator {
     }
 
     /**
-     * Dispatches a call from {@link #validate()} to
-     * {@link ClassValidator#validateBeanNet(GroupValidationContext)} with the
-     * current context set.
+     * Dispatches a call from {@link #validate()} to {@link ClassValidator#validateBeanNet(GroupValidationContext)} with
+     * the current context set.
      */
-    protected class Jsr303ValidationCallback implements
-            ValidationHelper.ValidateCallback {
+    protected class Jsr303ValidationCallback implements ValidationHelper.ValidateCallback {
 
         private final GroupValidationContext<?> context;
 
@@ -759,6 +678,140 @@ public class ClassValidator implements Validator {
             validateBeanNet(context);
         }
 
+    }
+
+    /**
+     * Create a {@link ValidationContextTraversal} instance for this {@link ClassValidator}.
+     * 
+     * @param validationContext
+     * @return {@link ValidationContextTraversal}
+     */
+    protected ValidationContextTraversal createValidationContextTraversal(GroupValidationContext<?> validationContext) {
+        return new ValidationContextTraversal(validationContext);
+    }
+
+    /**
+     * Implement {@link #validateProperty(Object, String, boolean, Class...)} and
+     * {@link #validateValue(Class, String, Object, boolean, Class...)}.
+     * 
+     * @param <T>
+     * @param beanType
+     * @param object
+     * @param propertyName
+     * @param value
+     * @param cascade
+     * @param groups
+     * @return {@link ConstraintViolation} {@link Set}
+     */
+    private <T> Set<ConstraintViolation<T>> validateValueImpl(Class<T> beanType, T object, String propertyName,
+        Object value, final boolean cascade, Class<?>... groups) {
+
+        assert (object == null) ^ (value == VALIDATE_PROPERTY);
+        checkPropertyName(propertyName);
+        checkGroups(groups);
+
+        try {
+            final MetaBean initialMetaBean = new DynamicMetaBean(getMetaBeanFinder());
+            initialMetaBean.setBeanClass(beanType);
+            GroupValidationContext<T> context = createContext(initialMetaBean, object, beanType, groups);
+            ValidationContextTraversal contextTraversal = createValidationContextTraversal(context);
+            PathNavigation.navigate(propertyName, contextTraversal);
+
+            MetaProperty prop = context.getMetaProperty();
+            boolean fixed = false;
+            if (value != VALIDATE_PROPERTY) {
+                assert !context.getPropertyPath().isRootPath();
+                if (prop == null && value != null) {
+                    context.setMetaBean(getMetaBeanFinder().findForClass(value.getClass()));
+                }
+                if (!cascade) {
+                    //TCK doesn't care what type a property is if there are no constraints to validate:
+                    FeaturesCapable meta = prop == null ? context.getMetaBean() : prop;
+                    if (ArrayUtils.isEmpty(meta.getValidations())) {
+                        return Collections.<ConstraintViolation<T>> emptySet();
+                    }
+                }
+                if (!TypeUtils.isAssignable(value == null ? null : value.getClass(), contextTraversal.getType())) {
+                    throw new IncompatiblePropertyValueException(String.format(
+                        "%3$s is not a valid value for property %2$s of type %1$s", beanType, propertyName, value));
+                }
+                if (prop == null) {
+                    context.setBean(value);
+                } else {
+                    context.setFixedValue(value);
+                    fixed = true;
+                }
+            }
+            boolean doCascade = cascade && (prop == null || prop.getMetaBean() != null);
+
+            Object bean = context.getBean();
+
+            ConstraintValidationListener<T> result = context.getListener();
+            Groups sequence = context.getGroups();
+
+            // 1. process groups
+
+            for (Group current : sequence.getGroups()) {
+                context.setCurrentGroup(current);
+
+                if (!doCascade || prop != null) {
+                    validatePropertyInGroup(context);
+                }
+                if (doCascade) {
+                    contextTraversal.moveDownIfNecessary();
+                    if (context.getMetaBean() instanceof DynamicMetaBean) {
+                        context.setMetaBean(context.getMetaBean().resolveMetaBean(
+                            ObjectUtils.defaultIfNull(context.getBean(), contextTraversal.getRawType())));
+                    }
+                    validateBeanNet(context);
+                    if (prop != null) {
+                        context.moveUp(bean, prop.getParentMetaBean());
+                        context.setMetaProperty(prop);
+                        if (fixed) {
+                            context.setFixedValue(value);
+                        }
+                    }
+                }
+            }
+
+            // 2. process sequences
+
+            int groupViolations = result.getConstraintViolations().size();
+
+            outer: for (List<Group> eachSeq : sequence.getSequences()) {
+                for (Group current : eachSeq) {
+                    context.setCurrentGroup(current);
+
+                    if (!doCascade || prop != null) {
+                        validatePropertyInGroup(context);
+                    }
+                    if (doCascade) {
+                        contextTraversal.moveDownIfNecessary();
+                        if (context.getMetaBean() instanceof DynamicMetaBean) {
+                            context.setMetaBean(context.getMetaBean().resolveMetaBean(
+                                ObjectUtils.defaultIfNull(context.getBean(), contextTraversal.getRawType())));
+                        }
+                        validateBeanNet(context);
+                        if (prop != null) {
+                            context.moveUp(bean, prop.getParentMetaBean());
+                            context.setMetaProperty(prop);
+                            if (fixed) {
+                                context.setFixedValue(value);
+                            }
+                        }
+                    }
+                    /**
+                     * if one of the group process in the sequence leads to one or more validation failure, the groups
+                     * following in the sequence must not be processed
+                     */
+                    if (result.getConstraintViolations().size() > groupViolations)
+                        break outer;
+                }
+            }
+            return result.getConstraintViolations();
+        } catch (RuntimeException ex) {
+            throw unrecoverableValidationError(ex, ObjectUtils.defaultIfNull(object, value));
+        }
     }
 
 }

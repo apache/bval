@@ -19,14 +19,13 @@ package org.apache.bval.jsr303.extensions;
 import org.apache.bval.Validate;
 import org.apache.bval.jsr303.ApacheFactoryContext;
 import org.apache.bval.jsr303.AppendValidation;
+import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang3.ClassUtils;
 
 import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
 import javax.validation.Valid;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -155,18 +154,18 @@ public class MethodValidatorMetaBeanFactory extends Jsr303MetaBeanFactory {
         } else {
             Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
             if (vcAnno != null) {
-                Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
-                validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
-                applyConstraint(annotation, validatorClasses, null, ClassUtils.primitiveToWrapper((Class<?>) access
-                    .getJavaType()), access, validations);
+                annotationProcessor.processAnnotation(annotation, null,
+                    ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()), access, validations);
             } else {
                 /**
                  * Multi-valued constraints
                  */
-                Object result = SecureActions.getAnnotationValue(annotation, ANNOTATION_VALUE);
-                if (result != null && result instanceof Annotation[]) {
-                    for (Annotation each : (Annotation[]) result) {
-                        processAnnotation(each, desc, access, validations); // recursion
+                if (ConstraintAnnotationAttributes.VALUE.isDeclaredOn(annotation.annotationType())) {
+                    Annotation[] children = ConstraintAnnotationAttributes.VALUE.getValue(annotation);
+                    if (children != null) {
+                        for (Annotation child : children) {
+                            processAnnotation(child, desc, access, validations); // recursion
+                        }
                     }
                 }
             }

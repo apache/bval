@@ -16,28 +16,31 @@
  */
 package org.apache.bval.jsr303.xml;
 
-
-import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
-import org.apache.bval.jsr303.util.SecureActions;
-
-import javax.validation.Payload;
-import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.Payload;
+import javax.validation.ValidationException;
+
+import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr303.util.SecureActions;
+
 /**
- * Description: Holds the information and creates an annotation proxy
- * during xml parsing of validation mapping constraints. <br/>
+ * Description: Holds the information and creates an annotation proxy during xml
+ * parsing of validation mapping constraints. <br/>
  */
-//TODO move this guy up to org.apache.bval.jsr303 or org.apache.bval.jsr303.model
+// TODO move this guy up to org.apache.bval.jsr303 or
+// org.apache.bval.jsr303.model
 final public class AnnotationProxyBuilder<A extends Annotation> {
-
     private final Class<A> type;
-
     private final Map<String, Object> elements = new HashMap<String, Object>();
 
     /**
@@ -63,8 +66,9 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
     }
 
     /**
-     * Create a builder initially configured to create an annotation equivalent to <code>annot</code>.
-     *
+     * Create a builder initially configured to create an annotation equivalent
+     * to <code>annot</code>.
+     * 
      * @param annot Annotation to be replicated.
      */
     @SuppressWarnings("unchecked")
@@ -114,7 +118,8 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * Learn whether a given element has been configured.
      *
      * @param elementName
-     * @return <code>true</code> if an <code>elementName</code> element is found on this annotation
+     * @return <code>true</code> if an <code>elementName</code> element is found
+     *         on this annotation
      */
     public boolean contains(String elementName) {
         return elements.containsKey(elementName);
@@ -144,7 +149,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @param message
      */
     public void setMessage(String message) {
-        putValue(Jsr303MetaBeanFactory.ANNOTATION_MESSAGE, message);
+        ConstraintAnnotationAttributes.MESSAGE.put(elements, message);
     }
 
     /**
@@ -153,16 +158,16 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @param groups
      */
     public void setGroups(Class<?>[] groups) {
-        putValue(Jsr303MetaBeanFactory.ANNOTATION_GROUPS, groups);
+        ConstraintAnnotationAttributes.GROUPS.put(elements, groups);
     }
 
     /**
      * Configure the well-known JSR303 "payload" element.
-     *
+     * 
      * @param payload
      */
     public void setPayload(Class<? extends Payload>[] payload) {
-        putValue(Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD, payload);
+        ConstraintAnnotationAttributes.PAYLOAD.put(elements, payload);
     }
 
     /**

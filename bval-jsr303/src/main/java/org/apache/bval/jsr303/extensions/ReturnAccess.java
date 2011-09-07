@@ -20,7 +20,6 @@
 package org.apache.bval.jsr303.extensions;
 
 import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang.NotImplementedException;
 
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Type;
@@ -47,7 +46,7 @@ public class ReturnAccess extends AccessStrategy {
      */
     @Override
     public Object get(Object instance) {
-        throw new NotImplementedException("Obtaining a method return value not yet implemented");
+        throw new UnsupportedOperationException("Obtaining a method return value not yet implemented");
     }
 
     /**

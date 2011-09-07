@@ -22,12 +22,13 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
- * Description: Undefined dynamic strategy (FIELD or METHOD access) Uses
- * PropertyUtils or tries to determine field to access the value<br/>
+ * Description: Undefined dynamic strategy (FIELD or METHOD access) Uses PropertyUtils or tries to determine field to
+ * access the value<br/>
  */
 public class PropertyAccess extends AccessStrategy {
     private final Class<?> beanClass;
@@ -49,7 +50,7 @@ public class PropertyAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public ElementType getElementType() {
-        return (rememberField != null) ? ElementType.FIELD : ElementType.METHOD;
+        return rememberField != null ? ElementType.FIELD : ElementType.METHOD;
     }
 
     private static Object getPublicProperty(Object bean, String property) throws InvocationTargetException,
@@ -87,32 +88,65 @@ public class PropertyAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public Type getJavaType() {
-        /*
-         * if(Map.class.isAssignableFrom(beanClass)) { return beanClass. }
-         */
-        if (rememberField != null) { // use cached field of previous access
+        Type result = getTypeInner();
+        return result == null ? Object.class : result;
+    }
+
+    /**
+     * Learn whether this {@link PropertyAccess} references a known property.
+     * 
+     * @return boolean
+     */
+    public boolean isKnown() {
+        return getTypeInner() != null;
+    }
+
+    /**
+     * Find out what, if any, type can be calculated.
+     * 
+     * @return type found or <code>null</code>
+     */
+    private Type getTypeInner() {
+        if (rememberField != null) {
             return rememberField.getGenericType();
         }
+        Method readMethod = getPropertyReadMethod(propertyName, beanClass);
+        if (readMethod != null) {
+            return readMethod.getGenericReturnType();
+        }
+        Field fld = getField(propertyName, beanClass);
+        if (fld != null) {
+            cacheField(fld);
+            return rememberField.getGenericType();
+        }
+        return null;
+    }
+
+    private static Method getPropertyReadMethod(String propertyName, Class<?> beanClass) {
         for (PropertyDescriptor each : PropertyUtils.getPropertyDescriptors(beanClass)) {
-            if (each.getName().equals(propertyName) && each.getReadMethod() != null) {
-                return each.getReadMethod().getGenericReturnType();
+            if (each.getName().equals(propertyName)) {
+                return each.getReadMethod();
             }
         }
+        return null;
+    }
+
+    private static Field getField(String propertyName, Class<?> beanClass) {
         try { // try public field
-            return beanClass.getField(propertyName).getGenericType();
+            return beanClass.getField(propertyName);
         } catch (NoSuchFieldException ex2) {
             // search for private/protected field up the hierarchy
             Class<?> theClass = beanClass;
             while (theClass != null) {
                 try {
-                    return theClass.getDeclaredField(propertyName).getGenericType();
+                    return theClass.getDeclaredField(propertyName);
                 } catch (NoSuchFieldException ex3) {
                     // do nothing
                 }
                 theClass = theClass.getSuperclass();
             }
         }
-        return Object.class; // unknown type: allow any type??
+        return null;
     }
 
     /**
@@ -130,7 +164,6 @@ public class PropertyAccess extends AccessStrategy {
             if (rememberField != null) { // cache field of previous access
                 return rememberField.get(bean);
             }
-
             try { // try public method
                 return getPublicProperty(bean, propertyName);
             } catch (NoSuchMethodException ex) {
@@ -144,31 +177,19 @@ public class PropertyAccess extends AccessStrategy {
     }
 
     private Object getFieldValue(Object bean) throws IllegalAccessException {
-        Object value;
-        try { // try public field
-            Field aField = bean.getClass().getField(propertyName);
-            value = aField.get(bean);
-            rememberField = aField;
-            return value;
-        } catch (NoSuchFieldException ex2) {
-            // search for private/protected field up the hierarchy
-            Class<?> theClass = bean.getClass();
-            while (theClass != null) {
-                try {
-                    Field aField = theClass.getDeclaredField(propertyName);
-                    if (!aField.isAccessible()) {
-                        aField.setAccessible(true);
-                    }
-                    value = aField.get(bean);
-                    rememberField = aField;
-                    return value;
-                } catch (NoSuchFieldException ex3) {
-                    // do nothing
-                }
-                theClass = theClass.getSuperclass();
-            }
-            throw new IllegalArgumentException("cannot access field " + propertyName);
+        Field field = getField(propertyName, beanClass);
+        if (field != null) {
+            cacheField(field);
+            return rememberField.get(bean);
         }
+        throw new IllegalArgumentException("cannot access field " + propertyName);
+    }
+
+    private void cacheField(Field field) {
+        if (!field.isAccessible()) {
+            field.setAccessible(true);
+        }
+        this.rememberField = field;
     }
 
     /**

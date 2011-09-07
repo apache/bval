@@ -23,8 +23,12 @@ import junit.framework.TestCase;
 import org.apache.bval.util.PropertyAccess;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
 import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Pattern;
+
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -34,6 +38,35 @@ import java.util.Set;
  * Time: 14:21:45<br>
  */
 public class TckReproducerTest extends TestCase {
+    static ValidatorFactory factory;
+
+    static {
+        factory = Validation.buildDefaultValidatorFactory();
+        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
+    }
+
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
+        return factory.getValidator();
+    }
 
     public static <T> void assertCorrectNumberOfViolations(Set<ConstraintViolation<T>> violations,
         int expectedViolations) {
@@ -41,12 +74,7 @@ public class TckReproducerTest extends TestCase {
             + violations.size(), expectedViolations, violations.size());
     }
 
-    private Validator getValidator() {
-        return ApacheValidatorFactory.getDefault().getValidator();
-    }
-
     public void testPropertyAccessOnNonPublicClass() throws Exception {
-        Validator validator = getValidator();
         Car car = new Car("USd-298");
         assertEquals(car.getLicensePlateNumber(), PropertyAccess.getProperty(car, "licensePlateNumber"));
 

@@ -19,6 +19,7 @@
 package org.apache.bval.jsr303;
 
 import javax.validation.Configuration;
+import javax.validation.ValidatorContext;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 
@@ -72,5 +73,19 @@ public interface ApacheValidatorConfiguration
          * {@link ConfigurationState} argument.
          */
          String VALIDATOR_FACTORY_CLASSNAME = "apache.bval.validator-factory-classname";
+
+        /**
+         * Specifies the names, delimited by whitespace, of
+         * {@link MetaBeanFactory} classes that should be added to collaborate
+         * with an {@link ApacheFactoryContext}'s {@link MetaBeanFinder}. These
+         * are instantiated per {@link ValidatorContext}, attempting to use
+         * constructor arguments of decreasing specificity:
+         * <ol>
+         * <li>assignable from the creating {@link ApacheFactoryContext}</li>
+         * <li>assignable from the associated {@link ApacheValidatorFactory}</li>
+         * <li>default (no-args) constructor</li>
+         * </ol>
+         */
+         String METABEAN_FACTORY_CLASSNAMES = "apache.bval.metabean-factory-classnames";
     }
 }

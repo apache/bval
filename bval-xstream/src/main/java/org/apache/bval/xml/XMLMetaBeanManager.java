@@ -16,7 +16,6 @@
  */
 package org.apache.bval.xml;
 
-import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.MetaBeanManager;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
@@ -36,8 +35,7 @@ import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
  * Date: 17.06.2010<br>
  * Time: 09:47:14<br>
  */
-public class XMLMetaBeanManager extends MetaBeanManager implements MetaBeanFinder, XMLMetaBeanRegistry,
-    MetaBeanEnricher {
+public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRegistry, MetaBeanEnricher {
     public XMLMetaBeanManager() {
         this(new XMLMetaBeanBuilder());
     }

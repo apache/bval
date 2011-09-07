@@ -34,15 +34,33 @@ import java.util.Set;
  * @author Carlos Vara
  */
 public class CircularReferencesTest extends TestCase {
-    
     static ValidatorFactory factory;
 
     static {
         factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator)factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
+        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
     }
 
-    private Validator getValidator() {
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
         return factory.getValidator();
     }
 
@@ -51,15 +69,12 @@ public class CircularReferencesTest extends TestCase {
      * dependency.
      */
     public void testAutoreferringBean() {
-        
-        Validator validator = getValidator();
-        
         Person p1 = new Person();
         p1.name = "too-long-name";
         p1.sibling = p1;
-        
+
         Set<ConstraintViolation<Person>> violations = validator.validate(p1);
-        
+
         Assert.assertEquals("Only 1 violation should be reported", 1, violations.size());
         ConstraintViolation<Person> violation = violations.iterator().next();
         Assert.assertEquals("Incorrect violation path", "name", violation.getPropertyPath().toString());
@@ -70,37 +85,32 @@ public class CircularReferencesTest extends TestCase {
      * paths inside the bean graph.
      */
     public void testNonCircularArrayOfSameBean() {
-        
-        Validator validator = getValidator();
-        
         Boss boss = new Boss();
         Person p1 = new Person();
         p1.name = "too-long-name";
-        
-        boss.employees = new Person[]{ p1, p1, p1, p1 };
-        
+
+        boss.employees = new Person[] { p1, p1, p1, p1 };
+
         Set<ConstraintViolation<Boss>> violations = validator.validate(boss);
-        
+
         Assert.assertEquals("A total of 4 violations should be reported", 4, violations.size());
-        
     }
-    
-    
+
     public static class Person {
-        
+
         @Valid
         public Person sibling;
-        
-        @Size(max=10)
+
+        @Size(max = 10)
         public String name;
-        
+
     }
-    
+
     public static class Boss {
-        
+
         @Valid
         public Person[] employees;
-        
+
     }
-    
+
 }

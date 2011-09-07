@@ -18,6 +18,24 @@
  */
 package org.apache.bval.jsr303;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.PrivilegedAction;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintValidator;
+import javax.validation.OverridesAttribute;
+import javax.validation.Payload;
+import javax.validation.ReportAsSingleViolation;
 
 import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.util.SecureActions;
@@ -26,17 +44,10 @@ import org.apache.bval.util.AccessStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.*;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.security.PrivilegedAction;
-import java.util.*;
-
 /**
  * Description: helper class that builds a {@link ConstraintValidation} or its
- * composite constraint validations by parsing the jsr303-annotations
- * and providing information (e.g. for @OverridesAttributes) <br/>
+ * composite constraint validations by parsing the jsr303-annotations and
+ * providing information (e.g. for @OverridesAttributes) <br/>
  */
 final class AnnotationConstraintBuilder<A extends Annotation> {
     private static final Logger log = LoggerFactory.getLogger(AnnotationConstraintBuilder.class);
@@ -46,20 +57,20 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
     /**
      * Create a new AnnotationConstraintBuilder instance.
+     * 
      * @param validatorClasses
      * @param constraintValidator
      * @param annotation
      * @param owner
      * @param access
      */
-    public AnnotationConstraintBuilder(
-          Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
-          ConstraintValidator<A, ?> constraintValidator, A annotation, Class<?> owner,
-          AccessStrategy access) {
-        boolean reportFromComposite = annotation != null && annotation.annotationType()
-              .isAnnotationPresent(ReportAsSingleViolation.class);
-        constraintValidation = new ConstraintValidation<A>(validatorClasses,
-              constraintValidator, annotation, owner, access, reportFromComposite);
+    public AnnotationConstraintBuilder(Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
+        ConstraintValidator<A, ?> constraintValidator, A annotation, Class<?> owner, AccessStrategy access) {
+        boolean reportFromComposite =
+            annotation != null && annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
+        constraintValidation =
+            new ConstraintValidation<A>(validatorClasses, constraintValidator, annotation, owner, access,
+                reportFromComposite);
         buildFromAnnotation();
     }
 
@@ -68,24 +79,22 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         if (constraintValidation.getAnnotation() != null) {
             SecureActions.run(new PrivilegedAction<Object>() {
                 public Object run() {
-                    for (Method method : constraintValidation.getAnnotation()
-                          .annotationType()
-                          .getDeclaredMethods()) {
-                        // groups + payload must also appear in attributes (also checked by TCK-Tests)
+                    for (Method method : constraintValidation.getAnnotation().annotationType().getDeclaredMethods()) {
+                        // groups + payload must also appear in attributes (also
+                        // checked by TCK-Tests)
                         if (method.getParameterTypes().length == 0) {
                             try {
-                                if (Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD.equals(method.getName())) {
+                                if (ConstraintAnnotationAttributes.PAYLOAD.getAttributeName().equals(method.getName())) {
                                     buildPayload(method);
-                                } else if (Jsr303MetaBeanFactory.ANNOTATION_GROUPS.equals(method.getName())) {
+                                } else if (ConstraintAnnotationAttributes.GROUPS.getAttributeName().equals(
+                                    method.getName())) {
                                     buildGroups(method);
                                 } else {
-                                    constraintValidation.getAttributes()
-                                          .put(method.getName(), method.invoke(
-                                                constraintValidation.getAnnotation()));
+                                    constraintValidation.getAttributes().put(method.getName(),
+                                        method.invoke(constraintValidation.getAnnotation()));
                                 }
                             } catch (Exception e) { // do nothing
-                                log.warn("error processing annotation: " +
-                                      constraintValidation.getAnnotation(), e);
+                                log.warn("error processing annotation: " + constraintValidation.getAnnotation(), e);
                             }
                         }
                     }
@@ -95,12 +104,11 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         }
     }
 
-    private void buildGroups(Method method)
-          throws IllegalAccessException, InvocationTargetException {
+    private void buildGroups(Method method) throws IllegalAccessException, InvocationTargetException {
         Object raw = method.invoke(constraintValidation.getAnnotation());
         Class<?>[] garr;
         if (raw instanceof Class<?>) {
-            garr = new Class[]{(Class<?>) raw};
+            garr = new Class[] { (Class<?>) raw };
         } else if (raw instanceof Class<?>[]) {
             garr = (Class<?>[]) raw;
         } else {
@@ -114,13 +122,12 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     @SuppressWarnings("unchecked")
-    private void buildPayload(Method method)
-          throws IllegalAccessException, InvocationTargetException {
+    private void buildPayload(Method method) throws IllegalAccessException, InvocationTargetException {
         Class<? extends Payload>[] payload_raw =
-              (Class<? extends Payload>[]) method.invoke(constraintValidation.getAnnotation());
+            (Class<? extends Payload>[]) method.invoke(constraintValidation.getAnnotation());
         Set<Class<? extends Payload>> payloadSet;
         if (payload_raw == null) {
-            payloadSet = Collections.<Class<? extends Payload>>emptySet();
+            payloadSet = Collections.<Class<? extends Payload>> emptySet();
         } else {
             payloadSet = new HashSet<Class<? extends Payload>>(payload_raw.length);
             payloadSet.addAll(Arrays.asList(payload_raw));
@@ -130,6 +137,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
     /**
      * Get the configured {@link ConstraintValidation}.
+     * 
      * @return {@link ConstraintValidation}
      */
     public ConstraintValidation<?> getConstraintValidation() {
@@ -137,8 +145,8 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     /**
-     * initialize a child composite 'validation' with @OverridesAttribute
-     * from 'constraintValidation' and add to composites.
+     * initialize a child composite 'validation' with @OverridesAttribute from
+     * 'constraintValidation' and add to composites.
      */
     public void addComposed(ConstraintValidation<?> composite) {
         applyOverridesAttributes(composite);
@@ -154,27 +162,28 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
             // Search for the overrides to apply
             ConstraintOverrides generalOverride = findOverride(composite.getAnnotation().annotationType(), -1);
-            if ( generalOverride != null ) {
-                if ( index > 0 ) {
-                    throw new ConstraintDeclarationException("Wrong OverridesAttribute declaration for " + generalOverride.constraintType + ", it needs a defined index when there is a list of constraints");
+            if (generalOverride != null) {
+                if (index > 0) {
+                    throw new ConstraintDeclarationException("Wrong OverridesAttribute declaration for "
+                        + generalOverride.constraintType
+                        + ", it needs a defined index when there is a list of constraints");
                 }
                 generalOverride.applyOn(composite);
             }
 
             ConstraintOverrides override = findOverride(composite.getAnnotation().annotationType(), index);
-            if ( override != null ) {
+            if (override != null) {
                 override.applyOn(composite);
             }
 
         }
     }
 
-
     /**
      * Calculates the index of the composite constraint. The index represents
      * the order in which it is added in reference to other constraints of the
      * same type.
-     *
+     * 
      * @param composite
      *            The composite constraint (not yet added).
      * @return An integer index always >= 0
@@ -192,11 +201,8 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     /** read overridesAttributes from constraintValidation.annotation */
     private void buildOverridesAttributes() {
         overrides = new LinkedList<ConstraintOverrides>();
-        for (Method method : constraintValidation.getAnnotation()
-              .annotationType()
-              .getDeclaredMethods()) {
-            OverridesAttribute.List annoOAL =
-                  method.getAnnotation(OverridesAttribute.List.class);
+        for (Method method : constraintValidation.getAnnotation().annotationType().getDeclaredMethods()) {
+            OverridesAttribute.List annoOAL = method.getAnnotation(OverridesAttribute.List.class);
             if (annoOAL != null) {
                 for (OverridesAttribute annoOA : annoOAL.value()) {
                     parseConstraintOverride(method.getName(), annoOA);
@@ -215,15 +221,12 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             target = new ConstraintOverrides(oa.constraint(), oa.constraintIndex());
             overrides.add(target);
         }
-        target.values
-              .put(oa.name(), constraintValidation.getAttributes().get(methodName));
+        target.values.put(oa.name(), constraintValidation.getAttributes().get(methodName));
     }
 
-    private ConstraintOverrides findOverride(Class<? extends Annotation> constraint,
-                                             int constraintIndex) {
+    private ConstraintOverrides findOverride(Class<? extends Annotation> constraint, int constraintIndex) {
         for (ConstraintOverrides each : overrides) {
-            if (each.constraintType == constraint &&
-                  each.constraintIndex == constraintIndex) {
+            if (each.constraintType == constraint && each.constraintIndex == constraintIndex) {
                 return each;
             }
         }
@@ -231,8 +234,8 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     /**
-     * Holds the values to override in a composed constraint
-     * during creation of a composed ConstraintValidation
+     * Holds the values to override in a composed constraint during creation of
+     * a composed ConstraintValidation
      */
     private static final class ConstraintOverrides {
         final Class<? extends Annotation> constraintType;
@@ -241,8 +244,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         /** key = attributeName, value = overridden value */
         final Map<String, Object> values;
 
-        private ConstraintOverrides(Class<? extends Annotation> constraintType,
-                                    int constraintIndex) {
+        private ConstraintOverrides(Class<? extends Annotation> constraintType, int constraintIndex) {
             this.constraintType = constraintType;
             this.constraintIndex = constraintIndex;
             values = new HashMap<String, Object>();
@@ -256,7 +258,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             // And the annotation
             Annotation originalAnnot = composite.getAnnotation();
             AnnotationProxyBuilder<Annotation> apb = new AnnotationProxyBuilder<Annotation>(originalAnnot);
-            for ( String key : values.keySet() ) {
+            for (String key : values.keySet()) {
                 apb.putValue(key, values.get(key));
             }
             Annotation newAnnot = apb.createAnnotation();

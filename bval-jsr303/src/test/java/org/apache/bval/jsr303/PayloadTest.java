@@ -18,14 +18,19 @@
  */
 package org.apache.bval.jsr303;
 
-import junit.framework.TestCase;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.util.Locale;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Payload;
+import javax.validation.Validation;
 import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
-import java.util.Set;
+
+import junit.framework.TestCase;
+
+import org.apache.bval.jsr303.util.TestUtils;
 
 /**
  * Description: test that payload information can be retrieved
@@ -33,10 +38,34 @@ import java.util.Set;
  * through the ConstraintViolation objects<br/>
  */
 public class PayloadTest extends TestCase {
-    private Validator validator;
+    static ValidatorFactory factory;
 
-    protected void setUp() {
-        validator = ApacheValidatorFactory.getDefault().getValidator();
+    static {
+        factory = Validation.buildDefaultValidatorFactory();
+        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
+    }
+
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
+        return factory.getValidator();
     }
 
     static class Severity {
@@ -72,7 +101,7 @@ public class PayloadTest extends TestCase {
         Address address = new Address(null, null);
         violations = validator.validate(address);
         assertEquals(2, violations.size());
-        ConstraintViolation vio;
+        ConstraintViolation<?> vio;
         vio = TestUtils.getViolation(violations, "zipCode");
         assertNotNull(vio);
         assertEquals(1, vio.getConstraintDescriptor().getPayload().size());

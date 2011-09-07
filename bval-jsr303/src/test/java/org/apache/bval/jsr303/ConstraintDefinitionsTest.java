@@ -18,23 +18,31 @@
  */
 package org.apache.bval.jsr303;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.constraints.NotNullValidator;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import javax.validation.*;
-import javax.validation.constraints.Min;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.validation.Constraint;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.Payload;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.Min;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
+import org.apache.bval.constraints.NotNullValidator;
 
 /**
  * Checks the correct parsing of constraint definitions.
@@ -42,7 +50,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Carlos Vara
  */
 public class ConstraintDefinitionsTest extends TestCase {
-    
     static ValidatorFactory factory;
 
     static {
@@ -50,23 +57,42 @@ public class ConstraintDefinitionsTest extends TestCase {
         ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
     }
 
-    private Validator getValidator() {
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
         return factory.getValidator();
     }
-    
-    
+
     /**
      * Checks the correct parsing of a constraint with an array of constraints
      * as attributes.
      */
     public void testCustomAttributes() {
-        Validator validator = getValidator();
         BeanDescriptor constraints = validator.getConstraintsForClass(Person.class);
-        Set<ConstraintDescriptor<?>> ageConstraints = constraints.getConstraintsForProperty("age").getConstraintDescriptors();
-        
+        Set<ConstraintDescriptor<?>> ageConstraints =
+            constraints.getConstraintsForProperty("age").getConstraintDescriptors();
+
         Assert.assertEquals("There should be 2 constraints in 'age'", ageConstraints.size(), 2);
-        for ( ConstraintDescriptor<?> cd : ageConstraints ) {
-            Assert.assertEquals("Annotation should be @Min", cd.getAnnotation().annotationType().getName(), Min.class.getName());
+        for (ConstraintDescriptor<?> cd : ageConstraints) {
+            Assert.assertEquals("Annotation should be @Min", cd.getAnnotation().annotationType().getName(), Min.class
+                .getName());
         }
     }
 
@@ -76,7 +102,7 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testNoGroupsConstraint() {
         try {
-            getValidator().validate(new NoGroups());
+            validator.validate(new NoGroups());
             fail("No exception thrown when parsing a constraint definition with no groups() method");
         } catch (ConstraintDefinitionException e) {
             // correct
@@ -90,7 +116,7 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testInvalidDefaultGroupsConstraint() {
         try {
-            getValidator().validate(new InvalidGroups());
+            validator.validate(new InvalidGroups());
             fail("No exception thrown when parsing a constraint definition with a groups() method does not return Class[]");
         } catch (ConstraintDefinitionException e) {
             // correct
@@ -103,13 +129,13 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testNoPayloadConstraint() {
         try {
-            getValidator().validate(new NoPayload());
+            validator.validate(new NoPayload());
             fail("No exception thrown when parsing a constraint definition with no payload() method");
         } catch (ConstraintDefinitionException e) {
             // correct
         }
     }
-    
+
     /**
      * Checks that a {@link ConstraintDefinitionException} is thrown when
      * parsing a constraint definition with an invalid <code>payload()</code>
@@ -117,7 +143,7 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testInvalidDefaultPayloadConstraint() {
         try {
-            getValidator().validate(new InvalidPayload());
+            validator.validate(new InvalidPayload());
             fail("No exception thrown when parsing a constraint definition with a payload() method does not return an empty array");
         } catch (ConstraintDefinitionException e) {
             // correct
@@ -130,13 +156,13 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testNoMessageConstraint() {
         try {
-            getValidator().validate(new NoMessage());
+            validator.validate(new NoMessage());
             fail("No exception thrown when parsing a constraint definition with no payload() method");
         } catch (ConstraintDefinitionException e) {
             // correct
         }
     }
-    
+
     /**
      * Checks that a {@link ConstraintDefinitionException} is thrown when
      * parsing a constraint definition with an invalid <code>message()</code>
@@ -144,7 +170,7 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testInvalidDefaultMessageConstraint() {
         try {
-            getValidator().validate(new InvalidMessage());
+            validator.validate(new InvalidMessage());
             fail("No exception thrown when parsing a constraint definition with a message() method does not return a String");
         } catch (ConstraintDefinitionException e) {
             // correct
@@ -157,130 +183,140 @@ public class ConstraintDefinitionsTest extends TestCase {
      */
     public void testInvalidAttributeConstraint() {
         try {
-            getValidator().validate(new InvalidAttribute());
+            validator.validate(new InvalidAttribute());
             fail("No exception thrown when parsing a constraint definition with a method starting with 'valid'");
         } catch (ConstraintDefinitionException e) {
             // correct
         }
     }
-    
+
     public static class Person {
-        @MinList({
-            @Min(value=20),
-            @Min(value=30)
-        })
+        @MinList( { @Min(value = 20), @Min(value = 30) })
         public Integer age;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     public static @interface MinList {
         Min[] value();
     }
-    
+
     public static class NoGroups {
         @NoGroupsConstraint
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface NoGroupsConstraint {
         String message() default "def msg";
+
         Class<? extends Payload>[] payload() default {};
     }
-    
+
     public static class InvalidGroups {
         @InvalidGroupsConstraint
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface InvalidGroupsConstraint {
         String message() default "def msg";
+
         String[] groups() default { "Group1" };
+
         Class<? extends Payload>[] payload() default {};
     }
-    
+
     public static class NoPayload {
         @NoPayloadConstraint
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface NoPayloadConstraint {
         String message() default "def msg";
+
         String[] groups() default {};
     }
-    
+
     public static class InvalidPayload {
         @InvalidPayloadConstraint
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface InvalidPayloadConstraint {
         String message() default "def msg";
+
         String[] groups() default {};
-        Class<? extends Payload>[] payload() default {Payload1.class};
+
+        Class<? extends Payload>[] payload() default { Payload1.class };
+
         public static class Payload1 implements Payload {
         }
     }
-    
+
     public static class NoMessage {
         @NoMessageConstraint
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface NoMessageConstraint {
         String[] groups() default {};
+
         Class<? extends Payload>[] payload() default {};
     }
-    
+
     public static class InvalidMessage {
-        @InvalidMessageConstraint(message=2)
+        @InvalidMessageConstraint(message = 2)
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface InvalidMessageConstraint {
         int message();
+
         String[] groups() default {};
+
         Class<? extends Payload>[] payload() default {};
     }
-    
+
     public static class InvalidAttribute {
         @InvalidAttributeConstraint
         public String prop;
     }
-    
-    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
+
+    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
-    @Constraint(validatedBy = {NotNullValidator.class})
+    @Constraint(validatedBy = { NotNullValidator.class })
     public static @interface InvalidAttributeConstraint {
         String message() default "def msg";
+
         String[] groups() default {};
+
         Class<? extends Payload>[] payload() default {};
+
         String validValue() default "1";
     }
 }

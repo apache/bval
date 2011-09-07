@@ -85,16 +85,16 @@ public class ConstraintDefaults {
         }
         Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadedConstraints
                 = new HashMap<String, Class<? extends ConstraintValidator<?,?>>[]>();
-        for (Map.Entry entry : constraintProperties.entrySet()) {
+        for (Map.Entry<Object, Object> entry : constraintProperties.entrySet()) {
 
             StringTokenizer tokens = new StringTokenizer((String) entry.getValue(), ", ");
-            LinkedList classes = new LinkedList();
+            LinkedList<Class<?>> classes = new LinkedList<Class<?>>();
             while (tokens.hasMoreTokens()) {
                 final String eachClassName = tokens.nextToken();
 
-                Class constraintValidatorClass =
-                      SecureActions.run(new PrivilegedAction<Class>() {
-                          public Class run() {
+                Class<?> constraintValidatorClass =
+                      SecureActions.run(new PrivilegedAction<Class<?>>() {
+                          public Class<?> run() {
                               try {
                                   return Class.forName(eachClassName, true, classloader);
                               } catch (ClassNotFoundException e) {
@@ -109,7 +109,7 @@ public class ConstraintDefaults {
             }
             loadedConstraints
                   .put((String) entry.getKey(),
-                        (Class[]) classes.toArray(new Class[classes.size()]));
+                        (Class<? extends ConstraintValidator<?, ?>>[]) classes.toArray(new Class[classes.size()]));
 
         }
         return loadedConstraints;

@@ -19,6 +19,8 @@
 package org.apache.bval.jsr303.util;
 
 import javax.validation.Path;
+import javax.validation.Path.Node;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -32,7 +34,54 @@ public final class NodeImpl implements Path.Node, Serializable {
     private static final String INDEX_OPEN = "[";
     private static final String INDEX_CLOSE = "]";
 
-    private final String name;
+    /**
+     * Append a Node to the specified StringBuilder.
+     * @param node
+     * @param to
+     * @return to
+     */
+    public static StringBuilder appendNode(Node node, StringBuilder to) {
+        if (node.isInIterable()) {
+            to.append(INDEX_OPEN);
+            if (node.getIndex() != null) {
+                to.append(node.getIndex());
+            } else if (node.getKey() != null) {
+                to.append(node.getKey());
+            }
+            to.append(INDEX_CLOSE);
+        }
+        if (node.getName() != null) {
+            if (to.length() > 0) {
+                to.append(PathImpl.PROPERTY_PATH_SEPARATOR);
+            }
+            to.append(node.getName());
+        }
+        return to;
+    }
+
+    /**
+     * Get a NodeImpl indexed from the preceding node (or root).
+     * @param index
+     * @return NodeImpl
+     */
+    public static NodeImpl atIndex(Integer index) {
+        NodeImpl result = new NodeImpl();
+        result.setIndex(index);
+        return result;
+    }
+
+    /**
+     * Get a NodeImpl keyed from the preceding node (or root).
+     * @param key
+     * @return NodeImpl
+     */
+    public static NodeImpl atKey(Object key) {
+        NodeImpl result = new NodeImpl();
+        result.setKey(key);
+        return result;
+    }
+
+    private String name;
     private boolean inIterable;
     private Integer index;
     private Object key;
@@ -56,11 +105,21 @@ public final class NodeImpl implements Path.Node, Serializable {
         this.key = node.getKey();
     }
 
+    private NodeImpl() {
+    }
+
     /**
      * {@inheritDoc}
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -92,6 +151,7 @@ public final class NodeImpl implements Path.Node, Serializable {
     public void setIndex(Integer index) {
         inIterable = true;
         this.index = index;
+        this.key = null;
     }
 
     /**
@@ -108,6 +168,7 @@ public final class NodeImpl implements Path.Node, Serializable {
     public void setKey(Object key) {
         inIterable = true;
         this.key = key;
+        this.index = null;
     }
 
     /**
@@ -115,17 +176,7 @@ public final class NodeImpl implements Path.Node, Serializable {
      */
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder(name == null ? "" : name);
-        if (inIterable) {
-            builder.append(INDEX_OPEN);
-            if (getIndex() != null) {
-                builder.append(getIndex());
-            } else if (getKey() != null) {
-                builder.append(getKey());
-            }
-            builder.append(INDEX_CLOSE);
-        }
-        return builder.toString();
+        return appendNode(this, new StringBuilder()).toString();
     }
 
     /**

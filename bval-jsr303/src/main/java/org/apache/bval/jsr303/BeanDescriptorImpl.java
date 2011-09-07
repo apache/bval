@@ -80,22 +80,13 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     }
 
     /**
-<<<<<<< .working
-     * Return the property level constraints for a given propertyName
-     * or null if either the property does not exist or has no constraint
-     * The returned object (and associated objects including ConstraintDescriptors)
-     * are immutable.
-     *
-     * @param propertyName property evaludated
-=======
-     * Return the property level constraints for a given propertyName or null if
-     * either the property does not exist or has no constraint The returned
+     * Return the property level constraints for a given propertyName or {@code null} if
+     * either the property does not exist or has no constraint. The returned
      * object (and associated objects including ConstraintDescriptors) are
      * immutable.
      * 
      * @param propertyName
      *            property evaluated
->>>>>>> .merge-right.r997084
      */
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
         if (propertyName == null || propertyName.trim().length() == 0) {

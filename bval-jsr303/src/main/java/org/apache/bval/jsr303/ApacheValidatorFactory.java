@@ -22,7 +22,7 @@ import org.apache.bval.jsr303.xml.AnnotationIgnores;
 import org.apache.bval.jsr303.xml.MetaConstraint;
 import org.apache.bval.jsr303.xml.ValidationMappingParser;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang3.ClassUtils;
 
 import javax.validation.*;
 import javax.validation.bootstrap.ProviderSpecificBootstrap;
@@ -313,7 +313,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * Mark a property of <code>beanClass</code> for nested validation.
      *
      * @param beanClass
-     * @param accessStrategy defining the property to validate
+     * @param accessStrategy
+     *            defining the property to validate
      */
     public void addValid(Class<?> beanClass, AccessStrategy accessStrategy) {
         List<AccessStrategy> slot = validAccesses.get(beanClass);
@@ -344,7 +345,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return List of {@link MetaConstraint}s applicable to
      *         <code>beanClass</code>
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> List<MetaConstraint<T, ? extends Annotation>> getMetaConstraints(
             Class<T> beanClass) {
         List<MetaConstraint<?, ? extends Annotation>> slot =

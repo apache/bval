@@ -31,9 +31,7 @@ final class NodeBuilderCustomizableContextImpl
     private final ConstraintValidatorContextImpl parent;
     private final String messageTemplate;
     private final PathImpl propertyPath;
-    // The name of the last "added" node, it will only be added if it has a non-null name
-    // The actual incorporation in the path will take place when the definition of the current leaf node is complete
-    private String lastNodeName; // Not final as it can be re-used
+    private NodeImpl node;
 
     /**
      * Create a new NodeBuilderCustomizableContextImpl instance.
@@ -47,7 +45,7 @@ final class NodeBuilderCustomizableContextImpl
         parent = contextImpl;
         messageTemplate = template;
         propertyPath = path;
-        lastNodeName = name;
+        node = new NodeImpl(name);
     }
 
     /**
@@ -55,8 +53,8 @@ final class NodeBuilderCustomizableContextImpl
      */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder inIterable() {
         // Modifies the "previous" node in the path
-        this.propertyPath.getLeafNode().setInIterable( true );
-        return new NodeContextBuilderImpl(parent, messageTemplate, propertyPath, lastNodeName);
+        node.setInIterable(true);
+        return new NodeContextBuilderImpl(parent, messageTemplate, propertyPath, node);
     }
 
     /**
@@ -64,8 +62,8 @@ final class NodeBuilderCustomizableContextImpl
      */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
-        addLastNodeIfNeeded();
-        lastNodeName = name;
+        propertyPath.addNode(node);
+        node = new NodeImpl(name);
         return this; // Re-use this instance
     }
 
@@ -73,15 +71,10 @@ final class NodeBuilderCustomizableContextImpl
      * {@inheritDoc}
      */
     public ConstraintValidatorContext addConstraintViolation() {
-        addLastNodeIfNeeded();
+        propertyPath.addNode(node);
+        node = null;
         parent.addError(messageTemplate, propertyPath);
         return parent;
     }
     
-    private void addLastNodeIfNeeded() {
-        if (lastNodeName != null) {
-            NodeImpl node = new NodeImpl(lastNodeName);
-            propertyPath.addNode(node);
-        }
-    }
 }

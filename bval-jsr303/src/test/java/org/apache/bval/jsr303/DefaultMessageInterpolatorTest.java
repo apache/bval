@@ -62,7 +62,7 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
             public ConstraintDescriptor<?> getConstraintDescriptor() {
                 return (ConstraintDescriptor<?>) gvalidator.getConstraintsForClass(PreferredGuest.class)
-                    .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().toArray()[0];
+                    .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().iterator().next();
             }
 
             public Object getValidatedValue() {
@@ -74,8 +74,8 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
         ctx = new MessageInterpolator.Context() {
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor) gvalidator.getConstraintsForClass(Author.class)
-                    .getConstraintsForProperty("lastName").getConstraintDescriptors().toArray()[0];
+                return gvalidator.getConstraintsForClass(Author.class).getConstraintsForProperty("lastName")
+                    .getConstraintDescriptors().iterator().next();
             }
 
             public Object getValidatedValue() {
@@ -101,7 +101,7 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
             public ConstraintDescriptor<?> getConstraintDescriptor() {
                 return (ConstraintDescriptor<?>) validator.getConstraintsForClass(Person.class)
-                    .getConstraintsForProperty("idNumber").getConstraintDescriptors().toArray()[0];
+                    .getConstraintsForProperty("idNumber").getConstraintDescriptors().iterator().next();
             }
 
             public Object getValidatedValue() {
@@ -118,7 +118,7 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
             public ConstraintDescriptor<?> getConstraintDescriptor() {
                 return (ConstraintDescriptor<?>) validator.getConstraintsForClass(Person.class)
-                    .getConstraintsForProperty("otherId").getConstraintDescriptors().toArray()[0];
+                    .getConstraintsForProperty("otherId").getConstraintDescriptors().iterator().next();
             }
 
             public Object getValidatedValue() {

@@ -31,6 +31,8 @@ import java.util.Set;
 
 /**
  * Description: JSR-303 {@link ValidationListener} implementation; provides {@link ConstraintViolation}s.<br/>
+ * 
+ * @version $Rev$ $Date$
  */
 public final class ConstraintValidationListener<T> implements ValidationListener {
     private final Set<ConstraintViolation<T>> constraintViolations = new HashSet<ConstraintViolation<T>>();

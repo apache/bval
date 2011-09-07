@@ -16,8 +16,9 @@
  */
 package org.apache.bval.model;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Description: the meta description of a property of a bean. It supports a map
@@ -103,20 +104,14 @@ public class MetaProperty extends FeaturesCapable
      * @return Class, <code>null</code> if cannot be determined
      */
     public Class<?> getTypeClass() {
-        return getTypeClass(type);
-    }
-
-    //TODO can this handle variables?  Perhaps move TypeUtils up from bval-jsr303
-    private static Class<?> getTypeClass(Type rawType) {
-        if (rawType instanceof Class<?>) {
-            return (Class<?>) rawType;
-        } else if (rawType instanceof ParameterizedType) {
-            return getTypeClass(((ParameterizedType) rawType).getRawType()); // recursion!
-        } else if(rawType instanceof DynaType) {
-            return getTypeClass(((DynaType)rawType).getRawType()); // recursion
-        } else {
-            return null; // class cannot be determined!
+        Type targetType = type instanceof DynaType ? ((DynaType) type)
+                .getRawType() : type;
+        if (targetType == null) {
+            return null;
         }
+        Type assigningType = getParentMetaBean() == null ? null
+                : getParentMetaBean().getBeanClass();
+        return TypeUtils.getRawType(targetType, assigningType);
     }
 
     /**
@@ -176,4 +171,5 @@ public class MetaProperty extends FeaturesCapable
     public String toString() {
         return "MetaProperty{" + "name='" + name + '\'' + ", type=" + type + '}';
     }
+
 }

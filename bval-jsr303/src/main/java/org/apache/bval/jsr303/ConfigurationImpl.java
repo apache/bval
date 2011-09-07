@@ -129,7 +129,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     public ApacheValidatorConfiguration ignoreXmlConfiguration() {
         ignoreXmlConfiguration = true;
-//        this.prepared = false;
         return this;
     }
 

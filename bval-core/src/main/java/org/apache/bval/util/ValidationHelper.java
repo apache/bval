@@ -21,6 +21,7 @@ package org.apache.bval.util;
 import java.util.List;
 import java.util.Map;
 import org.apache.bval.DynamicMetaBean;
+import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
@@ -98,17 +99,24 @@ public class ValidationHelper {
     static protected <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context, ValidateCallback s) {
         int index = 0;
         DynamicMetaBean dyn = getDynamicMetaBean(context);
-        for (Object each : ((Object[]) context.getBean())) {
-            context.setCurrentIndex(index++);
-            if (each == null) {
-                continue; // Null values are not validated
+        Object[] array = (Object[]) context.getBean();
+        MetaBean metaBean = context.getMetaBean();
+        context.setCurrentIndex(null);
+        try {
+            for (Object each : array) {
+                context.setCurrentIndex(index++);
+                if (each == null) {
+                    continue; // Null values are not validated
+                }
+                if (dyn != null) {
+                    context.setBean(each, dyn.resolveMetaBean(each));
+                } else {
+                    context.setBean(each);
+                }
+                s.validate();
             }
-            if (dyn != null) {
-                context.setBean(each, dyn.resolveMetaBean(each));
-            } else {
-                context.setBean(each);
-            }
-            s.validate();
+        } finally {
+            context.moveUp(array, metaBean);
         }
     }
 
@@ -125,23 +133,29 @@ public class ValidationHelper {
 
         final boolean positional = context.getBean() instanceof List<?>;
         int index = 0;
+        Iterable<?> iterable = (Iterable<?>) context.getBean();
+        MetaBean metaBean = context.getMetaBean();
         context.setCurrentIndex(null);
 
-        // jsr303 spec: Each object provided by the iterator is validated.
-        final DynamicMetaBean dyn = getDynamicMetaBean(context);
-        for (Object each : (Iterable<?>) context.getBean()) {
-            if (positional) {
-                context.setCurrentIndex(index++);
+        try {
+            // jsr303 spec: Each object provided by the iterator is validated.
+            final DynamicMetaBean dyn = getDynamicMetaBean(context);
+            for (Object each : iterable) {
+                if (positional) {
+                    context.setCurrentIndex(index++);
+                }
+                if (each == null) {
+                    continue; // Null values are not validated
+                }
+                if (dyn != null) {
+                    context.setBean(each, dyn.resolveMetaBean(each));
+                } else {
+                    context.setBean(each);
+                }
+                s.validate();
             }
-            if (each == null) {
-                continue; // Null values are not validated
-            }
-            if (dyn != null) {
-                context.setBean(each, dyn.resolveMetaBean(each));
-            } else {
-                context.setBean(each);
-            }
-            s.validate();
+        } finally {
+            context.moveUp(iterable, metaBean);
         }
     }
 
@@ -155,21 +169,28 @@ public class ValidationHelper {
      *            {@link Map}.
      */
     static protected <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context, ValidateCallback s) {
-        // jsr303 spec: For Map, the value of each Map.Entry is validated (key is not validated).
+        // jsr303 spec: For Map, the value of each Map.Entry is validated (key
+        // is not validated).
         Map<?, ?> currentBean = (Map<?, ?>) context.getBean();
+        MetaBean metaBean = context.getMetaBean();
         final DynamicMetaBean dyn = getDynamicMetaBean(context);
-        for (Object key : currentBean.keySet()) {
-            context.setCurrentKey(key);
-            Object value = currentBean.get(key);
-            if (value == null) {
-                continue; // Null values are not validated
+        context.setCurrentKey(null);
+        try {
+            for (Object key : currentBean.keySet()) {
+                context.setCurrentKey(key);
+                Object value = currentBean.get(key);
+                if (value == null) {
+                    continue; // Null values are not validated
+                }
+                if (dyn != null) {
+                    context.setBean(value, dyn.resolveMetaBean(value));
+                } else {
+                    context.setBean(value);
+                }
+                s.validate();
             }
-            if (dyn != null) {
-                context.setBean(value, dyn.resolveMetaBean(value));
-            } else {
-                context.setBean(value);
-            }
-            s.validate();
+        } finally {
+            context.moveUp(currentBean, metaBean);
         }
     }
 

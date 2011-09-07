@@ -18,9 +18,14 @@
  */
 package org.apache.bval.jsr303.example;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.*;
 
 /**
  * Description: <br/>
@@ -29,8 +34,8 @@ public class Library {
     @NotNull
     private String libraryName;
     @Valid
-    private final Map<String,Book> taggedBooks = new HashMap();
-    
+    private final Map<String, Book> taggedBooks = new HashMap<String, Book>();
+
     private Person[] persons;
 
     public String getLibraryName() {
@@ -55,11 +60,13 @@ public class Library {
 
     @Valid
     public List<Employee> getEmployees() {
-        if(persons == null) return Collections.emptyList();
+        if (persons == null)
+            return Collections.emptyList();
 
-        ArrayList<Employee> emps = new ArrayList(persons.length);
-        for(Person each : persons) {
-            if(each instanceof Employee) emps.add((Employee) each);
+        ArrayList<Employee> emps = new ArrayList<Employee>(persons.length);
+        for (Person each : persons) {
+            if (each instanceof Employee)
+                emps.add((Employee) each);
         }
         return emps;
     }

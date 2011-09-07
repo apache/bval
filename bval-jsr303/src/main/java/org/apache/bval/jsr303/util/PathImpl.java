@@ -19,52 +19,92 @@
 package org.apache.bval.jsr303.util;
 
 import javax.validation.Path;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Description: object holding the property path as a list of nodes.
- * (Implementation based on reference implementation)
+ * (Implementation partially based on reference implementation)
  * <br/>
  * This class is not synchronized.
+ * 
+ * @version $Rev$ $Date$
  */
 public class PathImpl implements Path, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Regular expression used to split a string path into its elements.
-     *
-     * @see <a href="http://www.regexplanet.com/simple/index.jsp">Regular expression tester</a>
-     */
-    private static final Pattern pathPattern =
-          Pattern.compile("(\\w+)(\\[(\\w*)\\])?(\\.(.*))*");
+    static final String PROPERTY_PATH_SEPARATOR = ".";
 
-    private static final String PROPERTY_PATH_SEPARATOR = ".";
+    /**
+     * Builds non-root paths from expressions.
+     */
+    private static class PathImplBuilder implements PathNavigation.Callback<PathImpl> {
+        PathImpl result = new PathImpl();
+
+        /**
+         * {@inheritDoc}
+         */
+        public void handleProperty(String name) {
+            result.addProperty(name);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void handleIndexOrKey(String value) {
+            // with no context to guide us, we can only parse ints and fall back to String keys:
+            NodeImpl node;
+            try {
+                node = NodeImpl.atIndex(Integer.parseInt(value));
+            } catch (NumberFormatException e) {
+                node = NodeImpl.atKey(value);
+            }
+            result.addNode(node);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public PathImpl result() {
+            if (result.nodeList.isEmpty()) {
+                throw new IllegalStateException();
+            }
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void handleGenericInIterable() {
+            result.addNode(NodeImpl.atIndex(null));
+        }
+
+    }
 
     private final List<Node> nodeList;
 
     /**
-     * Returns a {@code Path} instance representing the path described by the given string. To create a root node the empty string should be passed.
-     * Note:  This signature is to maintain pluggability with the RI impl.
-     *
-     * @param propertyPath the path as string representation.
+     * Returns a {@code Path} instance representing the path described by the given string. To create a root node the
+     * empty string should be passed. Note: This signature is to maintain pluggability with the RI impl.
+     * 
+     * @param propertyPath
+     *            the path as string representation.
      * @return a {@code Path} instance representing the path described by the given string.
      */
     public static PathImpl createPathFromString(String propertyPath) {
         if (propertyPath == null || propertyPath.length() == 0) {
             return create(null);
         }
-
-        return parseProperty(propertyPath);
+        return PathNavigation.navigateAndReturn(propertyPath, new PathImplBuilder());
     }
 
     /**
      * Create a {@link PathImpl} instance representing the specified path.
+     * 
      * @param name
      * @return PathImpl
      */
@@ -77,6 +117,7 @@ public class PathImpl implements Path, Serializable {
 
     /**
      * Copy another Path.
+     * 
      * @param path
      * @return new {@link PathImpl}
      */
@@ -104,15 +145,21 @@ public class PathImpl implements Path, Serializable {
 
     /**
      * Learn whether this {@link PathImpl} points to the root of its graph.
+     * 
      * @return true if no child nodes
      */
-    //our implementation stores a nameless root node.
+    // our implementation stores a nameless root node.
     public boolean isRootPath() {
-        return nodeList.size() == 1 && nodeList.get(0).getName() == null;
+        if (nodeList.size() != 1) {
+            return false;
+        }
+        Path.Node first = nodeList.get(0);
+        return !first.isInIterable() && first.getName() == null;
     }
 
     /**
-     * Return a new {@link PathImpl} that represents <code>this</code> minus its leaf node (if present). 
+     * Return a new {@link PathImpl} that represents <code>this</code> minus its leaf node (if present).
+     * 
      * @return PathImpl
      */
     public PathImpl getPathWithoutLeafNode() {
@@ -127,21 +174,40 @@ public class PathImpl implements Path, Serializable {
 
     /**
      * Add a node to this {@link PathImpl}.
-     * @param node to add
+     * 
+     * @param node
+     *            to add
      */
     public void addNode(Node node) {
-    	if ( isRootPath() && nodeList.get(0).getIndex() == null ) {
-    		nodeList.set(0, node);
-    	}
-    	else {
-    		nodeList.add(node);
-    	}
+        if (isRootPath()) {
+            nodeList.set(0, node);
+        } else {
+            nodeList.add(node);
+        }
+    }
+
+    /**
+     * Encapsulate the node manipulations needed to add a named property to this path.
+     * 
+     * @param name
+     */
+    public void addProperty(String name) {
+        if (!nodeList.isEmpty()) {
+            NodeImpl leaf = getLeafNode();
+            if (leaf != null && leaf.isInIterable() && leaf.getName() == null) {
+                leaf.setName(name);
+                return;
+            }
+        }
+        addNode(new NodeImpl(name));
     }
 
     /**
      * Trim the leaf node from this {@link PathImpl}.
+     * 
      * @return the node removed
-     * @throws IllegalStateException if no nodes are found
+     * @throws IllegalStateException
+     *             if no nodes are found
      */
     public Node removeLeafNode() {
         if (isRootPath() || nodeList.size() == 0) {
@@ -158,6 +224,7 @@ public class PathImpl implements Path, Serializable {
 
     /**
      * Get the leaf node (if any) from this {@link PathImpl}
+     * 
      * @return {@link NodeImpl}
      */
     public NodeImpl getLeafNode() {
@@ -176,6 +243,7 @@ public class PathImpl implements Path, Serializable {
 
     /**
      * Learn whether <code>path</code> is a parent to <code>this</code>.
+     * 
      * @param path
      * @return <code>true</code> if our nodes begin with nodes equal to those found in <code>path</code>
      */
@@ -191,9 +259,25 @@ public class PathImpl implements Path, Serializable {
                 return false;
             }
             Node thisNode = thisIter.next();
-            if (!thisNode.equals(pathNode)) {
+            if (pathNode.isInIterable()) {
+                if (!thisNode.isInIterable()) {
+                    return false;
+                }
+                if (pathNode.getIndex() != null && !pathNode.getIndex().equals(thisNode.getIndex())) {
+                    return false;
+                }
+                if (pathNode.getKey() != null && !pathNode.getKey().equals(thisNode.getKey())) {
+                    return false;
+                }
+            } else if (thisNode.isInIterable()) {
+                // in this case we have shown that the proposed parent is not
+                // indexed, and we are, thus the paths cannot match
                 return false;
             }
+            if (pathNode.getName() == null || pathNode.getName().equals(thisNode.getName())) {
+                continue;
+            }
+            return false;
         }
         return true;
     }
@@ -204,13 +288,8 @@ public class PathImpl implements Path, Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        Iterator<Path.Node> iter = iterator();
-        while (iter.hasNext()) {
-            Node node = iter.next();
-            builder.append(node.toString());
-            if (iter.hasNext() && builder.length() > 0) {
-                builder.append(PROPERTY_PATH_SEPARATOR);
-            }
+        for (Path.Node node : this) {
+            NodeImpl.appendNode(node, builder);
         }
         return builder.toString();
     }
@@ -228,8 +307,7 @@ public class PathImpl implements Path, Serializable {
         }
 
         PathImpl path = (PathImpl) o;
-        return !(nodeList != null && !nodeList.equals(path.nodeList)) &&
-              !(nodeList == null && path.nodeList != null);
+        return !(nodeList != null && !nodeList.equals(path.nodeList)) && !(nodeList == null && path.nodeList != null);
 
     }
 
@@ -239,37 +317,6 @@ public class PathImpl implements Path, Serializable {
     @Override
     public int hashCode() {
         return nodeList != null ? nodeList.hashCode() : 0;
-    }
-
-    private static PathImpl parseProperty(String property) {
-        PathImpl path = new PathImpl();
-        String tmp = property;
-        do {
-            Matcher matcher = pathPattern.matcher(tmp);
-            if (matcher.matches()) {
-                String value = matcher.group(1);
-                String indexed = matcher.group(2);
-                String index = matcher.group(3);
-                NodeImpl node = new NodeImpl(value);
-                if (indexed != null) {
-                    node.setInIterable(true);
-                }
-                if (index != null && index.length() > 0) {
-                    try {
-                        Integer i = Integer.valueOf(index);
-                        node.setIndex(i);
-                    } catch (NumberFormatException e) {
-                        node.setKey(index);
-                    }
-                }
-                path.addNode(node);
-                tmp = matcher.group(5);
-            } else {
-                throw new IllegalArgumentException(
-                      "Unable to parse property path " + property);
-            }
-        } while (tmp != null);
-        return path;
     }
 
 }

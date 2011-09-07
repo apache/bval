@@ -18,40 +18,49 @@
  */
 package org.apache.bval.jsr303;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.constraints.NotNullValidator;
-import org.apache.bval.jsr303.example.Customer;
-
-import javax.validation.*;
-import javax.validation.bootstrap.ProviderSpecificBootstrap;
-import javax.validation.spi.ValidationProvider;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import javax.validation.Configuration;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidatorFactory;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.ValidationException;
+import javax.validation.ValidationProviderResolver;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.bootstrap.ProviderSpecificBootstrap;
+import javax.validation.spi.ValidationProvider;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
+import org.apache.bval.constraints.NotNullValidator;
+import org.apache.bval.jsr303.example.Customer;
 
 /**
  * Description: <br/>
  */
 public class BootstrapTest extends TestCase {
     public void testDirectBootstrap() {
-        Validator validator =
-                ApacheValidatorFactory.getDefault().getValidator();
+        Validator validator = ApacheValidatorFactory.getDefault().getValidator();
         Assert.assertNotNull(validator);
-        Assert.assertTrue(ApacheValidatorFactory.getDefault() ==
-                ApacheValidatorFactory.getDefault());
+        Assert.assertTrue(ApacheValidatorFactory.getDefault() == ApacheValidatorFactory.getDefault());
     }
 
     public void testEverydayBootstrap() {
-        ApacheValidatorFactory factory =
-                (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
+        ApacheValidatorFactory factory = (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
         Assert.assertNotNull(validator);
 
-        // each call to Validation.getValidationBuilder() returns a new builder with new state
-        ApacheValidatorFactory factory2 =
-                (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
+        // each call to Validation.getValidationBuilder() returns a new builder
+        // with new state
+        ApacheValidatorFactory factory2 = (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
         Assert.assertTrue(factory2 != factory);
         Assert.assertTrue(factory2.getMessageInterpolator() != factory.getMessageInterpolator());
 
@@ -72,8 +81,8 @@ public class BootstrapTest extends TestCase {
     }
 
     /**
-     * some tests based on RI tested behaviors to ensure our 
-     * implementation works as the reference implementation
+     * some tests based on RI tested behaviors to ensure our implementation
+     * works as the reference implementation
      */
 
     public void testCustomConstraintFactory() {
@@ -91,37 +100,34 @@ public class BootstrapTest extends TestCase {
         Assert.assertFalse(ConstraintViolations.isEmpty());
 
         builder = Validation.byDefaultProvider().configure();
-        builder.constraintValidatorFactory(
-                new ConstraintValidatorFactory() {
-                    public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
-                        if (key == NotNullValidator.class) {
-                            return (T) new BadlyBehavedNotNullValidator();
-                        }
-                        return new DefaultConstraintValidatorFactory().getInstance(key);
-                    }
+        builder.constraintValidatorFactory(new ConstraintValidatorFactory() {
+            public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
+                if (key == NotNullValidator.class) {
+                    @SuppressWarnings("unchecked")
+                    final T result = (T) new BadlyBehavedNotNullValidator();
+                    return result;
                 }
-        );
+                return new DefaultConstraintValidatorFactory().getInstance(key);
+            }
+        });
         factory = builder.buildValidatorFactory();
         validator = factory.getValidator();
         Set<ConstraintViolation<Customer>> ConstraintViolations2 = validator.validate(customer);
-        Assert.assertTrue("Wrong number of constraints",
-                ConstraintViolations.size() > ConstraintViolations2.size());
+        Assert.assertTrue("Wrong number of constraints", ConstraintViolations.size() > ConstraintViolations2.size());
     }
 
     public void testCustomResolverAndType() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
             public List<ValidationProvider<?>> getValidationProviders() {
-                List<ValidationProvider<?>> list = new ArrayList(1);
+                List<ValidationProvider<?>> list = new ArrayList<ValidationProvider<?>>(1);
                 list.add(new ApacheValidationProvider());
                 return list;
             }
         };
 
-        ApacheValidatorConfiguration builder = Validation
-                .byProvider(ApacheValidationProvider.class)
-                .providerResolver(resolver)
-                .configure();
+        ApacheValidatorConfiguration builder =
+            Validation.byProvider(ApacheValidationProvider.class).providerResolver(resolver).configure();
         assertDefaultBuilderAndFactory(builder);
     }
 
@@ -129,20 +135,15 @@ public class BootstrapTest extends TestCase {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
             public List<ValidationProvider<?>> getValidationProviders() {
-                List list = new ArrayList();
-                list.add(new ApacheValidationProvider());
-                return list;
+                return Collections.<ValidationProvider<?>> singletonList(new ApacheValidationProvider());
             }
         };
 
-        Configuration<?> builder = Validation
-                .byDefaultProvider()
-                .providerResolver(resolver)
-                .configure();
+        Configuration<?> builder = Validation.byDefaultProvider().providerResolver(resolver).configure();
         assertDefaultBuilderAndFactory(builder);
     }
 
-    private void assertDefaultBuilderAndFactory(Configuration builder) {
+    private void assertDefaultBuilderAndFactory(Configuration<?> builder) {
         Assert.assertNotNull(builder);
         Assert.assertTrue(builder instanceof ConfigurationImpl);
 
@@ -155,26 +156,22 @@ public class BootstrapTest extends TestCase {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
             public List<ValidationProvider<?>> getValidationProviders() {
-                return new ArrayList();
+                return Collections.emptyList();
             }
         };
 
         ProviderSpecificBootstrap<ApacheValidatorConfiguration> type =
-                Validation.byProvider(ApacheValidationProvider.class);
+            Validation.byProvider(ApacheValidationProvider.class);
 
         final ProviderSpecificBootstrap<ApacheValidatorConfiguration> specializedBuilderFactory =
-                type.providerResolver(resolver);
+            type.providerResolver(resolver);
 
         try {
             specializedBuilderFactory.configure();
             Assert.fail();
-        }
-        catch (ValidationException e) {
-            Assert.assertTrue(
-                    "Wrong error message",
-                    e.getMessage().contains("provider") && 
-                    e.getMessage().contains("org.apache.bval.jsr303.ApacheValidationProvider")
-            );
+        } catch (ValidationException e) {
+            Assert.assertTrue("Wrong error message", e.getMessage().contains("provider")
+                && e.getMessage().contains("org.apache.bval.jsr303.ApacheValidationProvider"));
         }
     }
 

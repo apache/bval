@@ -17,16 +17,22 @@
 package org.apache.bval.jsr303.xml;
 
 
-import org.apache.bval.jsr303.ApacheValidatorFactory;
-import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
-import org.apache.bval.jsr303.util.EnumerationConverter;
-import org.apache.bval.jsr303.util.IOUtils;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.util.FieldAccess;
-import org.apache.bval.util.MethodAccess;
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.Converter;
-import org.apache.commons.lang.StringUtils;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -38,16 +44,17 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.*;
+
+import org.apache.bval.jsr303.ApacheValidatorFactory;
+import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr303.util.EnumerationConverter;
+import org.apache.bval.jsr303.util.IOUtils;
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.FieldAccess;
+import org.apache.bval.util.MethodAccess;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.Converter;
+import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -57,10 +64,10 @@ import java.util.*;
 public class ValidationMappingParser {
     //    private static final Log log = LogFactory.getLog(ValidationMappingParser.class);
     private static final String VALIDATION_MAPPING_XSD = "META-INF/validation-mapping-1.0.xsd";
-    private static final String[] RESERVED_PARAMS = {
-            Jsr303MetaBeanFactory.ANNOTATION_MESSAGE,
-            Jsr303MetaBeanFactory.ANNOTATION_GROUPS,
-            Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD };
+
+    private static final Set<ConstraintAnnotationAttributes> RESERVED_PARAMS = Collections.unmodifiableSet(EnumSet.of(
+        ConstraintAnnotationAttributes.GROUPS, ConstraintAnnotationAttributes.MESSAGE,
+        ConstraintAnnotationAttributes.PAYLOAD));
 
     private final Set<Class<?>> processedClasses;
     private final ApacheValidatorFactory factory;
@@ -180,9 +187,9 @@ public class ValidationMappingParser {
     }
 
     private void checkValidName(String name) {
-        for (String each : RESERVED_PARAMS) {
-            if (each.equals(name)) {
-                throw new ValidationException(each + " is a reserved parameter name.");
+        for (ConstraintAnnotationAttributes attr : RESERVED_PARAMS) {
+            if (attr.getAttributeName().equals(name)) {
+                throw new ValidationException(name + " is a reserved parameter name.");
             }
         }
     }
@@ -437,7 +444,8 @@ public class ValidationMappingParser {
             Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) clazz;
 
             ValidatedByType validatedByType = constraintDefinition.getValidatedBy();
-            List<Class<? extends ConstraintValidator<?,?>>> classes = new ArrayList();
+            List<Class<? extends ConstraintValidator<?, ?>>> classes =
+                new ArrayList<Class<? extends ConstraintValidator<?, ?>>>();
             /*
              If include-existing-validator is set to false,
              ConstraintValidator defined on the constraint annotation are ignored.

@@ -25,6 +25,7 @@ import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.metadata.BeanDescriptor;
 import java.util.Locale;
@@ -36,7 +37,6 @@ import java.util.Locale;
  * @author Carlos Vara
  */
 public class ExceptionsContractTest extends TestCase {
-
     static ValidatorFactory factory;
 
     static {
@@ -44,7 +44,26 @@ public class ExceptionsContractTest extends TestCase {
         ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
     }
 
-    private Validator getValidator() {
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
         return factory.getValidator();
     }
 
@@ -53,7 +72,6 @@ public class ExceptionsContractTest extends TestCase {
      * getter throws an exception.
      */
     public void testExceptionThrowingBean() {
-        Validator validator = getValidator();
         try {
             validator.validate(new ExceptionThrowingBean());
             Assert.fail("No exception thrown when validating a bean whose getter throws a RTE");
@@ -67,7 +85,6 @@ public class ExceptionsContractTest extends TestCase {
      * <code>null</code> as group array.
      */
     public void testValidateNullGroup() {
-        Validator validator = getValidator();
         try {
             Class<?>[] groups = null;
             validator.validate(new String(), groups);
@@ -82,7 +99,6 @@ public class ExceptionsContractTest extends TestCase {
      * invalid property name.
      */
     public void testValidateInvalidPropertyName() {
-        Validator validator = getValidator();
 
         // Null propertyName
         try {
@@ -112,7 +128,6 @@ public class ExceptionsContractTest extends TestCase {
      * validate a property on a null object.
      */
     public void testValidatePropertyOnNullBean() {
-        Validator validator = getValidator();
         try {
             validator.validateProperty(null, "class");
         } catch (IllegalArgumentException e) {
@@ -126,7 +141,6 @@ public class ExceptionsContractTest extends TestCase {
      * {@link Validator#validateProperty(Object, String, Class...)} call.
      */
     public void testValidatePropertyNullGroup() {
-        Validator validator = getValidator();
         try {
             Class<?>[] groups = null;
             validator.validateProperty(new Person(), "name", groups);
@@ -142,7 +156,6 @@ public class ExceptionsContractTest extends TestCase {
      * <code>null</code> class.
      */
     public void testValidateValueOnNullClass() {
-        Validator validator = getValidator();
         try {
             validator.validateValue(null, "class", Object.class);
             Assert.fail("No exception thrown when passing null as group array");
@@ -157,8 +170,6 @@ public class ExceptionsContractTest extends TestCase {
      * {@link Validator#validateValue(Class, String, Object, Class...)}.
      */
     public void testValidateValueInvalidPropertyName() {
-        Validator validator = getValidator();
-
         // Null propertyName
         try {
             validator.validateValue(Person.class, null, "John");
@@ -187,11 +198,29 @@ public class ExceptionsContractTest extends TestCase {
      * <code>null</code> group array.
      */
     public void testValidateValueNullGroup() {
-        Validator validator = getValidator();
         try {
             Class<?>[] groups = null;
             validator.validateValue(Person.class, "name", "John", groups);
             Assert.fail("No exception thrown when passing null as group array");
+        } catch (IllegalArgumentException e) {
+            // Correct
+        }
+    }
+
+    /**
+     * Enforces the "not a valid object property" part of the {@link IllegalArgumentException}
+     * declaration on {@link Validator#validateValue(Class, String, Object, Class...)}
+     */
+    public void testValidateIncompatibleValue() {
+        try {
+            validator.validateValue(Person.class, "name", 666);
+            Assert.fail("No exception thrown when passing Integer for string value");
+        } catch (IllegalArgumentException e) {
+            // Correct
+        }
+        try {
+            validator.validateValue(Person.class, "age", null);
+            Assert.fail("No exception thrown when passing null for primitive value");
         } catch (IllegalArgumentException e) {
             // Correct
         }
@@ -203,16 +232,15 @@ public class ExceptionsContractTest extends TestCase {
      * property name.
      */
     public void testGetConstraintsForInvalidProperty() {
-        Validator validator = getValidator();
         BeanDescriptor personDescriptor = validator.getConstraintsForClass(Person.class);
-        
+
         try {
             personDescriptor.getConstraintsForProperty(null);
             fail("No exception thrown when calling getConstraintsForProperty with null property");
         } catch (IllegalArgumentException e) {
             // Correct
         }
-        
+
         try {
             personDescriptor.getConstraintsForProperty("");
             fail("No exception thrown when calling getConstraintsForProperty with empty property");
@@ -220,7 +248,6 @@ public class ExceptionsContractTest extends TestCase {
             // Correct
         }
     }
-    
 
     public static class ExceptionThrowingBean {
 
@@ -232,10 +259,12 @@ public class ExceptionsContractTest extends TestCase {
     }
 
     public static class Person {
-        
+
         @NotNull
         public String name;
-        
+
+        @Min(0)
+        public int age;
     }
 
 }

@@ -18,11 +18,15 @@
  */
 package org.apache.bval.jsr303.util;
 
-import org.junit.Assert;
-
-import javax.validation.ConstraintViolation;
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
+
+import org.junit.Assert;
 
 /**
  * Description: <br/>
@@ -30,21 +34,45 @@ import java.util.Set;
 public class TestUtils {
     /**
      * @param violations
-     * @param propertyPath - string format of a propertyPath
-     * @return the constraintViolation with the propertyPath's string representation given
+     * @param propertyPath
+     *            - string format of a propertyPath
+     * @return the constraintViolation with the propertyPath's string
+     *         representation given
      */
-    public static ConstraintViolation getViolation(Set violations, String propertyPath)
-    {
-        for(ConstraintViolation each : (Set<ConstraintViolation>)violations) {
-            if(each.getPropertyPath().toString().equals(propertyPath)) return each;
+    public static <T> ConstraintViolation<T> getViolation(Set<ConstraintViolation<T>> violations, String propertyPath) {
+        for (ConstraintViolation<T> each : violations) {
+            if (each.getPropertyPath().toString().equals(propertyPath))
+                return each;
         }
         return null;
     }
 
-    public static ConstraintViolation getViolationWithMessage(Set violations, String message)
-    {
-        for(ConstraintViolation each : (Set<ConstraintViolation>)violations) {
-            if(each.getMessage().equals(message)) return each;
+    /**
+     * @param violations
+     * @param propertyPath
+     * @return count of violations
+     */
+    public static <T> int countViolations(Set<ConstraintViolation<T>> violations, String propertyPath) {
+        int result = 0;
+        for (ConstraintViolation<T> each : violations) {
+            if (each.getPropertyPath().toString().equals(propertyPath)) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param <T>
+     * @param violations
+     * @param message
+     * @return the constraint violation with the specified message found, if any
+     */
+    public static <T> ConstraintViolation<T> getViolationWithMessage(Set<ConstraintViolation<T>> violations,
+        String message) {
+        for (ConstraintViolation<T> each : violations) {
+            if (each.getMessage().equals(message))
+                return each;
         }
         return null;
     }
@@ -67,4 +95,19 @@ public class TestUtils {
         Assert.assertEquals("constraint descriptor set size changed", size, collection.size());
     }
 
+    /**
+     * Assert that the specified ConstraintFinder provides constraints of each of the specified types.
+     * @param constraintFinder
+     * @param types
+     */
+    public static void assertConstraintTypesFound(ConstraintFinder constraintFinder, Class<? extends Annotation>... types) {
+        outer: for (Class<? extends Annotation> type : types) {
+            for (ConstraintDescriptor<?> descriptor : constraintFinder.getConstraintDescriptors()) {
+                if (descriptor.getAnnotation().annotationType().equals(type)) {
+                    continue outer;
+                }
+            }
+            Assert.fail(String.format("Missing expected constraint descriptor of type %s", type));
+        }
+    }
 }

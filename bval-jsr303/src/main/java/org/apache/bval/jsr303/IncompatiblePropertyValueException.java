@@ -21,46 +21,48 @@ package org.apache.bval.jsr303;
 import javax.validation.ValidationException;
 
 /**
- * Internal exception thrown when trying to access a property that doesn't exist
- * in a bean.
+ * Internal exception thrown when trying to validate a value for a property for which it is not assignment-compatible.
  * 
- * @version $Rev$ $Date$
+ * @version $Rev: 1031833 $ $Date: 2010-11-05 16:53:03 -0500 (Fri, 05 Nov 2010) $
  * 
- * @author Carlos Vara
+ * @author Matt Benson
  */
-public class UnknownPropertyException extends ValidationException {
+public class IncompatiblePropertyValueException extends ValidationException {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Create a new UnknownPropertyException instance.
+     * Create a new {@link IncompatiblePropertyValueException} instance.
+     * 
      * @param message
      */
-    public UnknownPropertyException(String message) {
+    public IncompatiblePropertyValueException(String message) {
         super(message);
     }
 
     /**
-     * Create a new UnknownPropertyException instance.
+     * Create a new IncompatiblePropertyValueException instance.
      */
-    public UnknownPropertyException() {
+    public IncompatiblePropertyValueException() {
         super();
     }
 
     /**
-     * Create a new UnknownPropertyException instance.
+     * Create a new IncompatiblePropertyValueException instance.
+     * 
      * @param message
      * @param cause
      */
-    public UnknownPropertyException(String message, Throwable cause) {
+    public IncompatiblePropertyValueException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * Create a new UnknownPropertyException instance.
+     * Create a new IncompatiblePropertyValueException instance.
+     * 
      * @param cause
      */
-    public UnknownPropertyException(Throwable cause) {
+    public IncompatiblePropertyValueException(Throwable cause) {
         super(cause);
     }
 

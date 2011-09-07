@@ -37,7 +37,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Carlos Vara
  */
 public class ValidatorResolutionTest extends TestCase {
-
     static ValidatorFactory factory;
 
     static {
@@ -45,7 +44,26 @@ public class ValidatorResolutionTest extends TestCase {
         ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
     }
 
-    private Validator getValidator() {
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
         return factory.getValidator();
     }
 
@@ -54,7 +72,6 @@ public class ValidatorResolutionTest extends TestCase {
      * only available validator is associated with a different annotation type.
      */
     public void testInvalidValidator() {
-        Validator validator = getValidator();
         try {
             validator.validate(new Person());
             fail("No exception thrown, but no valid validator available.");
@@ -62,30 +79,32 @@ public class ValidatorResolutionTest extends TestCase {
             // correct
         }
     }
-    
-    
+
     public static class Person {
         @PersonName
         public String name;
     }
-    
-    @Constraint(validatedBy = {InvalidPersonNameValidator.class})
+
+    @Constraint(validatedBy = { InvalidPersonNameValidator.class })
     @Documented
-    @Target({ METHOD, FIELD, TYPE })
+    @Target( { METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface PersonName {
         String message() default "Wrong person name";
-        Class<?>[] groups() default { };
+
+        Class<?>[] groups() default {};
+
         Class<? extends Payload>[] payload() default {};
     }
-    
+
     public static class InvalidPersonNameValidator implements ConstraintValidator<NotNull, String> {
         public void initialize(NotNull constraintAnnotation) {
             // Nothing
         }
+
         public boolean isValid(String value, ConstraintValidatorContext context) {
             return true;
         }
     }
-    
+
 }

@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Description: abstract superclass of meta objects that support a map of
@@ -177,7 +177,7 @@ public abstract class FeaturesCapable implements Serializable {
      *            to add
      */
     public void addValidation(Validation validation) {
-        validations = (Validation[]) ArrayUtils.add(validations, validation);
+        validations = ArrayUtils.add(validations, validation);
     }
 
     /**

@@ -18,9 +18,9 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import org.apache.commons.lang.ObjectUtils;
-
 import javax.validation.groups.Default;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * Immutable object that wraps an interface representing a single group.

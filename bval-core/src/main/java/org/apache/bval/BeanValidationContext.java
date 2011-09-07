@@ -57,7 +57,7 @@ public class BeanValidationContext<T extends ValidationListener>
     private AccessStrategy access;
 
     /** set of objects already validated to avoid endless loops. */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "rawtypes" })
     protected Map validatedObjects;
 
     /**
@@ -75,7 +75,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * Create a new BeanValidationContext instance.
      * @param listener
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "rawtypes" })
     public BeanValidationContext(T listener) {
         this(listener, new IdentityHashMap());
     }
@@ -85,7 +85,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * @param listener
      * @param validatedMap
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "rawtypes" })
     protected BeanValidationContext(T listener, Map validatedMap) {
         this.listener = listener;
         this.validatedObjects = validatedMap;

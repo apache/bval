@@ -16,9 +16,6 @@
  */
 package org.apache.bval.jsr303.xml;
 
-
-import org.apache.bval.jsr303.util.SecureActions;
-
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -30,16 +27,17 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.bval.jsr303.util.SecureActions;
 
 /**
  * Description: <br/>
- * InvocationHandler implementation of <code>Annotation</code> that pretends it is a
- * "real" source code annotation.
+ * InvocationHandler implementation of <code>Annotation</code> that pretends it
+ * is a "real" source code annotation.
  * <p/>
  */
-//TODO confirm that this class must be public for RT invocation purposes, then document this fact
-//TODO move this guy up to org.apache.bval.jsr303 or org.apache.bval.jsr303.model
-public class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
+// TODO move this guy up to org.apache.bval.jsr303 or
+// org.apache.bval.jsr303.model
+class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 1L;
@@ -49,6 +47,7 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
 
     /**
      * Create a new AnnotationProxy instance.
+     * 
      * @param <A>
      * @param descriptor
      */
@@ -74,8 +73,7 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
             }
         }
         if (processedValuesFromDescriptor != descriptor.size()) {
-            throw new RuntimeException(
-                  "Trying to instanciate " + annotationType + " with unknown paramters.");
+            throw new RuntimeException("Trying to instanciate " + annotationType + " with unknown paramters.");
         }
         return result;
     }
@@ -105,7 +103,8 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
         result.append('@').append(annotationType().getName()).append('(');
         boolean comma = false;
         for (String m : getMethodsSorted()) {
-            if (comma) result.append(", ");
+            if (comma)
+                result.append(", ");
             result.append(m).append('=').append(values.get(m));
             comma = true;
         }
@@ -129,4 +128,3 @@ public class AnnotationProxy implements Annotation, InvocationHandler, Serializa
         }
     }
 }
-

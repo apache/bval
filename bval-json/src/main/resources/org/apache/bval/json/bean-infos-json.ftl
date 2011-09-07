@@ -48,9 +48,10 @@ var metaBean${var} = {
    <#list metaBean.properties as property>
      "${property.name}":{
        "name" : "${property.name}",
-       <#if property.type??>"type" : "${property.type.name}",</#if>
+       <#if property.type??>"type" : "${property.type}",</#if>
+       <#if property.typeClass??>"typeClass" : "${property.typeClass.name}",</#if>
        "features" : {<#if property.type?? &&
-       property.type.enum>"enum" : {<#list property.type.enumConstants as enum>"${enum.name()}": "${enum.name()}"<#if enum_has_next>, </#if></#list>}<#if property.features?size &gt; 0>,</#if></#if><#list
+       property.type.enum!false>"enum" : {<#list property.type.enumConstants as enum>"${enum.name()}": "${enum.name()}"<#if enum_has_next>, </#if></#list>}<#if property.features?size &gt; 0>,</#if></#if><#list
        property.features?keys as featureKey>
        <#assign value = property.features[featureKey]>
        "${featureKey}" : <#rt/><#if

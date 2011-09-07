@@ -20,10 +20,13 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.bval.jsr303.ApacheValidatorFactory;
+
+import org.apache.bval.jsr303.ApacheValidationProvider;
+import org.apache.bval.jsr303.ApacheValidatorConfiguration;
 import org.apache.bval.jsr303.ClassValidator;
 import org.apache.bval.jsr303.extensions.ExampleMethodService.Person;
 
+import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
@@ -39,6 +42,7 @@ import java.util.Set;
  * @version 1.0
  * @since <pre>11/11/2009</pre>
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class MethodValidatorImplTest extends TestCase {
     public MethodValidatorImplTest(String name) {
         super(name);
@@ -276,6 +280,10 @@ public class MethodValidatorImplTest extends TestCase {
     
 
     private Validator getValidator() {
-        return ApacheValidatorFactory.getDefault().getValidator();
+        return Validation
+            .byProvider(ApacheValidationProvider.class)
+            .configure()
+            .addProperty(ApacheValidatorConfiguration.Properties.METABEAN_FACTORY_CLASSNAMES,
+                MethodValidatorMetaBeanFactory.class.getName()).buildValidatorFactory().getValidator();
     }
 }

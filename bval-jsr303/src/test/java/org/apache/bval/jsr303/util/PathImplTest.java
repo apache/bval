@@ -18,12 +18,14 @@
  */
 package org.apache.bval.jsr303.util;
 
+import java.util.Iterator;
+
+import javax.validation.Path;
+import javax.validation.ValidationException;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import javax.validation.Path;
-import java.util.Iterator;
 
 /**
  * PathImpl Tester.
@@ -40,26 +42,31 @@ public class PathImplTest extends TestCase {
         String property = "order[3].deliveryAddress.addressline[1]";
         Path path = PathImpl.createPathFromString(property);
         assertEquals(property, path.toString());
-        
+
         Iterator<Path.Node> propIter = path.iterator();
 
         assertTrue(propIter.hasNext());
         Path.Node elem = propIter.next();
+        assertFalse(elem.isInIterable());
         assertEquals("order", elem.getName());
+
+        assertTrue(propIter.hasNext());
+        elem = propIter.next();
         assertTrue(elem.isInIterable());
         assertEquals(new Integer(3), elem.getIndex());
+        assertEquals("deliveryAddress", elem.getName());
 
         assertTrue(propIter.hasNext());
         elem = propIter.next();
-        assertEquals("deliveryAddress", elem.getName());
         assertFalse(elem.isInIterable());
         assertEquals(null, elem.getIndex());
+        assertEquals("addressline", elem.getName());
 
         assertTrue(propIter.hasNext());
         elem = propIter.next();
-        assertEquals("addressline", elem.getName());
         assertTrue(elem.isInIterable());
         assertEquals(new Integer(1), elem.getIndex());
+        assertNull(elem.getName());
 
         assertFalse(propIter.hasNext());
     }
@@ -71,16 +78,50 @@ public class PathImplTest extends TestCase {
 
         assertTrue(propIter.hasNext());
         Path.Node elem = propIter.next();
+        assertFalse(elem.isInIterable());
         assertEquals("order", elem.getName());
-        assertTrue(elem.isInIterable());
-        assertEquals("foo", elem.getKey());
 
         assertTrue(propIter.hasNext());
         elem = propIter.next();
+        assertTrue(elem.isInIterable());
+        assertEquals("foo", elem.getKey());
         assertEquals("deliveryAddress", elem.getName());
-        assertFalse(elem.isInIterable());
-        assertEquals(null, elem.getIndex());
 
+        assertFalse(propIter.hasNext());
+    }
+
+    //some of the examples from the 1.0 bean validation spec, section 4.2
+    public void testSpecExamples() {
+        String fourthAuthor = "authors[3]";
+        Path path = PathImpl.createPathFromString(fourthAuthor);
+        Iterator<Path.Node> propIter = path.iterator();
+
+        assertTrue(propIter.hasNext());
+        Path.Node elem = propIter.next();
+        assertFalse(elem.isInIterable());
+        assertEquals("authors", elem.getName());
+
+        assertTrue(propIter.hasNext());
+        elem = propIter.next();
+        assertTrue(elem.isInIterable());
+        assertEquals(3, elem.getIndex().intValue());
+        assertNull(elem.getName());
+        assertFalse(propIter.hasNext());
+
+        String firstAuthorCompany = "authors[0].company";
+        path = PathImpl.createPathFromString(firstAuthorCompany);
+        propIter = path.iterator();
+
+        assertTrue(propIter.hasNext());
+        elem = propIter.next();
+        assertFalse(elem.isInIterable());
+        assertEquals("authors", elem.getName());
+
+        assertTrue(propIter.hasNext());
+        elem = propIter.next();
+        assertTrue(elem.isInIterable());
+        assertEquals(0, elem.getIndex().intValue());
+        assertEquals("company", elem.getName());
         assertFalse(propIter.hasNext());
     }
 
@@ -97,7 +138,7 @@ public class PathImplTest extends TestCase {
         try {
             PathImpl.createPathFromString("foo[.bar");
             fail();
-        } catch (IllegalArgumentException ex) {
+        } catch (ValidationException ex) {
         }
     }
 
@@ -105,23 +146,23 @@ public class PathImplTest extends TestCase {
         try {
             PathImpl.createPathFromString("f[1]oo.bar");
             fail();
-        } catch (IllegalArgumentException ex) {
+        } catch (ValidationException ex) {
         }
     }
 
-    public void testTrailingPathSeperator() {
+    public void testTrailingPathSeparator() {
         try {
             PathImpl.createPathFromString("foo.bar.");
             fail();
-        } catch (IllegalArgumentException ex) {
+        } catch (ValidationException ex) {
         }
     }
 
-    public void testLeadingPathSeperator() {
+    public void testLeadingPathSeparator() {
         try {
             PathImpl.createPathFromString(".foo.bar");
             fail();
-        } catch (IllegalArgumentException ex) {
+        } catch (ValidationException ex) {
         }
     }
 

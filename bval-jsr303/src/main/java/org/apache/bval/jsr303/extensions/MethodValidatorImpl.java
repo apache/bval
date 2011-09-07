@@ -16,22 +16,26 @@
  */
 package org.apache.bval.jsr303.extensions;
 
-import org.apache.bval.MetaBeanFactory;
-import org.apache.bval.MetaBeanManager;
-import org.apache.bval.jsr303.*;
-import org.apache.bval.jsr303.groups.Group;
-import org.apache.bval.jsr303.groups.Groups;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.util.ValidationHelper;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidationException;
-import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
+import javax.validation.metadata.ConstraintDescriptor;
+
+import org.apache.bval.jsr303.ApacheFactoryContext;
+import org.apache.bval.jsr303.BeanDescriptorImpl;
+import org.apache.bval.jsr303.ClassValidator;
+import org.apache.bval.jsr303.ConstraintValidation;
+import org.apache.bval.jsr303.ConstraintValidationListener;
+import org.apache.bval.jsr303.GroupValidationContext;
+import org.apache.bval.jsr303.groups.Group;
+import org.apache.bval.jsr303.groups.Groups;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.util.ValidationHelper;
 
 /**
  * Description: experimental implementation of method-level-validation <br/>
@@ -44,23 +48,6 @@ class MethodValidatorImpl extends ClassValidator implements MethodValidator {
      */
     public MethodValidatorImpl(ApacheFactoryContext factoryContext) {
         super(factoryContext);
-        patchFactoryContextForMethodValidation(factoryContext);
-    }
-
-    /**
-     * experimental: replace the Jsr303MetaBeanFactory with a
-     * MethodValidatorMetaBeanFactory in the factoryContext.
-     * 
-     * @param factoryContext
-     */
-    private void patchFactoryContextForMethodValidation(ApacheFactoryContext factoryContext) {
-        MetaBeanFactory[] factories = ((MetaBeanManager) getMetaBeanFinder()).getBuilder().getFactories();
-        for (int i = 0; i < factories.length; i++) {
-            if (factories[i] instanceof Jsr303MetaBeanFactory
-                && !(factories[i] instanceof MethodValidatorMetaBeanFactory)) {
-                factories[i] = new MethodValidatorMetaBeanFactory(factoryContext);
-            }
-        }
     }
 
     /**

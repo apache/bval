@@ -34,21 +34,20 @@ final class NodeContextBuilderImpl
     private final PathImpl propertyPath;
     // The name of the last "added" node, it will only be added if it has a non-null name
     // The actual incorporation in the path will take place when the definition of the current leaf node is complete
-    private final String lastNodeName;
+    private final NodeImpl node;
 
     /**
      * Create a new NodeContextBuilderImpl instance.
      * @param contextImpl
      * @param template
      * @param path
-     * @param name
      */
     NodeContextBuilderImpl(ConstraintValidatorContextImpl contextImpl,
-                                    String template, PathImpl path, String name) {
+                                    String template, PathImpl path, NodeImpl node) {
         parent = contextImpl;
         messageTemplate = template;
         propertyPath = path;
-        lastNodeName = name;
+        this.node = node;
     }
 
     /**
@@ -56,9 +55,8 @@ final class NodeContextBuilderImpl
      */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(
           Object key) {
-        // Modifies the "previous" node in the path
-        propertyPath.getLeafNode().setKey(key);
-        addLastNodeIfNeeded();
+        node.setKey(key);
+        propertyPath.addNode(node);
         return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
     }
 
@@ -67,9 +65,8 @@ final class NodeContextBuilderImpl
      */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(
           Integer index) {
-        // Modifies the "previous" node in the path
-        propertyPath.getLeafNode().setIndex(index);
-        addLastNodeIfNeeded();
+        node.setIndex(index);
+        propertyPath.addNode(node);
         return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
     }
 
@@ -78,23 +75,17 @@ final class NodeContextBuilderImpl
      */
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
-        addLastNodeIfNeeded();
-        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, lastNodeName);
+        propertyPath.addNode(node);
+        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
     /**
      * {@inheritDoc}
      */
     public ConstraintValidatorContext addConstraintViolation() {
-        addLastNodeIfNeeded();
+        propertyPath.addNode(node);
         parent.addError(messageTemplate, propertyPath);
         return parent;
     }
     
-    private void addLastNodeIfNeeded() {
-        if (lastNodeName != null) {
-            NodeImpl node = new NodeImpl(lastNodeName);
-            propertyPath.addNode(node);
-        }
-    }
 }

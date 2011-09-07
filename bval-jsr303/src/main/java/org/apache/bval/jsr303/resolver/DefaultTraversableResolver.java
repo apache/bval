@@ -16,17 +16,17 @@
  */
 package org.apache.bval.jsr303.resolver;
 
-import org.apache.bval.jsr303.util.ClassHelper;
-import org.apache.commons.lang.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.validation.Path;
-import javax.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
+import javax.validation.Path;
+import javax.validation.TraversableResolver;
+
+import org.apache.bval.jsr303.util.ClassHelper;
+import org.apache.commons.lang3.ClassUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** @see javax.validation.TraversableResolver */
 public class DefaultTraversableResolver implements TraversableResolver, CachingRelevant {

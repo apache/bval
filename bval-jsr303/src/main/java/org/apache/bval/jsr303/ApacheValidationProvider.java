@@ -18,7 +18,8 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.commons.lang.ClassUtils;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import javax.validation.Configuration;
 import javax.validation.ValidationException;
@@ -26,8 +27,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+import org.apache.commons.lang3.ClassUtils;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr303
@@ -54,7 +55,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
     /**
      * {@inheritDoc}
      */
-    public ConfigurationImpl createSpecializedConfiguration(BootstrapState state) {
+    public ApacheValidatorConfiguration createSpecializedConfiguration(BootstrapState state) {
         return new ConfigurationImpl(state, this);
     }
 

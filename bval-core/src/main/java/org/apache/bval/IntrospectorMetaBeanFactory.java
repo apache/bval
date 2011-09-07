@@ -23,32 +23,33 @@ import java.beans.BeanInfo;
 import java.beans.IndexedPropertyDescriptor;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Enumeration;
 
 import static org.apache.bval.model.Features.Property.*;
 
 /**
- * Description: use information from java.beans.Introspector in MetaBeans.
- * The PropertyDescriptor can contain info about HIDDEN, PREFERRED, READONLY
- * and other features<br/>
+ * Description: use information from java.beans.Introspector in MetaBeans. The PropertyDescriptor can contain info about
+ * HIDDEN, PREFERRED, READONLY and other features<br/>
  * NOTE: THIS IS AN OPTIONAL CLASS, TO ENABLE IT, SET Factory Property apache.bval.enable-introspector="true"
  */
-public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
+public class IntrospectorMetaBeanFactory implements MetaBeanFactory {
 
     /**
      * {@inheritDoc}
      */
     public void buildMetaBean(MetaBean meta) throws Exception {
-        if(meta.getBeanClass() == null) return; // handle only, when local class exists
-
+        if (meta.getBeanClass() == null) {
+            return; // handle only, when local class exists
+        }
         BeanInfo info = Introspector.getBeanInfo(meta.getBeanClass());
-        if (info.getBeanDescriptor() != null) {
-            meta.setName(
-                  info.getBeanDescriptor().getName()); // (display?)name = simple class name!
+        if (meta.getName() == null && info.getBeanDescriptor() != null) {
+            meta.setName(info.getBeanDescriptor().getName()); // (display?)name = simple class name!
         }
         for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
             if (!(pd instanceof IndexedPropertyDescriptor || pd.getName().equals("class"))) {
-                MetaProperty metaProp = buildMetaProperty(pd);
+                MetaProperty metaProp = buildMetaProperty(pd, meta.getProperty(pd.getName()));
                 meta.putProperty(pd.getName(), metaProp);
             }
         }
@@ -56,17 +57,35 @@ public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
 
     /**
      * Create a {@link MetaProperty} from the specified {@link PropertyDescriptor}.
+     * 
      * @param pd
      * @return MetaProperty
      */
+    @Deprecated
     protected MetaProperty buildMetaProperty(PropertyDescriptor pd) {
+        return buildMetaProperty(pd, null);
+    }
+
+    /**
+     * Create a {@link MetaProperty} from the specified {@link PropertyDescriptor}.
+     * 
+     * @param pd
+     * @param existing
+     * @return MetaProperty
+     */
+    protected MetaProperty buildMetaProperty(PropertyDescriptor pd, MetaProperty existing) {
         MetaProperty meta = new MetaProperty();
         meta.setName(pd.getName());
-        meta.setType(pd.getPropertyType());
-        if (pd.isHidden()) meta.putFeature(HIDDEN, Boolean.TRUE);
-        if (pd.isPreferred()) meta.putFeature(PREFERRED, Boolean.TRUE);
-        if (pd.isConstrained()) meta.putFeature(READONLY, Boolean.TRUE);
-
+        meta.setType(determineGenericPropertyType(pd));
+        if (pd.isHidden()) {
+            meta.putFeature(HIDDEN, Boolean.TRUE);
+        }
+        if (pd.isPreferred()) {
+            meta.putFeature(PREFERRED, Boolean.TRUE);
+        }
+        if (pd.isConstrained()) {
+            meta.putFeature(READONLY, Boolean.TRUE);
+        }
         Enumeration<String> enumeration = pd.attributeNames();
         while (enumeration.hasMoreElements()) {
             String key = enumeration.nextElement();
@@ -74,5 +93,17 @@ public final class IntrospectorMetaBeanFactory implements MetaBeanFactory {
             meta.putFeature(key, value);
         }
         return meta;
+    }
+
+    private Type determineGenericPropertyType(PropertyDescriptor pd) {
+        Method m = pd.getReadMethod();
+        if (m != null) {
+            return m.getGenericReturnType();
+        }
+        m = pd.getWriteMethod();
+        if (m != null && m.getParameterTypes().length == 1) {
+            return m.getGenericParameterTypes()[0];
+        }
+        return pd.getPropertyType();
     }
 }

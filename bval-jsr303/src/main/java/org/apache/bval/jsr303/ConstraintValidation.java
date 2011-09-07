@@ -100,7 +100,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      */
     void setGroups(Set<Class<?>> groups) {
         this.groups = groups;
-        this.attributes.put(Jsr303MetaBeanFactory.ANNOTATION_GROUPS, groups.toArray(new Class[groups.size()]));
+        ConstraintAnnotationAttributes.GROUPS.put(attributes, groups.toArray(new Class[groups.size()]));
     }
 
     /**
@@ -110,7 +110,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      */
     void setPayload(Set<Class<? extends Payload>> payload) {
         this.payload = payload;
-        this.attributes.put(Jsr303MetaBeanFactory.ANNOTATION_PAYLOAD, payload.toArray(new Class[payload.size()]));
+        ConstraintAnnotationAttributes.PAYLOAD.put(attributes, payload.toArray(new Class[payload.size()]));
     }
 
     /**
@@ -186,8 +186,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             }
 
             if (failed) {
-                // TODO RSt - how should the composed constraint error report
-                // look like?
+                // TODO RSt - how should the composed constraint error report look like?
                 ConstraintValidatorContextImpl jsrContext = new ConstraintValidatorContextImpl(context, this);
                 addErrors(context, jsrContext); // add defaultErrorMessage only
                 return;
@@ -267,7 +266,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      * @return String
      */
     public String getMessageTemplate() {
-        return (String) attributes.get(Jsr303MetaBeanFactory.ANNOTATION_MESSAGE);
+        return ConstraintAnnotationAttributes.MESSAGE.get(attributes);
     }
 
     /**

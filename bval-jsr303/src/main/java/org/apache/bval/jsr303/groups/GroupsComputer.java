@@ -35,8 +35,7 @@ public class GroupsComputer {
     private static final Groups DEFAULT_GROUPS;
 
     static {
-        DEFAULT_GROUPS = new GroupsComputer().computeGroups(
-            Arrays.asList(getDefaultGroupArray()));
+        DEFAULT_GROUPS = new GroupsComputer().computeGroups(Arrays.asList(getDefaultGroupArray()));
     }
 
     /**
@@ -44,12 +43,12 @@ public class GroupsComputer {
      * @return <code>{@link Default}.class</code> only
      */
     public static Class<?>[] getDefaultGroupArray() {
-        return new Class<?>[]{Default.class};
+        return new Class<?>[] { Default.class };
     }
 
     /** caching resolved groups in a thread-safe map. */
-    private final Map<Class<?>, List<Group>> resolvedSequences =
-          Collections.synchronizedMap(new HashMap<Class<?>, List<Group>>());
+    private final Map<Class<?>, List<Group>> resolvedSequences = Collections
+        .synchronizedMap(new HashMap<Class<?>, List<Group>>());
 
     /**
      * Compute groups from an array of group classes.

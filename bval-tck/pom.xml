@@ -92,7 +92,7 @@
                 <dependency>
                     <groupId>org.hibernate.jsr303.tck</groupId>
                     <artifactId>jsr303-tck</artifactId>
-                    <version>1.0.3.GA</version>
+                    <version>1.0.5.GA</version>
                 </dependency>
                 <dependency>
                     <groupId>org.jboss.test-harness</groupId>
@@ -162,8 +162,8 @@
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
-                                            <groupId>commons-lang</groupId>
-                                            <artifactId>commons-lang</artifactId>
+                                            <groupId>org.apache.commons</groupId>
+                                            <artifactId>commons-lang3</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>

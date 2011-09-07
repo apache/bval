@@ -18,23 +18,31 @@
  */
 package org.apache.bval.jsr303;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import org.apache.bval.jsr303.util.TestUtils;
 
-import javax.validation.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import javax.validation.metadata.*;
-import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
+import org.apache.bval.jsr303.util.TestUtils;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+import javax.validation.metadata.*;
+import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /**
  * Tests the implementation of {@link BeanDescriptor} and its dependent
@@ -43,7 +51,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Carlos Vara
  */
 public class BeanDescriptorTest extends TestCase {
-
     static ValidatorFactory factory;
 
     static {
@@ -51,19 +58,36 @@ public class BeanDescriptorTest extends TestCase {
         ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
     }
 
-    private Validator getValidator() {
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
         return factory.getValidator();
     }
-    
-    
+
     /**
      * Check that groups(), message() and payload() are always in the
      * attributes.
      */
     public void testMandatoryAttributesPresentInConstraintDescriptor() {
-        Validator validator = getValidator();
-        
-        Set<ConstraintDescriptor<?>> nameDescriptors = validator.getConstraintsForClass(Form.class).getConstraintsForProperty("name").getConstraintDescriptors();
+        Set<ConstraintDescriptor<?>> nameDescriptors =
+            validator.getConstraintsForClass(Form.class).getConstraintsForProperty("name").getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 1, nameDescriptors.size());
         ConstraintDescriptor<?> nameDescriptor = nameDescriptors.iterator().next();
         Assert.assertTrue("groups attribute not present", nameDescriptor.getAttributes().containsKey("groups"));
@@ -76,19 +100,20 @@ public class BeanDescriptorTest extends TestCase {
      * inheriting groups.
      */
     public void testCorrectValueForInheritedGroupsAttribute() {
-        Validator validator = getValidator();
-        
-        Set<ConstraintDescriptor<?>> passwordDescriptors = validator.getConstraintsForClass(Account.class).getConstraintsForProperty("password").getConstraintDescriptors();
+        Set<ConstraintDescriptor<?>> passwordDescriptors =
+            validator.getConstraintsForClass(Account.class).getConstraintsForProperty("password")
+                .getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 1, passwordDescriptors.size());
         ConstraintDescriptor<?> passwordDescriptor = passwordDescriptors.iterator().next();
-        Assert.assertEquals("Incorrect number of composing constraints", 1, passwordDescriptor.getComposingConstraints().size());
+        Assert.assertEquals("Incorrect number of composing constraints", 1, passwordDescriptor
+            .getComposingConstraints().size());
         ConstraintDescriptor<?> notNullDescriptor = passwordDescriptor.getComposingConstraints().iterator().next();
-        
+
         // Check that the groups value containts Group1.class
         Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
         boolean found = false;
-        for ( Class<?> group : notNullGroups ) {
-            if ( group == Group1.class ) {
+        for (Class<?> group : notNullGroups) {
+            if (group == Group1.class) {
                 found = true;
                 break;
             }
@@ -102,17 +127,19 @@ public class BeanDescriptorTest extends TestCase {
      * of the queried class.
      */
     public void testImplicitGroupIsPresent() {
-        Validator validator = getValidator();
-        
-        Set<ConstraintDescriptor<?>> nameDescriptors = validator.getConstraintsForClass(Woman.class).getConstraintsForProperty("name").getConstraintDescriptors();
+        Set<ConstraintDescriptor<?>> nameDescriptors =
+            validator.getConstraintsForClass(Woman.class).getConstraintsForProperty("name").getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 1, nameDescriptors.size());
         ConstraintDescriptor<?> notNullDescriptor = nameDescriptors.iterator().next();
-        
-        // Check that the groups attribute value contains the implicit group Person and the Default group
+
+        // Check that the groups attribute value contains the implicit group
+        // Person and the Default group
         Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
         Assert.assertEquals("Incorrect number of groups", 2, notNullGroups.length);
-        Assert.assertTrue("Default group not present", notNullGroups[0].equals(Default.class) || notNullGroups[1].equals(Default.class));
-        Assert.assertTrue("Implicit group not present", notNullGroups[0].equals(Person.class) || notNullGroups[1].equals(Person.class));
+        Assert.assertTrue("Default group not present", notNullGroups[0].equals(Default.class)
+            || notNullGroups[1].equals(Default.class));
+        Assert.assertTrue("Implicit group not present", notNullGroups[0].equals(Person.class)
+            || notNullGroups[1].equals(Person.class));
     }
 
     /**
@@ -120,12 +147,11 @@ public class BeanDescriptorTest extends TestCase {
      * interface group when querying the interface directly.
      */
     public void testNoImplicitGroupWhenQueryingInterfaceDirectly() {
-        Validator validator = getValidator();
-        
-        Set<ConstraintDescriptor<?>> nameDescriptors = validator.getConstraintsForClass(Person.class).getConstraintsForProperty("name").getConstraintDescriptors();
+        Set<ConstraintDescriptor<?>> nameDescriptors =
+            validator.getConstraintsForClass(Person.class).getConstraintsForProperty("name").getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 1, nameDescriptors.size());
         ConstraintDescriptor<?> notNullDescriptor = nameDescriptors.iterator().next();
-        
+
         // Check that only the default group is present
         Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
         Assert.assertEquals("Incorrect number of groups", 1, notNullGroups.length);
@@ -137,11 +163,9 @@ public class BeanDescriptorTest extends TestCase {
      * {@link ElementDescriptor#getElementClass()} work as defined in the spec.
      */
     public void testElementDescriptorGetElementClass() {
-        Validator validator = getValidator();
-        
-        BeanDescriptor beanDescriptor = validator.getConstraintsForClass( Person.class );
+        BeanDescriptor beanDescriptor = validator.getConstraintsForClass(Person.class);
         Assert.assertEquals("Incorrect class returned", Person.class, beanDescriptor.getElementClass());
-        
+
         PropertyDescriptor nameDescriptor = beanDescriptor.getConstraintsForProperty("name");
         Assert.assertEquals("Incorrect class returned", String.class, nameDescriptor.getElementClass());
     }
@@ -151,12 +175,12 @@ public class BeanDescriptorTest extends TestCase {
      * {@link ConstraintFinder#lookingAt(javax.validation.metadata.Scope)}.
      */
     public void testConstraintFinderLookingAt() {
-        Validator validator = getValidator();
-        
-        PropertyDescriptor nameDescriptor = validator.getConstraintsForClass( Woman.class ).getConstraintsForProperty("name");
-        Set<ConstraintDescriptor<?>> constraints = nameDescriptor.findConstraints().lookingAt(Scope.HIERARCHY).getConstraintDescriptors();
+        PropertyDescriptor nameDescriptor =
+            validator.getConstraintsForClass(Woman.class).getConstraintsForProperty("name");
+        Set<ConstraintDescriptor<?>> constraints =
+            nameDescriptor.findConstraints().lookingAt(Scope.HIERARCHY).getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 1, constraints.size());
-        
+
         constraints = nameDescriptor.findConstraints().lookingAt(Scope.LOCAL_ELEMENT).getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 0, constraints.size());
         TestUtils.failOnModifiable(constraints, "constraintFinder constraintDescriptors");
@@ -164,48 +188,49 @@ public class BeanDescriptorTest extends TestCase {
         constraints = nameDescriptor.getConstraintDescriptors();
         Assert.assertEquals("Incorrect number of descriptors", 1, constraints.size());
     }
-    
+
     public static class Form {
         @NotNull
         public String name;
     }
-    
+
     public static class Account {
-        @Password(groups={Group1.class})
+        @Password(groups = { Group1.class })
         public String password;
     }
-    
-    @NotNull(groups={})
+
+    @NotNull(groups = {})
     @Constraint(validatedBy = {})
     @Documented
-    @Target({ METHOD, FIELD, TYPE })
+    @Target( { METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface Password {
         String message() default "Invalid password";
-        Class<?>[] groups() default { };
+
+        Class<?>[] groups() default {};
+
         Class<? extends Payload>[] payload() default {};
     }
-    
+
     public static interface Group1 {
     }
-    
-    
+
     public static class Woman implements Person {
-        
+
         private String name;
 
         public String getName() {
             return this.name;
         }
-        
+
         public void setName(String name) {
             this.name = name;
         }
     }
-    
+
     public static interface Person {
         @NotNull
         String getName();
     }
-    
+
 }

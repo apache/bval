@@ -18,24 +18,60 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import junit.framework.TestCase;
-import org.apache.bval.jsr303.ApacheValidatorFactory;
-import org.apache.bval.jsr303.example.*;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
 import javax.validation.Validator;
-import java.util.ArrayList;
-import java.util.Set;
+import javax.validation.ValidatorFactory;
+
+import junit.framework.TestCase;
+
+import org.apache.bval.jsr303.DefaultMessageInterpolator;
+import org.apache.bval.jsr303.example.Address;
+import org.apache.bval.jsr303.example.Author;
+import org.apache.bval.jsr303.example.Book;
+import org.apache.bval.jsr303.example.Country;
+import org.apache.bval.jsr303.example.Customer;
+import org.apache.bval.jsr303.example.Employee;
+import org.apache.bval.jsr303.example.Library;
+import org.apache.bval.jsr303.example.Person;
+import org.apache.bval.jsr303.util.TestUtils;
 
 /**
  * Description: <br/>
  */
 public class CollectionValidationTest extends TestCase {
-    private Validator validator;
+    static ValidatorFactory factory;
 
-    protected void setUp() {
-        validator = ApacheValidatorFactory.getDefault().getValidator();
+    static {
+        factory = Validation.buildDefaultValidatorFactory();
+        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
+    }
+
+    /**
+     * Validator instance to test
+     */
+    protected Validator validator;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        validator = createValidator();
+    }
+
+    /**
+     * Create the validator instance.
+     * 
+     * @return Validator
+     */
+    protected Validator createValidator() {
+        return factory.getValidator();
     }
 
     public void testValidateList() {
@@ -43,7 +79,7 @@ public class CollectionValidationTest extends TestCase {
         author.setFirstName("Peter");
         author.setLastName("Ford");
         author.setCompany("IBM");
-        author.setAddresses(new ArrayList());
+        author.setAddresses(new ArrayList<Address>());
 
         Address adr1, adr2, adr3;
         adr1 = new Address();
@@ -130,18 +166,14 @@ public class CollectionValidationTest extends TestCase {
         book3.getAuthor().setFirstName(""); // violate NotEmpty validation
         book1.getAuthor().getAddresses().get(0).setCity(null);
         /*
-        This, by the way, tests redefined default group sequence behavior
-        on non-root-beans (Library.Book)!!
+         * This, by the way, tests redefined default group sequence behavior on
+         * non-root-beans (Library.Book)!!
          */
         violations = validator.validate(lib);
-        assertEquals(
-              "redefined default group of Book not correctly validated from Library", 3,
-              violations.size());
+        assertEquals("redefined default group of Book not correctly validated from Library", 3, violations.size());
         assertNotNull(TestUtils.getViolation(violations, "taggedBooks[politics].title"));
-        assertNotNull(
-              TestUtils.getViolation(violations, "taggedBooks[humor].author.firstName"));
-        assertNotNull(TestUtils.getViolation(violations,
-              "taggedBooks[science].author.addresses[0].city"));
+        assertNotNull(TestUtils.getViolation(violations, "taggedBooks[humor].author.firstName"));
+        assertNotNull(TestUtils.getViolation(violations, "taggedBooks[science].author.addresses[0].city"));
     }
 
     public void testValidateArray() {
@@ -150,14 +182,15 @@ public class CollectionValidationTest extends TestCase {
         lib.setPersons(new Person[3]);
         lib.getPersons()[0] = new Employee("Marcel", "Reich-Ranicki");
         lib.getPersons()[1] = new Employee("Elke", "Heidenreich");
-        lib.getPersons()[2] =
-              new Customer(); // not validated, because only getEmployees() is @Valid
+        lib.getPersons()[2] = new Customer(); // not validated, because only
+        // getEmployees() is @Valid
 
         Set<ConstraintViolation<Library>> violations;
         violations = validator.validate(lib);
         assertTrue(violations.isEmpty());
 
-        ((Employee) lib.getPersons()[1]).setFirstName(""); // violate NotEmpty constraint
+        ((Employee) lib.getPersons()[1]).setFirstName(""); // violate NotEmpty
+        // constraint
         violations = validator.validate(lib);
         assertEquals(1, violations.size());
         assertNotNull(TestUtils.getViolation(violations, "employees[1].firstName"));

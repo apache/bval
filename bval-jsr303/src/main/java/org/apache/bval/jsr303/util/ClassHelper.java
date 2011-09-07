@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr303.util;
 
-import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang3.ClassUtils;
 
 import java.security.AccessController;
 import java.util.List;

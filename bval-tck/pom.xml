@@ -137,7 +137,6 @@
             </dependencies>
             <repositories>
                 <repository>
-                    <!--id>jboss-public-repository-group</id-->
                     <!-- override settings from jboss dependencies
                          which point to repository.jboss.org/maven2 -->
                     <id>repository.jboss.org</id>

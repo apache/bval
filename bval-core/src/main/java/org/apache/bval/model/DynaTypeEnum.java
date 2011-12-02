@@ -47,8 +47,8 @@ public class DynaTypeEnum implements DynaType {
      */
     public void setEnumNames(String[] names) {
         enumConstants = new Value[names.length];
-        int i=0;
-        for(String each : names) {
+        int i = 0;
+        for (String each : names) {
             enumConstants[i++] = new Value(each);
         }
     }

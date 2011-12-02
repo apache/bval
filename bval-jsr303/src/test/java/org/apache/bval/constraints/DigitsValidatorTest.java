@@ -47,6 +47,8 @@ public class DigitsValidatorTest extends TestCase {
         Assert.assertFalse(validator.isValid(Double.valueOf(100.1234), null));
         Assert.assertFalse(validator.isValid(Double.valueOf(99.12345), null));
         Assert.assertTrue(validator.isValid(Double.valueOf(99.1234), null));
+        Assert.assertTrue(validator.isValid(Double.valueOf(99.123400), null));
+        Assert.assertTrue(validator.isValid(new BigDecimal("99.123400"), null));
     }
 
     public void testValidateString() {

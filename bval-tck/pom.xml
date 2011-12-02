@@ -137,8 +137,7 @@
             </dependencies>
             <repositories>
                 <repository>
-                    <!-- override settings from jboss dependencies
-                         which point to repository.jboss.org/maven2 -->
+                    <!-- override outdated URLs for jboss repo ids -->
                     <id>repository.jboss.org</id>
                     <name>JBoss Public Maven Repository Group</name>
                     <url>https://repository.jboss.org/nexus/content/groups/public/</url>
@@ -155,8 +154,6 @@
                     </snapshots>
                 </repository>
                 <repository>
-                    <!-- override settings from jboss dependencies
-                         which point to repository.jboss.org/maven2 -->
                     <id>jboss</id>
                     <name>JBoss Public Maven Repository Group (again)</name>
                     <url>https://repository.jboss.org/nexus/content/groups/public/</url>
@@ -171,6 +168,20 @@
                         <updatePolicy>never</updatePolicy>
                         <checksumPolicy>warn</checksumPolicy>
                     </snapshots>
+                </repository>
+                <repository>
+                  <id>snapshots.jboss.org</id>
+                  <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+                  <snapshots>
+                    <enabled>true</enabled>
+                  </snapshots>
+                </repository>
+                <repository>
+                  <id>jboss-snapshots</id>
+                  <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+                  <snapshots>
+                    <enabled>true</enabled>
+                  </snapshots>
                 </repository>
             </repositories>
             <build>

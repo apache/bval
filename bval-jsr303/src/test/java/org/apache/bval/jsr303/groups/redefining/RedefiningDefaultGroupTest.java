@@ -74,6 +74,22 @@ public class RedefiningDefaultGroupTest extends TestCase {
               1, violations.size());
     }
 
+    public void testValidateProperty() {
+        Address address = new Address();
+        address.setStreet1("");
+        Set<ConstraintViolation<Address>> violations = validator.validateProperty(address, "street1");
+        //prove that ExtraCareful group was validated:
+        assertEquals(1, violations.size());
+        assertNotNull(TestUtils.getViolation(violations, "street1"));
+    }
+
+    public void testValidateValue() {
+        Set<ConstraintViolation<Address>> violations = validator.validateValue(Address.class, "street1", "");
+        //prove that ExtraCareful group was validated:
+        assertEquals(1, violations.size());
+        assertNotNull(TestUtils.getViolation(violations, "street1"));
+    }
+    
     public void testRaiseGroupDefinitionException() {
         InvalidRedefinedDefaultGroupAddress address =
               new InvalidRedefinedDefaultGroupAddress();

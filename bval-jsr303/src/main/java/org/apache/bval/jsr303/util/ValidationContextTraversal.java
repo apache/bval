@@ -120,6 +120,7 @@ public class ValidationContextTraversal extends CallbackProcedure {
 
         if (metaBean instanceof DynamicMetaBean) {
             metaBean = metaBean.resolveMetaBean(ObjectUtils.defaultIfNull(validationContext.getBean(), rawType));
+            validationContext.setMetaBean(metaBean);
         }
         MetaProperty mp = metaBean.getProperty(token);
         if (mp == null) {

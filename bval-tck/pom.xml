@@ -127,7 +127,7 @@
                 <dependency>
                     <groupId>org.hibernate.jsr303.tck</groupId>
                     <artifactId>jsr303-tck</artifactId>
-                    <version>1.0.5.GA</version>
+                    <version>1.0.6.GA</version>
                 </dependency>
                 <dependency>
                     <groupId>org.jboss.test-harness</groupId>

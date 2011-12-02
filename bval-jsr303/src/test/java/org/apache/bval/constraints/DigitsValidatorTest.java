@@ -41,10 +41,12 @@ public class DigitsValidatorTest extends TestCase {
         DigitsValidatorForNumber validator = new DigitsValidatorForNumber();
         validator.setFractional(4);
         validator.setIntegral(2);
-        BigDecimal val = new BigDecimal("100.12345");
-        Assert.assertFalse(validator.isValid(val, null));
-        val = new BigDecimal("99.1234");
-        Assert.assertTrue(validator.isValid(val, null));
+        Assert.assertFalse(validator.isValid(new BigDecimal("100.1234"), null));
+        Assert.assertFalse(validator.isValid(new BigDecimal("99.12345"), null));
+        Assert.assertTrue(validator.isValid(new BigDecimal("99.1234"), null));
+        Assert.assertFalse(validator.isValid(Double.valueOf(100.1234), null));
+        Assert.assertFalse(validator.isValid(Double.valueOf(99.12345), null));
+        Assert.assertTrue(validator.isValid(Double.valueOf(99.1234), null));
     }
 
     public void testValidateString() {

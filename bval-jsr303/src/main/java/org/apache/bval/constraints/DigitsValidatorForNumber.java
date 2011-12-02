@@ -70,8 +70,9 @@ public class DigitsValidatorForNumber implements ConstraintValidator<Digits, Num
         if (num instanceof BigDecimal) {
             bigDecimal = (BigDecimal) num;
         } else {
-            bigDecimal = new BigDecimal(num.toString()).stripTrailingZeros();
+            bigDecimal = new BigDecimal(num.toString());
         }
+        bigDecimal = bigDecimal.stripTrailingZeros();
 
         int intLength = bigDecimal.precision() - bigDecimal.scale();
         if (integral >= intLength) {

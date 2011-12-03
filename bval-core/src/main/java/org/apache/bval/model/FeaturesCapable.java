@@ -158,7 +158,7 @@ public abstract class FeaturesCapable implements Serializable {
      * @return Validation array
      */
     public Validation[] getValidations() {
-        return validations;
+        return ArrayUtils.clone(validations);
     }
 
     /**
@@ -167,7 +167,7 @@ public abstract class FeaturesCapable implements Serializable {
      * @param validations
      */
     public void setValidations(Validation[] validations) {
-        this.validations = validations;
+        this.validations = ArrayUtils.clone(validations);
     }
 
     /**

@@ -120,7 +120,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return MetaProperty[]
      */
     public MetaProperty[] getProperties() {
-        return properties;
+        return ArrayUtils.clone(properties);
     }
 
     /**
@@ -130,8 +130,8 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      *            the MetaProperty[] to set
      */
     public void setProperties(MetaProperty[] properties) {
-        Arrays.sort(properties, PropertyNameComparator.INSTANCE);
-        this.properties = properties;
+        this.properties = ArrayUtils.clone(properties);
+        Arrays.sort(this.properties, PropertyNameComparator.INSTANCE);
     }
 
     /**

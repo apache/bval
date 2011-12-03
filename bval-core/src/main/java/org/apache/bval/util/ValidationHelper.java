@@ -176,16 +176,16 @@ public class ValidationHelper {
         final DynamicMetaBean dyn = getDynamicMetaBean(context);
         context.setCurrentKey(null);
         try {
-            for (Object key : currentBean.keySet()) {
-                context.setCurrentKey(key);
-                Object value = currentBean.get(key);
+            for (Map.Entry<?, ?> entry : currentBean.entrySet()) {
+                Object value = entry.getValue();
                 if (value == null) {
-                    continue; // Null values are not validated
+                    continue;
                 }
-                if (dyn != null) {
-                    context.setBean(value, dyn.resolveMetaBean(value));
-                } else {
+                context.setCurrentKey(entry.getKey());
+                if (dyn == null) {
                     context.setBean(value);
+                } else {
+                    context.setBean(value, dyn.resolveMetaBean(value));
                 }
                 s.validate();
             }

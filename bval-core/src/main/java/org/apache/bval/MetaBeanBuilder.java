@@ -17,6 +17,7 @@
 package org.apache.bval;
 
 import org.apache.bval.model.MetaBean;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,7 @@ public class MetaBeanBuilder {
      * @return {@link MetaBeanFactory} array
      */
     public MetaBeanFactory[] getFactories() {
-        return factories;
+        return ArrayUtils.clone(factories);
     }
 
     /**
@@ -69,7 +70,7 @@ public class MetaBeanBuilder {
      * @param factories
      */
     public void setFactories(MetaBeanFactory[] factories) {
-        this.factories = factories;
+        this.factories = ArrayUtils.clone(factories);
     }
 
     /**

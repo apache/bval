@@ -299,6 +299,29 @@ public class PathNavigation {
             return null;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        /*
+         * Override equals to make findbugs happy;
+         * would simply ignore but doesn't seem to be possible at the inner class level
+         * without attaching the filter to the containing class.
+         */
+        @Override
+        public boolean equals(Object obj) {
+            return super.equals(obj);
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        /*
+         * Override hashCode to make findbugs happy in the presence of overridden #equals :P
+         */
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
     }
 
 }

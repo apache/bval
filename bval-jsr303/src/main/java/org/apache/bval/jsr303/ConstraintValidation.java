@@ -24,6 +24,7 @@ import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintValidator;
@@ -75,7 +76,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         ConstraintValidator<T, ?> validator, T annotation, Class<?> owner, AccessStrategy access,
         boolean reportFromComposite) {
         this.attributes = new HashMap<String, Object>();
-        this.validatorClasses = validatorClasses;
+        this.validatorClasses = ArrayUtils.clone(validatorClasses);
         this.validator = validator;
         this.annotation = annotation;
         this.owner = owner;

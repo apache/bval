@@ -80,7 +80,7 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
 
         if (!constraintViolations.isEmpty()) {
             throw getException(new ConstraintViolationException(
-                    String.format("Validation error when calling method '%s' with arguments ",
+                    String.format("Validation error when calling method '%s' with arguments %s",
                             method,
                             Arrays.deepToString(arguments)),
                     constraintViolations),
@@ -96,7 +96,7 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
 
             if (!constraintViolations.isEmpty()) {
                 throw getException(new ConstraintViolationException(
-                        String.format("Method '%s' returned a not valid value ",
+                        String.format("Method '%s' returned a not valid value %s",
                                 method,
                                 returnedValue),
                         constraintViolations),

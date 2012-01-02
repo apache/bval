@@ -33,7 +33,6 @@ public class BusinessObject {
     private BusinessEnum choice;
     private BusinessObjectAddress address;
     private List<BusinessObjectAddress> addresses;
-    private List properties;
 
     public BusinessEnum getChoice() {
         return choice;
@@ -123,11 +122,4 @@ public class BusinessObject {
         this.addresses = addresses;
     }
 
-    public List getProperties() {
-        return properties;
-    }
-
-    public void setProperties(List properties) {
-        this.properties = properties;
-    }
 }

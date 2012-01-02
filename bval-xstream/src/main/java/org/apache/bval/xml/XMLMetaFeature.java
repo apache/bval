@@ -26,6 +26,9 @@ import java.io.Serializable;
  */
 @XStreamAlias("feature")
 public class XMLMetaFeature implements Serializable {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
+
     @XStreamAsAttribute
     private String key;
     @XStreamAsAttribute

@@ -102,6 +102,7 @@ public class StandardValidation implements Validation {
     }
 
     protected <T extends ValidationListener> void validateMinValue(ValidationContext<T> context) {
+        @SuppressWarnings("unchecked")
         Comparable<Object> minValue = (Comparable<Object>) context.getMetaProperty().getFeature(MIN_VALUE);
         if (minValue == null || context.getPropertyValue() == null) return;
         if (compare(context, minValue, context.getPropertyValue()) > 0) {
@@ -110,6 +111,7 @@ public class StandardValidation implements Validation {
     }
 
     protected <T extends ValidationListener> void validateMaxValue(ValidationContext<T> context) {
+        @SuppressWarnings("unchecked")
         Comparable<Object> maxValue = (Comparable<Object>) context.getMetaProperty().getFeature(MAX_VALUE);
         if (maxValue == null || context.getPropertyValue() == null) return;
         if (compare(context, maxValue, context.getPropertyValue()) < 0) {

@@ -46,8 +46,8 @@ public class XMLMetaBeanInfosTest extends TestCase {
 
     public void testBeanInfosToXML() {
         XMLMetaBeanInfos infos = new XMLMetaBeanInfos();
-        infos.setBeans(new ArrayList());
-        infos.setValidators(new ArrayList());
+        infos.setBeans(new ArrayList<XMLMetaBean>());
+        infos.setValidators(new ArrayList<XMLMetaValidator>());
 
         XMLMetaValidator validator = new XMLMetaValidator();
         validator.setId("mandatory");
@@ -106,7 +106,7 @@ public class XMLMetaBeanInfosTest extends TestCase {
         property.setName("email");
         property.putFeature(XMLMetaValue.ANNOKEY_Widget, "entry");
         property.putFeature(XMLMetaValue.ANNOKEY_TableColumn, true);
-        Map formatterMap = new HashMap();
+        Map<String, String> formatterMap = new HashMap<String, String>();
         formatterMap.put("locale", "DE");
         formatterMap.put("style", "info");
         property.putFeature("ajax-formatter", formatterMap);

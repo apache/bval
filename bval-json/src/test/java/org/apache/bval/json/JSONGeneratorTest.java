@@ -59,7 +59,7 @@ public class JSONGeneratorTest extends TestCase {
 
         JSONGenerator converter = new JSONGenerator();
 
-        List<MetaBean> metaBeans = new ArrayList(2);
+        List<MetaBean> metaBeans = new ArrayList<MetaBean>(2);
         metaBeans.add(mbean);
         MetaBean mbean2 = mbm.findForId("UnknownObject");
         metaBeans.add(mbean2);
@@ -76,7 +76,7 @@ public class JSONGeneratorTest extends TestCase {
         MetaBean info3 = mbm.findForClass(BusinessObjectAddress.class);
         JSONGenerator converter = new JSONGenerator();
 
-        List<MetaBean> metaBeans = new ArrayList(2);
+        List<MetaBean> metaBeans = new ArrayList<MetaBean>(2);
         metaBeans.add(info);
         metaBeans.add(info2);
         metaBeans.add(info3);
@@ -92,7 +92,7 @@ public class JSONGeneratorTest extends TestCase {
 
         JSONGenerator converter = new JSONGenerator();
 
-        List<MetaBean> metaBeans = new ArrayList(1);
+        List<MetaBean> metaBeans = new ArrayList<MetaBean>(1);
         metaBeans.add(info);
         String json = converter.toJSON(metaBeans);
         assertNotNull(json);

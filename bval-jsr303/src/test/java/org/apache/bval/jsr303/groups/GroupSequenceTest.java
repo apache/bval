@@ -113,7 +113,7 @@ public class GroupSequenceTest extends TestCase {
         author.setLastName("King");
 
         constraintViolations = validator.validate(book, First.class, Second.class, Last.class);
-        ConstraintViolation constraintViolation = constraintViolations.iterator().next();
+        ConstraintViolation<?> constraintViolation = constraintViolations.iterator().next();
         assertEquals(1, constraintViolations.size());
         assertEquals("may not be empty", constraintViolation.getMessage());
         assertEquals(book, constraintViolation.getRootBean());
@@ -165,7 +165,7 @@ public class GroupSequenceTest extends TestCase {
         author.setLastName("Cline");
 
         constraintViolations = validator.validate(book, Book.All.class);
-        ConstraintViolation constraintViolation = constraintViolations.iterator().next();
+        ConstraintViolation<?> constraintViolation = constraintViolations.iterator().next();
         assertEquals(1, constraintViolations.size());
         assertEquals("may not be null", constraintViolation.getMessage());
         assertEquals(book, constraintViolation.getRootBean());

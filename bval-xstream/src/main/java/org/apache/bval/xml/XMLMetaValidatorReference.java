@@ -26,6 +26,9 @@ import java.io.Serializable;
  */
 @XStreamAlias("validator-ref")
 public class XMLMetaValidatorReference implements Serializable {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
+
     @XStreamAsAttribute
     private String refId;
 

@@ -22,7 +22,6 @@ import org.apache.bval.model.Validation;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import java.util.Collections;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 

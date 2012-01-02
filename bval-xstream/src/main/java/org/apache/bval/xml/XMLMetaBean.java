@@ -28,6 +28,9 @@ import java.util.List;
  */
 @XStreamAlias("bean")
 public class XMLMetaBean extends XMLFeaturesCapable {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
+
     @XStreamAsAttribute()
     private String id;
     @XStreamAsAttribute()
@@ -72,7 +75,7 @@ public class XMLMetaBean extends XMLFeaturesCapable {
     }
 
     public void addProperty(XMLMetaProperty property) {
-        if (properties == null) properties = new ArrayList();
+        if (properties == null) properties = new ArrayList<XMLMetaProperty>();
         properties.add(property);
     }
 
@@ -116,7 +119,7 @@ public class XMLMetaBean extends XMLFeaturesCapable {
 
 
     public void addBeanRef(XMLMetaBeanReference beanRelation) {
-        if (beanRelations == null) beanRelations = new ArrayList();
+        if (beanRelations == null) beanRelations = new ArrayList<XMLMetaBeanReference>();
         beanRelations.add(beanRelation);
     }
 

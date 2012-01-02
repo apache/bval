@@ -27,7 +27,7 @@ import java.beans.SimpleBeanInfo;
  * Description: <br/>
  */
 public class BusinessObjectBeanInfo extends SimpleBeanInfo {
-    Class targetClass = BusinessObject.class;
+    Class<?> targetClass = BusinessObject.class;
 
     @Override
     public BeanInfo[] getAdditionalBeanInfo() {

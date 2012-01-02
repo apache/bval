@@ -52,7 +52,7 @@ public final class EnumerationConverter implements Converter {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Object convert(Class type, Object value) {
         if (!type.isEnum()) {
             throw new RuntimeException("Only enum types supported in this version!");

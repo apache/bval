@@ -29,7 +29,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Locale;
 import java.util.Set;
-import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

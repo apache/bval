@@ -37,7 +37,7 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
 
     // use LinkedHashMap to keep sequence of loaders
     private final Map<XMLMetaBeanLoader, XMLMetaBeanInfos> resources =
-          new LinkedHashMap();
+          new LinkedHashMap<XMLMetaBeanLoader, XMLMetaBeanInfos>();
 
     private StandardValidation standardValidation = StandardValidation.getInstance();
 
@@ -121,6 +121,7 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected void enrichValidations(FeaturesCapable prop, XMLFeaturesCapable xmlProp,
                                      XMLResult result, boolean addStandard)
           throws Exception {

@@ -230,8 +230,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         // Can't fix this because don't know which classes this method should support.
 
         if (type.isInstance(this)) {
-            //noinspection unchecked
-            return (T) this;
+            @SuppressWarnings("unchecked")
+            T result = (T) this;
+            return result;
         } else if (!(type.isInterface() || Modifier.isAbstract(type
                 .getModifiers()))) {
             return newInstance(type);
@@ -239,8 +240,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             try {
                 Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
                 if (type.isAssignableFrom(cls)) {
-                    //noinspection unchecked
-                    return (T) newInstance(cls);
+                    @SuppressWarnings("unchecked")
+                    T result = (T) newInstance(cls);
+                    return result;
                 }
             } catch (ClassNotFoundException e) {
                 // do nothing

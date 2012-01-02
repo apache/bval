@@ -34,7 +34,6 @@ import javax.validation.ValidationException;
 import javax.validation.groups.Default;
 
 import org.apache.bval.MetaBeanFactory;
-import org.apache.bval.Validate;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.SecureActions;

@@ -27,6 +27,9 @@ import java.util.List;
  * Description: <br/>
  */
 public class XMLFeaturesCapable implements Serializable {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
+
     @XStreamImplicit
     private List<XMLMetaFeature> features;
     @XStreamImplicit(itemFieldName = "validator")

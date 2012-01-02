@@ -32,6 +32,7 @@ public class AccessTestBusinessObject {
     protected String var1;
 
     // test that field-access is used, not method-access
+    @SuppressWarnings("unused")
     @Valid
     private AccessTestBusinessObject next;
 

@@ -65,6 +65,7 @@ public class XMLMetaBeanManagerTest extends TestCase {
         assertTrue(mb2.getProperty("dateBirth") != mb.getProperty("dateBirth"));
     }
 
+    @SuppressWarnings("deprecation")
     public void testFindForClass() throws Exception {
         MetaBeanFinder finder = mbm;
         MetaBean info = finder.findForClass(BusinessObject.class);

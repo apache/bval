@@ -56,21 +56,21 @@ public class BeanValidatorTest extends TestCase {
 
         // 1. validate a bean
         BusinessObjectAddress adr = new BusinessObjectAddress();
-        BeanValidator<ValidationResults> validator = new BeanValidator();
+        BeanValidator<ValidationResults> validator = new BeanValidator<ValidationResults>();
         ValidationResults results = validator.validate(adr, mb);
         assertEquals(2,
               results.getErrorsByReason().get(Features.Property.MANDATORY).size());
 
         // 2. validate a map with the same metabean
         validator.setTreatMapsLikeBeans(true);
-        results = validator.validate(new HashMap(), mb);
+        results = validator.validate(new HashMap<String, Object>(), mb);
         assertFalse(results.isEmpty());
         assertEquals(2,
               results.getErrorsByReason().get(Features.Property.MANDATORY).size());
 
         // 3. validate as empty map (jsr303 behavior)
         validator.setTreatMapsLikeBeans(false);
-        results = validator.validate(new HashMap(), mb);
+        results = validator.validate(new HashMap<Object, Object>(), mb);
         assertTrue(results.isEmpty());
     }
 
@@ -82,7 +82,7 @@ public class BeanValidatorTest extends TestCase {
         BusinessObject object = new BusinessObject();
         object.setAddress(new BusinessObjectAddress());
         object.getAddress().setOwner(object);
-        BeanValidator<ValidationResults> validator = new BeanValidator();
+        BeanValidator<ValidationResults> validator = new BeanValidator<ValidationResults>();
         ValidationResults results = validator.validate(object, info);
         assertTrue(results.hasErrorForReason(Reasons.MANDATORY));
         assertTrue(results.hasError(object, null));
@@ -103,7 +103,7 @@ public class BeanValidatorTest extends TestCase {
         assertFalse(validator.validate(object, info).isEmpty());
 
         object.getAddress().setCountry("Germany");
-        object.setAddresses(new ArrayList());
+        object.setAddresses(new ArrayList<BusinessObjectAddress>());
         object.getAddresses().add(object.getAddress());
         object.getAddresses().add(object.getAddress());
         object.getAddresses().add(object.getAddress());

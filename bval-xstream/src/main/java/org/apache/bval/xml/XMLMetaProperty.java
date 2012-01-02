@@ -27,6 +27,8 @@ import static org.apache.bval.model.Features.Property.*;
  */
 @XStreamAlias("property")
 public class XMLMetaProperty extends XMLMetaElement {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
 
     /**
      * if you need other types (Long, double, String) for maxValue and

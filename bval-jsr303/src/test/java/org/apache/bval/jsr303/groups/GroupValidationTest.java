@@ -45,7 +45,7 @@ public class GroupValidationTest extends TestCase {
 
         Set<ConstraintViolation<BillableUser>> violations = validator.validate(user);
         assertEquals(2, violations.size());
-        ConstraintViolation violation = TestUtils.getViolation(violations, "firstname");
+        ConstraintViolation<?> violation = TestUtils.getViolation(violations, "firstname");
         assertNotNull(violation);
         assertEquals(user, violation.getRootBean());
         violation = TestUtils.getViolation(violations, "lastname");
@@ -63,7 +63,7 @@ public class GroupValidationTest extends TestCase {
         Set<ConstraintViolation<BillableUser>> violations = validator.validate(user,
               Billable.class);
         assertEquals(1, violations.size());
-        ConstraintViolation violation = TestUtils.getViolation(violations, "defaultCreditCard");
+        ConstraintViolation<?> violation = TestUtils.getViolation(violations, "defaultCreditCard");
         assertNotNull(violation);
         assertEquals(user, violation.getRootBean());
     }
@@ -74,7 +74,7 @@ public class GroupValidationTest extends TestCase {
         Set<ConstraintViolation<BillableUser>> violations = validator.validate(user,
               BuyInOneClick.class, Billable.class);
         assertEquals(1, violations.size());
-        ConstraintViolation violation = TestUtils.getViolation(violations, "defaultCreditCard");
+        ConstraintViolation<?> violation = TestUtils.getViolation(violations, "defaultCreditCard");
         assertNotNull(violation);
         assertEquals(user, violation.getRootBean());
     }

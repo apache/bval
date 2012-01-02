@@ -29,9 +29,11 @@ import javax.validation.constraints.NotNull;
  */
 @GroupSequence({Address.class, Address.HighLevelCoherence.class})
 public class InvalidRedefinedDefaultGroupAddress {
+    @SuppressWarnings("unused")
     @NotNull(groups = Address.HighLevelCoherence.class)
     private String street;
 
+    @SuppressWarnings("unused")
     @NotNull
     private String city;
 

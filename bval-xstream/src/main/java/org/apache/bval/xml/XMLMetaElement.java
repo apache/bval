@@ -26,6 +26,8 @@ import static org.apache.bval.model.Features.Property.*;
  * Description: <br/>
  */
 public class XMLMetaElement extends XMLFeaturesCapable {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
 
     @XStreamAsAttribute()
     private String name;

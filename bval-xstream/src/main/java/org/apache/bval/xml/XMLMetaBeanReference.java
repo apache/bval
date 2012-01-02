@@ -26,6 +26,9 @@ import org.apache.bval.model.MetaProperty;
  */
 @XStreamAlias("relationship")
 public class XMLMetaBeanReference extends XMLMetaElement {
+    /** Serialization version */
+    private static final long serialVersionUID = 1L;
+
     @XStreamAsAttribute
     private String beanId;
 

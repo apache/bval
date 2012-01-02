@@ -87,6 +87,7 @@ public class ComposedConstraintsTest extends TestCase {
     public void processConstraintDescriptor(ConstraintDescriptor<?> cd) {
         //Size.class is understood by the tool
         if (cd.getAnnotation().annotationType().equals(Size.class)) {
+            @SuppressWarnings("unused")
             Size m = (Size) cd.getAnnotation();//what for?
         }
         for (ConstraintDescriptor<?> composingCd : cd.getComposingConstraints()) {

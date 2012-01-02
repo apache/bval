@@ -16,21 +16,30 @@
  */
 package org.apache.bval.routines;
 
-import org.apache.bval.model.*;
-import org.apache.bval.xml.XMLMetaValue;
+import static org.apache.bval.model.Features.Property.MANDATORY;
+import static org.apache.bval.model.Features.Property.MAX_LENGTH;
+import static org.apache.bval.model.Features.Property.MAX_VALUE;
+import static org.apache.bval.model.Features.Property.MIN_LENGTH;
+import static org.apache.bval.model.Features.Property.MIN_VALUE;
+import static org.apache.bval.model.Features.Property.REG_EXP;
+import static org.apache.bval.model.Features.Property.TIME_LAG;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import static org.apache.bval.routines.Reasons.*;
+import org.apache.bval.model.Features;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.model.Validation;
+import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
+import org.apache.bval.xml.XMLMetaValue;
 
 /**
  * Description: This class implements the standard validations for properties!
  * You can subclass this class and replace the implementation
  * in the beanInfo-xml by providing it a validation "standard"<br/>
- * 
  */
 public class StandardValidation implements Validation {
 

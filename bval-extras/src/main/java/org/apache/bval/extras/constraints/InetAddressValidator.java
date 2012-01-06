@@ -24,7 +24,9 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 /**
- * Description: <br/>
+ * <p><b>InetAddress</b> validation and conversion routines (<code>java.net.InetAddress</code>).</p>
+ *
+ * <p>This class provides methods to validate a candidate IP address.
  */
 public class InetAddressValidator implements ConstraintValidator<InetAddress, String> {
 

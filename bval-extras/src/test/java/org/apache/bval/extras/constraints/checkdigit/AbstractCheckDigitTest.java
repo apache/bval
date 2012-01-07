@@ -35,7 +35,7 @@ import org.junit.Test;
 public abstract class AbstractCheckDigitTest {
 
     /** Check digit routine being tested */
-    protected int checkDigitLth = 1;
+    private int checkDigitLth;
 
     /** Check digit routine being tested */
     private ConstraintValidator<? extends Annotation, String> routine;
@@ -47,11 +47,14 @@ public abstract class AbstractCheckDigitTest {
     private String[] invalid;
 
     /** code value which sums to zero */
-    protected String zeroSum = "0000000000";
+    private String zeroSum;
 
     /** Prefix for error messages */
-    protected String missingMessage = "Code is missing";
+    private String missingMessage;
 
+    public int getCheckDigitLth() {
+        return 1;
+    }
 
     protected abstract ConstraintValidator<? extends Annotation, String> getConstraint();
 
@@ -61,11 +64,22 @@ public abstract class AbstractCheckDigitTest {
         return new String[] {"12345678A"};
     }
 
+    protected String getZeroSum() {
+        return "0000000000";
+    }
+
+    public String getMissingMessage() {
+        return "Code is missing";
+    }
+
     @Before
     public void setUp() {
+        checkDigitLth = getCheckDigitLth();
         routine = getConstraint();
         valid = getValid();
         invalid = getInvalid();
+        zeroSum = getZeroSum();
+        missingMessage = getMissingMessage();
     }
 
     /**

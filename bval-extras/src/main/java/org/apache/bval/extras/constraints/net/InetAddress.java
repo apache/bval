@@ -44,7 +44,7 @@ public @interface InetAddress {
 
     Class<?>[] groups() default {};
 
-    String message() default "{org.apache.bval.extras.constraints.InetAddress.message}";
+    String message() default "{org.apache.bval.extras.constraints.net.InetAddress.message}";
 
     Class<? extends Payload>[] payload() default {};
 

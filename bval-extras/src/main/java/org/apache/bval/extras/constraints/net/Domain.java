@@ -44,7 +44,7 @@ public @interface Domain {
 
     Class<?>[] groups() default {};
 
-    String message() default "{org.apache.bval.extras.constraints.Domain.message}";
+    String message() default "{org.apache.bval.extras.constraints.net.Domain.message}";
 
     Class<? extends Payload>[] payload() default {};
 

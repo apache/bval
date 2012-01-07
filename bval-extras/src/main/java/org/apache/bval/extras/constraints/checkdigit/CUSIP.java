@@ -47,7 +47,7 @@ public @interface CUSIP {
 
     Class<?>[] groups() default {};
 
-    String message() default "{org.apache.bval.extras.constraints.InetAddress.message}";
+    String message() default "{org.apache.bval.extras.constraints.checkdigit.CUSIP.message}";
 
     Class<? extends Payload>[] payload() default {};
 

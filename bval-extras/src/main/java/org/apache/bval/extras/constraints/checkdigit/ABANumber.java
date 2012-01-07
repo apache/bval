@@ -47,7 +47,7 @@ public @interface ABANumber {
 
     Class<?>[] groups() default {};
 
-    String message() default "{org.apache.bval.extras.constraints.InetAddress.message}";
+    String message() default "{org.apache.bval.extras.constraints.checkdigit.ABANumber.message}";
 
     Class<? extends Payload>[] payload() default {};
 

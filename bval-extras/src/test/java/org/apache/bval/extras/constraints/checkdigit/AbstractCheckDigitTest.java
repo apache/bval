@@ -38,10 +38,10 @@ public abstract class AbstractCheckDigitTest {
     protected int checkDigitLth = 1;
 
     /** Check digit routine being tested */
-    protected ConstraintValidator<? extends Annotation, String> routine;
+    private ConstraintValidator<? extends Annotation, String> routine;
 
     /** Array of valid code values */
-    protected String[] valid;
+    private String[] valid;
 
     /** Array of invalid code values */
     protected String[] invalid = new String[] {"12345678A"};
@@ -51,6 +51,17 @@ public abstract class AbstractCheckDigitTest {
 
     /** Prefix for error messages */
     protected String missingMessage = "Code is missing";
+
+
+    protected abstract ConstraintValidator<? extends Annotation, String> getConstraint();
+
+    protected abstract String[] getValid();
+
+    @Before
+    public void setUp() {
+        routine = getConstraint();
+        valid = getValid();
+    }
 
     /**
      * Tear Down - clears routine and valid codes.

@@ -16,27 +16,30 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
-import org.junit.Before;
+import java.lang.annotation.Annotation;
+
+import javax.validation.ConstraintValidator;
 
 /**
  * ABA Number Validator Test.
  */
 public class ABANumberValidatorTest extends AbstractCheckDigitTest {
 
-    /**
-     * Set up routine & valid codes.
-     */
-    @Before
-    public void setUp() throws Exception {
-        routine = new ABANumberValidator();
-        valid = new String[] {
-                "123456780",
-                "123123123",
-                "011000015",
-                "111000038",
-                "231381116",
-                "121181976"
-                };
+    @Override
+    protected ConstraintValidator<? extends Annotation, String> getConstraint() {
+        return new ABANumberValidator();
+    }
+
+    @Override
+    protected String[] getValid() {
+        return new String[] {
+            "123456780",
+            "123123123",
+            "011000015",
+            "111000038",
+            "231381116",
+            "121181976"
+        };
     }
 
 }

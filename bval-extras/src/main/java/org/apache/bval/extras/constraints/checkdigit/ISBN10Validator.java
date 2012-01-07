@@ -42,7 +42,7 @@ package org.apache.bval.extras.constraints.checkdigit;
  * </ul>
  */
 public final class ISBN10Validator
-    extends ModulusValidator<EAN13> {
+    extends ModulusValidator<ISBN10> {
 
     public ISBN10Validator() {
         super(11);

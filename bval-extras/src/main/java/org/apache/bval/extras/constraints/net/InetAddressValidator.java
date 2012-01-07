@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.bval.extras.constraints;
+package org.apache.bval.extras.constraints.net;
 
 import java.util.regex.Pattern;
 

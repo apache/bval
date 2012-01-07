@@ -14,9 +14,9 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.
+ * under the License.    
  */
-package org.apache.bval.extras.constraints;
+package org.apache.bval.extras.constraints.file;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -37,14 +37,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: annotation to validate a java.io.File is a directory<br/>
  */
 @Documented
-@Constraint( validatedBy = InetAddressValidator.class )
+@Constraint( validatedBy = DirectoryValidator.class )
 @Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
 @Retention( RUNTIME )
-public @interface InetAddress {
+public @interface Directory {
 
     Class<?>[] groups() default {};
 
-    String message() default "{org.apache.bval.extras.constraints.InetAddress.message}";
+    String message() default "{org.apache.bval.extras.constraints.Directory.message}";
 
     Class<? extends Payload>[] payload() default {};
 

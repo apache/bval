@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.bval.extras.constraints;
+package org.apache.bval.extras.constraints.net;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.bval.extras.constraints.net.InetAddressValidator;
 import org.junit.Before;
 import org.junit.Test;
 

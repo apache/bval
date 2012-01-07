@@ -44,7 +44,7 @@ public abstract class AbstractCheckDigitTest {
     private String[] valid;
 
     /** Array of invalid code values */
-    protected String[] invalid = new String[] {"12345678A"};
+    private String[] invalid;
 
     /** code value which sums to zero */
     protected String zeroSum = "0000000000";
@@ -57,10 +57,15 @@ public abstract class AbstractCheckDigitTest {
 
     protected abstract String[] getValid();
 
+    protected String[] getInvalid() {
+        return new String[] {"12345678A"};
+    }
+
     @Before
     public void setUp() {
         routine = getConstraint();
         valid = getValid();
+        invalid = getInvalid();
     }
 
     /**

@@ -110,7 +110,7 @@ abstract class ModulusValidator<A extends Annotation>
      * @param rightPos The positionof the character in the code, counting from right to left
      * @return The integer value of the character
      */
-    protected static int toInt(char character, int leftPos, int rightPos) {
+    protected int toInt(char character, int leftPos, int rightPos) {
         if (isDigit(character)) {
             return getNumericValue(character);
         }
@@ -119,6 +119,22 @@ abstract class ModulusValidator<A extends Annotation>
                                            + "] = '"
                                            + character
                                            + "'");
+    }
+
+    /**
+     * Add together the individual digits in a number.
+     *
+     * @param number The number whose digits are to be added
+     * @return The sum of the digits
+     */
+    protected static int sumDigits(int number) {
+        int total = 0;
+        int todo = number;
+        while (todo > 0) {
+            total += todo % 10;
+            todo  = todo / 10;
+        }
+        return total;
     }
 
 }

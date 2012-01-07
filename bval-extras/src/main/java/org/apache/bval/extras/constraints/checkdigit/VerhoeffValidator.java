@@ -18,6 +18,8 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
+import static java.lang.Character.getNumericValue;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
@@ -69,7 +71,7 @@ public final class VerhoeffValidator
         int checksum = 0;
         for (int i = 0; i < code.length(); i++) {
             int idx = code.length() - (i + 1);
-            int num = Character.getNumericValue(code.charAt(idx));
+            int num = getNumericValue(code.charAt(idx));
             if (num < 0 || num > 9) {
                 return false;
             }

@@ -31,10 +31,10 @@
     </parent>
 
     <artifactId>bval-extras</artifactId>
-    <name>Apache Bean Validation :: bval-extras (optional)</name>
+    <name>Apache BVal :: bval-extras (optional)</name>
     <packaging>bundle</packaging>
 
-    <description>Bean Validation - non-JSR303 routines and constraints</description>
+    <description>BVal - non-JSR303 routines and constraints</description>
 
     <dependencies>
         <dependency>

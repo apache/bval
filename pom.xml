@@ -31,11 +31,11 @@
 
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
-    <name>Apache Bean Validation :: bval-parent (Parent POM)</name>
+    <name>Apache BVal :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
     <version>0.4-incubating-SNAPSHOT</version>
 
-    <description>Apache BeanValidation parent pom</description>
+    <description>Apache BVal parent pom</description>
 
     <properties>
         <site.deploy.url>scp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
@@ -53,7 +53,7 @@
 
     <mailingLists>
         <mailingList>
-            <name>BeanValidation User List</name>
+            <name>BVal User List</name>
             <subscribe>bval-user-subscribe@incubator.apache.org</subscribe>
             <unsubscribe>bval-user-unsubscribe@incubator.apache.org</unsubscribe>
             <post>mailto:bval-user@incubator.apache.org</post>
@@ -61,7 +61,7 @@
         </mailingList>
 
         <mailingList>
-            <name>BeanValidation Developer List</name>
+            <name>BVal Developer List</name>
             <subscribe>bval-dev-subscribe@incubator.apache.org</subscribe>
             <unsubscribe>bval-dev-unsubscribe@incubator.apache.org</unsubscribe>
             <post>mailto:bval-dev@incubator.apache.org</post>
@@ -69,7 +69,7 @@
         </mailingList>
 
         <mailingList>
-            <name>BeanValidation Commits List</name>
+            <name>BVal Commits List</name>
             <subscribe>bval-commits-subscribe@incubator.apache.org</subscribe>
             <unsubscribe>bval-commits-unsubscribe@incubator.apache.org</unsubscribe>
             <post>mailto:bval-commits@incubator.apache.org</post>

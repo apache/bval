@@ -16,7 +16,7 @@
  */
 
 /**
- * Contains Apache Bean Validation support for Google-Guice.
+ * Contains Apache BVal support for Google-Guice.
  *
  * @version $Id$
  */

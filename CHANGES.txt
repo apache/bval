@@ -1,4 +1,4 @@
-Apache Bean Validation (incubating) - CHANGES.txt
+Apache BVal (incubating) - CHANGES.txt
 Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 --------------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ which was contributed to the ASF under a software grant.
 
 Disclaimer
 ==========
-Apache Bean Validation is an effort undergoing incubation at The Apache Software
+Apache BVal is an effort undergoing incubation at The Apache Software
 Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required
 of all newly accepted projects until a further review indicates that the
 infrastructure, communications, and decision making process have stabilized in a
@@ -48,7 +48,7 @@ Please refer to the project page at:
 
 Getting Involved
 ================
-The Apache Bean Validation project is being built by the open source community
+The Apache BVal project is being built by the open source community
 for the open source community - we welcome your input and contributions!
 
 What are we looking for?
@@ -60,7 +60,7 @@ What are we looking for?
   * Articles and whitepapers
 
 How do I Contribute?
-  * To discuss Bean Validation topics, check out the mailing lists.
+  * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
 
@@ -170,7 +170,7 @@ Improvement
 
 New Feature
 -----------
-    * [BVAL-40] - Provide a way to display the Bean Validation version being used
+    * [BVAL-40] - Provide a way to display the BVal version being used
     * [BVAL-56] - make bval work with geronimo spec osgi service locator
 
 Task

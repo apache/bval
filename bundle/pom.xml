@@ -32,10 +32,10 @@
 
     <!-- use fully qualified naming for OSGi bundles -->
     <artifactId>org.apache.bval.bundle</artifactId>
-    <name>Apache Bean Validation :: org.apache.bval.bundle</name>
+    <name>Apache BVal :: org.apache.bval.bundle</name>
     <packaging>bundle</packaging>
 
-    <description>Apache Bean Validation - Aggregate OSGi Bundle (bval-core + bval-jsr303)</description>
+    <description>Apache BVal - Aggregate OSGi Bundle (bval-core + bval-jsr303)</description>
 
     <dependencies>
         <!-- JARs to include in aggregate JAR via maven-shade-plugin -->
@@ -60,8 +60,8 @@
                 <configuration>
                     <instructions>
                         <!-- OSGi Bundle Metadata -->
-                        <Main-Class>org.apache.bval.util.BeanValidationVersion</Main-Class>
-                        <Implementation-Title>Apache Bean Validation</Implementation-Title>
+                        <Main-Class>org.apache.bval.util.BValVersion</Main-Class>
+                        <Implementation-Title>Apache BVal</Implementation-Title>
                         <Implementation-Build>${buildNumber}</Implementation-Build>
                         <Specification-Title>JSR-303 Bean Validation</Specification-Title>
                         <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>

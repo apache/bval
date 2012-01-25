@@ -1,4 +1,4 @@
-Apache Bean Validation (incubating) - README.txt
+Apache BVal (incubating) - README.txt
 Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 --------------------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ metadata repository and query API.
 
 Disclaimer
 ==========
-Apache Bean Validation is an effort undergoing incubation at The Apache Software
+Apache BVal is an effort undergoing incubation at The Apache Software
 Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required
 of all newly accepted projects until a further review indicates that the
 infrastructure, communications, and decision making process have stabilized in a

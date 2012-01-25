@@ -35,7 +35,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 
 /**
- * The Google-Guice module for Apache Bean Validation.
+ * The Google-Guice module for Apache BVal.
  *
  * @version $Id$
  */

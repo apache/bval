@@ -31,10 +31,10 @@
     </parent>
 
     <artifactId>bval-json</artifactId>
-    <name>Apache Bean Validation :: bval-json (optional)</name>
+    <name>Apache BVal :: bval-json (optional)</name>
     <packaging>bundle</packaging>
 
-    <description>Bean Validation - Optional JSON Component</description>
+    <description>BVal - Optional JSON Component</description>
 
     <dependencies>
         <dependency>

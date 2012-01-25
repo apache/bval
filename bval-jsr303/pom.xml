@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>bval-jsr303</artifactId>
-    <name>Apache Bean Validation :: bval-jsr303</name>
+    <name>Apache BVal :: bval-jsr303</name>
     <packaging>jar</packaging>
 
     <description>Implementation specific classes for JSR 303 Bean Validation 1.0</description>

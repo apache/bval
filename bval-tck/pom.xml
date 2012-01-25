@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>bval-tck-runner</artifactId>
-    <name>Apache Bean Validation :: bval-tck (TCK Runner)</name>
+    <name>Apache BVal :: bval-tck (TCK Runner)</name>
     <description>Aggregates dependencies and runs the JSR-303 TCK</description>
 
     <dependencies>

@@ -31,10 +31,10 @@
     </parent>
 
     <artifactId>bval-guice</artifactId>
-    <name>Apache Bean Validation :: bval-guice (optional)</name>
+    <name>Apache BVal :: bval-guice (optional)</name>
     <packaging>bundle</packaging>
 
-    <description>Bean Validation - Google Guice Integration</description>
+    <description>BVal - Google Guice Integration</description>
 
     <dependencies>
         <dependency>

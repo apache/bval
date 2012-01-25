@@ -24,8 +24,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 
 /**
- * Description: Uniquely identify Apache Bean Validation in the Bean Validation bootstrap
- * strategy. Also contains Apache Bean Validation specific configurations<br/>
+ * Description: Uniquely identify Apache BVal in the Bean Validation bootstrap
+ * strategy. Also contains Apache BVal specific configurations<br/>
  */
 public interface ApacheValidatorConfiguration
       extends Configuration<ApacheValidatorConfiguration> {

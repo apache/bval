@@ -31,10 +31,10 @@
     </parent>
 
     <artifactId>bval-core</artifactId>
-    <name>Apache Bean Validation :: bval-core</name>
+    <name>Apache BVal :: bval-core</name>
     <packaging>jar</packaging>
 
-    <description>Bean Validation Metadata Engine</description>
+    <description>BVal Metadata Engine</description>
 
     <dependencies>
         <dependency>
@@ -77,7 +77,7 @@
                                 <mkdir dir="${project.build.outputDirectory}/META-INF" />
                                 <echo file="${project.build.outputDirectory}/META-INF/org.apache.bval.revision.properties">
 # Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
-project.name=Apache Bean Validation
+project.name=Apache BVal
 project.version=${project.version}
 svn.revision=${buildNumber}
 svn.branch=${scmBranch}
@@ -106,7 +106,7 @@ build.timestamp=${timestamp}
                             <archive>
                                 <manifest>
                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                                   <mainClass>org.apache.bval.util.BeanValidationVersion</mainClass>
+                                   <mainClass>org.apache.bval.util.BValVersion</mainClass>
                                 </manifest>
                                 <manifestEntries>
                                     <Implementation-Build>${buildNumber}</Implementation-Build>

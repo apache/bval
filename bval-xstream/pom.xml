@@ -31,10 +31,10 @@
   </parent>
 
   <artifactId>bval-xstream</artifactId>
-  <name>Apache Bean Validation :: bval-xstream (optional)</name>
+  <name>Apache BVal :: bval-xstream (optional)</name>
   <packaging>jar</packaging>
 
-  <description>Bean Validation XML Metadata with XStream</description>
+  <description>BVal XML Metadata with XStream</description>
 
   <dependencies>
     <dependency>
@@ -78,7 +78,7 @@
             <configuration>
               <archive>
                 <manifest>
-                  <mainClass>org.apache.bval.util.BeanValidationVersion</mainClass>
+                  <mainClass>org.apache.bval.util.BValVersion</mainClass>
                 </manifest>
               </archive>
             </configuration>

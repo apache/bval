@@ -24,14 +24,14 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 /**
- * This class contains version information for Bean Validation.
+ * This class contains version information for BVal.
  * It uses Ant's filter tokens to convert the template into a java
  * file with current information.
  */
-public class BeanValidationVersion {
+public class BValVersion {
 
     /** Project name */
-    public static final String PROJECT_NAME = "Apache Bean Validation";
+    public static final String PROJECT_NAME = "Apache BVal";
     /** Unique id of the current project/version/revision */
     public static final String PROJECT_ID;
     /** Version number */
@@ -50,7 +50,7 @@ public class BeanValidationVersion {
     static {
         Properties revisionProps = new Properties();
         try {
-            InputStream in = BeanValidationVersion.class.getResourceAsStream
+            InputStream in = BValVersion.class.getResourceAsStream
                 ("/META-INF/org.apache.bval.revision.properties");
             if (in != null) {
                 try {
@@ -148,7 +148,7 @@ public class BeanValidationVersion {
      * @param args ignored
      */
     public static void main(String [] args) {
-        System.out.println(new BeanValidationVersion().toString());
+        System.out.println(new BValVersion().toString());
     }
 
     /**

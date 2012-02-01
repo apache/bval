@@ -19,6 +19,7 @@ package org.apache.bval.jsr303.resolver;
 import java.lang.annotation.ElementType;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
@@ -75,7 +76,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private void initJpa() {
         final ClassLoader classLoader = getClassLoader();
         try {
-            ClassUtils.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME, true);
+            getUtilClass(classLoader);
             log.debug("Found {} on classpath.", PERSISTENCE_UTIL_CLASSNAME);
         } catch (Exception e) {
             log.debug("Cannot find {} on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME);
@@ -102,8 +103,6 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
         return jpaTR != null && CachingTraversableResolver.needsCaching(jpaTR);
     }
 
-
-    
     private static ClassLoader getClassLoader()
     {
       return (System.getSecurityManager() == null)
@@ -121,5 +120,17 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
       return (loader != null) ? loader : ClassHelper.class.getClassLoader();
     }
 
+    private static Class<?> getUtilClass(final ClassLoader classLoader) throws Exception {
+        return (System.getSecurityManager() == null) 
+            ? getUtilClass0(classLoader)
+            : AccessController.doPrivileged(new PrivilegedExceptionAction<Class<?>>() {
+                    public Class<?> run() throws Exception {
+                        return getUtilClass0(classLoader);
+                    }
+                });
+    }
 
+    private static Class<?> getUtilClass0(ClassLoader classLoader) throws Exception {
+        return ClassUtils.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME, true);
+    }
 }

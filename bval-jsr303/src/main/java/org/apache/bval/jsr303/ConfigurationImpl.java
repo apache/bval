@@ -20,6 +20,7 @@ package org.apache.bval.jsr303;
 
 
 import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
+import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.ValidationParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,6 +240,10 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @throws ValidationException if the ValidatorFactory cannot be built
      */
     public ValidatorFactory buildValidatorFactory() {
+        return SecureActions.run(SecureActions.doPrivBuildValidatorFactory(this));
+    }
+
+    public ValidatorFactory doPrivBuildValidatorFactory() {
         prepare();
         if (provider != null) {
             return provider.buildValidatorFactory(this);

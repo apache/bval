@@ -57,7 +57,7 @@ public class ConstraintDefinitionValidator {
      *            The annotation to check.
      */
     private static void validAttributes(final Annotation annotation) {
-        final Method[] methods = SecureActions.doPrivileged(
+        final Method[] methods = SecureActions.run(
             SecureActions.getDeclaredMethods(annotation.annotationType())
         );
         for (Method method : methods ){

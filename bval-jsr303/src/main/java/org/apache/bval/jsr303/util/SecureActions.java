@@ -22,9 +22,11 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 
+import javax.validation.ValidatorFactory;
+
+import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.util.PrivilegedActions;
 
 /**
@@ -120,12 +122,15 @@ public class SecureActions extends PrivilegedActions {
         }
     }
 
-    static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
+    /**
+     * Create a privileged action for ConfigurationImpl.buildValidatorFactory.
+     */
+    public static PrivilegedAction<ValidatorFactory> doPrivBuildValidatorFactory(final ConfigurationImpl config) {
+        return new PrivilegedAction<ValidatorFactory>() {
+            public ValidatorFactory run() {
+                return config.doPrivBuildValidatorFactory();
+            }
+        };
     }
 
     private static final class GetContextClassLoader extends Object implements PrivilegedAction<ClassLoader> {

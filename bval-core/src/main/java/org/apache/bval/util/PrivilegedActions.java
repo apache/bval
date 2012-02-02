@@ -21,6 +21,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+
+import org.apache.commons.lang3.ClassUtils;
 
 /**
  * Description: utility methods to perform actions with AccessController or without. <br/>
@@ -68,7 +72,7 @@ public class PrivilegedActions {
     }
 
     /**
-     * Perform action with AccessController.doPrivileged() if possible.
+     * Perform action with AccessController.doPrivileged() if security if enabled.
      *
      * @param action - the action to run
      * @return result of running the action
@@ -79,6 +83,34 @@ public class PrivilegedActions {
         } else {
             return action.run();
         }
+    }
+
+    /**
+     * Perform action with AccessController.doPrivileged() if security if enabled.
+     *
+     * @param action - the action to run
+     * @return result of running the action
+     */
+    public static <T> T run(final PrivilegedExceptionAction<T> action) throws PrivilegedActionException, Exception {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
+    }
+
+    /**
+     * Perform AccessController.doPrivileged() action for ClassUtil.getClass()
+     * 
+     * @return Class
+     * @exception Exception
+     */
+    public static Class<?> getUtilClass(final ClassLoader classLoader, final String className) throws Exception {
+        return PrivilegedActions.run(new PrivilegedExceptionAction<Class<?>>() {
+            public Class<?> run() throws Exception {
+                return ClassUtils.getClass(classLoader, className, true);
+            }
+        });
     }
 
     /**
@@ -93,7 +125,7 @@ public class PrivilegedActions {
      */
     public static Object getAnnotationValue(final Annotation annotation, final String name)
           throws IllegalAccessException, InvocationTargetException {
-        return doPrivileged(new PrivilegedAction<Object>() {
+        return run(new PrivilegedAction<Object>() {
             public Object run() {
                 Method valueMethod;
                 try {
@@ -124,7 +156,7 @@ public class PrivilegedActions {
      * @return Classloader
      */
     public static ClassLoader getClassLoader(final Class<?> clazz) {
-        return doPrivileged(new PrivilegedAction<ClassLoader>() {
+        return run(new PrivilegedAction<ClassLoader>() {
             public ClassLoader run() {
                 ClassLoader cl = Thread.currentThread().getContextClassLoader();
                 if (cl == null) {
@@ -149,22 +181,6 @@ public class PrivilegedActions {
                 return System.getProperty(name);
             }
         });
-    }
-
-
-
-    /**
-     * Perform action with AccessController.doPrivileged() if possible.
-     *
-     * @param action - the action to run
-     * @return result of running the action
-     */
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 
 }

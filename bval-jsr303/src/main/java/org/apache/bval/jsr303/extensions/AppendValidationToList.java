@@ -30,7 +30,7 @@ import java.util.List;
  * cache of validations for further processing.<br/>
  */
 public class AppendValidationToList extends BaseAppendValidation {
-    private final List<ConstraintValidation<? extends Annotation>> validations = new ArrayList<ConstraintValidation<? extends Annotation>>();
+    private final List<ConstraintValidation<?>> validations = new ArrayList<ConstraintValidation<?>>();
 
     /**
      * Create a new AppendValidationToList instance.
@@ -49,7 +49,7 @@ public class AppendValidationToList extends BaseAppendValidation {
      * Get the list of cached validations.
      * @return {@link List} of {@link ConstraintValidation}
      */
-    public List<ConstraintValidation<? extends Annotation>> getValidations() {
+    public List<ConstraintValidation<?>> getValidations() {
         return validations;
     }
 }

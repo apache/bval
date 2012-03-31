@@ -92,7 +92,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
         } catch (Exception e) {
 			log.log(Level.WARNING,
 					String.format(
-							"Unable to load or instanciate JPA aware resolver %s. All properties will per default be traversable.",
+							"Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.",
 							JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, e));
         }
     }

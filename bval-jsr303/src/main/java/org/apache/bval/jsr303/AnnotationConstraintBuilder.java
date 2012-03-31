@@ -30,6 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintValidator;
@@ -41,8 +43,6 @@ import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Description: helper class that builds a {@link ConstraintValidation} or its
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * providing information (e.g. for @OverridesAttributes) <br/>
  */
 final class AnnotationConstraintBuilder<A extends Annotation> {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationConstraintBuilder.class);
+    private static final Logger log = Logger.getLogger(AnnotationConstraintBuilder.class.getName());
 
     private final ConstraintValidation<?> constraintValidation;
     private List<ConstraintOverrides> overrides;
@@ -94,7 +94,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
                                         method.invoke(constraintValidation.getAnnotation()));
                                 }
                             } catch (Exception e) { // do nothing
-                                log.warn("error processing annotation: " + constraintValidation.getAnnotation(), e);
+                                log.log(Level.WARNING, String.format("Error processing annotation: %s ", constraintValidation.getAnnotation()), e);
                             }
                         }
                     }

@@ -16,24 +16,29 @@
  */
 package org.apache.bval.xml;
 
+import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.model.FeaturesCapable;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.routines.StandardValidation;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
-
 /**
  * Description: Create or enrich MetaBeans from apache beanInfos xml<br/>
  */
 public class XMLMetaBeanFactory implements MetaBeanFactory {
-    private static final Logger loggger = Logger.getLogger(XMLMetaBeanFactory.class.getName());
+    private static final Logger logger = Logger.getLogger(XMLMetaBeanFactory.class.getName());
 
     // use LinkedHashMap to keep sequence of loaders
     private final Map<XMLMetaBeanLoader, XMLMetaBeanInfos> resources =
@@ -230,7 +235,7 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
     }
 
     public void handleLoadException(Object loader, IOException e) {
-        loggger.log(Level.SEVERE, String.format("Error loading %s", loader), e);
+        logger.log(Level.SEVERE, String.format("Error loading %s", loader), e);
     }
 
 }

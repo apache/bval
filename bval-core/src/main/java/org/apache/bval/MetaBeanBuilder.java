@@ -19,8 +19,9 @@ package org.apache.bval;
 import org.apache.bval.model.MetaBean;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +31,8 @@ import java.util.Map;
  * factories<br/>
  */
 public class MetaBeanBuilder {
-    private static final Logger log = LoggerFactory.getLogger(MetaBeanBuilder.class);
+
+    private static final Logger log =  Logger.getLogger(MetaBeanBuilder.class.getName());
 
     /**
      * here you can install different kinds of factories to create MetaBeans
@@ -106,7 +108,7 @@ public class MetaBeanBuilder {
             try {
                 return ClassUtils.getClass(className);
             } catch (ClassNotFoundException e) {
-                log.trace("class not found: " + className, e);
+            	log.log(Level.FINE, String.format("Class not found: %s", className), e);
             }
         }
         return null;

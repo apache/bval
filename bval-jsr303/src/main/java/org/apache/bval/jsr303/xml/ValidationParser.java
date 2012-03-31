@@ -23,8 +23,6 @@ import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.util.IOUtils;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.PrivilegedActions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.validation.ConstraintValidatorFactory;
@@ -46,6 +44,8 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Description: uses jaxb to parse validation.xml<br/>
@@ -55,7 +55,7 @@ public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final String VALIDATION_CONFIGURATION_XSD =
             "META-INF/validation-configuration-1.0.xsd";
-    private static final Logger log = LoggerFactory.getLogger(ValidationParser.class);
+    private static final Logger log = Logger.getLogger(ValidationParser.class.getName());
     protected final String validationXmlFile;
 
     /**
@@ -88,11 +88,11 @@ public class ValidationParser {
         try {
             inputStream = getInputStream(validationXmlFile);
             if (inputStream == null) {
-                log.debug("No {} found. Using annotation based configuration only.", validationXmlFile);
+            	log.log(Level.FINEST, String.format("No %s found. Using annotation based configuration only.", validationXmlFile));
                 return null;
             }
 
-            log.debug("{} found.", validationXmlFile);
+            log.log(Level.FINEST, String.format("%s found.", validationXmlFile));
 
             Schema schema = getSchema();
             JAXBContext jc = JAXBContext.newInstance(ValidationConfigType.class);
@@ -149,7 +149,7 @@ public class ValidationParser {
         try {
             return sf.newSchema(schemaUrl);
         } catch (SAXException e) {
-            log.warn("Unable to parse schema: " + xsd, e);
+            log.log(Level.WARNING, String.format("Unable to parse schema: %s", xsd), e);
             return null;
         }
     }
@@ -165,9 +165,8 @@ public class ValidationParser {
 
     private void applyProperties(ValidationConfigType xmlConfig, ConfigurationImpl target) {
         for (PropertyType property : xmlConfig.getProperty()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Found property '" + property.getName() + "' with value '" +
-                        property.getValue() + "' in " + validationXmlFile);
+            if (log.isLoggable(Level.FINEST)) {
+                log.log(Level.FINEST, String.format("Found property '%s' with value '%s' in %s", property.getName(), property.getValue(), validationXmlFile));
             }
             target.addProperty(property.getName(), property.getValue());
         }
@@ -180,7 +179,7 @@ public class ValidationParser {
             Class<? extends ValidationProvider<?>> clazz =
                     (Class<? extends ValidationProvider<?>>) loadClass(providerClassName);
             target.setProviderClass(clazz);
-            log.info("Using {} as validation provider.", providerClassName);
+            log.log(Level.INFO, String.format("Using %s as validation provider.", providerClassName));
         }
     }
 
@@ -193,7 +192,7 @@ public class ValidationParser {
                 Class<MessageInterpolator> clazz = (Class<MessageInterpolator>)
                         loadClass(messageInterpolatorClass);
                 target.messageInterpolator(newInstance(clazz));
-                log.info("Using {} as message interpolator.", messageInterpolatorClass);
+                log.log(Level.INFO, String.format("Using %s as message interpolator.", messageInterpolatorClass));
             }
         }
     }
@@ -207,7 +206,7 @@ public class ValidationParser {
                 Class<TraversableResolver> clazz = (Class<TraversableResolver>)
                         loadClass(traversableResolverClass);
                 target.traversableResolver(newInstance(clazz));
-                log.info("Using {} as traversable resolver.", traversableResolverClass);
+                log.log(Level.INFO, String.format("Using %s as traversable resolver.", traversableResolverClass));
             }
         }
     }
@@ -233,7 +232,7 @@ public class ValidationParser {
                 Class<ConstraintValidatorFactory> clazz = (Class<ConstraintValidatorFactory>)
                         loadClass(constraintFactoryClass);
                 target.constraintValidatorFactory(newInstance(clazz));
-                log.info("Using {} as constraint factory.", constraintFactoryClass);
+                log.log(Level.INFO, String.format("Using %s as constraint factory.", constraintFactoryClass));
             }
         }
     }
@@ -246,7 +245,7 @@ public class ValidationParser {
                 // Classloader needs a path without a starting /
                 mappingFileName = mappingFileName.substring(1);
             }
-            log.debug("Trying to open input stream for {}", mappingFileName);
+            log.log(Level.FINEST, String.format("Trying to open input stream for %s", mappingFileName));
             InputStream in = null;
             try {
                 in = getInputStream(mappingFileName);

@@ -120,12 +120,6 @@
                     <artifactId>geronimo-validation_1.0_spec</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <version>1.6.1</version>
-                    <scope>runtime</scope>
-                </dependency>
-                <dependency>
                     <groupId>org.testng</groupId>
                     <artifactId>testng</artifactId>
                     <classifier>jdk15</classifier>
@@ -249,24 +243,6 @@
                                         <artifactItem>
                                             <groupId>com.thoughtworks.xstream</groupId>
                                             <artifactId>xstream</artifactId>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.slf4j</groupId>
-                                            <artifactId>slf4j-api</artifactId>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.slf4j</groupId>
-                                            <artifactId>jcl-over-slf4j</artifactId>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.slf4j</groupId>
-                                            <artifactId>slf4j-log4j12</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>

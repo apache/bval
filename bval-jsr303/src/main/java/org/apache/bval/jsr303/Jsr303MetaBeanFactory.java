@@ -26,6 +26,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.validation.Constraint;
 import javax.validation.GroupDefinitionException;
@@ -43,8 +45,6 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Description: process the class annotations for JSR303 constraint validations to build the MetaBean with information
@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 public class Jsr303MetaBeanFactory implements MetaBeanFactory {
     /** Shared log instance */
     // of dubious utility as it's static :/
-    protected static final Logger log = LoggerFactory.getLogger(Jsr303MetaBeanFactory.class);
+    protected static final Logger log = Logger.getLogger(Jsr303MetaBeanFactory.class.getName());
 
     /** {@link ApacheFactoryContext} used */
     protected final ApacheFactoryContext factoryContext;
@@ -278,7 +278,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         if (!containsDefault) {
             throw new GroupDefinitionException("Redefined default group sequence must contain " + beanClass.getName());
         }
-        log.debug("Default group sequence for bean {} is: {}", beanClass.getName(), groupSeq);
+        log.log(Level.FINEST, String.format("Default group sequence for bean %s is: %s", beanClass.getName(), groupSeq));
     }
 
     /**

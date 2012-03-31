@@ -19,8 +19,6 @@
 package org.apache.bval.jsr303;
 
 import org.apache.bval.jsr303.util.SecureActions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintValidator;
 import java.io.IOException;
@@ -28,13 +26,15 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.security.PrivilegedAction;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Description: Provides access to the default constraints/validator implementation classes built into the framework.
  * These are configured in DefaultConstraints.properties.<br/>
  */
 public class ConstraintDefaults {
-    private static final Logger log = LoggerFactory.getLogger(ConstraintDefaults.class);
+    private static final Logger log = Logger.getLogger(ConstraintDefaults.class.getName());
     private static final String DEFAULT_CONSTRAINTS =
           "org/apache/bval/jsr303/DefaultConstraints.properties";
     
@@ -78,11 +78,12 @@ public class ConstraintDefaults {
             try {
                 constraintProperties.load(stream);
             } catch (IOException e) {
-                log.error("cannot load " + resource, e);
+                log.log(Level.SEVERE, String.format("Cannot load %s", resource), e);
             }
         } else {
-            log.warn("cannot find {}", resource);
+            log.log(Level.WARNING, String.format("Cannot find %s", resource));
         }
+
         Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadedConstraints
                 = new HashMap<String, Class<? extends ConstraintValidator<?,?>>[]>();
         for (Map.Entry<Object, Object> entry : constraintProperties.entrySet()) {
@@ -98,7 +99,7 @@ public class ConstraintDefaults {
                               try {
                                   return Class.forName(eachClassName, true, classloader);
                               } catch (ClassNotFoundException e) {
-                                  log.error("Cannot find class " + eachClassName, e);
+                                  log.log(Level.SEVERE, String.format("Cannot find class %s", eachClassName), e);
                                   return null;
                               }
                           }

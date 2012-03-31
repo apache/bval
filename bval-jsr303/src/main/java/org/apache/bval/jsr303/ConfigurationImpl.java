@@ -22,8 +22,6 @@ package org.apache.bval.jsr303;
 import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.ValidationParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.*;
 import javax.validation.spi.BootstrapState;
@@ -31,6 +29,7 @@ import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 import java.io.InputStream;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Description: used to configure apache-validation for jsr303.
@@ -39,7 +38,7 @@ import java.util.*;
  * <br/>
  */
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
-    private static final Logger log = LoggerFactory.getLogger(ConfigurationImpl.class);
+    private static final Logger log = Logger.getLogger(ConfigurationImpl.class.getName());
 
     /**
      * Configured {@link ValidationProvider}

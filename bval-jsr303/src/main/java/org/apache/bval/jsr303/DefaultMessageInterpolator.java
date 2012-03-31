@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,8 +32,6 @@ import javax.validation.MessageInterpolator;
 
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Description: Resource bundle backed message interpolator.
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * This class is threadsafe.<br/>
  */
 public class DefaultMessageInterpolator implements MessageInterpolator {
-    private static final Logger log = LoggerFactory.getLogger(DefaultMessageInterpolator.class);
+    private static final Logger log = Logger.getLogger(DefaultMessageInterpolator.class.getName());
     private static final String DEFAULT_VALIDATION_MESSAGES =
           "org.apache.bval.jsr303.ValidationMessages";
     private static final String USER_VALIDATION_MESSAGES = "ValidationMessages";
@@ -180,9 +180,9 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             );
         }
         if (rb != null) {
-            log.debug("{} found", USER_VALIDATION_MESSAGES);
+            log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
         } else {
-            log.debug("{} not found. Delegating to {}", USER_VALIDATION_MESSAGES, DEFAULT_VALIDATION_MESSAGES);
+        	log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES, DEFAULT_VALIDATION_MESSAGES));
         }
         return rb;
     }
@@ -193,7 +193,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         try {
             rb = ResourceBundle.getBundle(USER_VALIDATION_MESSAGES, locale, classLoader);
         } catch (MissingResourceException e) {
-            log.trace(message);
+            log.fine(message);
         }
         return rb;
     }

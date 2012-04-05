@@ -26,7 +26,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 
-import org.junit.Assert;
+import junit.framework.Assert;
 
 /**
  * Description: <br/>

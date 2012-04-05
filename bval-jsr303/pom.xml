@@ -74,7 +74,7 @@
         </profile>
         <!--
             optional profile using javax.validation/validation-api.jar from RI
-            manually active when property "-Pri" is provided.
+            manually active when property "-Dri" is provided.
         -->
         <profile>
             <id>ri</id>

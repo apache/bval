@@ -37,7 +37,6 @@ import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.MetaBeanManager;
 import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.util.PrivilegedActions;
 import org.apache.bval.xml.XMLMetaBeanBuilder;
 import org.apache.bval.xml.XMLMetaBeanFactory;
 import org.apache.bval.xml.XMLMetaBeanManager;
@@ -230,7 +229,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     private <F extends MetaBeanFactory> F createMetaBeanFactory(final Class<F> cls) {
-        return PrivilegedActions.run(new PrivilegedAction<F>() {
+        return run(new PrivilegedAction<F>() {
 
             public F run() {
                 try {
@@ -294,6 +293,14 @@ public class ApacheFactoryContext implements ValidatorContext {
             return Class.forName(className, true, loader);
         } catch (ClassNotFoundException ex) {
             throw new ValidationException("Unable to load class: " + className, ex);
+        }
+    }
+
+    private static <T> T run(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
         }
     }
 }

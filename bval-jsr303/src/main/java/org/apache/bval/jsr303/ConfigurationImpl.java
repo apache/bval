@@ -28,6 +28,8 @@ import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 import java.io.InputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -239,7 +241,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @throws ValidationException if the ValidatorFactory cannot be built
      */
     public ValidatorFactory buildValidatorFactory() {
-        return SecureActions.run(SecureActions.doPrivBuildValidatorFactory(this));
+        return run(SecureActions.doPrivBuildValidatorFactory(this));
     }
 
     public ValidatorFactory doPrivBuildValidatorFactory() {
@@ -328,4 +330,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         this.providerClass = providerClass;
     }
 
+    private static <T> T run(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
+    }
 }

@@ -176,8 +176,7 @@ public class PrivilegedActions {
      * @return String
      */
     public static final String getProperty(final String name) {
-        //TODO #run
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+        return run(new PrivilegedAction<String>() {
             public String run() {
                 return System.getProperty(name);
             }

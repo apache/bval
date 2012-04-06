@@ -76,7 +76,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private void initJpa() {
         final ClassLoader classLoader = getClassLoader();
         try {
-            PrivilegedActions.getUtilClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
+            PrivilegedActions.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
             log.log(Level.FINEST, String.format("Found %s on classpath.", PERSISTENCE_UTIL_CLASSNAME));
         } catch (Exception e) {
             log.log(Level.FINEST, String.format("Cannot find %s on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME));

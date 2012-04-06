@@ -105,8 +105,8 @@ public class PrivilegedActions {
      * @return Class
      * @exception Exception
      */
-    public static Class<?> getUtilClass(final ClassLoader classLoader, final String className) throws Exception {
-        return PrivilegedActions.run(new PrivilegedExceptionAction<Class<?>>() {
+    public static Class<?> getClass(final ClassLoader classLoader, final String className) throws Exception {
+        return run(new PrivilegedExceptionAction<Class<?>>() {
             public Class<?> run() throws Exception {
                 return ClassUtils.getClass(classLoader, className, true);
             }
@@ -176,6 +176,7 @@ public class PrivilegedActions {
      * @return String
      */
     public static final String getProperty(final String name) {
+        //TODO #run
         return AccessController.doPrivileged(new PrivilegedAction<String>() {
             public String run() {
                 return System.getProperty(name);

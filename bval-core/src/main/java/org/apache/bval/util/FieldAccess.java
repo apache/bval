@@ -19,6 +19,7 @@ package org.apache.bval.util;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
@@ -34,11 +35,11 @@ public class FieldAccess extends AccessStrategy {
      */
     public FieldAccess(final Field field) {
         this.field = field;
-        if(!field.isAccessible()) {
-            PrivilegedActions.run( new PrivilegedAction<Object>() {
-                public Object run() {
+        if (!field.isAccessible()) {
+            run(new PrivilegedAction<Void>() {
+                public Void run() {
                     field.setAccessible(true);
-                    return (Object) null;
+                    return null;
                 }
             });
         }
@@ -100,5 +101,13 @@ public class FieldAccess extends AccessStrategy {
      */
     public int hashCode() {
         return field.hashCode();
+    }
+
+    private static <T> T run(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 }

@@ -18,12 +18,11 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.jsr303.util.SecureActions;
-
 import javax.validation.ConstraintValidator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.logging.Level;
@@ -94,7 +93,7 @@ public class ConstraintDefaults {
                 final String eachClassName = tokens.nextToken();
 
                 Class<?> constraintValidatorClass =
-                      SecureActions.run(new PrivilegedAction<Class<?>>() {
+                      run(new PrivilegedAction<Class<?>>() {
                           public Class<?> run() {
                               try {
                                   return Class.forName(eachClassName, true, classloader);
@@ -120,5 +119,13 @@ public class ConstraintDefaults {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         if (classloader == null) classloader = getClass().getClassLoader();
         return classloader;
+    }
+
+    private static <T> T run(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 }

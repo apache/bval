@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
@@ -47,10 +48,10 @@ public class MethodAccess extends AccessStrategy {
         this.method = method;
         this.propertyName = propertyName;
         if (!method.isAccessible()) {
-            PrivilegedActions.run( new PrivilegedAction<Object>() {
-                public Object run() {
+            run( new PrivilegedAction<Void>() {
+                public Void run() {
                     method.setAccessible(true);
-                    return (Object) null;
+                    return null;
                 }
             });
         }
@@ -142,5 +143,13 @@ public class MethodAccess extends AccessStrategy {
      */
     public int hashCode() {
         return method.hashCode();
+    }
+
+    private static <T> T run(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
+        }
     }
 }

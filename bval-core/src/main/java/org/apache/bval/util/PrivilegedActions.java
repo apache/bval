@@ -77,7 +77,8 @@ public class PrivilegedActions {
      * @param action - the action to run
      * @return result of running the action
      */
-    public static <T> T run(PrivilegedAction<T> action) {
+    // should not be called by just anyone; do not increase access
+    private static <T> T run(PrivilegedAction<T> action) {
         if (System.getSecurityManager() != null) {
             return AccessController.doPrivileged(action);
         } else {
@@ -91,7 +92,8 @@ public class PrivilegedActions {
      * @param action - the action to run
      * @return result of running the action
      */
-    public static <T> T run(final PrivilegedExceptionAction<T> action) throws PrivilegedActionException, Exception {
+    // should not be called by just anyone; do not increase access
+    private static <T> T run(final PrivilegedExceptionAction<T> action) throws PrivilegedActionException, Exception {
         if (System.getSecurityManager() != null) {
             return AccessController.doPrivileged(action);
         } else {

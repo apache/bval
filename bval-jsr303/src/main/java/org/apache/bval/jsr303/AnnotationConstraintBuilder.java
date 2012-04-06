@@ -21,6 +21,7 @@ package org.apache.bval.jsr303;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +41,6 @@ import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
 
 import org.apache.bval.jsr303.groups.GroupsComputer;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
 
@@ -77,7 +77,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     /** build attributes, payload, groups from 'annotation' */
     private void buildFromAnnotation() {
         if (constraintValidation.getAnnotation() != null) {
-            SecureActions.run(new PrivilegedAction<Object>() {
+            run(new PrivilegedAction<Object>() {
                 public Object run() {
                     for (Method method : constraintValidation.getAnnotation().annotationType().getDeclaredMethods()) {
                         // groups + payload must also appear in attributes (also
@@ -263,6 +263,14 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             }
             Annotation newAnnot = apb.createAnnotation();
             ((ConstraintValidation<Annotation>) composite).setAnnotation(newAnnot);
+        }
+    }
+
+    private static <T> T run(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged(action);
+        } else {
+            return action.run();
         }
     }
 }

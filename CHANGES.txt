@@ -64,6 +64,34 @@ How do I Contribute?
   * Bugs and other issues can be posted on the project JIRA.
 
 
+Release Notes - BVal - Version 0.4
+==================================
+
+Bug
+---
+    * [BVAL-54] - Handle Java security policies and managers
+    * [BVAL-63] - use java.util.ServiceLoader in DefaultValidationProviderResolver#getValidationProviders()
+    * [BVAL-89] - Application specific constraints and artifacts not visible by provider in OSGI-based app server
+    * [BVAL-90] - Inconsistent fraction handling of @Digits when target is a BigDecimal
+    * [BVAL-91] - Security hole in org.apache.bval.util.MethodAccess.get()
+    * [BVAL-92] - Security holes in org.apache.bval.util.PrivilegedActions
+    * [BVAL-94] - Missing SVN EOL properties
+    * [BVAL-95] - Beanvalidation with Generic-DataTypes
+    * [BVAL-96] - Use correct encoding for localization messages
+    * [BVAL-97] - More than one META-INF/validation.xml in tomcat webapp
+    * [BVAL-100] - Java2 Security AccessControlException after moving to use common-lang3
+    * [BVAL-104] - german validation messages properties are broken
+
+Improvement
+-----------
+    * [BVAL-68] - Use FindBugs to reduce coding errors
+
+Task
+----
+    * [BVAL-99] - upgrade to apache parent pom 10
+    * [BVAL-103] - switch BVal from slf4j to java.util.logging
+
+
 Release Notes for 0.3-incubating
 ================================
 

@@ -43,7 +43,7 @@
 
     <inceptionYear>2010</inceptionYear>
 
-    <url>http://incubator.apache.org/bval/</url>
+    <url>http://bval.apache.org/</url>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/bval/trunk</connection>
@@ -54,26 +54,26 @@
     <mailingLists>
         <mailingList>
             <name>BVal User List</name>
-            <subscribe>bval-user-subscribe@incubator.apache.org</subscribe>
-            <unsubscribe>bval-user-unsubscribe@incubator.apache.org</unsubscribe>
-            <post>mailto:bval-user@incubator.apache.org</post>
-            <archive>http://mail-archives.apache.org/mod_mbox/incubator-bval-user/</archive>
+            <subscribe>user-subscribe@bval.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@bval.apache.org</unsubscribe>
+            <post>mailto:user@bval.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/bval-user/</archive>
         </mailingList>
 
         <mailingList>
             <name>BVal Developer List</name>
-            <subscribe>bval-dev-subscribe@incubator.apache.org</subscribe>
-            <unsubscribe>bval-dev-unsubscribe@incubator.apache.org</unsubscribe>
-            <post>mailto:bval-dev@incubator.apache.org</post>
-            <archive>http://mail-archives.apache.org/mod_mbox/incubator-bval-dev/</archive>
+            <subscribe>dev-subscribe@bval.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@bval.apache.org</unsubscribe>
+            <post>mailto:dev@bval.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/bval-dev/</archive>
         </mailingList>
 
         <mailingList>
             <name>BVal Commits List</name>
-            <subscribe>bval-commits-subscribe@incubator.apache.org</subscribe>
-            <unsubscribe>bval-commits-unsubscribe@incubator.apache.org</unsubscribe>
-            <post>mailto:bval-commits@incubator.apache.org</post>
-            <archive>http://mail-archives.apache.org/mod_mbox/incubator-bval-commits/</archive>
+            <subscribe>commits-subscribe@bval.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@bval.apache.org</unsubscribe>
+            <post>mailto:commits@bval.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/bval-commits/</archive>
         </mailingList>
     </mailingLists>
 
@@ -448,8 +448,6 @@
                             <configuration>
                                 <resourceBundles>
                                     <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                                    <!-- Include the Incubating disclaimer -->
-                                    <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
                                 </resourceBundles>
                             </configuration>
                         </execution>

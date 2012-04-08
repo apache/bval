@@ -83,11 +83,28 @@
 
     <developers>
         <developer>
+            <id>allee8285</id>
+            <name>Albert Lee</name>
+            <email>allee8285@apache.org</email>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
             <id>carlosvara</id>
             <name>Carlos Vara</name>
             <email>carlosvara@apache.org</email>
             <roles>
-                <role>Committer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>djencks</id>
+            <name>David Jencks</name>
+            <email>djencks@apache.org</email>
+            <organization>IBM</organization>
+            <roles>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -96,9 +113,7 @@
             <email>dwoods@apache.org</email>
             <organization>IBM</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>IPMC</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -107,8 +122,7 @@
             <email>gpetracek@apache.org</email>
             <organization>IRIAN Solutions GmbH</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -117,8 +131,7 @@
             <email>jrbauer@apache.org</email>
             <organization>IBM</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -127,11 +140,7 @@
             <email>kevan@apache.org</email>
             <organization>IBM</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Mentor</role>
-                <role>Champion</role>
-                <role>IPMC</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -140,10 +149,7 @@
             <email>lresende@apache.org</email>
             <organization>IBM</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Mentor</role>
-                <role>IPMC</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -151,8 +157,7 @@
             <name>Mark Struberg</name>
             <email>struberg@apache.org</email>
             <roles>
-                <role>PPMC Member</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -160,20 +165,16 @@
             <name>Matt Benson</name>
             <email>mbenson@apache.org</email>
             <roles>
-                <role>Committer</role>
-                <role>IPMC</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
             <id>matzew</id>
             <name>Matthias Wessendorf</name>
             <email>matzew@apache.org</email>
-            <organization>Oracle</organization>
+            <organization>Kaazing</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Mentor</role>
-                <role>IPMC</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -182,20 +183,7 @@
             <email>mnour@apache.org</email>
             <organization>Thebe Technology</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>niallp</id>
-            <name>Niall Pemberton</name>
-            <email>niallp@apache.org</email>
-            <organization>EMC</organization>
-            <roles>
-                <role>PPMC Member</role>
-                <role>Mentor</role>
-                <role>IPMC</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -204,18 +192,15 @@
             <email>romanstumm@apache.org</email>
             <organization>Viaboxx GmbH</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
             <id>simonetripodi</id>
             <name>Simone Tripodi</name>
             <email>simonetripodi@apache.org</email>
-            <organization>Sourcesense Srl</organization>
             <roles>
-                <role>PPMC Member</role>
-                <role>Committer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
     </developers>

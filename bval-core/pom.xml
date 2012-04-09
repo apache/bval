@@ -145,7 +145,7 @@ build.timestamp=${timestamp}
         								</goals>
         							</pluginExecutionFilter>
         							<action>
-        								<ignore></ignore>
+        								<ignore />
         							</action>
         						</pluginExecution>
         					</pluginExecutions>

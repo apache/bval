@@ -26,14 +26,14 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>10</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
     <name>Apache BVal :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
 
     <description>Apache BVal parent pom</description>
 

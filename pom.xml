@@ -215,12 +215,9 @@
     <reporting>
         <plugins>
             <plugin>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.1.1</version>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8</version>
                 <configuration>
                     <show>package</show>
                     <quiet>true</quiet>

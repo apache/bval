@@ -385,41 +385,22 @@
                         </archive>
                     </configuration>
                 </plugin>
-                <!--plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
                         <encoding>${project.build.sourceEncoding}</encoding>
+                        <additionalparam>${javadoc.additionalparam}</additionalparam>
+                        <aggregate>true</aggregate>
+                        <subpackages>org.apache</subpackages>
+                        <verbose>false</verbose>
+                        <maxmemory>512m</maxmemory>
+                        <links>
+                            <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+                            <link>http://java.sun.com/javaee/6/docs/api</link>
+                        </links>
                     </configuration>
-                    <executions>
-                        <execution>
-                            <id>attach-javadoc</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <phase>process-classes</phase>
-                            <goals>
-                                <goal>javadoc</goal>
-                            </goals>
-                            <configuration>
-                                <additionalparam>
-                                    ${javadoc.additionalparam}
-                                </additionalparam>
-                                <aggregate>true</aggregate>
-                                <subpackages>org.apache</subpackages>
-                                <verbose>false</verbose>
-                                <maxmemory>512m</maxmemory>
-                                <links>
-                                    <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-                                    <link>http://java.sun.com/javaee/6/docs/api</link>
-                                </links>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin-->
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-remote-resources-plugin</artifactId>
@@ -520,12 +501,15 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
+                    <!-- avoid 2.2.2 due to http://jira.codehaus.org/browse/MRELEASE-742 -->
+                    <version>2.2.1</version>
                     <configuration>
                         <useReleaseProfile>false</useReleaseProfile>
                         <goals>deploy site site-deploy</goals>
                         <arguments>-Papache-release</arguments>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>
+                        <tagNameFormat>@{project.version}</tagNameFormat>
                     </configuration>
                 </plugin>
                 <plugin>

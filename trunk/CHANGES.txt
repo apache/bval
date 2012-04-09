@@ -1,0 +1,214 @@
+Apache BVal (incubating) - CHANGES.txt
+Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
+--------------------------------------------------------------------------------
+
+Content
+=======
+   * Overview
+   * Disclaimer
+   * Prerequisites
+   * Documentation
+   * Getting Involved
+   * Release Notes
+
+
+Overview
+========
+This is an implementation of JSR 303 (Bean Validation), a specification of the
+Java API for Javabean validation in Java EE and Java SE.
+The technical objective is to provide a class level constraint declaration and
+validation facility for the Java application developer, as well as a constraint
+metadata repository and query API.
+
+This implementation is based on the validation framework of agimatec GmbH,
+which was contributed to the ASF under a software grant.
+
+
+Disclaimer
+==========
+Apache BVal is an effort undergoing incubation at The Apache Software
+Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required
+of all newly accepted projects until a further review indicates that the
+infrastructure, communications, and decision making process have stabilized in a
+manner consistent with other successful ASF projects. While incubation status is
+not necessarily a reflection of the completeness or stability of the code, it
+does indicate that the project has yet to be fully endorsed by the ASF.
+
+
+Prerequisites
+=============
+You need a platform that supports Java SE 5 or later.
+
+
+Documentation
+=============
+Please refer to the project page at:
+    http://incubator.apache.org/bval/
+
+
+Getting Involved
+================
+The Apache BVal project is being built by the open source community
+for the open source community - we welcome your input and contributions!
+
+What are we looking for?
+  * Source code and fixes contributions
+  * Documentation assistance
+  * Project and feature suggestions
+  * Integration and testing with other projects
+  * Detailed and constructive feedback
+  * Articles and whitepapers
+
+How do I Contribute?
+  * To discuss BVal topics, check out the mailing lists.
+  * Bugs and other issues can be posted on the project JIRA.
+
+
+Release Notes - BVal - Version 0.4
+==================================
+
+Bug
+---
+    * [BVAL-54] - Handle Java security policies and managers
+    * [BVAL-63] - use java.util.ServiceLoader in DefaultValidationProviderResolver#getValidationProviders()
+    * [BVAL-89] - Application specific constraints and artifacts not visible by provider in OSGI-based app server
+    * [BVAL-90] - Inconsistent fraction handling of @Digits when target is a BigDecimal
+    * [BVAL-91] - Security hole in org.apache.bval.util.MethodAccess.get()
+    * [BVAL-92] - Security holes in org.apache.bval.util.PrivilegedActions
+    * [BVAL-94] - Missing SVN EOL properties
+    * [BVAL-95] - Beanvalidation with Generic-DataTypes
+    * [BVAL-96] - Use correct encoding for localization messages
+    * [BVAL-97] - More than one META-INF/validation.xml in tomcat webapp
+    * [BVAL-100] - Java2 Security AccessControlException after moving to use common-lang3
+    * [BVAL-104] - german validation messages properties are broken
+
+Improvement
+-----------
+    * [BVAL-68] - Use FindBugs to reduce coding errors
+
+Task
+----
+    * [BVAL-99] - upgrade to apache parent pom 10
+    * [BVAL-103] - switch BVal from slf4j to java.util.logging
+
+
+Release Notes for 0.3-incubating
+================================
+
+Bug
+---
+    * [BVAL-84] - CNFEX org.slf4j.impl.StaticLoggerBinder building xstream and guice
+    * [BVAL-86] - Missing DecimalMax/DecimalMin constraint messages in ValidationMessages.properties
+    * [BVAL-87] - Java 2 security violations in ClassValidator.validate
+    * [BVAL-88] - Cascaded validation adds a constraint violation for valid child property
+
+Improvement
+-----------
+    * [BVAL-60] - Use SLF4J API for logging
+    * [BVAL-85] - bval-core has no dependency on slf4j-jcl*
+
+
+Release Notes for 0.2-incubating
+================================
+
+Bug
+---
+    * [BVAL-47] - Correctly follow GroupSequence definitions when validating
+    * [BVAL-70] - Remove @Override annotations from methods implementing interfaces
+    * [BVAL-71] - Compile errors with Java SE 5
+    * [BVAL-72] - NPE when doing methodvalidation
+    * [BVAL-77] - Recent changes made the bval-xstream module required, instead of optional
+
+Improvement
+-----------
+    * [BVAL-59] - Write or reuse an scm-plugin mojo to capture the svn revision
+    * [BVAL-69] - make dependency to com.thoughtworks.xstream of bval-core optional or obsolete
+    * [BVAL-73] - Alternative way of addressing code reuse issue between the validators
+    * [BVAL-74] - Remove redundant method call from ClassValidator.validateProperty()
+    * [BVAL-75] - javadocs, compiler (generics) warnings, etc.
+    * [BVAL-76] - Correct spelling error in API:  ConstraintValidationListener.getConstaintViolations()
+    * [BVAL-78] - Avoid unsafe casting and object swapping when processing @ReportAsSingleViolation composed constraints
+    * [BVAL-79] - email validation can easily work for any CharSequence rather than String only
+
+
+Release Notes for 0.1-incubating
+================================
+
+Sub-task
+--------
+    * [BVAL-3] - Move all copyrights to NOTICE files
+    * [BVAL-4] - Rename java packages
+    * [BVAL-5] - Update builds for incubator
+    * [BVAL-7] - Setup initial structure/navigation/content in the wiki
+    * [BVAL-8] - Setup confluence autoexport template
+    * [BVAL-9] - Setup rsync cron job to copy autoexport content over to www staging area
+
+Bug
+---
+    * [BVAL-11] - After moved java packages tests don't work
+    * [BVAL-13] - ConstraintViolationImpl must be Serialziable according to JSR303 spec
+    * [BVAL-15] - @Min and @Max fail with very high values of long
+    * [BVAL-17] - PathImpl keeps a null-named first node on unindexed property paths
+    * [BVAL-18] - DefaultMessageInterpolator substitutes unexistant variables with the whole message
+    * [BVAL-19] - Several changes to pass 12 more tests
+    * [BVAL-20] - When building a MetaBean, the full tree of subclasses/interfaces must be considered
+    * [BVAL-21] - ConstraintViolations set should not have duplicates and should store ElementType and use it in equals()
+    * [BVAL-22] - Incorrect output or IOBException when interpolating messages when annotation values have $ or \
+    * [BVAL-23] - Circular dependency check produces false positives
+    * [BVAL-24] - IllegalArgumentException should be thrown when calling Validator.getConstraintsForClass() with a null class
+    * [BVAL-26] - IllegalAccessException is thrown when accesing annotation values
+    * [BVAL-27] - IllegalArgumentException should be thrown when calling BeanDescriptor.getConstraintsForProperty(null)
+    * [BVAL-28] - Property path for nodes inside iterables that do not implement List should not contain the index
+    * [BVAL-29] - Defer node creation in implementation of ConstraintViolationBuilder API
+    * [BVAL-30] - Groups from the main constraint annotation must be inherited by the composing annotations
+    * [BVAL-31] - A ConstraintDefinitionException should be thrown when the resolved validator is not compatible with the annotation type
+    * [BVAL-32] - Annotations associated with composited contraints must reflect inherited groups
+    * [BVAL-33] - Payload value must also be inherited in compositing constraints
+    * [BVAL-34] - Parameter for @Pattern message should be {regexp}
+    * [BVAL-35] - Improved support of @OverridesAttribute
+    * [BVAL-36] - Improve @ReportAsSingleValidation implementation
+    * [BVAL-37] - Ensure constraint definitions are valid
+    * [BVAL-38] - Groups and payload values must be part of the ConstraintDescriptor attributes
+    * [BVAL-39] - Implicit groups should be correctly set in constraint descriptors
+    * [BVAL-41] - Package bval artifacts as bundles
+    * [BVAL-42] - Stop group sequence validation when at least 1 violation is already reported
+    * [BVAL-43] - GroupDefinitionException must be thrown on cyclic group detection
+    * [BVAL-45] - ValidationException must be thrown when validating a bean with an annotated method which isn't a valid getter
+    * [BVAL-48] - jUnit failure during build on Windows - trunk rev 945800
+    * [BVAL-49] - ValidationException must be thrown in case ConstraintValidatorFactory returns null for a valid getInstance call
+    * [BVAL-50] - Fix TraversableResolver usage
+    * [BVAL-51] - Several fixes in ElementDescriptor and subinterfaces impls
+    * [BVAL-53] - Several fixes for XML metadata processing impl
+    * [BVAL-55] - Fix remaining TCK tests
+    * [BVAL-58] - Clean up build before release
+    * [BVAL-62] - add missing ASL headers
+    * [BVAL-64] - org.apache.bval.bundle needs a custom NOTICE file
+    * [BVAL-65] - Incubator required DISCLAIMER missing from jars
+    * [BVAL-67] - Resolve NOTICE file issues fond during RC2 vote
+
+Improvement
+-----------
+    * [BVAL-12] - Current implementation of method validation (appendix C of JSR-303) doesn't work with some constraints
+    * [BVAL-16] - Maven project to launch TCK suite
+    * [BVAL-44] - Move optional JSON code out of bval-core to a bval-json module
+    * [BVAL-46] - Create project source assembly
+    * [BVAL-52] - ValidationParser.getInputStream() should call getResourceAsStream() for TCK suite to work
+    * [BVAL-57] - Create a single apache-bval jar/bundle
+    * [BVAL-66] - Method validation parameter processing problems
+
+New Feature
+-----------
+    * [BVAL-40] - Provide a way to display the BVal version being used
+    * [BVAL-56] - make bval work with geronimo spec osgi service locator
+
+Task
+----
+    * [BVAL-2] - Initial codebase donation tasks
+    * [BVAL-6] - Setup project website
+
+Test
+----
+    * [BVAL-10] - Setup continuous builds
+
+--------------------------------------------------------------------------------
+

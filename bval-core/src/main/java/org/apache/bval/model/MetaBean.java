@@ -212,7 +212,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * {@inheritDoc}
      */
     @Override
-    protected <T extends FeaturesCapable> void copyInto(T target) {
+    protected void copyInto(FeaturesCapable target) {
         super.copyInto(target);
         final MetaBean copy = (MetaBean) target;
         if (properties != null) {

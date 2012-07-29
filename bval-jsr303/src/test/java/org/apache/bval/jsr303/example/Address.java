@@ -84,7 +84,7 @@ public class Address implements ZipCodeCityCarrier {
     }
 
     /**
-     * Check conherence on the overall object
+     * Check coherence on the overall object
      * Needs basic checking to be green first
      */
     public interface HighLevelCoherence {

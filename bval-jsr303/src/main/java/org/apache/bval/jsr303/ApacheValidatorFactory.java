@@ -18,20 +18,31 @@
  */
 package org.apache.bval.jsr303;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.validation.ConstraintValidatorFactory;
+import javax.validation.MessageInterpolator;
+import javax.validation.TraversableResolver;
+import javax.validation.Validation;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.bootstrap.ProviderSpecificBootstrap;
+import javax.validation.spi.ConfigurationState;
+
 import org.apache.bval.jsr303.xml.AnnotationIgnores;
 import org.apache.bval.jsr303.xml.MetaConstraint;
 import org.apache.bval.jsr303.xml.ValidationMappingParser;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.commons.lang3.ClassUtils;
-
-import javax.validation.*;
-import javax.validation.bootstrap.ProviderSpecificBootstrap;
-import javax.validation.spi.ConfigurationState;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.*;
 
 /**
  * Description: a factory is a complete configurated object that can create

@@ -304,7 +304,7 @@ public final class AnnotationProcessor {
 
             @SuppressWarnings("unchecked")
             final ConstraintValidator<A, ? super T> validator =
-                (ConstraintValidator<A, ? super T>) factoryContext.getFactory().getConstraintValidatorFactory()
+                (ConstraintValidator<A, ? super T>) factoryContext.getConstraintValidatorFactory()
                     .getInstance(validatorTypes.get(assignableTypes.get(0)));
             if (validator == null) {
                 throw new ValidationException("Factory returned null validator for: "

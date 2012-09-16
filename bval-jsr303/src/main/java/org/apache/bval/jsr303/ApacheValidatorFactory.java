@@ -35,7 +35,6 @@ import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import javax.validation.bootstrap.ProviderSpecificBootstrap;
 import javax.validation.spi.ConfigurationState;
 
 import org.apache.bval.jsr303.xml.AnnotationIgnores;
@@ -65,6 +64,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final AnnotationIgnores annotationIgnores = new AnnotationIgnores();
     private final ConstraintCached constraintsCache = new ConstraintCached();
     private final Map<Class<?>, Class<?>[]> defaultSequences;
+
     /**
      * access strategies for properties with cascade validation @Valid support
      */
@@ -78,11 +78,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public static synchronized ApacheValidatorFactory getDefault() {
         if (DEFAULT_FACTORY == null) {
-            ProviderSpecificBootstrap<ApacheValidatorConfiguration> provider =
-                    Validation.byProvider(ApacheValidationProvider.class);
-            ApacheValidatorConfiguration configuration = provider.configure();
             DEFAULT_FACTORY =
-                    (ApacheValidatorFactory) configuration.buildValidatorFactory();
+                Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory()
+                    .unwrap(ApacheValidatorFactory.class);
         }
         return DEFAULT_FACTORY;
     }

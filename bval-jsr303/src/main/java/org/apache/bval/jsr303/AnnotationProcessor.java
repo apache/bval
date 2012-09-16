@@ -51,8 +51,6 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * Description: implements uniform handling of JSR303 {@link Constraint}
  * annotations, including composed constraints and the resolution of
  * {@link ConstraintValidator} implementations.
- * 
- * @version $Rev: 996992 $ $Date: 2010-09-14 12:05:40 -0500 (Tue, 14 Sep 2010) $
  */
 public final class AnnotationProcessor {
     /** {@link ApacheFactoryContext} used */

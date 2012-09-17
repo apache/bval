@@ -49,7 +49,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
      * @return boolean suitability
      */
     public boolean isSuitable(Class<? extends Configuration<?>> builderClass) {
-        return ApacheValidatorConfiguration.class == builderClass;
+        return ApacheValidatorConfiguration.class.equals(builderClass);
     }
 
     /**
@@ -72,20 +72,17 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
      * @throws javax.validation.ValidationException
      *             if the ValidatorFactory cannot be built
      */
-    @SuppressWarnings("unchecked")
     public ValidatorFactory buildValidatorFactory(final ConfigurationState configuration) {
         final Class<? extends ValidatorFactory> validatorFactoryClass;
         try {
             String validatorFactoryClassname =
                 configuration.getProperties().get(ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME);
 
-            if (validatorFactoryClassname == null)
+            if (validatorFactoryClassname == null) {
                 validatorFactoryClass = ApacheValidatorFactory.class;
-            else
-            {
-                validatorFactoryClass
-                  = (Class<? extends ValidatorFactory>) ClassUtils.getClass(validatorFactoryClassname);
-                validatorFactoryClass.asSubclass(ValidatorFactory.class);
+            } else {
+                validatorFactoryClass =
+                    ClassUtils.getClass(validatorFactoryClassname).asSubclass(ValidatorFactory.class);
             }
         } catch (ValidationException ex) {
             throw ex;
@@ -103,28 +100,21 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
         // because the classloader of ApacheValidationProvider will always
         // be an ancestor of the loader of validatorFactoryClass.
         return (System.getSecurityManager() == null)
-            ? instantiateValidatorFactory(validatorFactoryClass, configuration)
-            : AccessController.doPrivileged(new PrivilegedAction<ValidatorFactory>() {
-                  public ValidatorFactory run() {
-                      return instantiateValidatorFactory(validatorFactoryClass, configuration);
-                  }
-              });
+            ? instantiateValidatorFactory(validatorFactoryClass, configuration) : AccessController
+                .doPrivileged(new PrivilegedAction<ValidatorFactory>() {
+                    public ValidatorFactory run() {
+                        return instantiateValidatorFactory(validatorFactoryClass, configuration);
+                    }
+                });
     }
 
-
-
     private static ValidatorFactory instantiateValidatorFactory(
-        final Class<? extends ValidatorFactory> validatorFactoryClass,
-        final ConfigurationState                configuration
-    ) {
-      try
-      {
-          return validatorFactoryClass.getConstructor(ConfigurationState.class).newInstance(configuration);
-      }
-      catch (final Exception ex)
-      {
-          throw new ValidationException("Cannot instantiate : " + validatorFactoryClass, ex);
-      }
+        final Class<? extends ValidatorFactory> validatorFactoryClass, final ConfigurationState configuration) {
+        try {
+            return validatorFactoryClass.getConstructor(ConfigurationState.class).newInstance(configuration);
+        } catch (final Exception ex) {
+            throw new ValidationException("Cannot instantiate : " + validatorFactoryClass, ex);
+        }
     }
 
 }

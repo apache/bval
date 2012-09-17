@@ -263,7 +263,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /** Check whether a validation.xml file exists and parses it with JAXB */
     private void parseValidationXml() {
         if (isIgnoreXmlConfiguration()) {
-            log.info("ignoreXmlConfiguration == true");
+            log.config("ignoreXmlConfiguration == true");
         } else {
             new ValidationParser(getProperties().get(Properties.VALIDATION_XML_PATH))
                   .processValidationConfig(this);

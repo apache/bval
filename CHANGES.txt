@@ -1,4 +1,4 @@
-Apache BVal (incubating) - CHANGES.txt
+Apache BVal - CHANGES.txt
 Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 --------------------------------------------------------------------------------
 
@@ -20,19 +20,8 @@ The technical objective is to provide a class level constraint declaration and
 validation facility for the Java application developer, as well as a constraint
 metadata repository and query API.
 
-This implementation is based on the validation framework of agimatec GmbH,
+This implementation is based on the validation framework of Agimatec GmbH,
 which was contributed to the ASF under a software grant.
-
-
-Disclaimer
-==========
-Apache BVal is an effort undergoing incubation at The Apache Software
-Foundation (ASF), sponsored by the Apache Incubator PMC. Incubation is required
-of all newly accepted projects until a further review indicates that the
-infrastructure, communications, and decision making process have stabilized in a
-manner consistent with other successful ASF projects. While incubation status is
-not necessarily a reflection of the completeness or stability of the code, it
-does indicate that the project has yet to be fully endorsed by the ASF.
 
 
 Prerequisites
@@ -43,7 +32,7 @@ You need a platform that supports Java SE 5 or later.
 Documentation
 =============
 Please refer to the project page at:
-    http://incubator.apache.org/bval/
+    http://bval.apache.org/
 
 
 Getting Involved

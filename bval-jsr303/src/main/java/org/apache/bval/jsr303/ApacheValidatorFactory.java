@@ -41,6 +41,7 @@ import org.apache.bval.jsr303.xml.AnnotationIgnores;
 import org.apache.bval.jsr303.xml.MetaConstraint;
 import org.apache.bval.jsr303.xml.ValidationMappingParser;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 
 /**
@@ -132,16 +133,6 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Get the default {@link MessageInterpolator} used by this
-     * {@link ApacheValidatorFactory}.
-     *
-     * @return {@link MessageInterpolator}
-     */
-    protected MessageInterpolator getDefaultMessageInterpolator() {
-        return messageResolver;
-    }
-
-    /**
      * Shortcut method to create a new Validator instance with factory's
      * settings
      *
@@ -185,8 +176,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * {@inheritDoc}
      */
     public MessageInterpolator getMessageInterpolator() {
-        return ((messageResolver != null) ? messageResolver
-                : getDefaultMessageInterpolator());
+        return messageResolver;
     }
 
     /**
@@ -233,31 +223,32 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @throws ValidationException if the provider does not support the call.
      */
     public <T> T unwrap(final Class<T> type) {
-        // FIXME 2011-03-27 jw:
-        // This code is unsecure.
-        // It should allow only a fixed set of classes.
-        // Can't fix this because don't know which classes this method should support.
-
         if (type.isInstance(this)) {
             @SuppressWarnings("unchecked")
             T result = (T) this;
             return result;
-        } else if (!(type.isInterface() || Modifier.isAbstract(type
+        }
+
+        // FIXME 2011-03-27 jw:
+        // This code is unsecure.
+        // It should allow only a fixed set of classes.
+        // Can't fix this because don't know which classes this method should support.
+        
+        if (!(type.isInterface() || Modifier.isAbstract(type
                 .getModifiers()))) {
             return newInstance(type);
-        } else {
-            try {
-                Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
-                if (type.isAssignableFrom(cls)) {
-                    @SuppressWarnings("unchecked")
-                    T result = (T) newInstance(cls);
-                    return result;
-                }
-            } catch (ClassNotFoundException e) {
-                // do nothing
-            }
-            throw new ValidationException("Type " + type + " not supported");
         }
+        try {
+            Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+            if (type.isAssignableFrom(cls)) {
+                @SuppressWarnings("unchecked")
+                T result = (T) newInstance(cls);
+                return result;
+            }
+        } catch (ClassNotFoundException e) {
+            // do nothing
+        }
+        throw new ValidationException("Type " + type + " not supported");
     }
 
     private <T> T newInstance(final Class<T> cls) {
@@ -308,16 +299,15 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public void addMetaConstraint(Class<?> beanClass,
                                   MetaConstraint<?, ?> metaConstraint) {
-        List<MetaConstraint<?, ? extends Annotation>> slot =
-                constraintMap.get(beanClass);
-        if (slot != null) {
-            slot.add(metaConstraint);
-        } else {
-            List<MetaConstraint<?, ? extends Annotation>> constraintList =
-                    new ArrayList<MetaConstraint<?, ? extends Annotation>>();
-            constraintList.add(metaConstraint);
-            constraintMap.put(beanClass, constraintList);
+        List<MetaConstraint<?, ? extends Annotation>> slot;
+        synchronized (constraintMap) {
+            slot = constraintMap.get(beanClass);
+            if (slot == null) {
+                slot = new ArrayList<MetaConstraint<?, ? extends Annotation>>();
+                constraintMap.put(beanClass, slot);
+            }
         }
+        slot.add(metaConstraint);
     }
 
     /**
@@ -328,14 +318,15 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *            defining the property to validate
      */
     public void addValid(Class<?> beanClass, AccessStrategy accessStrategy) {
-        List<AccessStrategy> slot = validAccesses.get(beanClass);
-        if (slot != null) {
-            slot.add(accessStrategy);
-        } else {
-            List<AccessStrategy> tmpList = new ArrayList<AccessStrategy>();
-            tmpList.add(accessStrategy);
-            validAccesses.put(beanClass, tmpList);
+        List<AccessStrategy> slot;
+        synchronized (validAccesses) {
+            slot = validAccesses.get(beanClass);
+            if (slot == null) {
+                slot = new ArrayList<AccessStrategy>();
+                validAccesses.put(beanClass, slot);
+            }
         }
+        slot.add(accessStrategy);
     }
 
     /**
@@ -344,8 +335,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @param beanClass
      * @param groupSequence
      */
-    public void addDefaultSequence(Class<?> beanClass, Class<?>[] groupSequence) {
-        defaultSequences.put(beanClass, groupSequence);
+    public void addDefaultSequence(Class<?> beanClass, Class<?>... groupSequence) {
+        defaultSequences.put(beanClass, safeArray(groupSequence));
     }
 
     /**
@@ -356,17 +347,16 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return List of {@link MetaConstraint}s applicable to
      *         <code>beanClass</code>
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> List<MetaConstraint<T, ? extends Annotation>> getMetaConstraints(
             Class<T> beanClass) {
-        List<MetaConstraint<?, ? extends Annotation>> slot =
-                constraintMap.get(beanClass);
-        if (slot != null) {
-            // noinspection RedundantCast
-            return (List) slot;
-        } else {
-            return Collections.EMPTY_LIST;
+        final List<MetaConstraint<?, ? extends Annotation>> slot = constraintMap.get(beanClass);
+        if (slot == null) {
+            return Collections.emptyList();
         }
+        // noinspection RedundantCast
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        final List<MetaConstraint<T, ? extends Annotation>> result = (List) slot;
+        return Collections.unmodifiableList(result);
     }
 
     /**
@@ -378,12 +368,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return {@link List} of {@link AccessStrategy}
      */
     public List<AccessStrategy> getValidAccesses(Class<?> beanClass) {
-        List<AccessStrategy> slot = validAccesses.get(beanClass);
-        if (slot != null) {
-            return slot;
-        } else {
-            return Collections.<AccessStrategy>emptyList();
-        }
+        final List<AccessStrategy> slot = validAccesses.get(beanClass);
+        return slot == null ? Collections.<AccessStrategy> emptyList() : Collections.unmodifiableList(slot);
     }
 
     /**
@@ -393,7 +379,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return group Class array
      */
     public Class<?>[] getDefaultSequence(Class<?> beanClass) {
-        return defaultSequences.get(beanClass);
+        return safeArray(defaultSequences.get(beanClass));
     }
 
+    private static Class<?>[] safeArray(Class<?>... array) {
+        return ArrayUtils.isEmpty(array) ? ArrayUtils.EMPTY_CLASS_ARRAY : ArrayUtils.clone(array);
+    }
 }

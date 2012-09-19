@@ -37,7 +37,7 @@ import javax.validation.Payload;
  * as soon as a final version of the specification contains a similar functionality.
  * --
  * </p>
- * Description: annotation to validate a java.io.File is a directory<br/>
+ * Description: annotation to validate as EAN13<br/>
  */
 @Documented
 @Constraint( validatedBy = EAN13Validator.class )

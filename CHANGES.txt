@@ -61,6 +61,9 @@ Bug
 ---
     * [BVAL-106] - FeaturesCapable compilation fails on JDK7
     * [BVAL-111] - ValidatorFactory-bound ConstraintValidatorFactory used instead of ValidatorContext-bound instance
+
+Improvement
+-----------
     * [BVAL-112] - Reduced log level of ignoreXmlConfiguration message from INFO to CONFIG
 
 

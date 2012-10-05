@@ -78,7 +78,7 @@ public abstract class FeaturesCapable implements Serializable {
      * @return T
      */
     public <T> T getFeature(String key) {
-        return getFeature(key, (T) null);
+        return getFeature(key, null);
     }
 
     /**
@@ -146,9 +146,7 @@ public abstract class FeaturesCapable implements Serializable {
     protected void copyInto(FeaturesCapable target) {
         target.features = target.createFeaturesMap();
         target.features.putAll(features);
-        if (validations != null) {
-            target.validations = validations.clone();
-        }
+        target.validations = ArrayUtils.clone(validations);
     }
 
     /**
@@ -176,7 +174,14 @@ public abstract class FeaturesCapable implements Serializable {
      *            to add
      */
     public void addValidation(Validation validation) {
-        validations = ArrayUtils.add(validations, validation);
+        if (this.validations == null) {
+            this.validations = new Validation[] { validation };
+        } else {
+            Validation[] newValidations = new Validation[this.validations.length + 1];
+            System.arraycopy(this.validations, 0, newValidations, 0, this.validations.length);
+            newValidations[validations.length] = validation;
+            this.validations = newValidations;
+        }
     }
 
     /**

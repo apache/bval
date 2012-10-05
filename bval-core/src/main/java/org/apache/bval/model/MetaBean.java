@@ -16,10 +16,8 @@
  */
 package org.apache.bval.model;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
-import org.apache.commons.lang3.ArrayUtils;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Description: the meta description of a bean or class. the class/bean itself can have a map of features and an array
@@ -28,34 +26,12 @@ import org.apache.commons.lang3.ArrayUtils;
  * @see MetaProperty
  */
 public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bean {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Comparator for managing the sorted properties array.
-     */
-    private static class PropertyNameComparator implements Comparator<Object> {
-        /** Static instance */
-        static final PropertyNameComparator INSTANCE = new PropertyNameComparator();
-
-        /**
-         * {@inheritDoc}
-         */
-        public int compare(Object o1, Object o2) {
-            return getName(o1).compareTo(getName(o2));
-        }
-
-        private String getName(Object o) {
-            if (o == null) {
-                throw new NullPointerException();
-            }
-            return o instanceof MetaProperty ? ((MetaProperty) o).getName() : String.valueOf(o);
-        }
-    }
+    private static final long serialVersionUID = 2L;
 
     private String id;
     private String name;
     private Class<?> beanClass;
-    private MetaProperty[] properties = new MetaProperty[0];
+    private Map<String, MetaProperty> properties = new TreeMap<String, MetaProperty>();
 
     /**
      * Get the id.
@@ -120,7 +96,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return MetaProperty[]
      */
     public MetaProperty[] getProperties() {
-        return ArrayUtils.clone(properties);
+        return properties.values().toArray(new MetaProperty[this.properties.size()]);
     }
 
     /**
@@ -130,8 +106,10 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      *            the MetaProperty[] to set
      */
     public void setProperties(MetaProperty[] properties) {
-        this.properties = ArrayUtils.clone(properties);
-        Arrays.sort(this.properties, PropertyNameComparator.INSTANCE);
+        this.properties.clear();
+        for (MetaProperty property : properties) {
+            this.properties.put(property.getName(), property);
+        }
     }
 
     /**
@@ -141,9 +119,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return MetaProperty found or <code>null</code>
      */
     public MetaProperty getProperty(String name) {
-        final MetaProperty[] props = properties;
-        int pos = Arrays.binarySearch(props, name, PropertyNameComparator.INSTANCE);
-        return pos < 0 ? null : props[pos];
+        return this.properties.get(name);
     }
 
     /**
@@ -153,8 +129,8 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return true when at least one of the properties is a relationship
      */
     public boolean hasRelationships() {
-        for (MetaProperty p : properties) {
-            if (p.isRelationship()) {
+        for (MetaProperty property : this.properties.values()) {
+            if (property.isRelationship()) {
                 return true;
             }
         }
@@ -167,7 +143,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return boolean
      */
     public boolean hasProperties() {
-        return properties.length > 0;
+        return this.properties.size() > 0;
     }
 
     /**
@@ -178,27 +154,12 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      *            if <code>null</code>, remove
      */
     public void putProperty(String name, MetaProperty property) {
-        if (property != null) {
+        if (property == null) {
+            this.properties.remove(name);
+        } else {        
             property.setParentMetaBean(this);
+            this.properties.put(name, property);
         }
-        Object key = property == null ? name : property;
-        // make a local copy for consistency
-        MetaProperty[] props = properties;
-        int pos = Arrays.binarySearch(props, key, PropertyNameComparator.INSTANCE);
-        if (pos < 0) {
-            if (property == null) {
-                // store null property for unknown name == NOOP
-                return;
-            }
-            props = ArrayUtils.add(props, 0 - pos - 1, property);
-        } else {
-            if (property == null) {
-                props = ArrayUtils.remove(props, pos);
-            } else {
-                props[pos] = property;
-            }
-        }
-        this.properties = props;
     }
 
     /**
@@ -216,9 +177,9 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         super.copyInto(target);
         final MetaBean copy = (MetaBean) target;
         if (properties != null) {
-            copy.properties = properties.clone();
-            for (int i = copy.properties.length - 1; i >= 0; i--) {
-                copy.properties[i] = copy.properties[i].copy();
+            copy.properties = new TreeMap<String, MetaProperty>();        
+            for (Map.Entry<String, MetaProperty> entry : properties.entrySet()) {
+                copy.properties.put(entry.getKey(), (MetaProperty) entry.getValue().copy());
             }
         }
     }

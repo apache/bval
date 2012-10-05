@@ -78,7 +78,7 @@ public abstract class FeaturesCapable implements Serializable {
      * @return T
      */
     public <T> T getFeature(String key) {
-        return getFeature(key, null);
+        return getFeature(key, (T) null);
     }
 
     /**

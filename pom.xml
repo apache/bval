@@ -315,12 +315,6 @@
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils-core</artifactId>
                 <version>1.8.3</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
@@ -348,17 +342,6 @@
                 <groupId>aopalliance</groupId>
                 <artifactId>aopalliance</artifactId>
                 <version>1.0</version>
-            </dependency>
-            <!-- Added mainly for testing -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>1.6.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>1.6.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -205,6 +205,12 @@
         </developer>
     </developers>
 
+    <contributors>
+      <contributor>
+        <name>Jarek Gawor</name>
+      </contributor>
+    </contributors>
+
     <distributionManagement>
         <site>
             <id>people.apache.org</id>

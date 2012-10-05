@@ -183,7 +183,10 @@ public final class AnnotationProcessor {
             strategies = new AccessStrategy[] { access };
             prop.putFeature(Features.Property.REF_CASCADE, strategies);
         } else if (!ArrayUtils.contains(strategies, access)) {
-            prop.putFeature(Features.Property.REF_CASCADE, ArrayUtils.add(strategies, access));
+            AccessStrategy[] newStrategies = new AccessStrategy[strategies.length + 1];
+            System.arraycopy(strategies, 0, newStrategies, 0, strategies.length);
+            newStrategies[strategies.length] = access;
+            prop.putFeature(Features.Property.REF_CASCADE, newStrategies);
         }
         return true;
     }

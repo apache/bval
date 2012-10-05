@@ -207,7 +207,25 @@
 
     <contributors>
       <contributor>
+        <name>Sebastian Bazley</name>
+      </contributor>
+      <contributor>
+        <name>Chris Ey</name>
+      </contributor>
+      <contributor>
         <name>Jarek Gawor</name>
+      </contributor>
+      <contributor>
+        <name>David J. M. Karlsen</name>
+      </contributor>
+      <contributor>
+        <name>Romain Manni-Bucau</name>
+      </contributor>
+      <contributor>
+        <name>Frank Schwarz</name>
+      </contributor>
+      <contributor>
+        <name>Jörg Waßmer</name>
       </contributor>
     </contributors>
 

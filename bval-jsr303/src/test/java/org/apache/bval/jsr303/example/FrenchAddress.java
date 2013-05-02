@@ -42,4 +42,7 @@ public class FrenchAddress {
         this.zipCode = zipCode;
     }
 
+    @FrenchZipCode
+    String zipCode2 = "123456";
+
 }

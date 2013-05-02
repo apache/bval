@@ -170,6 +170,10 @@ public final class ConstraintValidationListener<T> implements ValidationListener
      * @return <code>true</code> as this call caused the listener to exit report-as-single-violation mode
      */
     public boolean endReportAsSingle() {
-        return --compositeDepth == 0;
+        boolean endOutMostReportAsSingle = (--compositeDepth == 0);
+        if( endOutMostReportAsSingle ) {
+            hasCompositeError = false;
+        }
+        return endOutMostReportAsSingle;
     }
 }

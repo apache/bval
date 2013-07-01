@@ -21,11 +21,14 @@ import javax.inject.Provider;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.TraversableResolver;
+import javax.validation.executable.ExecutableType;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 
 import org.apache.bval.jsr303.ConfigurationImpl;
+
+import java.util.Collections;
 
 /**
  * The {@code javax.validation.spi.ConfigurationState} provider implementation.
@@ -77,6 +80,7 @@ public final class ConfigurationStateProvider implements Provider<ConfigurationS
         configuration.traversableResolver(this.traversableResolver);
         configuration.messageInterpolator(this.messageInterpolator);
         configuration.constraintValidatorFactory(this.constraintValidatorFactory);
+        configuration.setExecutableValidation(Collections.<ExecutableType>singleton(ExecutableType.ALL));
         return configuration;
     }
 

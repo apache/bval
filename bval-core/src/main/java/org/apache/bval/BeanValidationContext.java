@@ -300,6 +300,10 @@ public class BeanValidationContext<T extends ValidationListener>
         setBean(getPropertyValue(access), prop.getMetaBean());
     }
 
+    public void moveDown(String prop) {
+        // no-op: not supported
+    }
+
     /**
      * {@inheritDoc}
      */

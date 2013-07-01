@@ -17,12 +17,14 @@
 package org.apache.bval.jsr303.xml;
 
 
+import org.apache.bval.ConstructorAccess;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
 
 import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -43,6 +45,8 @@ public class MetaConstraint<T, A extends Annotation> {
     /** constraint annotation (proxy) */
     private final A annotation;
 
+    private Integer index; // for parameters
+
     private final AccessStrategy accessStrategy;
 
     /**
@@ -57,12 +61,11 @@ public class MetaConstraint<T, A extends Annotation> {
         this.annotation = annotation;
         if (member != null) {
             accessStrategy = createAccessStrategy(member);
-            if (accessStrategy == null || accessStrategy.getPropertyName() ==
-                  null) { // can happen if method does not follow the bean convention
-                throw new ValidationException(
-                      "Annotated method does not follow the JavaBeans naming convention: " +
-                            member);
+            /*TODO: see if can really be removed
+            if (accessStrategy == null || accessStrategy.getPropertyName() == null) { // can happen if method does not follow the bean convention
+                throw new ValidationException("Annotated method does not follow the JavaBeans naming convention: " + member);
             }
+            */
         } else {
             this.accessStrategy = null;
         }
@@ -73,6 +76,8 @@ public class MetaConstraint<T, A extends Annotation> {
             return new MethodAccess((Method) member);
         } else if (member instanceof Field) {
             return new FieldAccess((Field) member);
+        } else if (member instanceof Constructor<?>) {
+            return new ConstructorAccess((Constructor<?>) member);
         } else {
             return null; // class level
         }
@@ -108,5 +113,13 @@ public class MetaConstraint<T, A extends Annotation> {
      */
     public AccessStrategy getAccessStrategy() {
         return accessStrategy;
+    }
+
+    public Integer getIndex() {
+        return index;
+    }
+
+    public void setIndex(final int index) {
+        this.index = index;
     }
 }

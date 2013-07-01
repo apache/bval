@@ -27,10 +27,10 @@ import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableValidator;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.bval.jsr303.extensions.MethodValidator;
 
 /**
  * Method interceptor for {@link Validate} annotation.
@@ -65,7 +65,7 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
         Validate validate = invocation.getMethod().getAnnotation(Validate.class);
 
         Validator validator = this.validatorFactory.getValidator();
-        MethodValidator methodValidator = validator.unwrap(MethodValidator.class);
+        ExecutableValidator methodValidator = validator.forExecutables();
 
         Set<ConstraintViolation<?>> constraintViolations = new HashSet<ConstraintViolation<?>>();
         Class<?> clazz = invocation.getMethod().getDeclaringClass();
@@ -73,7 +73,7 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
         Object[] arguments = invocation.getArguments();
         Class<?>[] groups = validate.groups();
 
-        constraintViolations.addAll(methodValidator.validateParameters(clazz,
+        constraintViolations.addAll(methodValidator.validateParameters(invocation.getThis(),
                 method,
                 arguments,
                 groups));
@@ -92,7 +92,7 @@ public final class ValidateMethodInterceptor implements MethodInterceptor {
         Object returnedValue = invocation.proceed();
 
         if (validate.validateReturnedValue()) {
-            constraintViolations.addAll(methodValidator.validateReturnedValue(clazz, method, returnedValue, groups));
+            constraintViolations.addAll(methodValidator.validateReturnValue(invocation.getThis(), method, returnedValue, groups));
 
             if (!constraintViolations.isEmpty()) {
                 throw getException(new ConstraintViolationException(

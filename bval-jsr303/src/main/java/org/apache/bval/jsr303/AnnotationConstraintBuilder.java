@@ -18,6 +18,23 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.jsr303.groups.GroupsComputer;
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
+import org.apache.bval.util.AccessStrategy;
+
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.validation.Constraint;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.OverridesAttribute;
+import javax.validation.Payload;
+import javax.validation.ReportAsSingleViolation;
+import javax.validation.constraintvalidation.SupportedValidationTarget;
+import javax.validation.constraintvalidation.ValidationTarget;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,16 +50,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ConstraintValidator;
-import javax.validation.OverridesAttribute;
-import javax.validation.Payload;
-import javax.validation.ReportAsSingleViolation;
-
-import org.apache.bval.jsr303.groups.GroupsComputer;
-import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
-import org.apache.bval.util.AccessStrategy;
 
 /**
  * Description: helper class that builds a {@link ConstraintValidation} or its
@@ -65,12 +72,13 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
      * @param access
      */
     public AnnotationConstraintBuilder(Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
-        ConstraintValidator<A, ?> constraintValidator, A annotation, Class<?> owner, AccessStrategy access) {
+        ConstraintValidator<A, ?> constraintValidator, A annotation, Class<?> owner, AccessStrategy access,
+        ConstraintTarget target, RuntimeException missingValidatorException) {
         boolean reportFromComposite =
             annotation != null && annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
         constraintValidation =
             new ConstraintValidation<A>(validatorClasses, constraintValidator, annotation, owner, access,
-                reportFromComposite);
+                reportFromComposite, target, missingValidatorException);
         buildFromAnnotation();
     }
 
@@ -84,23 +92,88 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
                         // checked by TCK-Tests)
                         if (method.getParameterTypes().length == 0) {
                             try {
-                                if (ConstraintAnnotationAttributes.PAYLOAD.getAttributeName().equals(method.getName())) {
+                                final String name = method.getName();
+                                if (ConstraintAnnotationAttributes.PAYLOAD.getAttributeName().equals(name)) {
                                     buildPayload(method);
-                                } else if (ConstraintAnnotationAttributes.GROUPS.getAttributeName().equals(
-                                    method.getName())) {
+                                } else if (ConstraintAnnotationAttributes.GROUPS.getAttributeName().equals(name)) {
                                     buildGroups(method);
+                                } else if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName().equals(name)) {
+                                    buildValidationAppliesTo(method);
+                                } else if (name.startsWith("valid")) {
+                                    throw new ConstraintDefinitionException("constraints parameters can't start with valid: " + name);
                                 } else {
-                                    constraintValidation.getAttributes().put(method.getName(),
-                                        method.invoke(constraintValidation.getAnnotation()));
+                                    constraintValidation.getAttributes().put(name, method.invoke(constraintValidation.getAnnotation()));
                                 }
-                            } catch (Exception e) { // do nothing
+                            } catch (final ConstraintDefinitionException cde) {
+                                throw cde;
+                            } catch (final Exception e) { // do nothing
                                 log.log(Level.WARNING, String.format("Error processing annotation: %s ", constraintValidation.getAnnotation()), e);
                             }
                         }
                     }
+
+                    // valid validationAppliesTo
+                    final Constraint annotation = constraintValidation.getAnnotation().annotationType().getAnnotation(Constraint.class);
+                    if (annotation == null) {
+                        return null;
+                    }
+
+                    final Pair validationTarget = computeValidationTarget(annotation.validatedBy());
+                    for (final Annotation a : constraintValidation.getAnnotation().annotationType().getAnnotations()) {
+                        final Constraint inheritedConstraint = a.annotationType().getAnnotation(Constraint.class);
+                        if (inheritedConstraint != null && !a.annotationType().getName().startsWith("javax.validation.constraints.")) {
+                            final Pair validationTargetInherited = computeValidationTarget(inheritedConstraint.validatedBy());
+                            if ((validationTarget.a > 0 && validationTargetInherited.b > 0 && validationTarget.b == 0)
+                                    || (validationTarget.b > 0 && validationTargetInherited.a > 0 && validationTarget.a == 0)) {
+                                throw new ConstraintDefinitionException("Parent and child constraint have different targets");
+                            }
+                        }
+                    }
+
                     return null;
                 }
             });
+        }
+    }
+
+    private Pair computeValidationTarget(final Class<?>[] validators) {
+        int param = 0;
+        int annotatedElt = 0;
+
+        for (final Class<?> validator : validators) {
+            final SupportedValidationTarget supportedAnnotationTypes = validator.getAnnotation(SupportedValidationTarget.class);
+            if (supportedAnnotationTypes != null) {
+                final List<ValidationTarget> values = Arrays.asList(supportedAnnotationTypes.value());
+                if (values.contains(ValidationTarget.PARAMETERS)) {
+                    param++;
+                }
+                if (values.contains(ValidationTarget.ANNOTATED_ELEMENT)) {
+                    annotatedElt++;
+                }
+            } else {
+                annotatedElt++;
+            }
+        }
+
+        if (annotatedElt == 0 && param >= 1 && constraintValidation.getValidationAppliesTo() != null) { // pure cross param
+            throw new ConstraintDefinitionException("pure cross parameter constraints shouldn't get validationAppliesTo attribute");
+        } else {
+            if (param >= 1 && annotatedElt >= 1 && constraintValidation.getValidationAppliesTo() == null) { // generic and cross param
+                throw new ConstraintDefinitionException("cross parameter AND generic constraints should get validationAppliesTo attribute");
+            } else if (param == 0 && constraintValidation.getValidationAppliesTo() != null) { // pure generic
+                throw new ConstraintDefinitionException("pure generic constraints shouldn't get validationAppliesTo attribute");
+            }
+        }
+
+        return new Pair(annotatedElt, param);
+    }
+
+    private void buildValidationAppliesTo(final Method method) throws InvocationTargetException, IllegalAccessException {
+        final Object validationAppliesTo = method.invoke(constraintValidation.getAnnotation());
+        if (ConstraintTarget.class.isInstance(validationAppliesTo)) {
+            constraintValidation.setValidationAppliesTo(ConstraintTarget.class.cast(validationAppliesTo));
+        } else {
+            throw new ConstraintDefinitionException("validationAppliesTo type is " + ConstraintTarget.class.getName());
         }
     }
 
@@ -150,6 +223,11 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
      */
     public void addComposed(ConstraintValidation<?> composite) {
         applyOverridesAttributes(composite);
+
+        if (constraintValidation.getValidationAppliesTo() != null) {
+            composite.setValidationAppliesTo(constraintValidation.getValidationAppliesTo());
+        }
+
         constraintValidation.addComposed(composite); // add AFTER apply()
     }
 
@@ -271,6 +349,16 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             return AccessController.doPrivileged(action);
         } else {
             return action.run();
+        }
+    }
+
+    private static class Pair {
+        private int a;
+        private int b;
+
+        private Pair(int a, int b) {
+            this.a = a;
+            this.b = b;
         }
     }
 }

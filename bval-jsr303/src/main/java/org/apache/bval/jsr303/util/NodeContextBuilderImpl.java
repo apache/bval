@@ -23,6 +23,7 @@ import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder;
+import javax.validation.ElementKind;
 
 /**
  * Description: Implementation of {@link NodeContextBuilder}.<br/>
@@ -77,6 +78,15 @@ final class NodeContextBuilderImpl
           String name) {
         propertyPath.addNode(node);
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
+    }
+
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
+        propertyPath.addProperty(name);
+        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, node.getName());
+    }
+
+    public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
+        return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
     }
 
     /**

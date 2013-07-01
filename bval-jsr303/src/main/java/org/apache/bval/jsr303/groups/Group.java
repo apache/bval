@@ -69,10 +69,8 @@ public final class Group {
 	 * {@inheritDoc}
 	 */
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o instanceof Group == false) return false;
-        return ObjectUtils.equals(group, ((Group) o).group);
+    public boolean equals(final Object o) {
+        return this == o || o instanceof Group && ObjectUtils.equals(group, ((Group) o).group);
     }
 
     /**

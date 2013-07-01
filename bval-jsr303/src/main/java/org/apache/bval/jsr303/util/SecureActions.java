@@ -18,16 +18,16 @@
  */
 package org.apache.bval.jsr303.util;
 
+import org.apache.bval.jsr303.ConfigurationImpl;
+import org.apache.bval.util.PrivilegedActions;
+
+import javax.validation.ValidatorFactory;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.PrivilegedAction;
-
-import javax.validation.ValidatorFactory;
-
-import org.apache.bval.jsr303.ConfigurationImpl;
-import org.apache.bval.util.PrivilegedActions;
 
 /**
  * Description: utility methods to perform actions with AccessController or without.<br/>
@@ -79,19 +79,46 @@ public class SecureActions extends PrivilegedActions {
         };
     }
 
-
-
-    /**
-     * Create a privileged action to get all methods declared by the specified class.
-     */
-    public static PrivilegedAction<Method[]> getDeclaredMethods(final Class<?> clazz) {
-      // XXX 2011-03-27 jw: Inconsistent behaviour.
-      // doGetDeclaredFields() is setting fields accessible, but here we don't.
-      return new PrivilegedAction<Method[]>() {
-          public Method[] run() {
-            return clazz.getDeclaredMethods();
-        }
+    public static PrivilegedAction<Constructor<?>> getDeclaredConstructor(final Class<?> clazz, final Class<?>... parameters) {
+      return new PrivilegedAction<Constructor<?>>() {
+          public Constructor<?> run() {
+              try {
+                  return clazz.getDeclaredConstructor(parameters);
+              } catch (final NoSuchMethodException e) {
+                  return null;
+              }
+          }
       };
+    }
+
+    public static PrivilegedAction<Method> getDeclaredMethod(final Class<?> clazz, final String name, final Class<?>... parameters) {
+        return new PrivilegedAction<Method>() {
+            public Method run() {
+                try {
+                    return clazz.getDeclaredMethod(name, parameters);
+                } catch (final NoSuchMethodException e) {
+                    return null;
+                }
+            }
+        };
+    }
+
+    public static PrivilegedAction<Method[]> getDeclaredMethods(final Class<?> clazz) {
+        // XXX 2011-03-27 jw: Inconsistent behaviour.
+        // doGetDeclaredFields() is setting fields accessible, but here we don't.
+        return new PrivilegedAction<Method[]>() {
+            public Method[] run() {
+                return clazz.getDeclaredMethods();
+            }
+        };
+    }
+
+    public static PrivilegedAction<Constructor<?>[]> getDeclaredConstructors(final Class<?> clazz) {
+        return new PrivilegedAction<Constructor<?>[]>() {
+            public Constructor<?>[] run() {
+                return clazz.getDeclaredConstructors();
+            }
+        };
     }
 
     /**

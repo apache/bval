@@ -106,6 +106,8 @@ public interface ValidationContext<T extends ValidationListener> {
      */
     void moveDown(MetaProperty prop, AccessStrategy access);
 
+    void moveDown(String prop);
+
     /**
      * Step out from a validation of associated objects.
      * @param bean

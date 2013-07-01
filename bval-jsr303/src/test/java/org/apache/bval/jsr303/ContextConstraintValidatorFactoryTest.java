@@ -102,7 +102,11 @@ public class ContextConstraintValidatorFactoryTest extends TestCase {
 				}
 				return null;
 			}
-		};
+
+            public void releaseInstance(ConstraintValidator<?, ?> instance) {
+                // no-op
+            }
+        };
 		final Set<ConstraintViolation<Example>> violations = factory.usingContext().constraintValidatorFactory(constraintValidatorFactory)
 				.getValidator().validate(new Example());
 		assertTrue(violations.isEmpty());

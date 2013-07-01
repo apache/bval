@@ -20,9 +20,7 @@ package org.apache.bval.jsr303.xml;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,11 +48,13 @@ public final class AnnotationIgnores {
      * <code>true</code> in the configuration
      * for this class.
      */
-    private final Map<Class<?>, List<Member>> ignoreAnnotationOnMember =
-          new HashMap<Class<?>, List<Member>>();
+    private final Map<Class<?>, Map<Member, Boolean>> ignoreAnnotationOnMember = new HashMap<Class<?>, Map<Member, Boolean>>();
 
-    private final Map<Class<?>, Boolean> ignoreAnnotationOnClass =
-          new HashMap<Class<?>, Boolean>();
+    private final Map<Class<?>, Boolean> ignoreAnnotationOnClass = new HashMap<Class<?>, Boolean>();
+
+    private final Map<Class<?>, Map<Member, Map<Integer, Boolean>>> ignoreAnnotationOnParameter = new HashMap<Class<?>, Map<Member, Map<Integer, Boolean>>>();
+    private final Map<Member, Boolean> ignoreAnnotationOnReturn = new HashMap<Member, Boolean>();
+    private final Map<Member, Boolean> ignoreAnnotationOnCrossParameter = new HashMap<Member, Boolean>();
 
     /**
      * Record the ignore state for a particular annotation type.
@@ -79,14 +79,14 @@ public final class AnnotationIgnores {
      * Ignore annotations on a particular {@link Member} of a class.
      * @param member
      */
-    public void setIgnoreAnnotationsOnMember(Member member) {
+    public void setIgnoreAnnotationsOnMember(Member member, boolean value) {
         Class<?> beanClass = member.getDeclaringClass();
-        List<Member> memberList = ignoreAnnotationOnMember.get(beanClass);
+        Map<Member, Boolean> memberList = ignoreAnnotationOnMember.get(beanClass);
         if (memberList == null) {
-            memberList = new ArrayList<Member>();
+            memberList = new HashMap<Member, Boolean>();
             ignoreAnnotationOnMember.put(beanClass, memberList);
         }
-        memberList.add(member);
+        memberList.put(member, value);
     }
 
     /**
@@ -94,20 +94,48 @@ public final class AnnotationIgnores {
      * @param member
      * @return boolean
      */
-    public boolean isIgnoreAnnotations(Member member) {
-        boolean ignoreAnnotation;
-        Class<?> clazz = member.getDeclaringClass();
-        List<Member> ignoreAnnotationForMembers = ignoreAnnotationOnMember.get(clazz);
-        if (ignoreAnnotationForMembers == null ||
-              !ignoreAnnotationForMembers.contains(member)) {
-            ignoreAnnotation = getDefaultIgnoreAnnotation(clazz);
-        } else {
-            ignoreAnnotation = ignoreAnnotationForMembers.contains(member);
+    public boolean isIgnoreAnnotations(final Member member) {
+        final Class<?> clazz = member.getDeclaringClass();
+        final Map<Member, Boolean> ignoreAnnotationForMembers = ignoreAnnotationOnMember.get(clazz);
+        if (ignoreAnnotationForMembers != null && ignoreAnnotationForMembers.containsKey(member)) {
+            final boolean value = ignoreAnnotationForMembers.get(member);
+            if (value) {
+                logMessage(member, clazz);
+            }
+            return value;
         }
+
+        final boolean ignoreAnnotation = getDefaultIgnoreAnnotation(clazz);
         if (ignoreAnnotation) {
             logMessage(member, clazz);
         }
         return ignoreAnnotation;
+    }
+
+    public void setIgnoreAnnotationsOnParameter(final Member method, final int i, final boolean value) {
+        final Class<?> beanClass = method.getDeclaringClass();
+        Map<Member, Map<Integer, Boolean>> memberList = ignoreAnnotationOnParameter.get(beanClass);
+        if (memberList == null) {
+            memberList = new HashMap<Member, Map<Integer, Boolean>>();
+            ignoreAnnotationOnParameter.put(beanClass, memberList);
+        }
+        Map<Integer, Boolean> indexes = memberList.get(method);
+        if (indexes == null) {
+            indexes = new HashMap<Integer, Boolean>();
+            memberList.put(method, indexes);
+        }
+        indexes.put(i, value);
+    }
+
+    public boolean isIgnoreAnnotationOnParameter(final Member m, final int i) {
+        final Map<Member, Map<Integer, Boolean>> members = ignoreAnnotationOnParameter.get(m.getDeclaringClass());
+        if (members != null) {
+            final Map<Integer, Boolean> indexes = members.get(m);
+            if (indexes != null && indexes.containsKey(i)) {
+                return indexes.get(i);
+            }
+        }
+        return false;
     }
 
     private void logMessage(Member member, Class<?> clazz) {
@@ -145,5 +173,29 @@ public final class AnnotationIgnores {
         	log.log(Level.FINEST, String.format("Class level annotation are getting ignored for %s", clazz.getName()));
         }
         return ignoreAnnotation;
+    }
+
+    public void setIgnoreAnnotationOnReturn(final Member method, final boolean value) {
+        ignoreAnnotationOnReturn.put(method, value);
+    }
+
+    public boolean isIgnoreAnnotationOnReturn(final Member m) {
+        final Boolean value = ignoreAnnotationOnReturn.get(m);
+        if (value != null) {
+            return value;
+        }
+        return false;
+    }
+
+    public void setIgnoreAnnotationOnCrossParameter(final Member method, final boolean value) {
+        ignoreAnnotationOnCrossParameter.put(method, value);
+    }
+
+    public boolean isIgnoreAnnotationOnCrossParameter(final Member m) {
+        final Boolean value = ignoreAnnotationOnCrossParameter.get(m);
+        if (value != null) {
+            return value;
+        }
+        return false;
     }
 }

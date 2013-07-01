@@ -46,4 +46,8 @@ final class GuiceAwareConstraintValidatorFactory implements ConstraintValidatorF
         return this.injector.getInstance(key);
     }
 
+    public void releaseInstance(ConstraintValidator<?, ?> instance) {
+        // no-op
+    }
+
 }

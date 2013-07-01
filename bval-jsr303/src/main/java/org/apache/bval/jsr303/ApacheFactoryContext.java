@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
+import javax.validation.ParameterNameProvider;
 import javax.validation.TraversableResolver;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
@@ -53,6 +54,7 @@ public class ApacheFactoryContext implements ValidatorContext {
 
     private MessageInterpolator messageInterpolator;
     private TraversableResolver traversableResolver;
+    private ParameterNameProvider parameterNameProvider;
     private ConstraintValidatorFactory constraintValidatorFactory;
 
     /**
@@ -119,6 +121,11 @@ public class ApacheFactoryContext implements ValidatorContext {
         return this;
     }
 
+    public ValidatorContext parameterNameProvider(ParameterNameProvider parameterNameProvider) {
+        this.parameterNameProvider = parameterNameProvider;
+        return this;
+    }
+
     /**
      * Get the {@link ConstraintValidatorFactory}.
      * 
@@ -157,6 +164,10 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public TraversableResolver getTraversableResolver() {
         return traversableResolver == null ? factory.getTraversableResolver() : traversableResolver;
+    }
+
+    public ParameterNameProvider getParameterNameProvider() {
+        return parameterNameProvider == null ? factory.getParameterNameProvider() : parameterNameProvider;
     }
 
     /**

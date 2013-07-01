@@ -28,6 +28,14 @@ import org.apache.bval.model.Features;
  * @see org.apache.bval.model.Features
  */
 public interface Jsr303Features {
+    interface Method extends Features.Property {
+        String MethodDescriptor = "MethodDescriptor";
+    }
+
+    interface Constructor extends Features.Property {
+        String ConstructorDescriptor = "ConstructorDescriptor";
+    }
+
     /**
      * JSR303 Property features
      */
@@ -38,6 +46,9 @@ public interface Jsr303Features {
          * INFO: Class[] with the groups to validate a REF_CASCADE
          */
         String REF_GROUPS = "refGroups";
+
+        // Collection<Annotation>
+        String ANNOTATIONS_TO_PROCESS = "annotationToProcess";
     }
 
     /**

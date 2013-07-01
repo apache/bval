@@ -19,18 +19,34 @@
 package org.apache.bval.jsr303;
 
 
+import org.apache.bval.jsr303.parameter.DefaultParameterNameProvider;
 import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
+import org.apache.bval.jsr303.util.IOs;
 import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.ValidationParser;
 
-import javax.validation.*;
+import javax.validation.BootstrapConfiguration;
+import javax.validation.ConstraintValidatorFactory;
+import javax.validation.MessageInterpolator;
+import javax.validation.ParameterNameProvider;
+import javax.validation.TraversableResolver;
+import javax.validation.ValidationException;
+import javax.validation.ValidationProviderResolver;
+import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableType;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
+import java.io.Closeable;
 import java.io.InputStream;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -61,36 +77,37 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * Configured {@link MessageInterpolator}
      */
-    protected MessageInterpolator messageInterpolator;
+    protected MessageInterpolator defaultMessageInterpolator = new DefaultMessageInterpolator();
+    protected MessageInterpolator messageInterpolator = defaultMessageInterpolator;
 
     /**
      * Configured {@link ConstraintValidatorFactory}
      */
-    protected ConstraintValidatorFactory constraintValidatorFactory;
+    protected ConstraintValidatorFactory defaultConstraintValidatorFactory = new DefaultConstraintValidatorFactory();
+    protected ConstraintValidatorFactory constraintValidatorFactory = defaultConstraintValidatorFactory;
 
-    private TraversableResolver traversableResolver;
+    private TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
+    private TraversableResolver traversableResolver = defaultTraversableResolver;
+
+    protected ParameterNameProvider defaultParameterNameProvider = new DefaultParameterNameProvider();
+    protected ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
+
+    protected BootstrapConfiguration  bootstrapConfiguration;
+
+    protected Collection<ExecutableType> executableValidation;
 
     // BEGIN DEFAULTS
     /**
      * false = dirty flag (to prevent from multiple parsing validation.xml)
      */
     private boolean prepared = false;
-    private final TraversableResolver defaultTraversableResolver =
-          new DefaultTraversableResolver();
-
-    /**
-     * Default {@link MessageInterpolator}
-     */
-    protected final MessageInterpolator defaultMessageInterpolator =
-          new DefaultMessageInterpolator();
-
-    private final ConstraintValidatorFactory defaultConstraintValidatorFactory =
-          new DefaultConstraintValidatorFactory();
     // END DEFAULTS
 
     private Set<InputStream> mappingStreams = new HashSet<InputStream>();
     private Map<String, String> properties = new HashMap<String, String>();
     private boolean ignoreXmlConfiguration = false;
+
+    private ValidationParser parser;
 
     /**
      * Create a new ConfigurationImpl instance.
@@ -153,6 +170,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return this;
     }
 
+    public ApacheValidatorConfiguration parameterNameProvider(ParameterNameProvider parameterNameProvider) {
+        this.parameterNameProvider = parameterNameProvider;
+        return this;
+    }
+
     /**
      * {@inheritDoc}
      * Add a stream describing constraint mapping in the Bean Validation
@@ -161,7 +183,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @return this
      */
     public ApacheValidatorConfiguration addMapping(InputStream stream) {
-        mappingStreams.add(stream);
+        mappingStreams.add(IOs.convertToMarkableInputStream(stream));
         return this;
     }
 
@@ -176,6 +198,22 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     public ApacheValidatorConfiguration addProperty(String name, String value) {
         properties.put(name, value);
         return this;
+    }
+
+    public MessageInterpolator getDefaultMessageInterpolator() {
+        return defaultMessageInterpolator;
+    }
+
+    public TraversableResolver getDefaultTraversableResolver() {
+        return defaultTraversableResolver;
+    }
+
+    public ConstraintValidatorFactory getDefaultConstraintValidatorFactory() {
+        return defaultConstraintValidatorFactory;
+    }
+
+    public ParameterNameProvider getDefaultParameterNameProvider() {
+        return defaultParameterNameProvider;
     }
 
     /**
@@ -213,25 +251,16 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return messageInterpolator;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public MessageInterpolator getDefaultMessageInterpolator() {
-        return defaultMessageInterpolator;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public TraversableResolver getDefaultTraversableResolver() {
-        return defaultTraversableResolver;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public ConstraintValidatorFactory getDefaultConstraintValidatorFactory() {
-        return defaultConstraintValidatorFactory;
+    public BootstrapConfiguration getBootstrapConfiguration() {
+        if (bootstrapConfiguration == null) {
+            synchronized (this) {
+                if (bootstrapConfiguration == null) {
+                    parser = parseValidationXml();
+                    bootstrapConfiguration = parser.getBootstrap();
+                }
+            }
+        }
+        return bootstrapConfiguration;
     }
 
     /**
@@ -246,6 +275,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     public ValidatorFactory doPrivBuildValidatorFactory() {
         prepare();
+        parser.ensureValidatorFactoryCanBeBuilt();
         if (provider != null) {
             return provider.buildValidatorFactory(this);
         } else {
@@ -253,34 +283,33 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         }
     }
 
-    private void prepare() {
-        if (prepared) return;
-        parseValidationXml();
-        applyDefaults();
+    public ConfigurationImpl prepare() {
+        if (prepared) {
+            return this;
+        }
+
+        if (parser == null) {
+            parser = parseValidationXml(); // already done if BootstrapConfiguration already looked up
+            synchronized (this) { // this synchro should be done in a better way
+                if (bootstrapConfiguration == null) {
+                    bootstrapConfiguration = parser.getBootstrap();
+                }
+            }
+        }
+        parser.applyConfigWithInstantiation(this); // instantiate the config if needed
+
+        // TODO: maybe find a better way to communicate between validator factory and config
+        if (getBootstrapConfiguration().isExecutableValidationEnabled()) {
+            getProperties().put(Properties.EXECUTABLE_VALIDATION_TYPES, executableValidationTypesAsString());
+        }
+
         prepared = true;
+        return this;
     }
 
     /** Check whether a validation.xml file exists and parses it with JAXB */
-    private void parseValidationXml() {
-        if (isIgnoreXmlConfiguration()) {
-            log.config("ignoreXmlConfiguration == true");
-        } else {
-            new ValidationParser(getProperties().get(Properties.VALIDATION_XML_PATH))
-                  .processValidationConfig(this);
-        }
-    }
-
-    private void applyDefaults() {
-        // make sure we use the defaults in case they haven't been provided yet
-        if (traversableResolver == null) {
-            traversableResolver = getDefaultTraversableResolver();
-        }
-        if (messageInterpolator == null) {
-            messageInterpolator = getDefaultMessageInterpolator();
-        }
-        if (constraintValidatorFactory == null) {
-            constraintValidatorFactory = getDefaultConstraintValidatorFactory();
-        }
+    private ValidationParser parseValidationXml() {
+        return ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this, ignoreXmlConfiguration);
     }
 
     /**
@@ -296,6 +325,10 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     public TraversableResolver getTraversableResolver() {
         return traversableResolver;
+    }
+
+    public ParameterNameProvider getParameterNameProvider() {
+        return parameterNameProvider;
     }
 
     /**
@@ -336,5 +369,38 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         } else {
             return action.run();
         }
+    }
+
+    public void setExecutableValidation(final Collection<ExecutableType> executableValidation) {
+        this.executableValidation = executableValidation;
+    }
+
+    public Collection<ExecutableType> getExecutableValidation() {
+        return executableValidation;
+    }
+
+    private String executableValidationTypesAsString() {
+        if (executableValidation == null || executableValidation.isEmpty()) {
+            return "";
+        }
+
+        final StringBuilder builder = new StringBuilder();
+        for (final ExecutableType type : executableValidation) {
+            builder.append(type.name()).append(",");
+        }
+        final String s = builder.toString();
+        return s.substring(0, s.length() - 1);
+    }
+
+    public Closeable getClosable() {
+        return parser;
+    }
+
+    public ValidationParser getParser() {
+        return parser;
+    }
+
+    public void setParser(ValidationParser parser) {
+        this.parser = parser;
     }
 }

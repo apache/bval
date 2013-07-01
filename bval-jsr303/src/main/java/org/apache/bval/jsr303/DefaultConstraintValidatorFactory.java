@@ -18,15 +18,22 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.cdi.BValExtension;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.ValidationException;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 /**
  * Description: create constraint instances with the default / no-arg constructor <br/>
  */
-public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory {
+public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory, Closeable {
+    private final Collection< BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
 
     /**
      * Instantiate a Constraint.
@@ -34,17 +41,32 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
      * @return Returns a new Constraint instance
      *         The ConstraintFactory is <b>not</b> responsible for calling Constraint#initialize
      */
-    public <T extends ConstraintValidator<?, ?>> T getInstance(final Class<T> constraintClass)
-    {
-      // 2011-03-27 jw: Do not use PrivilegedAction.
-      // Otherwise any user code would be executed with the privileges of this class.
-      try
-      {
-        return constraintClass.newInstance();
-      }
-      catch (final Exception ex)
-      {
-        throw new ValidationException("Cannot instantiate : " + constraintClass, ex);
-      }
+    public <T extends ConstraintValidator<?, ?>> T getInstance(final Class<T> constraintClass) {
+        // 2011-03-27 jw: Do not use PrivilegedAction.
+        // Otherwise any user code would be executed with the privileges of this class.
+        try {
+            try {
+                return BValExtension.inject(constraintClass).getInstance();
+            } catch (final Exception e) {
+                return constraintClass.newInstance();
+            } catch (final NoClassDefFoundError error) {
+                return constraintClass.newInstance();
+            }
+        } catch (final Exception ex) {
+            throw new ValidationException("Cannot instantiate : " + constraintClass, ex);
+        }
+    }
+
+    public void releaseInstance(final ConstraintValidator<?, ?> instance) {
+        // no-op
+    }
+
+    public void close() throws IOException {
+        for (final BValExtension.Releasable<?> releasable : releasables) {
+            // ensure to call this callback
+            releaseInstance(ConstraintValidator.class.cast(releasable.getInstance()));
+            releasable.release();
+        }
+        releasables.clear();
     }
 }

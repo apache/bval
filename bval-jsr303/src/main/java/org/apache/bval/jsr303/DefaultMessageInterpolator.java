@@ -23,20 +23,16 @@ import javax.el.ArrayELResolver;
 import javax.el.BeanELResolver;
 import javax.el.CompositeELResolver;
 import javax.el.ELContext;
-import javax.el.ELException;
 import javax.el.ELResolver;
 import javax.el.ExpressionFactory;
 import javax.el.FunctionMapper;
 import javax.el.ListELResolver;
 import javax.el.MapELResolver;
-import javax.el.MethodNotFoundException;
 import javax.el.PropertyNotWritableException;
 import javax.el.ResourceBundleELResolver;
 import javax.el.ValueExpression;
 import javax.el.VariableMapper;
 import javax.validation.MessageInterpolator;
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -112,7 +108,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         }
 
         defaultBundlesMap.put(defaultLocale,
-              ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, defaultLocale));
+                ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, defaultLocale));
     }
 
     private static ELResolver initResolver() {
@@ -121,112 +117,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         resolver.add(new ListELResolver());
         resolver.add(new ArrayELResolver());
         resolver.add(new ResourceBundleELResolver());
-        resolver.add(new BeanELResolver() {
-            @Override // patched because G l API contains a bug with array used by formatter usage, when fixed just update the API and remove this method
-            public Object invoke(ELContext context, Object base, Object method, Class<?>[] paramTypes, Object[] params) {
-                if (context == null) {
-                    throw new NullPointerException("ELContext could not be nulll");
-                }
-                // Why static invocation is not supported
-                if(base == null || method == null) {
-                    return null;
-                }
-                if (params == null) {
-                    params = new Object[0];
-                }
-                String methodName = (String) EXPRESSION_FACTORY.coerceToType(method, String.class);
-                if (methodName.length() == 0) {
-                    throw new MethodNotFoundException("The parameter method could not be zero-length");
-                }
-                Class<?> targetClass = base.getClass();
-                if (methodName.equals("<init>") || methodName.equals("<cinit>")) {
-                    throw new MethodNotFoundException(method + " is not found in target class " + targetClass.getName());
-                }
-                Method targetMethod = null;
-                if (paramTypes == null) {
-                    int paramsNumber = params.length;
-                    for (final Method m : targetClass.getMethods()) {
-                        if (m.getName().equals(methodName) && m.getParameterTypes().length == paramsNumber) {
-                            targetMethod = m;
-                            break;
-                        }
-                    }
-                    if (targetMethod == null) {
-                        for (final Method m : targetClass.getMethods()) {
-                            if (m.getName().equals(methodName) && m.isVarArgs() && paramsNumber >= (m.getParameterTypes().length - 1)) {
-                                targetMethod = m;
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    try {
-                        targetMethod = targetClass.getMethod(methodName, paramTypes);
-                    } catch (SecurityException e) {
-                        throw new ELException(e);
-                    } catch (NoSuchMethodException e) {
-                        throw new MethodNotFoundException(e);
-                    }
-                }
-                if (targetMethod == null) {
-                    throw new MethodNotFoundException(method + " is not found in target class " + targetClass.getName());
-                }
-                if (paramTypes == null) {
-                    paramTypes = targetMethod.getParameterTypes();
-                }
-                //Initial check whether the types and parameter values length
-                if (targetMethod.isVarArgs()) {
-                    if (paramTypes.length - 1 > params.length) {
-                        throw new IllegalArgumentException("Inconsistent number between argument types and values");
-                    }
-                } else if (paramTypes.length != params.length) {
-                    throw new IllegalArgumentException("Inconsistent number between argument types and values");
-                }
-                try {
-                    Object[] finalParamValues = new Object[paramTypes.length];
-                    //Only do the parameter conversion while the method is not a non-parameter one
-                    if (paramTypes.length > 0) {
-                        int iCurrentIndex = 0;
-                        for (int iLoopSize = paramTypes.length - 1; iCurrentIndex < iLoopSize; iCurrentIndex++) {
-                            finalParamValues[iCurrentIndex] = EXPRESSION_FACTORY.coerceToType(params[iCurrentIndex], paramTypes[iCurrentIndex]);
-                        }
-                        /**
-                         * Not sure it is over-designed. Do not find detailed description about how the parameter values are passed if the method is of variable arguments.
-                         * It might be an array directly passed or each parameter value passed one by one.
-                         */
-                        if (targetMethod.isVarArgs()) {
-                            // varArgsClassType should be an array type
-                            Class<?> varArgsClassType = paramTypes[iCurrentIndex];
-                            // 1. If there is no parameter value left for the variable argument, create a zero-length array
-                            // 2. If there is only one parameter value left for the variable argument, and it has the same array type with the varArgsClass, pass in directly
-                            // 3. Else, create an array of varArgsClass type, and add all the left coerced parameter values
-                            if (iCurrentIndex == params.length) {
-                                finalParamValues[iCurrentIndex] = Array.newInstance(varArgsClassType.getComponentType(), 0);
-                            } else if (iCurrentIndex == params.length - 1 && varArgsClassType == params[iCurrentIndex].getClass()
-                                    && varArgsClassType.getClassLoader() == params[iCurrentIndex].getClass().getClassLoader()) {
-                                finalParamValues[iCurrentIndex] = params[iCurrentIndex];
-                            } else {
-                                Object targetArray = Array.newInstance(varArgsClassType.getComponentType(), params.length - iCurrentIndex);
-                                Class<?> componentClassType = varArgsClassType.getComponentType();
-                                for (int i = 0, iLoopSize = params.length - iCurrentIndex; i < iLoopSize; i++) {
-                                    Array.set(targetArray, i, EXPRESSION_FACTORY.coerceToType(params[iCurrentIndex + i], componentClassType));
-                                }
-                                finalParamValues[iCurrentIndex] = targetArray;
-                            }
-                        } else {
-                            finalParamValues[iCurrentIndex] = EXPRESSION_FACTORY.coerceToType(params[iCurrentIndex], paramTypes[iCurrentIndex]);
-                        }
-                    }
-                    Object retValue = targetMethod.invoke(base, finalParamValues);
-                    context.setPropertyResolved(true);
-                    return retValue;
-                }  catch (IllegalAccessException e) {
-                    throw new ELException(e);
-                } catch (InvocationTargetException e) {
-                    throw new ELException(e.getCause());
-                }
-            }
-        });
+        resolver.add(new BeanELResolver());
         return resolver;
     }
 
@@ -240,7 +131,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     /** {@inheritDoc} */
     public String interpolate(String message, Context context, Locale locale) {
         return interpolateMessage(message,
-              context.getConstraintDescriptor().getAttributes(), locale, context.getValidatedValue());
+                context.getConstraintDescriptor().getAttributes(), locale, context.getValidatedValue());
     }
 
     /**

@@ -18,6 +18,7 @@
  */
 package org.apache.bval.jsr303;
 
+import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.io.Serializable;
@@ -44,16 +45,18 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     private final Map<String, Object> attributes;
     private final Set<ConstraintDescriptor<?>> composingConstraints;
     private final boolean reportAsSingleViolation;
+    private final ConstraintTarget validationAppliesTo;
+    private final String template;
 
     /**
      * Create a new ConstraintDescriptorImpl instance.
      * 
      * @param descriptor
      */
-    public ConstraintDescriptorImpl(ConstraintDescriptor<T> descriptor) {
+    public ConstraintDescriptorImpl(final ConstraintDescriptor<T> descriptor) {
         this(descriptor.getAnnotation(), descriptor.getGroups(), descriptor.getPayload(), descriptor
             .getConstraintValidatorClasses(), descriptor.getAttributes(), descriptor.getComposingConstraints(),
-            descriptor.isReportAsSingleViolation());
+            descriptor.isReportAsSingleViolation(), descriptor.getValidationAppliesTo(), descriptor.getMessageTemplate());
     }
 
     /**
@@ -71,7 +74,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
         Set<Class<? extends javax.validation.Payload>> payload,
         List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> constraintValidatorClasses,
         Map<String, Object> attributes, Set<ConstraintDescriptor<?>> composingConstraints,
-        boolean reportAsSingleViolation) {
+        boolean reportAsSingleViolation, ConstraintTarget validationAppliesTo, String messageTemplate) {
         this.annotation = annotation;
         this.groups = groups;
         this.payload = payload;
@@ -79,6 +82,8 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
         this.attributes = attributes;
         this.composingConstraints = composingConstraints;
         this.reportAsSingleViolation = reportAsSingleViolation;
+        this.validationAppliesTo = validationAppliesTo;
+        this.template = messageTemplate;
     }
 
     /**
@@ -86,6 +91,10 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
      */
     public T getAnnotation() {
         return annotation;
+    }
+
+    public String getMessageTemplate() {
+        return template;
     }
 
     /**
@@ -100,6 +109,10 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
      */
     public Set<Class<? extends Payload>> getPayload() {
         return payload;
+    }
+
+    public ConstraintTarget getValidationAppliesTo() {
+        return validationAppliesTo;
     }
 
     /**
@@ -128,5 +141,37 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
      */
     public boolean isReportAsSingleViolation() {
         return reportAsSingleViolation;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ConstraintDescriptorImpl that = (ConstraintDescriptorImpl) o;
+
+        if (reportAsSingleViolation != that.reportAsSingleViolation) return false;
+        if (!annotation.annotationType().equals(that.annotation.annotationType())) return false;
+        if (composingConstraints != null ? !composingConstraints.equals(that.composingConstraints) : that.composingConstraints != null)
+            return false;
+        if (constraintValidatorClasses != null ? !constraintValidatorClasses.equals(that.constraintValidatorClasses) : that.constraintValidatorClasses != null)
+            return false;
+        if (payload != null ? !payload.equals(that.payload) : that.payload != null) return false;
+        if (template != null ? !template.equals(that.template) : that.template != null) return false;
+        if (validationAppliesTo != that.validationAppliesTo) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = annotation != null ? annotation.annotationType().hashCode() : 0;
+        result = 31 * result + (payload != null ? payload.hashCode() : 0);
+        result = 31 * result + (constraintValidatorClasses != null ? constraintValidatorClasses.hashCode() : 0);
+        result = 31 * result + (composingConstraints != null ? composingConstraints.hashCode() : 0);
+        result = 31 * result + (reportAsSingleViolation ? 1 : 0);
+        result = 31 * result + (validationAppliesTo != null ? validationAppliesTo.hashCode() : 0);
+        result = 31 * result + (template != null ? template.hashCode() : 0);
+        return result;
     }
 }

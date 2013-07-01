@@ -20,6 +20,7 @@ package org.apache.bval.jsr303.util;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
 
 import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
 
@@ -45,10 +46,19 @@ public class ConstraintDefinitionValidator {
      * @throws ConstraintDefinitionException
      *             In case the constraint is invalid.
      */
-    public static void validateConstraintDefinition(Annotation annotation) {
-        ConstraintAnnotationAttributes.GROUPS.validateOn(annotation.annotationType());
-        ConstraintAnnotationAttributes.PAYLOAD.validateOn(annotation.annotationType());
-        ConstraintAnnotationAttributes.MESSAGE.validateOn(annotation.annotationType());
+    public static void validateConstraintDefinition(final Annotation annotation) {
+        final Class<? extends Annotation> type = annotation.annotationType();
+
+        ConstraintAnnotationAttributes.GROUPS.validateOn(type);
+        ConstraintAnnotationAttributes.PAYLOAD.validateOn(type);
+        ConstraintAnnotationAttributes.MESSAGE.validateOn(type);
+        ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.validateOn(type);
+
+        final Object defaultValidationApplies = ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getDefaultValue(type);
+        if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.isDeclaredOn(type) && !ConstraintTarget.IMPLICIT.equals(defaultValidationApplies)) {
+            throw new ConstraintDefinitionException("validationAppliesTo default value should be IMPLICIT");
+        }
+
         validAttributes(annotation);
     }
 
@@ -59,6 +69,7 @@ public class ConstraintDefinitionValidator {
      *            The annotation to check.
      */
     private static void validAttributes(final Annotation annotation) {
+        /*
         final Method[] methods = run(SecureActions.getDeclaredMethods(annotation.annotationType()));
         for (Method method : methods ){
             // Currently case insensitive, the spec is unclear about this
@@ -67,6 +78,7 @@ public class ConstraintDefinitionValidator {
                     "A constraint annotation cannot have methods which start with 'valid'");
             }
         }
+        */
     }
 
     private static <T> T run(PrivilegedAction<T> action) {

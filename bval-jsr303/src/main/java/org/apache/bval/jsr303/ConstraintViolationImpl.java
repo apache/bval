@@ -18,9 +18,11 @@ package org.apache.bval.jsr303;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
+import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.io.Serializable;
 import java.lang.annotation.ElementType;
+import java.util.Arrays;
 
 /**
  * Description: Describe a constraint validation defect.<br/>
@@ -41,10 +43,12 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     private final Path propertyPath;
     private final ElementType elementType;
     private final ConstraintDescriptor<?> constraintDescriptor;
-    
+    private final Object returnValue;
+    private final Object[] parameters;
+
     /**
      * Create a new ConstraintViolationImpl instance.
-     * @param messageTemplate - message reason (raw message) 
+     * @param messageTemplate - message reason (raw message)
      * @param message - interpolated message (locale specific)
      * @param rootBean
      * @param leafBean
@@ -53,10 +57,13 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * @param constraintDescriptor
      * @param rootBeanClass
      * @param elementType
+     * @param returnValue
+     * @param parameters
      */
     public ConstraintViolationImpl(String messageTemplate, String message, T rootBean, Object leafBean,
                                    Path propertyPath, Object value,
-                                   ConstraintDescriptor<?> constraintDescriptor, Class<T> rootBeanClass, ElementType elementType) {
+                                   ConstraintDescriptor<?> constraintDescriptor, Class<T> rootBeanClass,
+                                   ElementType elementType, Object returnValue, Object[] parameters) {
         this.messageTemplate = messageTemplate;
         this.message = message;
         this.rootBean = rootBean;
@@ -66,6 +73,8 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
         this.value = value;
         this.constraintDescriptor = constraintDescriptor;
         this.elementType = elementType;
+        this.returnValue = returnValue;
+        this.parameters = parameters;
     }
 
     /**
@@ -106,6 +115,14 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
         return leafBean;
     }
 
+    public Object[] getExecutableParameters() {
+        return parameters;
+    }
+
+    public Object getExecutableReturnValue() {
+        return returnValue;
+    }
+
     /**
      * {@inheritDoc}
      * @return The value failing to pass the constraint
@@ -130,6 +147,13 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
         return constraintDescriptor;
     }
 
+    public <U> U unwrap(Class<U> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        throw new ValidationException("Type " + type + " is not supported");
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -140,102 +164,45 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
               leafBean + ", value=" + value + '}';
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((this.leafBean == null) ? 0 : this.leafBean.hashCode());
-        result = prime * result
-                + ((this.message == null) ? 0 : this.message.hashCode());
-        result = prime
-                * result
-                + ((this.propertyPath == null) ? 0 : this.propertyPath
-                        .hashCode());
-        result = prime * result
-                + ((this.rootBean == null) ? 0 : this.rootBean.hashCode());
-        result = prime * result
-                + ((this.value == null) ? 0 : this.value.hashCode());
-        result = prime * result
-                + ((this.elementType == null) ? 0 : this.elementType.hashCode());
-        return result;
-    }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    /**
-     * {@inheritDoc}
-     * NOTE: Needed to avoid duplication in the reported violations.
-     * 
-     * @param   obj   the reference object with which to compare.
-     * @return  <code>true</code> if this object is the same as the obj
-     *          argument; <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof ConstraintViolationImpl<?>)) {
-            return false;
-        }
+        ConstraintViolationImpl that = (ConstraintViolationImpl) o;
 
-        ConstraintViolationImpl<?> other = (ConstraintViolationImpl<?>) obj;
+        if (constraintDescriptor != null ? !constraintDescriptor.equals(that.constraintDescriptor) : that.constraintDescriptor != null)
+            return false;
+        if (elementType != that.elementType) return false;
+        if (leafBean != null ? !leafBean.equals(that.leafBean) : that.leafBean != null) return false;
+        if (message != null ? !message.equals(that.message) : that.message != null) return false;
+        if (messageTemplate != null ? !messageTemplate.equals(that.messageTemplate) : that.messageTemplate != null)
+            return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(parameters, that.parameters)) return false;
+        if (propertyPath != null ? !propertyPath.equals(that.propertyPath) : that.propertyPath != null) return false;
+        if (returnValue != null ? !returnValue.equals(that.returnValue) : that.returnValue != null) return false;
+        if (rootBean != null ? !rootBean.equals(that.rootBean) : that.rootBean != null) return false;
+        if (rootBeanClass != null ? !rootBeanClass.equals(that.rootBeanClass) : that.rootBeanClass != null)
+            return false;
+        if (value != null ? !value.equals(that.value) : that.value != null) return false;
 
-        if (this.leafBean == null) {
-            if (other.leafBean != null) {
-                return false;
-            }
-        } else if (!this.leafBean.equals(other.leafBean)) {
-            return false;
-        }
-        
-        if (this.message == null) {
-            if (other.message != null) {
-                return false;
-            }
-        } else if (!this.message.equals(other.message)) {
-            return false;
-        }
-        
-        if (this.propertyPath == null) {
-            if (other.propertyPath != null) {
-                return false;
-            }
-        } else if (!this.propertyPath.equals(other.propertyPath)) {
-            return false;
-        }
-        
-        if (this.rootBean == null) {
-            if (other.rootBean != null) {
-                return false;
-            }
-        } else if (!this.rootBean.equals(other.rootBean)) {
-            return false;
-        }
-        
-        if (this.rootBeanClass != other.rootBeanClass) {
-            return false;
-        }
-        
-        if (this.value == null) {
-            if (other.value != null) {
-                return false;
-            }
-        } else if (!this.value.equals(other.value)) {
-            return false;
-        }
-        
-        if (this.elementType != other.elementType) {
-            return false;
-        }
-        
         return true;
     }
-    
-    
+
+    @Override
+    public int hashCode() {
+        int result = messageTemplate != null ? messageTemplate.hashCode() : 0;
+        result = 31 * result + (message != null ? message.hashCode() : 0);
+        result = 31 * result + (rootBean != null ? rootBean.hashCode() : 0);
+        result = 31 * result + (rootBeanClass != null ? rootBeanClass.hashCode() : 0);
+        result = 31 * result + (leafBean != null ? leafBean.hashCode() : 0);
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (propertyPath != null ? propertyPath.hashCode() : 0);
+        result = 31 * result + (elementType != null ? elementType.hashCode() : 0);
+        result = 31 * result + (constraintDescriptor != null ? constraintDescriptor.hashCode() : 0);
+        result = 31 * result + (returnValue != null ? returnValue.hashCode() : 0);
+        result = 31 * result + (parameters != null ? Arrays.hashCode(parameters) : 0);
+        return result;
+    }
 }

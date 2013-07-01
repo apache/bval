@@ -49,6 +49,10 @@ public class CustomValidatorFactoryTest extends TestCase {
             return null;
         }
 
+        public ParameterNameProvider getParameterNameProvider() {
+            return null;
+        }
+
         public MessageInterpolator getMessageInterpolator() {
             return null;
         }
@@ -63,6 +67,10 @@ public class CustomValidatorFactoryTest extends TestCase {
 
         public <T> T unwrap(Class<T> type) {
             return null;
+        }
+
+        public void close() {
+
         }
 
         public ValidatorContext usingContext() {

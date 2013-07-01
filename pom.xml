@@ -284,16 +284,18 @@
     <dependencyManagement>
         <dependencies>
             <!-- Default of Apache Geronimo version of the Spec API -->
+            <!-- TODO
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-validation_1.0_spec</artifactId>
                 <version>1.1</version>
             </dependency>
+            -->
             <!-- Optional profile to use Spec RI API -->
             <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
-                <version>1.0.0.GA</version>
+                <version>1.1.0.Final</version>
             </dependency>
             <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
@@ -491,6 +493,7 @@
                             <exclude>**/*.iml</exclude>
                             <exclude>**/*.ipr</exclude>
                             <exclude>**/*.iws</exclude>
+                            <exclude>**/META-INF/services/*</exclude> <!-- depending service loader it can fail if a comment is added -->
                         </excludes>
                     </configuration>
                 </plugin>
@@ -539,7 +542,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>1.0-beta-4</version>
+                    <version>1.2</version>
                 </plugin>
                 <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
@@ -626,11 +629,12 @@
         <module>bval-core</module>
         <module>bval-xstream</module>
         <module>bval-jsr303</module>
-        <module>bundle</module>
+        <!--<module>bundle</module>-->
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>
         <module>bval-extras</module>
-  </modules>
+        <module>bval-tck11</module>
+    </modules>
 
 </project>

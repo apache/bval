@@ -16,22 +16,21 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.commons.lang3.reflect.TypeUtils;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
+import javax.validation.Payload;
+import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Locale;
 import java.util.Map;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.Payload;
-import javax.validation.ValidationException;
-
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Defines the well-known attributes of {@link Constraint} annotations.
@@ -42,22 +41,27 @@ public enum ConstraintAnnotationAttributes {
     /**
      * "message"
      */
-    MESSAGE,
+    MESSAGE(false, false, "message"),
 
     /**
      * "groups"
      */
-    GROUPS,
+    GROUPS(false, false, "groups"),
 
     /**
      * "payload"
      */
-    PAYLOAD,
+    PAYLOAD(false, false, "payload"),
+
+    /**
+     * "validationAppliesTo"
+     */
+    VALIDATION_APPLIES_TO(true, true, "validationAppliesTo"),
 
     /**
      * "value" for multi-valued constraints
      */
-    VALUE(true);
+    VALUE(false, true, "value");
 
     @SuppressWarnings("unused")
     private static class Types {
@@ -65,17 +69,18 @@ public enum ConstraintAnnotationAttributes {
         Class<?>[] groups;
         Class<? extends Payload>[] payload;
         Annotation[] value;
+        ConstraintTarget validationAppliesTo;
     }
 
-    private Type type;
-    private boolean permitNullDefaultValue;
+    private final Type type;
+    private final boolean permitNullDefaultValue;
+    private final String attributeName;
+    private final boolean quiet;
 
-    private ConstraintAnnotationAttributes() {
-        this(false);
-    }
-
-    private ConstraintAnnotationAttributes(boolean permitNullDefaultValue) {
+    private ConstraintAnnotationAttributes(final boolean quiet, final boolean permitNullDefaultValue, final String name) {
         this.permitNullDefaultValue = permitNullDefaultValue;
+        this.quiet = quiet;
+        this.attributeName = name;
         try {
             this.type = Types.class.getDeclaredField(getAttributeName()).getGenericType();
         } catch (Exception e) {
@@ -99,7 +104,7 @@ public enum ConstraintAnnotationAttributes {
      * @return String
      */
     public String getAttributeName() {
-        return name().toLowerCase(Locale.US);
+        return attributeName;
     }
 
     /**
@@ -141,7 +146,7 @@ public enum ConstraintAnnotationAttributes {
      * @throws ConstraintDefinitionException
      */
     public <A extends Annotation> void validateOn(Class<A> type) {
-        new Worker<A>(type);
+        new Worker<A>(type, quiet);
     }
 
     /**
@@ -178,9 +183,7 @@ public enum ConstraintAnnotationAttributes {
      * @return Object
      */
     public <T, A extends Annotation> T getDefaultValue(Class<A> type) {
-        @SuppressWarnings("unchecked")
-        final T result = (T) new Worker<A>(type).defaultValue;
-        return result;
+        return  (T) new Worker<A>(type, quiet).defaultValue;
     }
 
     private static <T> T doPrivileged(final PrivilegedAction<T> action) {

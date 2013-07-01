@@ -692,8 +692,7 @@ public class ValidationTest extends TestCase {
 
     public void testKeyedMetadata() {
         @SuppressWarnings("serial")
-        BeanDescriptor beanDescriptor = validator.getConstraintsForClass(new HashMap<String, Object>() {
-        }.getClass());
+        BeanDescriptor beanDescriptor = validator.getConstraintsForClass(new HashMap<String, Object>() {}.getClass());
         Assert.assertNotNull(beanDescriptor);
         Assert.assertFalse(beanDescriptor.isBeanConstrained());
         Assert.assertNull(beanDescriptor.getConstraintsForProperty("[foo]"));

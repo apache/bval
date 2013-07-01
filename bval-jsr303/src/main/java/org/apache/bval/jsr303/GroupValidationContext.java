@@ -24,8 +24,13 @@ import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.ValidationContext;
 
 import javax.validation.ConstraintValidator;
+import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
+import javax.validation.ParameterNameProvider;
+import javax.validation.Path;
 import javax.validation.TraversableResolver;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 /**
  * Description: JSR-303 {@link ValidationContext} extension. <br/>
@@ -38,6 +43,8 @@ public interface GroupValidationContext<T>
      * @return the groups in their sequence for validation
      */
     Groups getGroups();
+
+    void setCurrentGroups(Groups groups);
 
     /**
      * Set the current {@link Group}.
@@ -119,4 +126,27 @@ public interface GroupValidationContext<T>
      */
     void setCurrentOwner(Class<?> currentOwner);
 
+    void setKind(ElementKind type);
+
+    ElementKind getElementKind();
+
+    Object getReturnValue();
+
+    Object[] getParameters();
+
+    void setParameters(Object[] parameters);
+
+    void setReturnValue(Object returnValue);
+
+    ParameterNameProvider getParameterNameProvider();
+
+    void setMethod(Method method);
+
+    Method getMethod();
+
+    void setConstructor(Constructor<?> method);
+
+    Constructor<?> getConstructor();
+
+    void moveDown(Path.Node node);
 }

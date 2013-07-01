@@ -102,6 +102,7 @@ public class ValidationHelper {
         Object[] array = (Object[]) context.getBean();
         MetaBean metaBean = context.getMetaBean();
         context.setCurrentIndex(null);
+
         try {
             for (Object each : array) {
                 context.setCurrentIndex(index++);

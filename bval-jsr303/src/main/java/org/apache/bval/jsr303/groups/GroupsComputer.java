@@ -78,10 +78,13 @@ public class GroupsComputer {
             throw new IllegalArgumentException("At least one group has to be specified.");
         }
 
-        for (Class<?> clazz : groups) {
+        for (final Class<?> clazz : groups) {
+            if (clazz == null) {
+                throw new IllegalArgumentException("At least one group has to be specified.");
+            }
+
             if (!clazz.isInterface()) {
-                throw new ValidationException(
-                      "A group has to be an interface. " + clazz.getName() + " is not.");
+                throw new ValidationException("A group has to be an interface. " + clazz.getName() + " is not.");
             }
         }
 

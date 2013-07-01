@@ -18,6 +18,29 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.jsr303.groups.Group;
+import org.apache.bval.jsr303.groups.GroupConversionDescriptorImpl;
+import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.model.Features;
+import org.apache.bval.model.Meta;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.PropertyAccess;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintValidator;
+import javax.validation.UnexpectedTypeException;
+import javax.validation.Valid;
+import javax.validation.ValidationException;
+import javax.validation.constraintvalidation.SupportedValidationTarget;
+import javax.validation.constraintvalidation.ValidationTarget;
+import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
@@ -25,27 +48,13 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.UnexpectedTypeException;
-import javax.validation.Valid;
-import javax.validation.ValidationException;
-import javax.validation.groups.Default;
-
-import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.model.Features;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * Description: implements uniform handling of JSR303 {@link Constraint}
@@ -82,12 +91,12 @@ public final class AnnotationProcessor {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public boolean processAnnotations(MetaProperty prop, Class<?> owner, AnnotatedElement element,
+    public boolean processAnnotations(Meta prop, Class<?> owner, AnnotatedElement element,
         AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
         boolean changed = false;
         for (Annotation annotation : element.getDeclaredAnnotations()) {
-            changed |= processAnnotation(annotation, prop, owner, access, appender);
+            changed |= processAnnotation(annotation, prop, owner, access, appender, true);
         }
         return changed;
     }
@@ -109,7 +118,7 @@ public final class AnnotationProcessor {
      */
     public final <A extends Annotation> boolean processAnnotation(A annotation, Class<?> owner, AppendValidation appender)
         throws IllegalAccessException, InvocationTargetException {
-        return processAnnotation(annotation, null, owner, null, appender);
+        return processAnnotation(annotation, null, owner, null, appender, true);
     }
 
     /**
@@ -131,11 +140,24 @@ public final class AnnotationProcessor {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public <A extends Annotation> boolean processAnnotation(A annotation, MetaProperty prop, Class<?> owner,
-        AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
+    public <A extends Annotation> boolean processAnnotation(A annotation, Meta prop, Class<?> owner,
+        AccessStrategy access, AppendValidation appender, boolean reflection) throws IllegalAccessException, InvocationTargetException {
         if (annotation instanceof Valid) {
             return addAccessStrategy(prop, access);
         }
+
+        if (ConvertGroup.class.isInstance(annotation) || ConvertGroup.List.class.isInstance(annotation)) {
+            if (!reflection) {
+                Collection<Annotation> annotations = prop.getFeature(Jsr303Features.Property.ANNOTATIONS_TO_PROCESS);
+                if (annotations == null) {
+                    annotations = new ArrayList<Annotation>();
+                    prop.putFeature(Jsr303Features.Property.ANNOTATIONS_TO_PROCESS, annotations);
+                }
+                annotations.add(annotation);
+            }
+            return true;
+        }
+
         /**
          * An annotation is considered a constraint definition if its retention
          * policy contains RUNTIME and if the annotation itself is annotated
@@ -154,12 +176,11 @@ public final class AnnotationProcessor {
          * annotated by @Constraint) whose value element has a return type of an
          * array of constraint annotations in a special way.
          */
-        Object result =
-            SecureActions.getAnnotationValue(annotation, ConstraintAnnotationAttributes.VALUE.getAttributeName());
+        final Object result = SecureActions.getAnnotationValue(annotation, ConstraintAnnotationAttributes.VALUE.getAttributeName());
         if (result instanceof Annotation[]) {
             boolean changed = false;
-            for (Annotation each : (Annotation[]) result) {
-                changed |= processAnnotation(each, prop, owner, access, appender);
+            for (final Annotation each : (Annotation[]) result) {
+                changed |= processAnnotation(each, prop, owner, access, appender, reflection);
             }
             return changed;
         }
@@ -174,7 +195,7 @@ public final class AnnotationProcessor {
      * @param access
      * @return whether anything took place.
      */
-    public boolean addAccessStrategy(MetaProperty prop, AccessStrategy access) {
+    public boolean addAccessStrategy(Meta prop, AccessStrategy access) {
         if (prop == null) {
             return false;
         }
@@ -223,7 +244,7 @@ public final class AnnotationProcessor {
      * 
      * @param annotation
      *            constraint annotation
-     * @param constraintClasses
+     * @param rawConstraintClasses
      *            known {@link ConstraintValidator} implementation classes for
      *            <code>annotation</code>
      * @param prop
@@ -238,13 +259,23 @@ public final class AnnotationProcessor {
      * @throws InvocationTargetException
      */
     private <A extends Annotation> boolean applyConstraint(A annotation,
-        Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, MetaProperty prop, Class<?> owner,
+        Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, Meta prop, Class<?> owner,
         AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
-        final ConstraintValidator<A, ?> validator =
-            getConstraintValidator(annotation, constraintClasses, owner, access);
+        final Class<? extends ConstraintValidator<A, ?>>[] constraintClasses = select(rawConstraintClasses, access);
+        if (constraintClasses != null && constraintClasses.length == 0 && rawConstraintClasses.length > 0) {
+            return false;
+        }
+
+        RuntimeException missingValidatorException = null;
+        ConstraintValidator<A, ?> validator = null;
+        try {
+            validator = getConstraintValidator(annotation, constraintClasses, owner, access);
+        } catch (final RuntimeException e) {
+            missingValidatorException = e;
+        }
         final AnnotationConstraintBuilder<A> builder =
-            new AnnotationConstraintBuilder<A>(constraintClasses, validator, annotation, owner, access);
+            new AnnotationConstraintBuilder<A>(constraintClasses, validator, annotation, owner, access, null, missingValidatorException);
 
         // JSR-303 3.4.4: Add implicit groups
         if (prop != null && prop.getParentMetaBean() != null) {
@@ -284,10 +315,36 @@ public final class AnnotationProcessor {
         return true;
     }
 
+    private static <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] select(
+            final Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, final AccessStrategy access) {
+        final boolean isReturn = ReturnAccess.class.isInstance(access);
+        final boolean isParam = ParametersAccess.class.isInstance(access);
+        if (rawConstraintClasses != null && (isReturn || isParam)) {
+            final Collection<Class<? extends ConstraintValidator<A, ?>>> selected = new ArrayList<Class<? extends ConstraintValidator<A, ?>>>();
+            for (final Class<? extends ConstraintValidator<A, ?>> constraint : rawConstraintClasses) {
+                final SupportedValidationTarget target = constraint.getAnnotation(SupportedValidationTarget.class);
+                if (target == null && isReturn) {
+                    selected.add(constraint);
+                } else if (target != null) {
+                    for (final ValidationTarget validationTarget : target.value()) {
+                        if (isReturn && ValidationTarget.ANNOTATED_ELEMENT.equals(validationTarget)) {
+                            selected.add(constraint);
+                        } else if (isParam && ValidationTarget.PARAMETERS.equals(validationTarget)) {
+                            selected.add(constraint);
+                        }
+                    }
+            }
+            }
+            return selected.toArray(new Class[selected.size()]);
+        }
+        return rawConstraintClasses;
+    }
+
     private <A extends Annotation, T> ConstraintValidator<A, ? super T> getConstraintValidator(A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
         if (constraintClasses != null && constraintClasses.length > 0) {
             Type type = determineTargetedType(owner, access);
+
             /**
              * spec says in chapter 3.5.3.: The ConstraintValidator chosen to
              * validate a declared type T is the one where the type supported by
@@ -296,20 +353,31 @@ public final class AnnotationProcessor {
              * T and not a supertype of the chosen ConstraintValidator supported
              * type.
              */
-            Map<Type, Class<? extends ConstraintValidator<A, ?>>> validatorTypes =
-                getValidatorsTypes(constraintClasses);
+            final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorTypes = getValidatorsTypes(constraintClasses);
+            reduceTarget(validatorTypes, access);
+
             final List<Type> assignableTypes = new ArrayList<Type>(constraintClasses.length);
             fillAssignableTypes(type, validatorTypes.keySet(), assignableTypes);
             reduceAssignableTypes(assignableTypes);
             checkOneType(assignableTypes, type, owner, annotation, access);
 
+            if ((type == Object.class || type == Object[].class) && validatorTypes.containsKey(Object.class) && validatorTypes.containsKey(Object[].class)) {
+                throw new ConstraintDefinitionException("Only a validator for Object or Object[] should be provided for cross parameter validators");
+            }
+
+            final Collection<Class<? extends ConstraintValidator<A, ?>>> key = validatorTypes.get(assignableTypes.get(0));
+            if (key.size() > 1) {
+                final String message = "Factory returned " + key.size() + " validators";
+                if (ParametersAccess.class.isInstance(access)) { // cross parameter
+                    throw new ConstraintDefinitionException(message);
+                }
+                throw new UnexpectedTypeException(message);
+            }
+
             @SuppressWarnings("unchecked")
-            final ConstraintValidator<A, ? super T> validator =
-                (ConstraintValidator<A, ? super T>) factoryContext.getConstraintValidatorFactory()
-                    .getInstance(validatorTypes.get(assignableTypes.get(0)));
+            final ConstraintValidator<A, ? super T> validator = (ConstraintValidator<A, ? super T>) factoryContext.getConstraintValidatorFactory().getInstance(key.iterator().next());
             if (validator == null) {
-                throw new ValidationException("Factory returned null validator for: "
-                    + validatorTypes.get(assignableTypes.get(0)));
+                throw new ValidationException("Factory returned null validator for: " + key);
 
             }
             return validator;
@@ -318,15 +386,43 @@ public final class AnnotationProcessor {
         return null;
     }
 
+    private <A extends Annotation> void reduceTarget(final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validator, final AccessStrategy access) {
+        for (final Map.Entry<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> entry : validator.entrySet()) {
+            final Collection<Class<? extends ConstraintValidator<A, ?>>> validators = entry.getValue();
+            final Iterator<Class<? extends ConstraintValidator<A, ?>>> it = validators.iterator();
+            while (it.hasNext()) {
+                final Type v = it.next();
+                if (!Class.class.isInstance(v)) {
+                    continue; // TODO: handle this case
+                }
+
+                final Class<?> clazz = Class.class.cast(v);
+                final SupportedValidationTarget target = clazz.getAnnotation(SupportedValidationTarget.class);
+                if (target != null) {
+                    final Collection<ValidationTarget> targets = Arrays.asList(target.value());
+                    final boolean isParameter = ParameterAccess.class.isInstance(access) || ParametersAccess.class.isInstance(access);
+                    if ((isParameter && !targets.contains(ValidationTarget.PARAMETERS))
+                            || (!isParameter && !targets.contains(ValidationTarget.ANNOTATED_ELEMENT))) {
+                        it.remove();
+                    }
+                }
+            }
+            if (validators.isEmpty()) {
+                validator.remove(entry.getKey());
+            }
+        }
+    }
+
     private static void checkOneType(List<Type> types, Type targetType, Class<?> owner, Annotation anno,
         AccessStrategy access) {
 
         if (types.isEmpty()) {
-            StringBuilder buf =
-                new StringBuilder().append("No validator could be found for type ").append(stringForType(targetType))
-                    .append(". See: @").append(anno.annotationType().getSimpleName()).append(" at ").append(
-                        stringForLocation(owner, access));
-            throw new UnexpectedTypeException(buf.toString());
+            final String message = "No validator could be found for type " + stringForType(targetType)
+                    + ". See: @" + anno.annotationType().getSimpleName() + " at " + stringForLocation(owner, access);
+            if (Object[].class.equals(targetType)) { // cross parameter
+                throw new ConstraintDefinitionException(message);
+            }
+            throw new UnexpectedTypeException(message);
         } else if (types.size() > 1) {
             StringBuilder buf = new StringBuilder();
             buf.append("Ambiguous validators for type ");
@@ -380,7 +476,7 @@ public final class AnnotationProcessor {
     }
 
     private static void fillAssignableTypes(Type type, Set<Type> validatorsTypes, List<Type> suitableTypes) {
-        for (Type validatorType : validatorsTypes) {
+        for (final Type validatorType : validatorsTypes) {
             if (org.apache.commons.lang3.reflect.TypeUtils.isAssignable(type, validatorType)
                 && !suitableTypes.contains(validatorType)) {
                 suitableTypes.add(validatorType);
@@ -426,14 +522,11 @@ public final class AnnotationProcessor {
      * @param constraintValidatorClasses
      * @return {@link Map} of {@link Type} : {@link ConstraintValidator} subtype
      */
-    private static <A extends Annotation> Map<Type, Class<? extends ConstraintValidator<A, ?>>> getValidatorsTypes(
+    private static <A extends Annotation> Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> getValidatorsTypes(
         Class<? extends ConstraintValidator<A, ?>>[] constraintValidatorClasses) {
-        Map<Type, Class<? extends ConstraintValidator<A, ?>>> validatorsTypes =
-            new HashMap<Type, Class<? extends ConstraintValidator<A, ?>>>();
+        final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorsTypes = new HashMap<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>>();
         for (Class<? extends ConstraintValidator<A, ?>> validatorType : constraintValidatorClasses) {
-            Type validatedType =
-                TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class).get(
-                    ConstraintValidator.class.getTypeParameters()[1]);
+            Type validatedType = TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class).get(ConstraintValidator.class.getTypeParameters()[1]);
             if (validatedType == null) {
                 throw new ValidationException(String.format("Could not detect validated type for %s", validatorType));
             }
@@ -443,7 +536,10 @@ public final class AnnotationProcessor {
                     validatedType = Array.newInstance((Class<?>) componentType, 0).getClass();
                 }
             }
-            validatorsTypes.put(validatedType, validatorType);
+            if (!validatorsTypes.containsKey(validatedType)) {
+                validatorsTypes.put(validatedType, new ArrayList<Class<? extends ConstraintValidator<A, ?>>>());
+            }
+            validatorsTypes.get(validatedType).add(validatorType);
         }
         return validatorsTypes;
     }

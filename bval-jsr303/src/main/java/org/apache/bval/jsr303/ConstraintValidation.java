@@ -27,6 +27,7 @@ import org.apache.bval.util.AccessStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
 import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
@@ -41,6 +42,7 @@ import java.util.*;
  */
 public class ConstraintValidation<T extends Annotation> implements Validation, ConstraintDescriptor<T> {
     private final ConstraintValidator<T, ?> validator;
+    private final RuntimeException missingValidatorException;
     private T annotation; // for metadata request API
     private final AccessStrategy access;
     private final boolean reportFromComposite;
@@ -56,25 +58,27 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     private Set<Class<?>> groups;
     private Set<Class<? extends Payload>> payload;
     private Class<? extends ConstraintValidator<T, ?>>[] validatorClasses;
+    private ConstraintTarget validationAppliesTo = null;
 
     /**
      * Create a new ConstraintValidation instance.
-     * 
+     *
      * @param validatorClasses
      * @param validator
      *            - the constraint validator
      * @param annotation
-     *            - the annotation of the constraint
+ *            - the annotation of the constraint
      * @param owner
-     *            - the type where the annotated element is placed (class,
-     *            interface, annotation type)
+*            - the type where the annotated element is placed (class,
+*            interface, annotation type)
      * @param access
-     *            - how to access the value
+*            - how to access the value
      * @param reportFromComposite
+     * @param missingValidatorException
      */
     public ConstraintValidation(Class<? extends ConstraintValidator<T, ?>>[] validatorClasses,
-        ConstraintValidator<T, ?> validator, T annotation, Class<?> owner, AccessStrategy access,
-        boolean reportFromComposite) {
+                                ConstraintValidator<T, ?> validator, T annotation, Class<?> owner, AccessStrategy access,
+                                boolean reportFromComposite, ConstraintTarget target, RuntimeException missingValidatorException) {
         this.attributes = new HashMap<String, Object>();
         this.validatorClasses = ArrayUtils.clone(validatorClasses);
         this.validator = validator;
@@ -82,6 +86,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         this.owner = owner;
         this.access = access;
         this.reportFromComposite = reportFromComposite;
+        this.validationAppliesTo = target;
+        this.missingValidatorException = missingValidatorException;
     }
 
     /**
@@ -148,6 +154,10 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      *            root
      */
     public void validate(GroupValidationContext<?> context) {
+        if (missingValidatorException != null) {
+            throw missingValidatorException;
+        }
+
         context.setConstraintValidation(this);
         /**
          * execute unless the given validation constraint has already been
@@ -231,11 +241,11 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     }
 
     private boolean isReachable(GroupValidationContext<?> context) {
-        PathImpl path = context.getPropertyPath();
-        NodeImpl node = path.getLeafNode();
+        final PathImpl path = context.getPropertyPath();
+        final NodeImpl node = path.getLeafNode();
         PathImpl beanPath = path.getPathWithoutLeafNode();
         if (beanPath == null) {
-            beanPath = PathImpl.create(null);
+            beanPath = PathImpl.create();
         }
         try {
             if (!context.getTraversableResolver().isReachable(context.getBean(), node,
@@ -368,6 +378,10 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         return payload;
     }
 
+    public ConstraintTarget getValidationAppliesTo() {
+        return validationAppliesTo;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -378,4 +392,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         return Arrays.asList(validatorClasses);
     }
 
+    public void setValidationAppliesTo(final ConstraintTarget validationAppliesTo) {
+        this.validationAppliesTo = validationAppliesTo;
+    }
 }

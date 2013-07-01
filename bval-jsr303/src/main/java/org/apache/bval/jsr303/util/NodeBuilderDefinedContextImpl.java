@@ -22,6 +22,8 @@ package org.apache.bval.jsr303.util;
 import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.ElementKind;
+import javax.validation.Path;
 
 /**
  * Description: Implementation of {@link NodeBuilderDefinedContext}.<br/>
@@ -48,10 +50,20 @@ public final class NodeBuilderDefinedContextImpl
     /**
      * {@inheritDoc}
      */
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
-          String name) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         // Node not yet added, wait until more information is provided
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
+    }
+
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
+        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
+    }
+
+    public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
+        final NodeImpl node = new NodeImpl((String) null);
+        node.setKind(ElementKind.BEAN);
+        propertyPath.addNode(node);
+        return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
     }
 
     /**

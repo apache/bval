@@ -68,6 +68,10 @@ public class DefaultMessageInterpolatorTest extends TestCase {
             public Object getValidatedValue() {
                 return "12345678";
             }
+
+            public <T> T unwrap(Class<T> type) {
+                return null;
+            }
         };
         String msg = interpolator.interpolate("{validator.creditcard}", ctx);
         Assert.assertEquals("credit card is not valid", msg);
@@ -80,6 +84,10 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
             public Object getValidatedValue() {
                 return "";
+            }
+
+            public <T> T unwrap(Class<T> type) {
+                return null;
             }
         };
 
@@ -107,6 +115,10 @@ public class DefaultMessageInterpolatorTest extends TestCase {
             public Object getValidatedValue() {
                 return "12345678";
             }
+
+            public <T> T unwrap(Class<T> type) {
+                return null;
+            }
         };
 
         String result = this.interpolator.interpolate("Id number should match {regexp}", ctx);
@@ -123,6 +135,10 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
             public Object getValidatedValue() {
                 return "12345678";
+            }
+
+            public <T> T unwrap(Class<T> type) {
+                return null;
             }
         };
 

@@ -16,19 +16,27 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
 
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.GroupConversionDescriptor;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Description: MetaData class<br/>
  */
 public abstract class ElementDescriptorImpl implements ElementDescriptor {
+    private final Set<GroupConversionDescriptor> groupConversions = new CopyOnWriteArraySet<GroupConversionDescriptor>();
+    private boolean cascaded;
 
     /**
      * Get a set of {@link ConstraintDescriptor}s from the specified array of
@@ -55,6 +63,8 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
 
     private Set<ConstraintDescriptor<?>> constraintDescriptors;
 
+    private final Map<Group, Group> groupMapping = new HashMap<Group, Group>();
+
     /**
      * Create a new ElementDescriptorImpl instance.
      * 
@@ -70,7 +80,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
 
     /**
      * Create a new ElementDescriptorImpl instance.
-     * 
+     *
      * @param elementClass
      * @param validations
      */
@@ -108,7 +118,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      * 
      * @return Set of {@link ConstraintDescriptor}
      */
-    protected Set<ConstraintDescriptor<?>> getMutableConstraintDescriptors() {
+    public Set<ConstraintDescriptor<?>> getMutableConstraintDescriptors() {
         return constraintDescriptors;
     }
 
@@ -137,5 +147,38 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      */
     public MetaBean getMetaBean() {
         return metaBean;
+    }
+
+    public void addGroupMapping(final Group from, final Group to) {
+        groupMapping.put(from, to);
+    }
+
+    public Group mapGroup(final Group current) {
+        final Group mapping = groupMapping.get(current);
+        if (mapping != null) {
+            return mapping;
+        }
+        return current;
+    }
+
+    public Set<GroupConversionDescriptor> getGroupConversions() {
+        return groupConversions;
+    }
+
+    public void addGroupConversion(final GroupConversionDescriptor descriptor) {
+        groupConversions.add(descriptor);
+        final Group from = new Group(descriptor.getFrom());
+        if (mapGroup(from) != from) { // ref == is fine
+            throw new ConstraintDeclarationException("You can't map twice from the same group");
+        }
+        addGroupMapping(from, new Group(descriptor.getTo()));
+    }
+
+    public boolean isCascaded() {
+        return cascaded;
+    }
+
+    public void setCascaded(final boolean cascaded) {
+        this.cascaded = cascaded;
     }
 }

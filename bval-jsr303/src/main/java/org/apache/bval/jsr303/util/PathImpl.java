@@ -19,7 +19,6 @@
 package org.apache.bval.jsr303.util;
 
 import javax.validation.Path;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -97,20 +96,19 @@ public class PathImpl implements Path, Serializable {
      */
     public static PathImpl createPathFromString(String propertyPath) {
         if (propertyPath == null || propertyPath.length() == 0) {
-            return create(null);
+            return create();
         }
         return PathNavigation.navigateAndReturn(propertyPath, new PathImplBuilder());
     }
 
     /**
      * Create a {@link PathImpl} instance representing the specified path.
-     * 
-     * @param name
+     *
      * @return PathImpl
      */
-    public static PathImpl create(String name) {
-        PathImpl path = new PathImpl();
-        NodeImpl node = new NodeImpl(name);
+    public static PathImpl create() {
+        final PathImpl path = new PathImpl();
+        final NodeImpl node = new NodeImpl.BeanNodeImpl();
         path.addNode(node);
         return path;
     }
@@ -127,9 +125,37 @@ public class PathImpl implements Path, Serializable {
 
     private PathImpl(Path path) {
         this.nodeList = new ArrayList<Node>();
-        for (Object aPath : path) {
-            nodeList.add(new NodeImpl((Node) aPath));
+        for (final Object aPath : path) {
+            nodeList.add(newNode(Node.class.cast(aPath)));
         }
+    }
+
+    private static Node newNode(final Node cast) {
+        if (PropertyNode.class.isInstance(cast)) {
+            return new NodeImpl.PropertyNodeImpl(cast);
+        }
+        if (BeanNode.class.isInstance(cast)) {
+            return new NodeImpl.BeanNodeImpl(cast);
+        }
+        if (MethodNode.class.isInstance(cast)) {
+            return new NodeImpl.MethodNodeImpl(cast);
+        }
+        if (ConstructorNode.class.isInstance(cast)) {
+            return new NodeImpl.ConstructorNodeImpl(cast);
+        }
+        if (ConstructorNode.class.isInstance(cast)) {
+            return new NodeImpl.ConstructorNodeImpl(cast);
+        }
+        if (ReturnValueNode.class.isInstance(cast)) {
+            return new NodeImpl.ReturnValueNodeImpl(cast);
+        }
+        if (ParameterNode.class.isInstance(cast)) {
+            return new NodeImpl.ParameterNodeImpl(cast);
+        }
+        if (CrossParameterNode.class.isInstance(cast)) {
+            return new NodeImpl.CrossParameterNodeImpl(cast);
+        }
+        return new NodeImpl(cast);
     }
 
     private PathImpl() {
@@ -194,12 +220,26 @@ public class PathImpl implements Path, Serializable {
     public void addProperty(String name) {
         if (!nodeList.isEmpty()) {
             NodeImpl leaf = getLeafNode();
-            if (leaf != null && leaf.isInIterable() && leaf.getName() == null) {
+            if (leaf != null && leaf.isInIterable() && leaf.getName() == null) { // TODO: avoid to be here
+                if (!PropertyNode.class.isInstance(leaf)) {
+                    final NodeImpl tmp = new NodeImpl.PropertyNodeImpl(leaf);
+                    removeLeafNode();
+                    addNode(tmp);
+                    leaf = tmp;
+                }
                 leaf.setName(name);
                 return;
             }
         }
-        addNode(new NodeImpl(name));
+
+        final NodeImpl node;
+        if ("<cross-parameter>".equals(name)) {
+            node = new NodeImpl.CrossParameterNodeImpl();
+        } else {
+            node = new NodeImpl.PropertyNodeImpl(name);
+        }
+        addNode(node);
+
     }
 
     /**

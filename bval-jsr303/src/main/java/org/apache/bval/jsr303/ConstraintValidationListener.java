@@ -22,11 +22,13 @@ import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
 import javax.validation.Path;
 import javax.validation.metadata.ConstraintDescriptor;
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -102,9 +104,82 @@ public final class ConstraintValidationListener<T> implements ValidationListener
             descriptor = null;
         }
         ElementType elementType = (context.getAccess() != null) ? context.getAccess().getElementType() : null;
-        ConstraintViolationImpl<T> ic = new ConstraintViolationImpl<T>(messageTemplate,
-              message, rootBean, context.getBean(), propPath, value, descriptor, rootBeanType, elementType);
-        constraintViolations.add(ic);
+
+        final Object[] parameters;
+        Object leaf;
+        Object returnValue;
+        T rootBean;
+        if (GroupValidationContext.class.isInstance(context)) { // TODO: clean up it but it would need to rework completely our context - get rid of it would be the best
+            final GroupValidationContext<T> ctx = GroupValidationContext.class.cast(context);
+            final ElementKind elementKind = ctx.getElementKind();
+            final Iterator<Path.Node> it = propPath.iterator();
+            final ElementKind kind = propPath.iterator().next().getKind();
+
+            returnValue = ctx.getReturnValue();
+
+            if (ElementKind.CONSTRUCTOR.equals(kind)) {
+                rootBean = null;
+                leaf = context.getBean();
+            } else if (ElementKind.METHOD.equals(kind)) {
+                if (ElementKind.RETURN_VALUE.equals(elementKind)) { // switch back return value and rootBean
+                    rootBean = (T) returnValue;
+                    if (kindOf(propPath, ElementKind.RETURN_VALUE)) {
+                        leaf = returnValue;
+                        returnValue = this.rootBean;
+                    } else {
+                        leaf = this.rootBean;
+                        returnValue = this.rootBean;
+                    }
+                } else {
+                    rootBean = this.rootBean;
+                    if (kindOf(propPath, ElementKind.PARAMETER, ElementKind.CROSS_PARAMETER)) {
+                        leaf = rootBean;
+                    } else {
+                        leaf = context.getBean();
+                    }
+                }
+            } else {
+                rootBean = this.rootBean;
+                leaf = context.getBean();
+            }
+
+            if (ElementKind.CONSTRUCTOR.equals(kind)
+                    && (ElementKind.CROSS_PARAMETER.equals(elementKind)
+                        || ElementKind.PARAMETER.equals(elementKind))
+                    && (it.hasNext() && it.next() != null && it.hasNext() && it.next() != null && !it.hasNext())) { // means inherited validation use real value
+                leaf = null;
+            }
+
+            parameters = ctx.getParameters();
+        } else {
+            leaf = context.getBean();
+            returnValue = null;
+            parameters = null;
+            rootBean = this.rootBean;
+        }
+
+        constraintViolations.add(new ConstraintViolationImpl<T>(
+                messageTemplate, message,
+                rootBean, leaf,
+                propPath, value, descriptor,
+                rootBeanType,
+                elementType, returnValue, parameters));
+    }
+
+    private static boolean kindOf(final Path propPath, final ElementKind... kinds) {
+        final Iterator<Path.Node> node = propPath.iterator();
+        boolean isParam = false;
+        while (node.hasNext()) {
+            final ElementKind current = node.next().getKind();
+            isParam = false;
+            for (final ElementKind k : kinds) {
+                if (k.equals(current)) {
+                    isParam = true;
+                    break;
+                }
+            }
+        }
+        return isParam;
     }
 
     /**

@@ -18,33 +18,42 @@
  */
 package org.apache.bval.jsr303;
 
+import org.apache.bval.MetaBeanFactory;
+import org.apache.bval.jsr303.groups.Group;
+import org.apache.bval.jsr303.util.ClassHelper;
+import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.jsr303.xml.MetaConstraint;
+import org.apache.bval.model.Meta;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaConstructor;
+import org.apache.bval.model.MetaMethod;
+import org.apache.bval.model.MetaParameter;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.FieldAccess;
+import org.apache.bval.util.MethodAccess;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.GroupDefinitionException;
+import javax.validation.GroupSequence;
+import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
+import javax.validation.metadata.PropertyDescriptor;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.validation.Constraint;
-import javax.validation.GroupDefinitionException;
-import javax.validation.GroupSequence;
-import javax.validation.ValidationException;
-import javax.validation.groups.Default;
-
-import org.apache.bval.MetaBeanFactory;
-import org.apache.bval.jsr303.groups.Group;
-import org.apache.bval.jsr303.util.ClassHelper;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.jsr303.xml.MetaConstraint;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.util.AccessStrategy;
-import org.apache.bval.util.FieldAccess;
-import org.apache.bval.util.MethodAccess;
 
 /**
  * Description: process the class annotations for JSR303 constraint validations to build the MetaBean with information
@@ -92,6 +101,10 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             // time of processing
             for (int i = classSequence.size() - 1; i >= 0; i--) {
                 Class<?> eachClass = classSequence.get(i);
+                if (eachClass == Serializable.class || eachClass == Cloneable.class) {
+                    continue;
+                }
+
                 processClass(eachClass, metabean);
                 processGroupSequence(eachClass, metabean, "{GroupSequence:" + eachClass.getCanonicalName() + "}");
             }
@@ -116,12 +129,13 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
 
         // if NOT ignore class level annotations
         if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(beanClass)) {
-            annotationProcessor.processAnnotations(null, beanClass, beanClass, null, new AppendValidationToMeta(
-                metabean));
+            annotationProcessor.processAnnotations(null, beanClass, beanClass, null, new AppendValidationToMeta(metabean));
         }
 
+        final Collection<String> missingValid = new ArrayList<String>();
+
         final Field[] fields = doPrivileged(SecureActions.getDeclaredFields(beanClass));
-        for (Field field : fields) {
+        for (final Field field : fields) {
             MetaProperty metaProperty = metabean.getProperty(field.getName());
             // create a property for those fields for which there is not yet a
             // MetaProperty
@@ -135,10 +149,14 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                     new AppendValidationToMeta(metaProperty)) && create) {
                     metabean.putProperty(metaProperty.getName(), null);
                 }
+
+                if (field.getAnnotation(ConvertGroup.class) != null) {
+                    missingValid.add(field.getName());
+                }
             }
         }
         final Method[] methods = doPrivileged(SecureActions.getDeclaredMethods(beanClass));
-        for (Method method : methods) {
+        for (final Method method : methods) {
             String propName = null;
             if (method.getParameterTypes().length == 0) {
                 propName = MethodAccess.getPropertyName(method);
@@ -158,12 +176,18 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                         metabean.putProperty(propName, null);
                     }
                 }
-            } else if (hasValidationConstraintsDefined(method)) {
-                throw new ValidationException("Property " + method.getName() + " does not follow javabean conventions.");
             }
         }
 
         addXmlConstraints(beanClass, metabean);
+
+        for (final String name : missingValid) {
+            final MetaProperty metaProperty = metabean.getProperty(name);
+            if (metaProperty != null && metaProperty.getFeature(Jsr303Features.Property.REF_CASCADE) == null) {
+                throw new ConstraintDeclarationException("@ConvertGroup needs @Valid");
+            }
+        }
+        missingValid.clear();
     }
 
     /**
@@ -212,26 +236,76 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
      */
     private void addXmlConstraints(Class<?> beanClass, MetaBean metabean) throws IllegalAccessException,
         InvocationTargetException {
-        for (MetaConstraint<?, ? extends Annotation> meta : factoryContext.getFactory().getMetaConstraints(beanClass)) {
-            MetaProperty metaProperty;
-            AccessStrategy access = meta.getAccessStrategy();
+        for (final MetaConstraint<?, ? extends Annotation> metaConstraint : factoryContext.getFactory().getMetaConstraints(beanClass)) {
+            Meta meta;
+            AccessStrategy access = metaConstraint.getAccessStrategy();
             boolean create = false;
             if (access == null) { // class level
-                metaProperty = null;
+                meta = null;
+            } else if (access.getElementType() == ElementType.METHOD && !metaConstraint.getMember().getName().startsWith("get")) { // TODO: better getter test
+                final Method method = Method.class.cast(metaConstraint.getMember());
+                meta = metabean.getMethod(method);
+                final MetaMethod metaMethod;
+                if (meta == null) {
+                    meta = new MetaMethod(metabean, method);
+                    metaMethod = MetaMethod.class.cast(meta);
+                    metabean.addMethod(method, metaMethod);
+                } else {
+                    metaMethod = MetaMethod.class.cast(meta);
+                }
+                final Integer index = metaConstraint.getIndex();
+                if (index != null && index >= 0) {
+                    MetaParameter param = metaMethod.getParameter(index);
+                    if (param == null) {
+                        param = new MetaParameter(metaMethod, index);
+                        metaMethod.addParameter(index, param);
+                    }
+                    param.addAnnotation(metaConstraint.getAnnotation());
+                } else {
+                    metaMethod.addAnnotation(metaConstraint.getAnnotation());
+                }
+                continue;
+            } else if (access.getElementType() == ElementType.CONSTRUCTOR){
+                final Constructor<?> constructor = Constructor.class.cast(metaConstraint.getMember());
+                meta = metabean.getConstructor(constructor);
+                final MetaConstructor metaConstructor;
+                if (meta == null) {
+                    meta = new MetaConstructor(metabean, constructor);
+                    metaConstructor = MetaConstructor.class.cast(meta);
+                    metabean.addConstructor(constructor, metaConstructor);
+                } else {
+                    metaConstructor = MetaConstructor.class.cast(meta);
+                }
+                final Integer index = metaConstraint.getIndex();
+                if (index != null && index >= 0) {
+                    MetaParameter param = metaConstructor.getParameter(index);
+                    if (param == null) {
+                        param = new MetaParameter(metaConstructor, index);
+                        metaConstructor.addParameter(index, param);
+                    }
+                    param.addAnnotation(metaConstraint.getAnnotation());
+                } else {
+                    metaConstructor.addAnnotation(metaConstraint.getAnnotation());
+                }
+                continue;
             } else { // property level
-                metaProperty = metabean.getProperty(access.getPropertyName());
-                create = metaProperty == null;
+                meta = metabean.getProperty(access.getPropertyName());
+                create = meta == null;
                 if (create) {
-                    metaProperty = addMetaProperty(metabean, access);
+                    meta = addMetaProperty(metabean, access);
                 }
             }
-            if (!annotationProcessor.processAnnotation(meta.getAnnotation(), metaProperty, beanClass,
-                meta.getAccessStrategy(), new AppendValidationToMeta(metaProperty == null ? metabean : metaProperty))
+            if (!annotationProcessor.processAnnotation(metaConstraint.getAnnotation(), meta, beanClass,
+                metaConstraint.getAccessStrategy(), new AppendValidationToMeta(meta == null ? metabean : meta), false)
                 && create) {
                 metabean.putProperty(access.getPropertyName(), null);
             }
         }
-        for (AccessStrategy access : factoryContext.getFactory().getValidAccesses(beanClass)) {
+        for (final AccessStrategy access : factoryContext.getFactory().getValidAccesses(beanClass)) {
+            if (access.getElementType() == ElementType.PARAMETER) {
+                continue;
+            }
+
             MetaProperty metaProperty = metabean.getProperty(access.getPropertyName());
             boolean create = metaProperty == null;
             if (create) {
@@ -264,7 +338,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             }
         }
         boolean containsDefault = false;
-        for (Class<?> groupClass : groupClasses) {
+        for (final Class<?> groupClass : groupClasses) {
             if (groupClass.getName().equals(beanClass.getName())) {
                 groupSeq.add(Group.DEFAULT);
                 containsDefault = true;

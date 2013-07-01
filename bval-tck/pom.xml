@@ -34,8 +34,43 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>org.apache.bval.bundle</artifactId>
+            <artifactId>bval-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-jsr303</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-atinject_1.0_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-jcdi_1.0_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-interceptor_1.1_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-ejb_3.1_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-el_2.2_spec</artifactId>
+            <version>1.0.4</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -123,9 +158,16 @@
                 </dependency>
                 -->
                 <dependency>
+                  <groupId>javax.validation</groupId>
+                  <artifactId>validation-api</artifactId>
+                  <scope>provided</scope>
+                </dependency>
+                <!-- TODO
+                <dependency>
                     <groupId>org.apache.geronimo.specs</groupId>
                     <artifactId>geronimo-validation_1.0_spec</artifactId>
                 </dependency>
+                -->
                 <dependency>
                     <groupId>org.testng</groupId>
                     <artifactId>testng</artifactId>
@@ -144,6 +186,10 @@
                 </dependency>
             </dependencies>
             <repositories>
+                <repository>
+                  <id>nuxeo</id>
+                  <url>https://maven.nuxeo.org/nexus/content/groups/public/</url>
+                </repository>
                 <repository>
                     <!-- override outdated URLs for jboss repo ids -->
                     <id>repository.jboss.org</id>
@@ -214,20 +260,22 @@
                                             <classifier>suite</classifier>
                                             <overWrite>false</overWrite>
                                         </artifactItem>
-                                        <!-- use geronimo-validation spec
+                                        <!-- TODO: use geronimo-validation spec -->
                                         <artifactItem>
                                             <groupId>javax.validation</groupId>
                                             <artifactId>validation-api</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
-                                        -->
+
+                                        <!-- TODO
                                         <artifactItem>
                                             <groupId>org.apache.geronimo.specs</groupId>
                                             <artifactId>geronimo-validation_1.0_spec</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
+                                        -->
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
                                             <artifactId>org.apache.bval.bundle</artifactId>

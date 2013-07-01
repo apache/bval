@@ -34,7 +34,7 @@
 
     </field>
     <field name="valueCode">
-      <valid/>
+      <!--<valid/>-->
       <!-- @HasValue({ 0, 20 }) -->
       <constraint annotation="org.apache.bval.constraints.HasValue">
         <element name="value">
@@ -45,7 +45,7 @@
 
     </field>
     <getter name="firstName">
-      <valid/>
+      <!--<valid/>-->
       <!-- @Size(message="Size is limited",
                  groups={First.class, Default.class},
                  max=10
@@ -66,7 +66,7 @@
 
   <constraint-definition annotation="javax.validation.constraints.Size">
       <validated-by include-existing-validators="false">
-          <value>org.apache.bval.constraints.SizeValidatorForString</value>
+          <value>org.apache.bval.constraints.SizeValidatorForCharSequence</value>
       </validated-by>
   </constraint-definition>
 

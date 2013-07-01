@@ -66,12 +66,10 @@ public class ConstraintValidatorContextTest extends TestCase {
     }
 
     public void testPerson1() {
-        cvb.addNode("person").addNode(null).inIterable().atIndex(1)
-                .addConstraintViolation();
-        Error error = cvc.getErrorMessages().iterator().next();
-        PathImpl errorPath = (PathImpl) error.getOwner();
-        Assert.assertEquals("Incorrect path created", "person[1]", errorPath
-                .toString());
+        cvb.addNode("person").addNode(null).inIterable().atIndex(1).addConstraintViolation();
+        final Error error = cvc.getErrorMessages().iterator().next();
+        final PathImpl errorPath = (PathImpl) error.getOwner();
+        Assert.assertEquals("Incorrect path created", "person[1]", errorPath.toString());
     }
 
     public void testPersonLawyerName() {

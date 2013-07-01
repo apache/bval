@@ -20,6 +20,7 @@ package org.apache.bval.jsr303.util;
 
 import org.apache.commons.lang3.ClassUtils;
 
+import java.io.Serializable;
 import java.security.AccessController;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class ClassHelper {
      *            The current class, root of the hierarchy to traverse.
      */
     static public void fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
-        if (clazz == null || clazz == Object.class) {
+        if (clazz == null || clazz == Object.class || clazz == Serializable.class) {
             return;
         }
         if (allClasses.contains(clazz)) {

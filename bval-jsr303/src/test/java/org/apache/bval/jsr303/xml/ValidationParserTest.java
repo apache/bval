@@ -45,11 +45,10 @@ public class ValidationParserTest extends TestCase
     }
 
     public void testGetInputStream() throws IOException {
-        ValidationParser vp = new ValidationParser("sample-validation.xml");
-        assertNotNull(vp.getInputStream("sample-validation.xml"));
+        assertNotNull(ValidationParser.getInputStream("sample-validation.xml"));
 
         try {
-            vp.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
+            ValidationParser.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
             fail("exception not thrown");
         } catch(ValidationException vex) {
             assertTrue(vex.getMessage().startsWith("More than "));
@@ -57,10 +56,8 @@ public class ValidationParserTest extends TestCase
     }
 
     public void testParse() {
-        ValidationParser vp = new ValidationParser("sample-validation.xml");
-        ConfigurationImpl config =
-              new ConfigurationImpl(null, new ApacheValidationProvider());
-        vp.processValidationConfig(config);
+        ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
+        ValidationParser.processValidationConfig("sample-validation.xml", config, false);
     }
 
     public void testConfigureFromXml() {

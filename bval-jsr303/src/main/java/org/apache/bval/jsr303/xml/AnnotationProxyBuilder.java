@@ -16,6 +16,13 @@
  */
 package org.apache.bval.jsr303.xml;
 
+import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr303.util.SecureActions;
+
+import javax.validation.Payload;
+import javax.validation.Valid;
+import javax.validation.ValidationException;
+import javax.validation.groups.ConvertGroup;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -26,12 +33,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.validation.Payload;
-import javax.validation.ValidationException;
-
-import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
-import org.apache.bval.jsr303.util.SecureActions;
 
 /**
  * Description: Holds the information and creates an annotation proxy during xml
@@ -197,6 +198,37 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
             return AccessController.doPrivileged(action);
         } else {
             return action.run();
+        }
+    }
+
+
+    public static final class ValidAnnotation implements Valid {
+        public static final ValidAnnotation INSTANCE = new ValidAnnotation();
+
+        public Class<? extends Annotation> annotationType() {
+            return Valid.class;
+        }
+    }
+
+    public static final class ConverGroupAnnotation implements ConvertGroup {
+        private final Class<?> from;
+        private final Class<?> to;
+
+        public ConverGroupAnnotation(final Class<?> from, final Class<?> to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        public Class<? extends Annotation> annotationType() {
+            return ConvertGroup.class;
+        }
+
+        public Class<?> from() {
+            return from;
+        }
+
+        public Class<?> to() {
+            return to;
         }
     }
 }

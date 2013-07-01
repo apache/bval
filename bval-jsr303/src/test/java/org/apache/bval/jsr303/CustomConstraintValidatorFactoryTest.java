@@ -61,6 +61,10 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
             public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
                 return null; // always return null
             }
+
+            public void releaseInstance(ConstraintValidator<?, ?> instance) {
+                // no-op
+            }
         };
         
         // Create a validator with this factory

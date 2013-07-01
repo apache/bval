@@ -18,21 +18,25 @@
  */
 package org.apache.bval.jsr303.util;
 
+import javax.validation.ElementKind;
 import javax.validation.Path;
 import javax.validation.Path.Node;
-
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Description: a node (property) as part of a Path.
  * (Implementation based on reference implementation) <br/>
+ *
+ * TODO: split it in several impl
  */
-public final class NodeImpl implements Path.Node, Serializable {
+public class NodeImpl implements Path.Node, Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final String INDEX_OPEN = "[";
     private static final String INDEX_CLOSE = "]";
+    private List<Class<?>> parameterTypes;
 
     /**
      * Append a Node to the specified StringBuilder.
@@ -84,13 +88,15 @@ public final class NodeImpl implements Path.Node, Serializable {
     private String name;
     private boolean inIterable;
     private Integer index;
+    private int parameterIndex;
     private Object key;
+    private ElementKind kind;
 
     /**
      * Create a new NodeImpl instance.
      * @param name
      */
-    public NodeImpl(String name) {
+    public  NodeImpl(String name) {
         this.name = name;
     }
 
@@ -103,6 +109,7 @@ public final class NodeImpl implements Path.Node, Serializable {
         this.inIterable = node.isInIterable();
         this.index = node.getIndex();
         this.key = node.getKey();
+        this.kind = node.getKind();
     }
 
     private NodeImpl() {
@@ -154,6 +161,10 @@ public final class NodeImpl implements Path.Node, Serializable {
         this.key = null;
     }
 
+    public void setParameterIndex(final Integer parameterIndex) {
+        this.parameterIndex = parameterIndex;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -169,6 +180,21 @@ public final class NodeImpl implements Path.Node, Serializable {
         inIterable = true;
         this.key = key;
         this.index = null;
+    }
+
+    public ElementKind getKind() {
+        return kind;
+    }
+
+    public void setKind(ElementKind kind) {
+        this.kind = kind;
+    }
+
+    public <T extends Node> T as(final Class<T> nodeType) {
+        if (nodeType.isInstance(this)) {
+            return nodeType.cast(this);
+        }
+        throw new ClassCastException("Type " + nodeType + " not supported");
     }
 
     /**
@@ -205,6 +231,9 @@ public final class NodeImpl implements Path.Node, Serializable {
         if (name != null ? !name.equals(node.name) : node.name != null) {
             return false;
         }
+        if (kind != null ? !kind.equals(node.kind) : node.kind != null) {
+            return false;
+        }
 
         return true;
     }
@@ -218,6 +247,129 @@ public final class NodeImpl implements Path.Node, Serializable {
         result = 31 * result + (inIterable ? 1 : 0);
         result = 31 * result + (index != null ? index.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);
+        result = 31 * result + (kind != null ? kind.hashCode() : 0);
         return result;
+    }
+
+    public int getParameterIndex() {
+        return parameterIndex;
+    }
+
+    public List<Class<?>> getParameterTypes() {
+        return parameterTypes;
+    }
+
+    public void setParameterTypes(final List<Class<?>> parameterTypes) {
+        this.parameterTypes = parameterTypes;
+    }
+
+    public static class ParameterNodeImpl extends NodeImpl implements Path.ParameterNode {
+        public ParameterNodeImpl(final Node cast) {
+            super(cast);
+            if (ParameterNodeImpl.class.isInstance(cast)) {
+                setParameterIndex(ParameterNodeImpl.class.cast(cast).getParameterIndex());
+            }
+        }
+
+        public ParameterNodeImpl(final String name, final int idx) {
+            super(name);
+            setParameterIndex(idx);
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.PARAMETER;
+        }
+    }
+
+    public static class ConstructorNodeImpl extends NodeImpl implements Path.ConstructorNode {
+        public ConstructorNodeImpl(final Node cast) {
+            super(cast);
+            if (NodeImpl.class.isInstance(cast)) {
+                setParameterTypes(NodeImpl.class.cast(cast).parameterTypes);
+            }
+        }
+
+        public ConstructorNodeImpl(final String simpleName, List<Class<?>> paramTypes) {
+            super(simpleName);
+            setParameterTypes(paramTypes);
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.CONSTRUCTOR;
+        }
+    }
+
+    public static class CrossParameterNodeImpl extends NodeImpl implements Path.CrossParameterNode {
+        public CrossParameterNodeImpl() {
+            super("<cross-parameter>");
+        }
+
+        public CrossParameterNodeImpl(final Node cast) {
+            super(cast);
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.CROSS_PARAMETER;
+        }
+    }
+
+    public static class MethodNodeImpl extends NodeImpl implements Path.MethodNode {
+        public MethodNodeImpl(final Node cast) {
+            super(cast);
+            if (MethodNodeImpl.class.isInstance(cast)) {
+                setParameterTypes(MethodNodeImpl.class.cast(cast).getParameterTypes());
+            }
+        }
+
+        public MethodNodeImpl(final String name, final List<Class<?>> classes) {
+            super(name);
+            setParameterTypes(classes);
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.METHOD;
+        }
+    }
+
+    public static class ReturnValueNodeImpl extends NodeImpl implements Path.ReturnValueNode {
+        public ReturnValueNodeImpl(final Node cast) {
+            super(cast);
+        }
+
+        public ReturnValueNodeImpl() {
+            super("<return value>");
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.RETURN_VALUE;
+        }
+    }
+
+    public static class PropertyNodeImpl extends NodeImpl implements Path.PropertyNode {
+        public PropertyNodeImpl(final String name) {
+            super(name);
+        }
+
+        public PropertyNodeImpl(final Node cast) {
+            super(cast);
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.PROPERTY;
+        }
+    }
+
+    public static class BeanNodeImpl extends NodeImpl implements Path.BeanNode {
+        public BeanNodeImpl() {
+            // no-op
+        }
+
+        public BeanNodeImpl(final Node cast) {
+            super(cast);
+        }
+
+        public ElementKind getKind() {
+            return ElementKind.BEAN;
+        }
     }
 }

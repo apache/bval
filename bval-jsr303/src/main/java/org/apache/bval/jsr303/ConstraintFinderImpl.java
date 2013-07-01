@@ -149,8 +149,10 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
      * {@inheritDoc}
      */
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
-        return constraintDescriptors.isEmpty() ? Collections.<ConstraintDescriptor<?>> emptySet() : Collections
-            .<ConstraintDescriptor<?>> unmodifiableSet(constraintDescriptors);
+        if (constraintDescriptors.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return Collections.<ConstraintDescriptor<?>>unmodifiableSet(constraintDescriptors);
     }
 
     /**

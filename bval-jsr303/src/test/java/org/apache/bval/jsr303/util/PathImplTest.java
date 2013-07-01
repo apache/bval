@@ -126,10 +126,10 @@ public class PathImplTest extends TestCase {
     }
 
     public void testNull() {
-        assertEquals(PathImpl.createPathFromString(null), PathImpl.create(null));
+        assertEquals(PathImpl.createPathFromString(null), PathImpl.create());
 
-        assertEquals("", PathImpl.create(null).toString());
-        Path path = PathImpl.create(null);
+        assertEquals("", PathImpl.create().toString());
+        Path path = PathImpl.create();
         Path.Node node = path.iterator().next();
         assertEquals(null, node.getName());
     }
@@ -172,11 +172,11 @@ public class PathImplTest extends TestCase {
     }
 
     public void testToString() {
-        PathImpl path = PathImpl.create(null);
+        PathImpl path = PathImpl.create();
         path.addNode(new NodeImpl("firstName"));
         assertEquals("firstName", path.toString());
 
-        path = PathImpl.create(null);
+        path = PathImpl.create();
         path.getLeafNode().setIndex(2);
         assertEquals("[2]", path.toString());
         path.addNode(new NodeImpl("firstName"));

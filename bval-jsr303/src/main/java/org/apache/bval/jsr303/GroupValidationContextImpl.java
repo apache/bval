@@ -27,9 +27,15 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.util.AccessStrategy;
 
 import javax.validation.ConstraintValidator;
+import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
+import javax.validation.ParameterNameProvider;
+import javax.validation.Path;
 import javax.validation.TraversableResolver;
+import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -43,6 +49,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     private final MessageInterpolator messageResolver;
     private final PathImpl path;
     private final MetaBean rootMetaBean;
+    private final ParameterNameProvider parameterNameProvider;
 
     /**
      * the groups in the sequence of validation to take place
@@ -64,23 +71,30 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     private ConstraintValidation<?> constraintValidation;
     private final TraversableResolver traversableResolver;
 
+    private Object[] parameters;
+    private Object returnValue;
+    private Method method;
+    private Constructor<?> constructor;
+
     /**
      * Create a new GroupValidationContextImpl instance.
-     * 
+     *
      * @param listener
      * @param aMessageResolver
      * @param traversableResolver
+     * @param parameterNameProvider
      * @param rootMetaBean
      */
     public GroupValidationContextImpl(ConstraintValidationListener<T> listener, MessageInterpolator aMessageResolver,
-        TraversableResolver traversableResolver, MetaBean rootMetaBean) {
+                                      TraversableResolver traversableResolver, ParameterNameProvider parameterNameProvider, MetaBean rootMetaBean) {
         // inherited variable 'validatedObjects' is of type:
         // HashMap<GraphBeanIdentity, Set<PathImpl>> in this class
         super(listener, new HashMap<GraphBeanIdentity, Set<PathImpl>>());
         this.messageResolver = aMessageResolver;
         this.traversableResolver = CachingTraversableResolver.cacheFor(traversableResolver);
+        this.parameterNameProvider = parameterNameProvider;
         this.rootMetaBean = rootMetaBean;
-        this.path = PathImpl.create(null);
+        this.path = PathImpl.create();
     }
 
     /**
@@ -109,13 +123,26 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
         }
     }
 
+    public void setKind(final ElementKind type) {
+        path.getLeafNode().setKind(type);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void moveDown(MetaProperty prop, AccessStrategy access) {
-        path.addProperty(prop.getName());
+        moveDown(prop.getName());
         super.moveDown(prop, access);
+    }
+
+    @Override
+    public void moveDown(final String prop) {
+        path.addProperty(prop);
+    }
+
+    public void moveDown(final Path.Node node) {
+        path.addNode(node);
     }
 
     /**
@@ -215,6 +242,10 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
         return groups;
     }
 
+    public void setCurrentGroups(final Groups g) {
+        groups = g;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -261,6 +292,13 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
         }
     }
 
+    public <T> T unwrap(Class<T> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        throw new ValidationException("Type " + type + " not supported");
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -287,5 +325,45 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
      */
     public void setCurrentOwner(Class<?> currentOwner) {
         this.currentOwner = currentOwner;
+    }
+
+    public ElementKind getElementKind() {
+        return path.getLeafNode().getKind();
+    }
+
+    public Object getReturnValue() {
+        return returnValue;
+    }
+
+    public Object[] getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(final Object[] parameters) {
+        this.parameters = parameters;
+    }
+
+    public void setReturnValue(final Object returnValue) {
+        this.returnValue = returnValue;
+    }
+
+    public ParameterNameProvider getParameterNameProvider() {
+        return parameterNameProvider;
+    }
+
+    public void setMethod(final Method method) {
+        this.method = method;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public Constructor<?> getConstructor() {
+        return constructor;
+    }
+
+    public void setConstructor(final Constructor<?> constructor) {
+        this.constructor = constructor;
     }
 }

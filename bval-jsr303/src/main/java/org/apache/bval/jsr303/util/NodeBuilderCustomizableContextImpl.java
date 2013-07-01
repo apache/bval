@@ -22,9 +22,10 @@ package org.apache.bval.jsr303.util;
 import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.ElementKind;
 
 /**
- * Description: implementation of {@link NodeBuilderCustomizableContext}.<br/>
+ * Description: implementation of {@link javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
  */
 final class NodeBuilderCustomizableContextImpl
       implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {
@@ -46,6 +47,7 @@ final class NodeBuilderCustomizableContextImpl
         messageTemplate = template;
         propertyPath = path;
         node = new NodeImpl(name);
+        node.setKind(ElementKind.PROPERTY);
     }
 
     /**
@@ -60,11 +62,24 @@ final class NodeBuilderCustomizableContextImpl
     /**
      * {@inheritDoc}
      */
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
-          String name) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         propertyPath.addNode(node);
         node = new NodeImpl(name);
         return this; // Re-use this instance
+    }
+
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
+        propertyPath.addNode(node);
+        node = new NodeImpl.PropertyNodeImpl(name);
+        node.setKind(ElementKind.PROPERTY);
+        return null;
+    }
+
+    public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
+        propertyPath.addNode(node);
+        node = new NodeImpl((String) null);
+        node.setKind(ElementKind.BEAN);
+        return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
     }
 
     /**

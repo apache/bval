@@ -21,13 +21,16 @@ package org.apache.bval.jsr303;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
 
+import javax.validation.metadata.GroupConversionDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
+import java.util.Set;
 
 /**
  * Description: {@link PropertyDescriptor} implementation.<br/>
+ *
+ * TODO: use it instead of MetaProperty!
  */
 class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDescriptor {
-    private boolean cascaded;
     private String propertyPath;
 
     /**
@@ -39,22 +42,6 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
         super(property.getParentMetaBean(), property.getTypeClass(), property.getValidations());
         setCascaded(property.getMetaBean() != null || property.getFeature(Features.Property.REF_CASCADE) != null);
         setPropertyPath(property.getName());
-    }
-
-    /**
-     * Set whether the referenced property is cascaded.
-     * 
-     * @param cascaded
-     */
-    public void setCascaded(boolean cascaded) {
-        this.cascaded = cascaded;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isCascaded() {
-        return cascaded;
     }
 
     /**

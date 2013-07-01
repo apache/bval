@@ -19,6 +19,7 @@
 package org.apache.bval.jsr303;
 
 
+import org.apache.bval.jsr303.util.LeafNodeBuilderCustomizableContextImpl;
 import org.apache.bval.jsr303.util.NodeBuilderDefinedContextImpl;
 import org.apache.bval.jsr303.util.NodeImpl;
 import org.apache.bval.jsr303.util.PathImpl;
@@ -26,8 +27,11 @@ import org.apache.bval.model.ValidationListener;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.ElementKind;
+import javax.validation.ParameterNameProvider;
 import javax.validation.Path;
 import javax.validation.ValidationException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,8 +79,14 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
      */
     public ConstraintViolationBuilder buildConstraintViolationWithTemplate(
           String messageTemplate) {
-        return new ConstraintViolationBuilderImpl(this, messageTemplate,
-              validationContext.getPropertyPath());
+        return new ConstraintViolationBuilderImpl(this, messageTemplate, validationContext.getPropertyPath());
+    }
+
+    public <T> T unwrap(Class<T> type) {
+        if (type.isInstance(this)) {
+            return type.cast(this);
+        }
+        throw new ValidationException("Type " + type + " not supported");
     }
 
     private static final class ConstraintViolationBuilderImpl
@@ -104,12 +114,51 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
         public NodeBuilderDefinedContext addNode(String name) {
             PathImpl path;
             if (propertyPath.isRootPath()) {
-                path = PathImpl.create(name);
+                path = PathImpl.create();
+                path.getLeafNode().setName(name);
             } else {
                 path = PathImpl.copy(propertyPath);
                 path.addNode(new NodeImpl(name));
             }
             return new NodeBuilderDefinedContextImpl(parent, messageTemplate, path);
+        }
+
+        public NodeBuilderCustomizableContext addPropertyNode(String name) {
+            final NodeImpl node;
+            if (!propertyPath.isRootPath()) {
+                if (propertyPath.getLeafNode().getKind() != null) {
+                    node = new NodeImpl.PropertyNodeImpl(name);
+                    propertyPath.addNode(node);
+                } else {
+                    node = propertyPath.getLeafNode();
+                }
+            } else {
+                node = new NodeImpl.PropertyNodeImpl(name);
+                propertyPath.addNode(node);
+            }
+            node.setName(name);
+            node.setKind(ElementKind.PROPERTY); // enforce it
+            return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
+        }
+
+        public LeafNodeBuilderCustomizableContext addBeanNode() {
+            final NodeImpl node = new NodeImpl.BeanNodeImpl();
+            node.setKind(ElementKind.BEAN);
+            propertyPath.addNode(node);
+            return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
+        }
+
+        public NodeBuilderDefinedContext addParameterNode(int index) {
+            final Method method = parent.validationContext.getMethod();
+            final List<String> parameters = parent.validationContext.getParameterNameProvider().getParameterNames(method);
+            final NodeImpl node = new NodeImpl.ParameterNodeImpl(parameters.get(index), index);
+            node.setParameterIndex(index);
+            node.setKind(ElementKind.PARAMETER);
+            if (!propertyPath.isRootPath()) {
+                propertyPath.removeLeafNode();
+            }
+            propertyPath.addNode(node);
+            return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
         }
 
         /**

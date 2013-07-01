@@ -109,6 +109,10 @@ public class BootstrapTest extends TestCase {
                 }
                 return new DefaultConstraintValidatorFactory().getInstance(key);
             }
+
+            public void releaseInstance(ConstraintValidator<?, ?> instance) {
+                // no-op
+            }
         });
         factory = builder.buildValidatorFactory();
         validator = factory.getValidator();

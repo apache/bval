@@ -29,14 +29,14 @@ import java.util.TreeSet;
 
 import org.apache.bval.jsr303.util.SecureActions;
 
+import javax.validation.Valid;
+
 /**
  * Description: <br/>
  * InvocationHandler implementation of <code>Annotation</code> that pretends it
  * is a "real" source code annotation.
  * <p/>
  */
-// TODO move this guy up to org.apache.bval.jsr303 or
-// org.apache.bval.jsr303.model
 class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
 
     /** Serialization version */
@@ -72,7 +72,8 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
                 throw new IllegalArgumentException("No value provided for " + m.getName());
             }
         }
-        if (processedValuesFromDescriptor != descriptor.size()) {
+        if (processedValuesFromDescriptor != descriptor.size()
+                && !Valid.class.equals(annotationType)) {
             throw new RuntimeException("Trying to instanciate " + annotationType + " with unknown paramters.");
         }
         return result;

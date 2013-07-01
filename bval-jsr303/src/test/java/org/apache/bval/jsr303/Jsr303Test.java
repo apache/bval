@@ -18,12 +18,18 @@
  */
 package org.apache.bval.jsr303;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.constraints.SizeValidatorForCharSequence;
+import org.apache.bval.jsr303.example.Address;
+import org.apache.bval.jsr303.example.Book;
+import org.apache.bval.jsr303.example.Engine;
+import org.apache.bval.jsr303.example.IllustratedBook;
+import org.apache.bval.jsr303.example.MaxTestEntity;
+import org.apache.bval.jsr303.example.NoValidatorTestEntity;
+import org.apache.bval.jsr303.example.Second;
+import org.apache.bval.jsr303.example.SizeTestEntity;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.UnexpectedTypeException;
@@ -34,20 +40,12 @@ import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.constraints.SizeValidatorForString;
-import org.apache.bval.jsr303.example.Address;
-import org.apache.bval.jsr303.example.Book;
-import org.apache.bval.jsr303.example.Engine;
-import org.apache.bval.jsr303.example.IllustratedBook;
-import org.apache.bval.jsr303.example.MaxTestEntity;
-import org.apache.bval.jsr303.example.NoValidatorTestEntity;
-import org.apache.bval.jsr303.example.Second;
-import org.apache.bval.jsr303.example.SizeTestEntity;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: <br/>
@@ -189,7 +187,7 @@ public class Jsr303Test extends TestCase {
         Assert.assertNotNull(desc);
         boolean found = false;
         for (ConstraintDescriptor<?> each : desc.getConstraintDescriptors()) {
-            if (each.getConstraintValidatorClasses().get(0).equals(SizeValidatorForString.class)) {
+            if (each.getConstraintValidatorClasses().get(0).equals(SizeValidatorForCharSequence.class)) {
                 Assert.assertTrue(each.getAttributes().containsKey("max"));
                 assertEquals(30, each.getAttributes().get("max"));
                 found = true;

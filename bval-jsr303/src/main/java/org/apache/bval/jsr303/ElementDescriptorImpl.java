@@ -24,11 +24,13 @@ import javax.validation.ConstraintDeclarationException;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.GroupConversionDescriptor;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -37,6 +39,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public abstract class ElementDescriptorImpl implements ElementDescriptor {
     private final Set<GroupConversionDescriptor> groupConversions = new CopyOnWriteArraySet<GroupConversionDescriptor>();
     private boolean cascaded;
+    private final Collection<Object> validated = new CopyOnWriteArraySet<Object>();
 
     /**
      * Get a set of {@link ConstraintDescriptor}s from the specified array of
@@ -180,5 +183,13 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
 
     public void setCascaded(final boolean cascaded) {
         this.cascaded = cascaded;
+    }
+
+    public boolean isValidated(final Object object) {
+        return validated.contains(object);
+    }
+
+    public void setValidated(final Object object) {
+        this.validated.add(object);
     }
 }

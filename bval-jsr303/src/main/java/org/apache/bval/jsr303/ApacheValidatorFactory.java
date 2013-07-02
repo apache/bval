@@ -130,7 +130,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             executableTypes.addAll(impl.getExecutableValidation());
             toClose.add(impl.getClosable());
         } else {
-            final String executableTypesStr = getProperties().get(ApacheValidatorConfiguration.Properties.EXECUTABLE_VALIDATION_TYPES);
+            final String executableTypesStr = getProperties().remove(ApacheValidatorConfiguration.Properties.EXECUTABLE_VALIDATION_TYPES);
             if (executableTypesStr != null && !executableTypesStr.isEmpty()) {
                 for (final String s : executableTypesStr.split(",")) {
                     executableTypes.add(ExecutableType.valueOf(s.trim()));

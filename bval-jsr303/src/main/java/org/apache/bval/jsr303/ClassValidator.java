@@ -470,8 +470,11 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         // execute all property level validations
         for (final PropertyDescriptor prop : getConstraintsForClass(context.getMetaBean().getBeanClass()).getConstrainedProperties()) {
             final PropertyDescriptorImpl impl = PropertyDescriptorImpl.class.cast(prop);
-            checkValidationAppliesTo(impl.getConstraintDescriptors(), ConstraintTarget.PARAMETERS);
-            checkValidationAppliesTo(impl.getConstraintDescriptors(), ConstraintTarget.RETURN_VALUE);
+            if (!impl.isValidated(impl)) {
+                checkValidationAppliesTo(impl.getConstraintDescriptors(), ConstraintTarget.PARAMETERS);
+                checkValidationAppliesTo(impl.getConstraintDescriptors(), ConstraintTarget.RETURN_VALUE);
+                impl.setValidated(impl); // we don't really care about concurrency here
+            }
 
             final MetaProperty metaProperty = context.getMetaBean().getProperty(prop.getPropertyName());
             context.setMetaProperty(metaProperty);
@@ -485,8 +488,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         context.setMetaProperty(null);
         for (final Validation validation : context.getMetaBean().getValidations()) {
             if (ConstraintValidation.class.isInstance(validation)) {
-                checkValidationAppliesTo(ConstraintValidation.class.cast(validation).getValidationAppliesTo(), ConstraintTarget.PARAMETERS);
-                checkValidationAppliesTo(ConstraintValidation.class.cast(validation).getValidationAppliesTo(), ConstraintTarget.RETURN_VALUE);
+                final ConstraintValidation constraintValidation = ConstraintValidation.class.cast(validation);
+                if (!constraintValidation.isValidated()) {
+                    checkValidationAppliesTo(constraintValidation.getValidationAppliesTo(), ConstraintTarget.PARAMETERS);
+                    checkValidationAppliesTo(constraintValidation.getValidationAppliesTo(), ConstraintTarget.RETURN_VALUE);
+                    constraintValidation.setValidated(true);
+                }
             }
             validation.validate(context);
         }
@@ -767,12 +774,15 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         }
 
         // validations
-        if (parameterValues.length > 0) {
-            checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
-            checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
-        } else {
-            checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.PARAMETERS);
-            checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.PARAMETERS);
+        if (!constructorDescriptor.isValidated(constructor)) {
+            if (parameterValues.length > 0) {
+                checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
+                checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
+            } else {
+                checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.PARAMETERS);
+                checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.PARAMETERS);
+            }
+            constructorDescriptor.setValidated(constructor);
         }
 
         final Set<ConstraintViolation<T>> violations = new HashSet<ConstraintViolation<T>>();
@@ -887,12 +897,15 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             return Collections.emptySet();
         }
 
-        if (method.getParameterTypes().length > 0 && method.getReturnType() != Void.TYPE) {
-            checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
-            checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
-        } else if (method.getParameterTypes().length == 0) {
-            checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()), ConstraintTarget.PARAMETERS);
-            checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.PARAMETERS);
+        if (!methodDescriptor.isValidated(method)) {
+            if (method.getParameterTypes().length > 0 && method.getReturnType() != Void.TYPE) {
+                checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
+                checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
+            } else if (method.getParameterTypes().length == 0) {
+                checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()), ConstraintTarget.PARAMETERS);
+                checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.PARAMETERS);
+            }
+            methodDescriptor.setValidated(method);
         }
 
         final Set<ConstraintViolation<T>> violations = new HashSet<ConstraintViolation<T>>();

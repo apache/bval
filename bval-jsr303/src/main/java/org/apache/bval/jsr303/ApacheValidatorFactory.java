@@ -118,7 +118,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @param configuration
      */
-    protected void configure(ConfigurationState configuration) {
+    protected void configure(final ConfigurationState configuration) {
         getProperties().putAll(configuration.getProperties());
         setParameterNameProvider(configuration.getParameterNameProvider());
         setMessageInterpolator(configuration.getMessageInterpolator());

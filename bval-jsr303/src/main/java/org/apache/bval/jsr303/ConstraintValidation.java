@@ -50,6 +50,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
 
     private Set<ConstraintValidation<?>> composedConstraints;
 
+    private boolean validated = false;
+
     /**
      * the owner is the type where the validation comes from. it is used to
      * support implicit grouping.
@@ -394,5 +396,13 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
 
     public void setValidationAppliesTo(final ConstraintTarget validationAppliesTo) {
         this.validationAppliesTo = validationAppliesTo;
+    }
+
+    public boolean isValidated() {
+        return validated;
+    }
+
+    public void setValidated(final boolean validated) {
+        this.validated = validated;
     }
 }

@@ -148,14 +148,16 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ConstraintDescriptorImpl that = (ConstraintDescriptorImpl) o;
+        final ConstraintDescriptorImpl that = (ConstraintDescriptorImpl) o;
 
         if (reportAsSingleViolation != that.reportAsSingleViolation) return false;
         if (!annotation.annotationType().equals(that.annotation.annotationType())) return false;
+        if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) return false;
         if (composingConstraints != null ? !composingConstraints.equals(that.composingConstraints) : that.composingConstraints != null)
             return false;
         if (constraintValidatorClasses != null ? !constraintValidatorClasses.equals(that.constraintValidatorClasses) : that.constraintValidatorClasses != null)
             return false;
+        if (groups != null ? !groups.equals(that.groups) : that.groups != null) return false;
         if (payload != null ? !payload.equals(that.payload) : that.payload != null) return false;
         if (template != null ? !template.equals(that.template) : that.template != null) return false;
         if (validationAppliesTo != that.validationAppliesTo) return false;
@@ -165,9 +167,11 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
 
     @Override
     public int hashCode() {
-        int result = annotation != null ? annotation.annotationType().hashCode() : 0;
+        int result = annotation.annotationType().hashCode();
+        result = 31 * result + (groups != null ? groups.hashCode() : 0);
         result = 31 * result + (payload != null ? payload.hashCode() : 0);
         result = 31 * result + (constraintValidatorClasses != null ? constraintValidatorClasses.hashCode() : 0);
+        result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         result = 31 * result + (composingConstraints != null ? composingConstraints.hashCode() : 0);
         result = 31 * result + (reportAsSingleViolation ? 1 : 0);
         result = 31 * result + (validationAppliesTo != null ? validationAppliesTo.hashCode() : 0);

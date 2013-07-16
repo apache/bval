@@ -120,6 +120,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
             if (ElementKind.CONSTRUCTOR.equals(kind)) {
                 rootBean = null;
                 leaf = context.getBean();
+                returnValue = this.rootBean; // switch back return value and rootBean
             } else if (ElementKind.METHOD.equals(kind)) {
                 if (ElementKind.RETURN_VALUE.equals(elementKind)) { // switch back return value and rootBean
                     rootBean = (T) returnValue;

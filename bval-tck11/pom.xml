@@ -116,7 +116,7 @@ under the License.
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jasper-el</artifactId>
-            <version>7.0.41</version>
+            <version>7.0.42</version>
             <scope>provided</scope>
         </dependency>
 

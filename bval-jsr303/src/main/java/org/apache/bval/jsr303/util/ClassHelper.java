@@ -38,24 +38,24 @@ public class ClassHelper {
     /**
      * Fill the list with the full class/interface hierarchy of the given class.
      * List is ordered from the most to less specific.
-     * 
+     *
      * @param allClasses
      *            The current list of classes in the hierarchy.
      * @param clazz
-     *            The current class, root of the hierarchy to traverse.
      */
-    static public void fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
+    static public List<Class<?>> fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
         if (clazz == null || clazz == Object.class || clazz == Serializable.class) {
-            return;
+            return allClasses;
         }
         if (allClasses.contains(clazz)) {
-            return;
+            return allClasses;
         }
         allClasses.add(clazz);
         fillFullClassHierarchyAsList(allClasses, clazz.getSuperclass());
         for (Class<?> subClass : clazz.getInterfaces()) {
             fillFullClassHierarchyAsList(allClasses, subClass);
         }
+        return allClasses;
     }
 
     /**

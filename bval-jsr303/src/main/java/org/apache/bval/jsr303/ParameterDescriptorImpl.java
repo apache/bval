@@ -21,11 +21,8 @@ import org.apache.bval.jsr303.groups.GroupConversionDescriptorImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
 
-import javax.validation.ParameterNameProvider;
 import javax.validation.metadata.GroupConversionDescriptor;
 import javax.validation.metadata.ParameterDescriptor;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 

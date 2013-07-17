@@ -77,4 +77,19 @@ public class ParameterAccess extends AccessStrategy {
         return "" + paramIdx;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final ParameterAccess that = (ParameterAccess) o;
+        return paramIdx == that.paramIdx && paramType.equals(that.paramType);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = paramType.hashCode();
+        result = 31 * result + paramIdx;
+        return result;
+    }
 }

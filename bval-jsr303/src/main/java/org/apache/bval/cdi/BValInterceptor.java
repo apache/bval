@@ -18,9 +18,11 @@
  */
 package org.apache.bval.cdi;
 
+import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.Proxies;
 
 import javax.inject.Inject;
+import javax.interceptor.AroundConstruct;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
@@ -30,10 +32,16 @@ import javax.validation.Validator;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ExecutableValidator;
 import javax.validation.executable.ValidateOnExecution;
+import javax.validation.metadata.ConstructorDescriptor;
 import javax.validation.metadata.MethodDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +52,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class BValInterceptor {
     private Collection<ExecutableType> classConfiguration = null;
     private final Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
+    private Boolean constructorValidated = null;
 
     @Inject
     private Validator validator;
@@ -51,22 +60,25 @@ public class BValInterceptor {
     @Inject
     private BValExtension globalConfiguration;
 
-    @AroundInvoke
-    public Object around(final InvocationContext context) throws Throwable {
-        final Method method = context.getMethod();
-        if (!isMethodValidated(Proxies.classFor(context.getTarget().getClass()), method)) {
+    private ExecutableValidator executableValidator;
+
+    @AroundConstruct // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template for the one created with ASM
+    public Object construct(final InvocationContext context) throws Exception {
+        final Constructor constructor = context.getConstructor();
+        final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
+        if (!isConstructorValidated(targetClass, constructor)) {
             return context.proceed();
         }
 
-        final ExecutableValidator ev = validator.forExecutables();
-
-        final MethodDescriptor constraintsForMethod = validator.getConstraintsForClass(Proxies.classFor(method.getDeclaringClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes());
-        if (constraintsForMethod == null) {
+        final ConstructorDescriptor constraints = validator.getConstraintsForClass(targetClass).getConstraintsForConstructor(constructor.getParameterTypes());
+        if (constraints == null) {
             return context.proceed();
         }
+
+        initExecutableValidator();
 
         {
-            final Set<ConstraintViolation<Object>> violations = ev.validateParameters(context.getTarget(), method, context.getParameters());
+            final Set<ConstraintViolation<?>> violations = executableValidator.validateConstructorParameters(constructor, context.getParameters());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
@@ -75,7 +87,7 @@ public class BValInterceptor {
         final Object result = context.proceed();
 
         {
-            final Set<ConstraintViolation<Object>> violations = ev.validateReturnValue(context.getTarget(), method, result);
+            final Set<ConstraintViolation<?>> violations = executableValidator.validateConstructorReturnValue(constructor, result);
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
@@ -84,8 +96,124 @@ public class BValInterceptor {
         return result;
     }
 
+    @AroundInvoke
+    public Object invoke(final InvocationContext context) throws Throwable {
+        final Method method = context.getMethod();
+        final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
+        if (!isMethodValidated(targetClass, method)) {
+            return context.proceed();
+        }
+
+        final MethodDescriptor constraintsForMethod = validator.getConstraintsForClass(targetClass).getConstraintsForMethod(method.getName(), method.getParameterTypes());
+        if (constraintsForMethod == null) {
+            return context.proceed();
+        }
+
+        initExecutableValidator();
+
+        {
+            final Set<ConstraintViolation<Object>> violations = executableValidator.validateParameters(context.getTarget(), method, context.getParameters());
+            if (!violations.isEmpty()) {
+                throw new ConstraintViolationException(violations);
+            }
+        }
+
+        final Object result = context.proceed();
+
+        {
+            final Set<ConstraintViolation<Object>> violations = executableValidator.validateReturnValue(context.getTarget(), method, result);
+            if (!violations.isEmpty()) {
+                throw new ConstraintViolationException(violations);
+            }
+        }
+
+        return result;
+    }
+
+    private boolean isConstructorValidated(final Class<?> targetClass, final Constructor<?> constructor) throws NoSuchMethodException {
+        initClassConfig(targetClass);
+
+        if (constructorValidated == null) {
+            synchronized (this) {
+                if (constructorValidated == null) {
+                    final ValidateOnExecution annotation = targetClass.getConstructor(constructor.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
+                    if (annotation == null) {
+                        constructorValidated = classConfiguration.contains(ExecutableType.CONSTRUCTORS);
+                    } else {
+                        final Collection<ExecutableType> types = Arrays.asList(annotation.type());
+                        constructorValidated = types.contains(ExecutableType.CONSTRUCTORS) || types.contains(ExecutableType.IMPLICIT) || types.contains(ExecutableType.ALL);
+                    }
+                }
+            }
+        }
+
+        return constructorValidated;
+    }
+
     private boolean isMethodValidated(final Class<?> targetClass, final Method method) throws NoSuchMethodException {
-        Boolean methodConfig;// config
+        initClassConfig(targetClass);
+
+        Boolean methodConfig = methodConfiguration.get(method);
+        if (methodConfig == null) {
+            synchronized (this) {
+                methodConfig = methodConfiguration.get(method);
+                if (methodConfig == null) {
+                    final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), targetClass);
+
+                    Class<?> lastClassWithTheMethod = null;
+
+                    // search on method @ValidateOnExecution
+                    Collections.reverse(classHierarchy);
+                    ValidateOnExecution validateOnExecution = null;
+                    for (final Class<?> c : classHierarchy) {
+                        try {
+                            validateOnExecution = c.getDeclaredMethod(method.getName(), method.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
+                            if (lastClassWithTheMethod == null) {
+                                lastClassWithTheMethod = c;
+                            }
+                            if (validateOnExecution != null) {
+                                lastClassWithTheMethod = null;
+                                break;
+                            }
+                        } catch (final Throwable h) {
+                            // no-op
+                        }
+                    }
+
+                    // if not found look in the class declaring the method
+                    if (validateOnExecution == null && lastClassWithTheMethod != null) {
+                        validateOnExecution = lastClassWithTheMethod.getAnnotation(ValidateOnExecution.class);
+                    }
+
+                    if (validateOnExecution == null) {
+                        methodConfig = doValidMethod(method, classConfiguration);
+                    } else {
+                        final Collection<ExecutableType> config = new HashSet<ExecutableType>();
+                        for (final ExecutableType type : validateOnExecution.type()) {
+                            if (ExecutableType.IMPLICIT.equals(type)) { // on method it just means validate, even on getters
+                                config.add(ExecutableType.NON_GETTER_METHODS);
+                                if (lastClassWithTheMethod == null) {
+                                    config.add(ExecutableType.GETTER_METHODS);
+                                } // else the annotation was not on the method so implicit doesn't mean getters
+                            } else if (ExecutableType.ALL.equals(type)) {
+                                config.add(ExecutableType.NON_GETTER_METHODS);
+                                config.add(ExecutableType.GETTER_METHODS);
+                                break;
+                            } else if (!ExecutableType.NONE.equals(type)) {
+                                config.add(type);
+                            }
+                        }
+                        methodConfig = doValidMethod(method, config);
+                    }
+                }
+                methodConfiguration.put(method, methodConfig);
+            }
+        }
+
+        return methodConfig;
+    }
+
+    private void initClassConfig(Class<?> targetClass) {
         if (classConfiguration == null) {
             synchronized (this) {
                 if (classConfiguration == null) {
@@ -112,43 +240,19 @@ public class BValInterceptor {
                 }
             }
         }
-
-        methodConfig = methodConfiguration.get(method);
-        if (methodConfig == null) {
-            synchronized (this) {
-                methodConfig = methodConfiguration.get(method);
-                if (methodConfig == null) {
-                    // reuse Proxies to avoid issue with some subclassing libs removing annotations
-                    final ValidateOnExecution annotation = targetClass.getMethod(method.getName(), method.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
-                    if (annotation == null) {
-                        methodConfig = doValidMethod(method, classConfiguration);
-                    } else {
-                        final Collection<ExecutableType> config = new HashSet<ExecutableType>();
-                        for (final ExecutableType type : annotation.type()) {
-                            if (ExecutableType.IMPLICIT.equals(type)) { // on method it just means validate, even on getters
-                                config.add(ExecutableType.CONSTRUCTORS);
-                                config.add(ExecutableType.NON_GETTER_METHODS);
-                                config.add(ExecutableType.GETTER_METHODS);
-                            } else if (ExecutableType.ALL.equals(type)) {
-                                config.add(ExecutableType.CONSTRUCTORS);
-                                config.add(ExecutableType.NON_GETTER_METHODS);
-                                config.add(ExecutableType.GETTER_METHODS);
-                                break;
-                            } else if (!ExecutableType.NONE.equals(type)) {
-                                config.add(type);
-                            }
-                        }
-                        methodConfig = doValidMethod(method, config);
-                    }
-                }
-                methodConfiguration.put(method, methodConfig);
-            }
-        }
-
-        return methodConfig;
     }
 
-    private boolean doValidMethod(final Method method, final Collection<ExecutableType> config) {
+    private void initExecutableValidator() {
+        if (executableValidator == null) {
+            synchronized (this) {
+                if (executableValidator == null) {
+                    executableValidator = validator.forExecutables();
+                }
+            }
+        }
+    }
+
+    private static boolean doValidMethod(final Method method, final Collection<ExecutableType> config) {
         final boolean getter = isGetter(method);
         return (!getter && config.contains(ExecutableType.NON_GETTER_METHODS)) || (getter && config.contains(ExecutableType.GETTER_METHODS));
     }

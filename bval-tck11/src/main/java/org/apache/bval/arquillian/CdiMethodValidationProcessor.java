@@ -34,6 +34,7 @@ import org.jboss.shrinkwrap.impl.base.NodeImpl;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+// hack while OWB doesn't have interceptor discovery
 public class CdiMethodValidationProcessor implements ApplicationArchiveProcessor {
     private static final String BEANS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<beans xmlns=\"http://java.sun.com/xml/ns/javaee\"\n" +
@@ -45,6 +46,18 @@ public class CdiMethodValidationProcessor implements ApplicationArchiveProcessor
             "  </interceptors>\n" +
             "</beans>";
 
+    private static final String ValidationInterceptorPriorityTest_BEANS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+        "<beans xmlns=\"http://java.sun.com/xml/ns/javaee\"\n" +
+        "       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+        "       xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee\n" +
+        "      http://java.sun.com/xml/ns/javaee/beans_1_0.xsd\">\n" +
+        "  <interceptors>\n" +
+        "    <class>org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.priority.LaterInterceptor</class>\n" +
+        "    <class>org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.priority.EarlierInterceptor</class>\n" +
+        "    <class>org.apache.bval.cdi.BValInterceptor</class>\n" +
+        "  </interceptors>\n" +
+        "</beans>";
+
     public void process(final Archive<?> applicationArchive, final TestClass testClass) {
         final String path;
         if (WebContainer.class.isInstance(applicationArchive)) {
@@ -55,12 +68,19 @@ public class CdiMethodValidationProcessor implements ApplicationArchiveProcessor
 
         final Node beansXml = applicationArchive.get(path);
         if (beansXml != null && beansXml.getAsset() == EmptyAsset.INSTANCE) {
+            final String beansXmlStr;
+            if (testClass.getJavaClass().getSimpleName().equals("ValidationInterceptorPriorityTest")) {
+                beansXmlStr = ValidationInterceptorPriorityTest_BEANS_XML;
+            } else {
+                beansXmlStr = BEANS_XML;
+            }
+
             final Map<ArchivePath, NodeImpl> content = getInternal(applicationArchive);
             content.remove(ArchivePaths.create(path));
             if (path.startsWith("META-INF")) {
-                ManifestContainer.class.cast(applicationArchive).addAsManifestResource(new StringAsset(BEANS_XML), "beans.xml");
+                ManifestContainer.class.cast(applicationArchive).addAsManifestResource(new StringAsset(beansXmlStr), "beans.xml");
             } else {
-                WebContainer.class.cast(applicationArchive).addAsWebInfResource(new StringAsset(BEANS_XML), "beans.xml");
+                WebContainer.class.cast(applicationArchive).addAsWebInfResource(new StringAsset(beansXmlStr), "beans.xml");
             }
         }
     }

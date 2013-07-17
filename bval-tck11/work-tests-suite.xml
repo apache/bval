@@ -19,14 +19,14 @@ JUST HERE TO BE ABLE TO RUN TCK ONE BY ONE WHEN DEVELOPING
 think to add -Dvalidation.provider=org.apache.bval.jsr303.ApacheValidationProvider to your runner config
 -->
 <suite name="tmp" verbose="1">
-    <test name="tmp">
-        <classes>
-            <!--<class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.ExecutableValidationTest">-->
-            <class name="org.hibernate.beanvalidation.tck.tests.integration.ee.cdi.ConstraintValidatorInjectionTest">
-                <methods>
+  <test name="tmp">
+    <classes>
+      <class
+        name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.global.ExecutableValidationBasedOnGlobalConfigurationTest">
+        <methods>
 
-                </methods>
-            </class>
-        </classes>
-    </test>
+        </methods>
+      </class>
+    </classes>
+  </test>
 </suite>

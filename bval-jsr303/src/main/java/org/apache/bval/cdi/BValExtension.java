@@ -42,9 +42,11 @@ import javax.validation.executable.ExecutableType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +71,7 @@ public class BValExtension implements Extension {
         config = Validation.byDefaultProvider().configure();
         try {
             final BootstrapConfiguration bootstrap = config.getBootstrapConfiguration();
-            globalExecutableTypes = bootstrap.getDefaultValidatedExecutableTypes();
+            globalExecutableTypes = convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes());
             isExecutableValidationEnabled = bootstrap.isExecutableValidationEnabled();
         } catch (final Exception e) { // custom providers can throw an exception
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -79,16 +81,46 @@ public class BValExtension implements Extension {
         }
     }
 
+    private static Set<ExecutableType> convertToRuntimeTypes(final Set<ExecutableType> defaultValidatedExecutableTypes) {
+        final Set<ExecutableType> types = new CopyOnWriteArraySet<ExecutableType>();
+        for (final ExecutableType type : defaultValidatedExecutableTypes) {
+            if (ExecutableType.IMPLICIT.equals(type)) {
+                types.add(ExecutableType.CONSTRUCTORS);
+                types.add(ExecutableType.NON_GETTER_METHODS);
+            } else if (ExecutableType.ALL.equals(type)) {
+                types.add(ExecutableType.CONSTRUCTORS);
+                types.add(ExecutableType.NON_GETTER_METHODS);
+                types.add(ExecutableType.GETTER_METHODS);
+                break;
+            } else if (!ExecutableType.NONE.equals(type)) {
+                types.add(type);
+            }
+        }
+        return types;
+    }
+
+    public Set<ExecutableType> getGlobalExecutableTypes() {
+        return globalExecutableTypes;
+    }
+
     public static BValExtension getInstance() {
         return bmpSingleton;
     }
 
     public void addBvalBinding(final @Observes BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
+        if (!isExecutableValidationEnabled) {
+            return;
+        }
+
         beforeBeanDiscovery.addInterceptorBinding(BValBinding.class);
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
     }
 
     public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat) {
+        if (!isExecutableValidationEnabled) {
+            return;
+        }
+
         final Class<A> javaClass = pat.getAnnotatedType().getJavaClass();
         final int modifiers = javaClass.getModifiers();
         if (!javaClass.getName().startsWith("javax.") && !javaClass.getName().startsWith("org.apache.bval")

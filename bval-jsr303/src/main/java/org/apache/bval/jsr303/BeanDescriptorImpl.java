@@ -39,6 +39,7 @@ import javax.validation.ConstraintTarget;
 import javax.validation.Valid;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ConstructorDescriptor;
 import javax.validation.metadata.ExecutableDescriptor;
 import javax.validation.metadata.GroupConversionDescriptor;
@@ -515,7 +516,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         Class<?> current = getMetaBean().getBeanClass();
         do {
             for (final Method method : current.getDeclaredMethods()) {
-                final boolean getter = method.getName().startsWith("get") && method.getParameterTypes().length == 0;
+                final boolean getter = (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != Void.TYPE;
 
                 final MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(getMetaBean(), new Validation[0], method);
                 methodConstraints.put(method, methodDesc);
@@ -537,7 +538,6 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
                 ensureNotNullDescriptors(method.getReturnType(), methodDesc);
 
-                // validations, TODO: if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(method)) {
                 if (parents != null) {
                     if (parents.size() > 1) {
                         for (final Method parent : parents) {
@@ -763,10 +763,26 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             paramDesc = new ParameterDescriptorImpl(Class.class.cast(access.getJavaType()), // set from getParameterTypes() so that's a Class<?>
                     validations.getValidations().toArray(new Validation[validations.getValidations().size()]), name);
             paramDesc.setIndex(idx);
-            methodDesc.getParameterDescriptors().add(paramDesc);
+            final List<ParameterDescriptor> parameterDescriptors = methodDesc.getParameterDescriptors();
+            if (!parameterDescriptors.contains(paramDesc)) {
+                parameterDescriptors.add(paramDesc);
+            }
             paramDesc.setCascaded(cascaded);
         } else {
-            paramDesc.getMutableConstraintDescriptors().addAll(validations.getValidations());
+            final List<ConstraintValidation<?>> newValidations = validations.getValidations();
+            for (final ConstraintValidation<?> validation : newValidations) { // don't add it if exactly the same is already here
+                boolean alreadyHere = false;
+                for (final ConstraintDescriptor<?> existing : paramDesc.getMutableConstraintDescriptors()) {
+                    if (existing.getAnnotation().annotationType().equals(validation.getAnnotation().annotationType())) { // TODO: make it a bit finer
+                        alreadyHere = true;
+                        break;
+                    }
+                }
+                if (!alreadyHere) {
+                    paramDesc.getMutableConstraintDescriptors().add(validation);
+                }
+            }
+
             if (cascaded) {
                 paramDesc.setCascaded(true);
             } // else keep previous config

@@ -21,26 +21,12 @@ think to add -Dvalidation.provider=org.apache.bval.jsr303.ApacheValidationProvid
 <suite name="tmp" verbose="1">
     <test name="tmp">
         <classes>
-            <class name="org.hibernate.beanvalidation.tck.tests.constraints.application.ValidationRequirementTest">
-
-            </class>
-
-            <!--
-            <class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.ExecutableValidationTest">
+            <!--<class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.ExecutableValidationTest">-->
+            <class name="org.hibernate.beanvalidation.tck.tests.integration.ee.cdi.ConstraintValidatorInjectionTest">
                 <methods>
 
                 </methods>
             </class>
-            -->
-
-            <!--
-            <class name="org.hibernate.beanvalidation.tck.tests.methodvalidation.MethodValidationTest">
-                <methods>
-                    <include name="constructorParameterValidationWithRedefinedDefaultGroupSequence"/>
-                </methods>
-            </class>
-            -->
-
         </classes>
     </test>
 </suite>

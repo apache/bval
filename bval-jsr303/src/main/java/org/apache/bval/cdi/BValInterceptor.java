@@ -21,6 +21,7 @@ package org.apache.bval.cdi;
 import org.apache.bval.jsr303.util.ClassHelper;
 import org.apache.bval.jsr303.util.Proxies;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.interceptor.AroundConstruct;
 import javax.interceptor.AroundInvoke;
@@ -49,6 +50,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 @Interceptor
 @BValBinding
+@Priority(4800) // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to generate another one for CDI 1.1 impl
 public class BValInterceptor {
     private Collection<ExecutableType> classConfiguration = null;
     private final Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
@@ -60,18 +62,18 @@ public class BValInterceptor {
     @Inject
     private BValExtension globalConfiguration;
 
-    private ExecutableValidator executableValidator;
+    private ExecutableValidator executableValidator = null;
 
-    @AroundConstruct // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template for the one created with ASM
+    @AroundConstruct // TODO: see previous one
     public Object construct(final InvocationContext context) throws Exception {
         final Constructor constructor = context.getConstructor();
-        final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
+        final Class<?> targetClass = constructor.getDeclaringClass();
         if (!isConstructorValidated(targetClass, constructor)) {
             return context.proceed();
         }
 
         final ConstructorDescriptor constraints = validator.getConstraintsForClass(targetClass).getConstraintsForConstructor(constructor.getParameterTypes());
-        if (constraints == null) {
+        if (constraints == null) { // surely implicit constructor
             return context.proceed();
         }
 

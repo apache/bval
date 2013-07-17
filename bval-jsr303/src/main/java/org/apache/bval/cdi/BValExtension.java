@@ -49,7 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 // mainly copied from deltaspike to not force users to use deltaspike
-// which would be a pain in servers
+// which would be a pain in app servers
 // TODO: get rid of beans.xml adding interceptor automatically
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
@@ -85,6 +85,7 @@ public class BValExtension implements Extension {
 
     public void addBvalBinding(final @Observes BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
         beforeBeanDiscovery.addInterceptorBinding(BValBinding.class);
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
     }
 
     public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat) {

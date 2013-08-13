@@ -48,12 +48,16 @@ public class MethodAccess extends AccessStrategy {
         this.method = method;
         this.propertyName = propertyName;
         if (!method.isAccessible()) {
-            run( new PrivilegedAction<Void>() {
-                public Void run() {
-                    method.setAccessible(true);
-                    return null;
-                }
-            });
+            if (System.getSecurityManager() == null) {
+                method.setAccessible(true);
+            } else {
+                AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                    public Void run() {
+                        method.setAccessible(true);
+                        return null;
+                    }
+                });
+            }
         }
     }
 
@@ -143,13 +147,5 @@ public class MethodAccess extends AccessStrategy {
      */
     public int hashCode() {
         return method.hashCode();
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

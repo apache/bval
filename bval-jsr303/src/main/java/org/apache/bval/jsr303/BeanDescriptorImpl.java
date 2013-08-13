@@ -22,7 +22,7 @@ import org.apache.bval.Validate;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.groups.GroupConversionDescriptorImpl;
 import org.apache.bval.jsr303.util.ClassHelper;
-import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.jsr303.xml.AnnotationIgnores;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaConstructor;
@@ -31,6 +31,7 @@ import org.apache.bval.model.MetaParameter;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ClassUtils;
 
 import javax.validation.Constraint;
@@ -72,6 +73,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDescriptor {
     private static final CopyOnWriteArraySet<ConstraintValidation<?>> NO_CONSTRAINTS = new CopyOnWriteArraySet<ConstraintValidation<?>>();
+    private static final Validation[] EMPTY_VALIDATION = new Validation[0];
+
     /**
      * The {@link ApacheFactoryContext} (not) used by this
      * {@link BeanDescriptorImpl}
@@ -97,7 +100,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         Class<?> current = prop.getParentMetaBean().getBeanClass();
         while (current != null && current != Object.class && (!methodFound || !fieldFound)) {
             if (!fieldFound) {
-                final Field field = SecureActions.getDeclaredField(current, prop.getName()).run();
+                final Field field = Reflection.INSTANCE.getDeclaredField(current, prop.getName());
                 if (field != null) {
                     final ConvertGroup.List convertGroupList = field.getAnnotation(ConvertGroup.List.class);
                     if (convertGroupList != null) {
@@ -117,8 +120,8 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             if (!methodFound) {
                 final String name = Character.toUpperCase(prop.getName().charAt(0)) + prop.getName().substring(1);
                 for (final Method method : Arrays.asList(
-                        SecureActions.getDeclaredMethod(current, "is" + name).run(),
-                        SecureActions.getDeclaredMethod(current, "get" + name).run())) {
+                                    Reflection.INSTANCE.getDeclaredMethod(current, "is" + name),
+                                    Reflection.INSTANCE.getDeclaredMethod(current, "get" + name))) {
 
                     if (method != null) {
                         final ConvertGroup.List convertGroupList = method.getAnnotation(ConvertGroup.List.class);
@@ -378,26 +381,28 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     }
 
     private void buildConstructorConstraints() throws InvocationTargetException, IllegalAccessException {
-        for (final Constructor<?> cons : SecureActions.getDeclaredConstructors(getMetaBean().getBeanClass()).run()) {
+        for (final Constructor<?> cons : Reflection.INSTANCE.getDeclaredConstructors(getMetaBean().getBeanClass())) {
             final ConstructorDescriptorImpl consDesc = new ConstructorDescriptorImpl(getMetaBean(), new Validation[0]);
             contructorConstraints.put(cons, consDesc);
 
             final List<String> names = factoryContext.getParameterNameProvider().getParameterNames(cons);
             final boolean isInnerClass = cons.getDeclaringClass().getEnclosingClass() != null && !Modifier.isStatic(cons.getDeclaringClass().getModifiers());
 
+            final AnnotationIgnores annotationIgnores = factoryContext.getFactory().getAnnotationIgnores();
+
             {
                 final Annotation[][] paramsAnnos = cons.getParameterAnnotations();
 
                 int idx = 0;
                 if (isInnerClass) { // paramsAnnos.length = parameterTypes.length - 1 in this case
-                    final ParameterDescriptorImpl paramDesc = new ParameterDescriptorImpl(getMetaBean(), new Validation[0], names.get(idx));
+                    final ParameterDescriptorImpl paramDesc = new ParameterDescriptorImpl(getMetaBean(), EMPTY_VALIDATION, names.get(idx));
                     consDesc.getParameterDescriptors().add(paramDesc);
                     idx++;
                 }
 
                 for (final Annotation[] paramAnnos : paramsAnnos) {
-                    if (factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotationOnParameter(cons, idx)) {
-                        consDesc.getParameterDescriptors().add(new ParameterDescriptorImpl(metaBean, new Validation[0], names.get(idx)));
+                    if (annotationIgnores.isIgnoreAnnotationOnParameter(cons, idx)) {
+                        consDesc.getParameterDescriptors().add(new ParameterDescriptorImpl(metaBean, EMPTY_VALIDATION, names.get(idx)));
                     } else if (cons.getParameterTypes().length > idx) {
                         ParameterAccess access = new ParameterAccess(cons.getParameterTypes()[idx], idx);
                         consDesc.addValidations(processAnnotations(consDesc, paramAnnos, access, idx, names.get(idx)).getValidations());
@@ -405,7 +410,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     idx++;
                 }
 
-                if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(cons)) {
+                if (!annotationIgnores.isIgnoreAnnotations(cons)) {
                     for (final Annotation anno : cons.getAnnotations()) {
                         if (!Valid.class.isInstance(anno)) {
                             processAnnotations(null, consDesc, cons.getDeclaringClass(), anno);
@@ -416,10 +421,10 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                 }
             }
 
-            if (factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotationOnCrossParameter(cons) && consDesc.getCrossParameterDescriptor() != null) {
+            if (annotationIgnores.isIgnoreAnnotationOnCrossParameter(cons) && consDesc.getCrossParameterDescriptor() != null) {
                 consDesc.setCrossParameterDescriptor(null);
             }
-            if (factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotationOnReturn(cons) && consDesc.getReturnValueDescriptor() != null) {
+            if (annotationIgnores.isIgnoreAnnotationOnReturn(cons) && consDesc.getReturnValueDescriptor() != null) {
                 consDesc.setReturnValueDescriptor(null);
             }
 
@@ -514,20 +519,20 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     private void buildMethodConstraints() throws InvocationTargetException, IllegalAccessException {
 
         Class<?> current = getMetaBean().getBeanClass();
+
+        final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), current);
+
         do {
-            for (final Method method : current.getDeclaredMethods()) {
+            classHierarchy.remove(current);
+            for (final Method method : Reflection.INSTANCE.getDeclaredMethods(current)) {
                 final boolean getter = (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != Void.TYPE;
 
                 final MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(getMetaBean(), new Validation[0], method);
                 methodConstraints.put(method, methodDesc);
 
-                final List<Class<?>> classHierarchy = new ArrayList<Class<?>>();
-                ClassHelper.fillFullClassHierarchyAsList(classHierarchy, current);
-                classHierarchy.remove(current);
-
                 final Collection<Method> parents = new ArrayList<Method>();
                 for (final Class<?> clazz : classHierarchy) {
-                    final Method overriden = SecureActions.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes()).run();
+                    final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
                     if (overriden != null) {
                         processMethod(overriden, methodDesc);
                         parents.add(overriden);
@@ -541,19 +546,19 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                 if (parents != null) {
                     if (parents.size() > 1) {
                         for (final Method parent : parents) {
-                            final InvocableElementDescriptor elementDescriptor = InvocableElementDescriptor.class.cast(factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes()));
-                            if (elementDescriptor != null) {
-                                ensureNoParameterConstraint(elementDescriptor, "Parameter constraints can't be defined for parallel interfaces/parents");
+                            final MethodDescriptor parentDec = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
+                            if (parentDec != null) {
+                                ensureNoParameterConstraint(InvocableElementDescriptor.class.cast(parentDec), "Parameter constraints can't be defined for parallel interfaces/parents");
                             } else {
                                 ensureMethodDoesntDefineParameterConstraint(methodDesc);
                             }
-                            ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parent, "Return value constraints should be the same for parent and children");
+                            ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parentDec, "Return value constraints should be the same for parent and children");
                         }
                     } else if (!parents.isEmpty()) {
                         final Method parent = parents.iterator().next();
-                        ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parent, "Return value constraints should be at least the same for parent and children");
-
                         final MethodDescriptor parentDesc = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
+                        ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parentDesc, "Return value constraints should be at least the same for parent and children");
+
                         if (parentDesc != null) {
                             final Iterator<ParameterDescriptor> parentPd = parentDesc.getParameterDescriptors().iterator();
                             for (final ParameterDescriptor pd : methodDesc.getParameterDescriptors()) {
@@ -573,7 +578,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     final Class<?>[] interfaces = method.getDeclaringClass().getInterfaces();
                     final Collection<Method> itfWithThisMethod = new ArrayList<Method>();
                     for (final Class<?> i : interfaces) {
-                        final Method m = SecureActions.getDeclaredMethod(i, method.getName(), method.getParameterTypes()).run();
+                        final Method m = Reflection.INSTANCE.getDeclaredMethod(i, method.getName(), method.getParameterTypes());
                         if (m != null) {
                             itfWithThisMethod.add(m);
                         }
@@ -591,7 +596,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                         returnValid++;
                     }
                     for (final Class<?> clazz : classHierarchy) {
-                        final Method overriden = SecureActions.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes()).run();
+                        final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
                         if (overriden != null) {
                             if (overriden.getAnnotation(Valid.class) != null) {
                                 returnValid++;
@@ -629,13 +634,12 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         }
     }
 
-    private void ensureNoReturnValueAddedInChild(final ReturnValueDescriptor returnValueDescriptor, final Method parent, final String msg) {
-        final MethodDescriptor parentDesc = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
-        if (parentDesc == null) {
+    private void ensureNoReturnValueAddedInChild(final ReturnValueDescriptor returnValueDescriptor, final MethodDescriptor parentMtdDesc, final String msg) {
+        if (parentMtdDesc == null) {
             return;
         }
 
-        final ReturnValueDescriptor parentReturnDesc = parentDesc.getReturnValueDescriptor();
+        final ReturnValueDescriptor parentReturnDesc = parentMtdDesc.getReturnValueDescriptor();
         if (parentReturnDesc.isCascaded() && !returnValueDescriptor.isCascaded() || parentReturnDesc.getConstraintDescriptors().size() > returnValueDescriptor.getConstraintDescriptors().size()) {
             throw new ConstraintDeclarationException(msg);
         }
@@ -662,9 +666,11 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         }
     }
 
-    private void processMethod(Method method, MethodDescriptorImpl methodDesc) throws InvocationTargetException, IllegalAccessException {
+    private void processMethod(final Method method, final MethodDescriptorImpl methodDesc) throws InvocationTargetException, IllegalAccessException {
+        final AnnotationIgnores annotationIgnores = factoryContext.getFactory().getAnnotationIgnores();
+
         { // reflection
-            if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(method)) {
+            if (!annotationIgnores.isIgnoreAnnotations(method)) {
                 // return value validations and/or cross-parameter validation
                 for (Annotation anno : method.getAnnotations()) {
                     if (anno instanceof Valid || anno instanceof Validate) {
@@ -680,7 +686,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             int idx = 0;
             final List<String> names = factoryContext.getParameterNameProvider().getParameterNames(method);
             for (final Annotation[] paramAnnos : paramsAnnos) {
-                if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotationOnParameter(method, idx)) {
+                if (!annotationIgnores.isIgnoreAnnotationOnParameter(method, idx)) {
                     final ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
                     processAnnotations(methodDesc, paramAnnos, access, idx, names.get(idx));
                 } else {
@@ -692,10 +698,10 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             }
         }
 
-        if (factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotationOnCrossParameter(method) && methodDesc.getCrossParameterDescriptor() != null) {
+        if (annotationIgnores.isIgnoreAnnotationOnCrossParameter(method) && methodDesc.getCrossParameterDescriptor() != null) {
             methodDesc.setCrossParameterDescriptor(null);
         }
-        if (factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotationOnReturn(method) && methodDesc.getReturnValueDescriptor() != null) {
+        if (annotationIgnores.isIgnoreAnnotationOnReturn(method) && methodDesc.getReturnValueDescriptor() != null) {
             methodDesc.setReturnValueDescriptor(null);
         }
 
@@ -819,8 +825,9 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                 /**
                  * Multi-valued constraints
                  */
-                if (ConstraintAnnotationAttributes.VALUE.isDeclaredOn(annotation.annotationType())) {
-                    Annotation[] children = ConstraintAnnotationAttributes.VALUE.getValue(annotation);
+                final ConstraintAnnotationAttributes.Worker<? extends Annotation> worker = ConstraintAnnotationAttributes.VALUE.analyze(annotation.annotationType());
+                if (worker.isValid()) {
+                    Annotation[] children = Annotation[].class.cast(worker.read(annotation));
                     if (children != null) {
                         for (Annotation child : children) {
                             processAnnotation(child, desc, access, validations); // recursion

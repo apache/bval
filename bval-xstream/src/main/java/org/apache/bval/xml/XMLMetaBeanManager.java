@@ -19,7 +19,7 @@ package org.apache.bval.xml;
 import org.apache.bval.MetaBeanManager;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
-import org.apache.bval.util.PrivilegedActions;
+import org.apache.bval.util.reflection.Reflection;
 
 import java.util.Map;
 
@@ -45,7 +45,7 @@ public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRe
     }
 
     public void addResourceLoader(String resource) {
-        addLoader(new XMLMetaBeanURLLoader(PrivilegedActions.getClassLoader(getClass()).getResource(resource)));
+        addLoader(new XMLMetaBeanURLLoader(Reflection.INSTANCE.getClassLoader(getClass()).getResource(resource)));
     }
 
     public synchronized void addLoader(XMLMetaBeanLoader loader) {

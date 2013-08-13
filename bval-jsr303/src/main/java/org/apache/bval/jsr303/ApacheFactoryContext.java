@@ -18,11 +18,17 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.reflect.Constructor;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.bval.IntrospectorMetaBeanFactory;
+import org.apache.bval.MetaBeanBuilder;
+import org.apache.bval.MetaBeanFactory;
+import org.apache.bval.MetaBeanFinder;
+import org.apache.bval.MetaBeanManager;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.xml.XMLMetaBeanBuilder;
+import org.apache.bval.xml.XMLMetaBeanFactory;
+import org.apache.bval.xml.XMLMetaBeanManager;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -31,18 +37,11 @@ import javax.validation.TraversableResolver;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorContext;
-
-import org.apache.bval.IntrospectorMetaBeanFactory;
-import org.apache.bval.MetaBeanBuilder;
-import org.apache.bval.MetaBeanFactory;
-import org.apache.bval.MetaBeanFinder;
-import org.apache.bval.MetaBeanManager;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.xml.XMLMetaBeanBuilder;
-import org.apache.bval.xml.XMLMetaBeanFactory;
-import org.apache.bval.xml.XMLMetaBeanManager;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.ConstructorUtils;
+import java.lang.reflect.Constructor;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Description: Represents the context that is used to create
@@ -60,7 +59,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     /**
      * Create a new ApacheFactoryContext instance.
      * 
-     * @param factory
+     * @param factory validator factory
      */
     public ApacheFactoryContext(ApacheValidatorFactory factory) {
         this.factory = factory;
@@ -70,8 +69,8 @@ public class ApacheFactoryContext implements ValidatorContext {
     /**
      * Create a new ApacheFactoryContext instance.
      * 
-     * @param factory
-     * @param metaBeanFinder
+     * @param factory validator factory
+     * @param metaBeanFinder meta finder
      */
     protected ApacheFactoryContext(ApacheValidatorFactory factory, MetaBeanFinder metaBeanFinder) {
         this.factory = factory;
@@ -240,24 +239,30 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     private <F extends MetaBeanFactory> F createMetaBeanFactory(final Class<F> cls) {
-        return run(new PrivilegedAction<F>() {
-
+        if (System.getSecurityManager() == null) {
+            return doCreateMetaBeanFactory(cls);
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<F>() {
             public F run() {
-                try {
-                    Constructor<F> c = ConstructorUtils.getMatchingAccessibleConstructor(cls, ApacheFactoryContext.this.getClass());
-                    if (c != null) {
-                        return c.newInstance(ApacheFactoryContext.this);
-                    }
-                    c = ConstructorUtils.getMatchingAccessibleConstructor(cls, getFactory().getClass());
-                    if (c != null) {
-                        return c.newInstance(getFactory());
-                    }
-                    return cls.newInstance();
-                } catch (Exception e) {
-                    throw new ValidationException(e);
-                }
+                return doCreateMetaBeanFactory(cls);
             }
         });
+    }
+
+    private <F extends MetaBeanFactory> F doCreateMetaBeanFactory(final Class<F> cls) {
+        try {
+            Constructor<F> c = ConstructorUtils.getMatchingAccessibleConstructor(cls, ApacheFactoryContext.this.getClass());
+            if (c != null) {
+                return c.newInstance(ApacheFactoryContext.this);
+            }
+            c = ConstructorUtils.getMatchingAccessibleConstructor(cls, getFactory().getClass());
+            if (c != null) {
+                return c.newInstance(getFactory());
+            }
+            return cls.newInstance();
+        } catch (Exception e) {
+            throw new ValidationException(e);
+        }
     }
 
     /**
@@ -275,7 +280,7 @@ public class ApacheFactoryContext implements ValidatorContext {
          * Create the {@link MetaBeanManager} to process JSR303 XML. Requires
          * bval-xstream at RT.
          * 
-         * @param builders
+         * @param builders meta bean builders
          * @return {@link MetaBeanManager}
          */
         // NOTE - We return MetaBeanManager instead of XMLMetaBeanManager to
@@ -287,31 +292,11 @@ public class ApacheFactoryContext implements ValidatorContext {
         }
     }
 
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
-    }
-
     private Class<?> loadClass(final String className) {
-        ClassLoader loader = doPrivileged(SecureActions.getContextClassLoader());
-        if (loader == null)
-            loader = getClass().getClassLoader();
-
         try {
-            return Class.forName(className, true, loader);
+            return Class.forName(className, true, Reflection.INSTANCE.getClassLoader(ApacheFactoryContext.class));
         } catch (ClassNotFoundException ex) {
             throw new ValidationException("Unable to load class: " + className, ex);
-        }
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
         }
     }
 }

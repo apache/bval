@@ -114,9 +114,15 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      * 
      * @param groups
      */
-    void setGroups(Set<Class<?>> groups) {
+    void setGroups(final Set<Class<?>> groups) {
         this.groups = groups;
-        ConstraintAnnotationAttributes.GROUPS.put(attributes, groups.toArray(new Class[groups.size()]));
+        ConstraintAnnotationAttributes.GROUPS.put(attributes, groups.toArray(new Class<?>[groups.size()]));
+    }
+
+    void setGroups(final Class<?>[] groups) {
+        this.groups = new HashSet<Class<?>>();
+        Collections.addAll(this.groups, groups);
+        ConstraintAnnotationAttributes.GROUPS.put(attributes, groups);
     }
 
     /**

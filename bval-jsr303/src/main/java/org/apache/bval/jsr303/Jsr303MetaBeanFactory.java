@@ -21,7 +21,6 @@ package org.apache.bval.jsr303;
 import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.jsr303.groups.Group;
 import org.apache.bval.jsr303.util.ClassHelper;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.MetaConstraint;
 import org.apache.bval.model.Meta;
 import org.apache.bval.model.MetaBean;
@@ -32,6 +31,7 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
+import org.apache.bval.util.reflection.Reflection;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
@@ -39,7 +39,6 @@ import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
-import javax.validation.metadata.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -47,8 +46,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -134,7 +131,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
 
         final Collection<String> missingValid = new ArrayList<String>();
 
-        final Field[] fields = doPrivileged(SecureActions.getDeclaredFields(beanClass));
+        final Field[] fields = Reflection.INSTANCE.getDeclaredFields(beanClass);
         for (final Field field : fields) {
             MetaProperty metaProperty = metabean.getProperty(field.getName());
             // create a property for those fields for which there is not yet a
@@ -155,7 +152,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
                 }
             }
         }
-        final Method[] methods = doPrivileged(SecureActions.getDeclaredMethods(beanClass));
+        final Method[] methods = Reflection.INSTANCE.getDeclaredMethods(beanClass);
         for (final Method method : methods) {
             String propName = null;
             if (method.getParameterTypes().length == 0) {
@@ -205,17 +202,18 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         return false;
     }
 
-    private boolean hasValidationConstraintsDefined(Annotation annot) {
+    private boolean hasValidationConstraintsDefined(final Annotation annot) {
         // If it is annotated with @Constraint
         if (annot.annotationType().getAnnotation(Constraint.class) != null) {
             return true;
         }
 
         // Check whether it is a multivalued constraint:
-        if (ConstraintAnnotationAttributes.VALUE.isDeclaredOn(annot.annotationType())) {
-            Annotation[] children = ConstraintAnnotationAttributes.VALUE.getValue(annot);
+        final ConstraintAnnotationAttributes.Worker<?> worker = ConstraintAnnotationAttributes.VALUE.analyze(annot.annotationType());
+        if (worker.isValid()) {
+            Annotation[] children = Annotation[].class.cast(worker.read(annot));
             if (children != null) {
-                for (Annotation child : children) {
+                for (final Annotation child : children) {
                     if (hasValidationConstraintsDefined(child)) {
                         return true;
                     }
@@ -368,24 +366,5 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         result.setType(access.getJavaType());
         parentMetaBean.putProperty(name, result);
         return result;
-    }
-
-
-
-
-    /**
-     * Perform action with AccessController.doPrivileged() if a security manager is installed.
-     *
-     * @param action
-     *  the action to run
-     * @return
-     *  result of the action
-     */
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

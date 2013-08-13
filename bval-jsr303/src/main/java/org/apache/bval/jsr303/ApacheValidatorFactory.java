@@ -22,6 +22,7 @@ import org.apache.bval.jsr303.xml.AnnotationIgnores;
 import org.apache.bval.jsr303.xml.MetaConstraint;
 import org.apache.bval.jsr303.xml.ValidationMappingParser;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 
@@ -298,15 +299,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     private <T> T newInstance(final Class<T> cls) {
-        return AccessController.doPrivileged(new PrivilegedAction<T>() {
-            public T run() {
-                try {
-                    return cls.newInstance();
-                } catch (final Exception ex) {
-                    throw new ValidationException("Cannot instantiate : " + cls, ex);
-                }
-            }
-        });
+        try {
+            return Reflection.INSTANCE.newInstance(cls);
+        } catch (final RuntimeException e) {
+            throw new ValidationException(e.getCause());
+        }
     }
 
     /**

@@ -34,7 +34,7 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
 
     //TODO - Spec recommends caching per classloader
     private static final String SPI_CFG =
-            "META-INF/services/javax.validation.spi.ValidationProvider";
+        "META-INF/services/javax.validation.spi.ValidationProvider";
 
     /**
      * {@inheritDoc}
@@ -62,21 +62,29 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
                                 // try loading the specified class
                                 final Class<?> provider = cl.loadClass(line);
                                 // create an instance to return
-                                ValidationProvider<?> vp =
-                                        AccessController.doPrivileged(new PrivilegedAction<ValidationProvider<?>>() {
-                                            public ValidationProvider<?> run() {
-                                                try {
-                                                    return (ValidationProvider<?>) provider.newInstance();
-                                                } catch (final Exception ex) {
-                                                    throw new ValidationException("Cannot instantiate : " + provider, ex);
-                                                }
+                                final ValidationProvider<?> vp;
+                                if (System.getSecurityManager() == null) {
+                                    try {
+                                        vp = (ValidationProvider<?>) provider.newInstance();
+                                    } catch (final Exception ex) {
+                                        throw new ValidationException("Cannot instantiate : " + provider, ex);
+                                    }
+                                } else {
+                                    vp = AccessController.doPrivileged(new PrivilegedAction<ValidationProvider<?>>() {
+                                        public ValidationProvider<?> run() {
+                                            try {
+                                                return (ValidationProvider<?>) provider.newInstance();
+                                            } catch (final Exception ex) {
+                                                throw new ValidationException("Cannot instantiate : " + provider, ex);
                                             }
-                                        });
-                                 providers.add(vp);
+                                        }
+                                    });
+                                }
+                                providers.add(vp);
 
                             } catch (ClassNotFoundException e) {
                                 throw new ValidationException("Failed to load provider " +
-                                        line + " configured in file " + url, e);
+                                    line + " configured in file " + url, e);
                             }
                         }
                         line = br.readLine();

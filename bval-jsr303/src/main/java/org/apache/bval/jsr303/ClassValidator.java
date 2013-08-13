@@ -110,16 +110,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     /**
-     * Create a new ClassValidator instance.
-     *
-     * @param factory
-     * @deprecated provided for backward compatibility
-     */
-    public ClassValidator(ApacheValidatorFactory factory) {
-        this(factory.usingContext());
-    }
-
-    /**
      * Get the metabean finder associated with this validator.
      *
      * @return a MetaBeanFinder
@@ -331,19 +321,26 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     private <T> T newInstance(final Class<T> cls) {
+        if (System.getSecurityManager() == null) {
+            return doNewInstance(cls);
+        }
         return AccessController.doPrivileged(new PrivilegedAction<T>() {
             public T run() {
-                try {
-                    Constructor<T> cons = cls.getConstructor(ApacheFactoryContext.class);
-                    if (!cons.isAccessible()) {
-                        cons.setAccessible(true);
-                    }
-                    return cons.newInstance(factoryContext);
-                } catch (final Exception ex) {
-                    throw new ValidationException("Cannot instantiate : " + cls, ex);
-                }
+                return doNewInstance(cls);
             }
         });
+    }
+
+    private <T> T doNewInstance(final Class<T> cls) {
+        try {
+            Constructor<T> cons = cls.getConstructor(ApacheFactoryContext.class);
+            if (!cons.isAccessible()) {
+                cons.setAccessible(true);
+            }
+            return cons.newInstance(factoryContext);
+        } catch (final Exception ex) {
+            throw new ValidationException("Cannot instantiate : " + cls, ex);
+        }
     }
 
     // Helpers

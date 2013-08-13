@@ -18,8 +18,10 @@
  */
 package org.apache.bval.util;
 
-import java.io.InputStream;
+import org.apache.bval.util.reflection.Reflection;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -168,7 +170,7 @@ public class BValVersion {
 
         buf.append("java.class.path:\n");
         StringTokenizer tok = new StringTokenizer(
-            PrivilegedActions.getProperty("java.class.path"));
+            Reflection.INSTANCE.getProperty("java.class.path"));
         while (tok.hasMoreTokens()) {
             buf.append("\t").append(tok.nextToken());
             buf.append("\n");
@@ -190,6 +192,6 @@ public class BValVersion {
 
     private StringBuilder appendProperty(String prop, StringBuilder buf) {
         return buf.append(prop).append(": ").append(
-            PrivilegedActions.getProperty(prop));
+            Reflection.INSTANCE.getProperty(prop));
     }
 }

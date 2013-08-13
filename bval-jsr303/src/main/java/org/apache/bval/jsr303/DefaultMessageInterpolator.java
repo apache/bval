@@ -17,12 +17,10 @@
 package org.apache.bval.jsr303;
 
 import org.apache.bval.el.MessageEvaluator;
-import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
 
 import javax.validation.MessageInterpolator;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -41,6 +39,7 @@ import java.util.regex.Pattern;
  */
 public class DefaultMessageInterpolator implements MessageInterpolator {
     private static final Logger log = Logger.getLogger(DefaultMessageInterpolator.class.getName());
+    private static final boolean LOG_FINEST = log.isLoggable(Level.FINEST);
     private static final String DEFAULT_VALIDATION_MESSAGES = "org.apache.bval.jsr303.ValidationMessages";
     private static final String USER_VALIDATION_MESSAGES = "ValidationMessages";
 
@@ -174,7 +173,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
         ResourceBundle rb = null;
-        final ClassLoader classLoader = doPrivileged(SecureActions.getContextClassLoader());
+        final ClassLoader classLoader = Reflection.INSTANCE.getClassLoader(DefaultMessageInterpolator.class);
         if (classLoader != null) {
             rb = loadBundle(classLoader, locale,
                   USER_VALIDATION_MESSAGES + " not found by thread local classloader");
@@ -183,16 +182,14 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         // 2011-03-27 jw: No privileged action required.
         // A class can always access the classloader of itself and of subclasses.
         if (rb == null) {
-            rb = loadBundle(
-              getClass().getClassLoader(),
-              locale,
-              USER_VALIDATION_MESSAGES + " not found by validator classloader"
-            );
+            rb = loadBundle(getClass().getClassLoader(), locale, USER_VALIDATION_MESSAGES + " not found by validator classloader");
         }
-        if (rb != null) {
-            log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
-        } else {
-        	log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES, DEFAULT_VALIDATION_MESSAGES));
+        if (LOG_FINEST) {
+            if (rb != null) {
+                log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
+            } else {
+                log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES, DEFAULT_VALIDATION_MESSAGES));
+            }
         }
         return rb;
     }
@@ -202,7 +199,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         ResourceBundle rb = null;
         try {
             rb = ResourceBundle.getBundle(USER_VALIDATION_MESSAGES, locale, classLoader);
-        } catch (MissingResourceException e) {
+        } catch (final MissingResourceException e) {
             log.fine(message);
         }
         return rb;
@@ -310,23 +307,5 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     private String sanitizeForAppendReplacement(String src) {
         return src.replace("\\", "\\\\").replace("$", "\\$");
-    }
-
-
-
-    /**
-     * Perform action with AccessController.doPrivileged() if a security manager is installed.
-     *
-     * @param action
-     *  the action to run
-     * @return
-     *  result of the action
-     */
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

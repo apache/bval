@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaMethod;
 import org.apache.bval.model.Validation;
@@ -27,6 +26,8 @@ import java.lang.reflect.Method;
  * Description: {@link MethodDescriptor} implementation.<br/>
  */
 public class MethodDescriptorImpl extends InvocableElementDescriptor implements javax.validation.metadata.MethodDescriptor, ProcedureDescriptor {
+    private static final Validation[] EMPTY_VALIDATION = new Validation[0];
+
     private final String name;
 
     protected MethodDescriptorImpl(final MetaBean metaBean, final Validation[] validations, final Method method) {
@@ -35,7 +36,7 @@ public class MethodDescriptorImpl extends InvocableElementDescriptor implements 
     }
 
     public MethodDescriptorImpl(final MetaBean bean, final MetaMethod metaMethod) {
-        super(bean, metaMethod.getMethod().getReturnType(), new Validation[0]);
+        super(bean, metaMethod.getMethod().getReturnType(), EMPTY_VALIDATION);
         setCascaded(false);
         this.name = metaMethod.getMethod().getName();
     }

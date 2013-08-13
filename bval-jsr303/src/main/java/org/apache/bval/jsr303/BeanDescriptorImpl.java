@@ -518,24 +518,29 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
     private void buildMethodConstraints() throws InvocationTargetException, IllegalAccessException {
 
-        Class<?> current = getMetaBean().getBeanClass();
+        final Class<?> beanClass = getMetaBean().getBeanClass();
+        final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), beanClass);
 
-        final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), current);
-
+        Class<?> current = beanClass;
         do {
             classHierarchy.remove(current);
+
             for (final Method method : Reflection.INSTANCE.getDeclaredMethods(current)) {
+                if (Modifier.isStatic(method.getModifiers()) || method.isSynthetic()) {
+                    continue;
+                }
+
                 final boolean getter = (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != Void.TYPE;
 
-                final MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(getMetaBean(), new Validation[0], method);
+                final MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(getMetaBean(), EMPTY_VALIDATION, method);
                 methodConstraints.put(method, methodDesc);
 
                 final Collection<Method> parents = new ArrayList<Method>();
                 for (final Class<?> clazz : classHierarchy) {
                     final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
                     if (overriden != null) {
-                        processMethod(overriden, methodDesc);
                         parents.add(overriden);
+                        processMethod(overriden, methodDesc);
                     }
                 }
 
@@ -543,7 +548,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
                 ensureNotNullDescriptors(method.getReturnType(), methodDesc);
 
-                if (parents != null) {
+                if (current == beanClass && parents != null) { // only valid beanClass, other validations are done through inheritance meta building
                     if (parents.size() > 1) {
                         for (final Method parent : parents) {
                             final MethodDescriptor parentDec = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
@@ -619,6 +624,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     throw new ConstraintDeclarationException("@Valid is needed to define a group conversion");
                 }
             }
+
             current = current.getSuperclass();
         } while (current != null && current != Object.class);
     }

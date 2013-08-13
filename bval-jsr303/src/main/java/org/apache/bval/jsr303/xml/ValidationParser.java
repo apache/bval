@@ -24,8 +24,7 @@ import org.apache.bval.jsr303.BootstrapConfigurationImpl;
 import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.util.IOUtils;
 import org.apache.bval.jsr303.util.IOs;
-import org.apache.bval.jsr303.util.SecureActions;
-import org.apache.bval.util.PrivilegedActions;
+import org.apache.bval.util.reflection.Reflection;
 import org.xml.sax.SAXException;
 
 import javax.validation.ConstraintValidatorFactory;
@@ -103,11 +102,6 @@ public class ValidationParser implements Closeable {
         return file;
     }
 
-    /**
-     * Process the validation configuration into <code>targetConfig</code>.
-     *
-     * @param targetConfig
-     */
     public static ValidationParser processValidationConfig(final String file, final ConfigurationImpl targetConfig, final boolean ignoreXml) {
         final ValidationParser parser = new ValidationParser();
 
@@ -198,7 +192,7 @@ public class ValidationParser implements Closeable {
     }
 
     protected static InputStream getInputStream(String path) throws IOException {
-        ClassLoader loader = PrivilegedActions.getClassLoader(ValidationParser.class);
+        ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
         InputStream inputStream = loader.getResourceAsStream(path);
 
         if (inputStream != null) {
@@ -222,16 +216,10 @@ public class ValidationParser implements Closeable {
         return getSchema(VALIDATION_CONFIGURATION_XSD);
     }
 
-    /**
-     * Get a Schema object from the specified resource name.
-     *
-     * @param xsd
-     * @return {@link Schema}
-     */
-    static Schema getSchema(String xsd) {
-        ClassLoader loader = PrivilegedActions.getClassLoader(ValidationParser.class);
-        SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        URL schemaUrl = loader.getResource(xsd);
+    static Schema getSchema(final String xsd) {
+        final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
+        final SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        final URL schemaUrl = loader.getResource(xsd);
         try {
             return sf.newSchema(schemaUrl);
         } catch (SAXException e) {
@@ -320,24 +308,31 @@ public class ValidationParser implements Closeable {
     }
 
     private <T> T newInstance(final Class<T> cls) {
+        if (System.getSecurityManager() == null) {
+            return doNewInstance(cls);
+        }
         return AccessController.doPrivileged(new PrivilegedAction<T>() {
             public T run() {
-                try {
-                    try {
-                        final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
-                        releasables.add(releasable);
-                        return releasable.getInstance();
-                    } catch (final Exception e) {
-                        return cls.newInstance();
-                    } catch (final NoClassDefFoundError error) {
-                        return cls.newInstance();
-                    }
-                } catch (final Exception ex) {
-                    exceptions.add(new ValidationException("Cannot instantiate : " + cls, ex));
-                    return null; // ensure BootstrapConfiguration can be read even if class can't be instantiated
-                }
+                return doNewInstance(cls);
             }
         });
+    }
+
+    private <T> T doNewInstance(final Class<T> cls) {
+        try {
+            try {
+                final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
+                releasables.add(releasable);
+                return releasable.getInstance();
+            } catch (final Exception e) {
+                return cls.newInstance();
+            } catch (final NoClassDefFoundError error) {
+                return cls.newInstance();
+            }
+        } catch (final Exception ex) {
+            exceptions.add(new ValidationException("Cannot instantiate : " + cls, ex));
+            return null; // ensure BootstrapConfiguration can be read even if class can't be instantiated
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -379,23 +374,11 @@ public class ValidationParser implements Closeable {
         }
     }
 
-
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
-    }
-
     private Class<?> loadClass(final String className) {
-        ClassLoader loader = doPrivileged(SecureActions.getContextClassLoader());
-        if (loader == null)
-            loader = ValidationParser.class.getClassLoader();
-
+        final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
         try {
             return Class.forName(className, true, loader);
-        } catch (ClassNotFoundException ex) {
+        } catch (final ClassNotFoundException ex) {
             // TCK check BootstrapConfig is present in all cases
             // so throw next exception later
             exceptions.add(new ValidationException("Unable to load class: " + className, ex));

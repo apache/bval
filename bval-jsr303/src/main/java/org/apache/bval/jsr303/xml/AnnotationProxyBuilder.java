@@ -17,7 +17,7 @@
 package org.apache.bval.jsr303.xml;
 
 import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
-import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.reflection.Reflection;
 
 import javax.validation.Payload;
 import javax.validation.Valid;
@@ -76,7 +76,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
     public AnnotationProxyBuilder(A annot) {
         this((Class<A>) annot.annotationType());
         // Obtain the "elements" of the annotation
-        final Method[] methods = doPrivileged(SecureActions.getDeclaredMethods(annot.annotationType()));
+        final Method[] methods = Reflection.INSTANCE.getDeclaredMethods(annot.annotationType());
         for (Method m : methods) {
             if (!m.isAccessible()) {
                 m.setAccessible(true);
@@ -177,30 +177,28 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @return {@link Annotation}
      */
     public A createAnnotation() {
-        ClassLoader classLoader = SecureActions.getClassLoader(getType());
+        ClassLoader classLoader = Reflection.INSTANCE.getClassLoader(getType());
         @SuppressWarnings("unchecked")
         final Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
         final InvocationHandler handler = new AnnotationProxy(this);
-        return doPrivileged(new PrivilegedAction<A>() {
+        if (System.getSecurityManager() == null) {
+            return doCreateAnnotation(proxyClass, handler);
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<A>() {
             public A run() {
-                try {
-                    Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
-                    return constructor.newInstance(handler);
-                } catch (Exception e) {
-                    throw new ValidationException("Unable to create annotation for configured constraint", e);
-                }
+                return doCreateAnnotation(proxyClass, handler);
             }
         });
     }
 
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
+    private A doCreateAnnotation(final Class<A> proxyClass, final InvocationHandler handler) {
+        try {
+            Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
+            return constructor.newInstance(handler);
+        } catch (Exception e) {
+            throw new ValidationException("Unable to create annotation for configured constraint", e);
         }
     }
-
 
     public static final class ValidAnnotation implements Valid {
         public static final ValidAnnotation INSTANCE = new ValidAnnotation();

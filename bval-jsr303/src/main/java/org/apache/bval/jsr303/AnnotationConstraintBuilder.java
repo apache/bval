@@ -19,17 +19,15 @@
 package org.apache.bval.jsr303;
 
 import org.apache.bval.jsr303.groups.GroupsComputer;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.reflection.Reflection;
 
-import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintTarget;
 import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import javax.validation.OverridesAttribute;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
@@ -85,54 +83,63 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     /** build attributes, payload, groups from 'annotation' */
     private void buildFromAnnotation() {
         if (constraintValidation.getAnnotation() != null) {
-            run(new PrivilegedAction<Object>() {
-                public Object run() {
-                    for (Method method : constraintValidation.getAnnotation().annotationType().getDeclaredMethods()) {
-                        // groups + payload must also appear in attributes (also
-                        // checked by TCK-Tests)
-                        if (method.getParameterTypes().length == 0) {
-                            try {
-                                final String name = method.getName();
-                                if (ConstraintAnnotationAttributes.PAYLOAD.getAttributeName().equals(name)) {
-                                    buildPayload(method);
-                                } else if (ConstraintAnnotationAttributes.GROUPS.getAttributeName().equals(name)) {
-                                    buildGroups(method);
-                                } else if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName().equals(name)) {
-                                    buildValidationAppliesTo(method);
-                                } else if (name.startsWith("valid")) {
-                                    throw new ConstraintDefinitionException("constraints parameters can't start with valid: " + name);
-                                } else {
-                                    constraintValidation.getAttributes().put(name, method.invoke(constraintValidation.getAnnotation()));
-                                }
-                            } catch (final ConstraintDefinitionException cde) {
-                                throw cde;
-                            } catch (final Exception e) { // do nothing
-                                log.log(Level.WARNING, String.format("Error processing annotation: %s ", constraintValidation.getAnnotation()), e);
-                            }
-                        }
-                    }
-
-                    // valid validationAppliesTo
-                    final Constraint annotation = constraintValidation.getAnnotation().annotationType().getAnnotation(Constraint.class);
-                    if (annotation == null) {
+            if (System.getSecurityManager() == null) {
+                doBuildFromAnnotations();
+            } else {
+                AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                    public Object run() {
+                        doBuildFromAnnotations();
                         return null;
                     }
+                });
+            }
+        }
+    }
 
-                    final Pair validationTarget = computeValidationTarget(annotation.validatedBy());
-                    for (final Annotation a : constraintValidation.getAnnotation().annotationType().getAnnotations()) {
-                        final Constraint inheritedConstraint = a.annotationType().getAnnotation(Constraint.class);
-                        if (inheritedConstraint != null && !a.annotationType().getName().startsWith("javax.validation.constraints.")) {
-                            final Pair validationTargetInherited = computeValidationTarget(inheritedConstraint.validatedBy());
-                            if ((validationTarget.a > 0 && validationTargetInherited.b > 0 && validationTarget.b == 0)
-                                    || (validationTarget.b > 0 && validationTargetInherited.a > 0 && validationTarget.a == 0)) {
-                                throw new ConstraintDefinitionException("Parent and child constraint have different targets");
-                            }
-                        }
+    private void doBuildFromAnnotations() {
+        final Class<? extends Annotation> annotationType = constraintValidation.getAnnotation().annotationType();
+
+        for (final Method method : Reflection.INSTANCE.getDeclaredMethods(annotationType)) {
+            // groups + payload must also appear in attributes (also
+            // checked by TCK-Tests)
+            if (method.getParameterTypes().length == 0) {
+                try {
+                    final String name = method.getName();
+                    if (ConstraintAnnotationAttributes.PAYLOAD.getAttributeName().equals(name)) {
+                        buildPayload(method);
+                    } else if (ConstraintAnnotationAttributes.GROUPS.getAttributeName().equals(name)) {
+                        buildGroups(method);
+                    } else if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName().equals(name)) {
+                        buildValidationAppliesTo(method);
+                    } else if (name.startsWith("valid")) {
+                        throw new ConstraintDefinitionException("constraints parameters can't start with valid: " + name);
+                    } else {
+                        constraintValidation.getAttributes().put(name, method.invoke(constraintValidation.getAnnotation()));
                     }
-
-                    return null;
+                } catch (final ConstraintDefinitionException cde) {
+                    throw cde;
+                } catch (final Exception e) { // do nothing
+                    log.log(Level.WARNING, String.format("Error processing annotation: %s ", constraintValidation.getAnnotation()), e);
                 }
-            });
+            }
+        }
+
+        // valid validationAppliesTo
+        final Constraint annotation = annotationType.getAnnotation(Constraint.class);
+        if (annotation == null) {
+            return;
+        }
+
+        final Pair validationTarget = computeValidationTarget(annotation.validatedBy());
+        for (final Annotation a : annotationType.getAnnotations()) {
+            final Constraint inheritedConstraint = a.annotationType().getAnnotation(Constraint.class);
+            if (inheritedConstraint != null && !a.annotationType().getName().startsWith("javax.validation.constraints.")) {
+                final Pair validationTargetInherited = computeValidationTarget(inheritedConstraint.validatedBy());
+                if ((validationTarget.a > 0 && validationTargetInherited.b > 0 && validationTarget.b == 0)
+                        || (validationTarget.b > 0 && validationTargetInherited.a > 0 && validationTarget.a == 0)) {
+                    throw new ConstraintDefinitionException("Parent and child constraint have different targets");
+                }
+            }
         }
     }
 
@@ -177,8 +184,8 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         }
     }
 
-    private void buildGroups(Method method) throws IllegalAccessException, InvocationTargetException {
-        Object raw = method.invoke(constraintValidation.getAnnotation());
+    private void buildGroups(final Method method) throws IllegalAccessException, InvocationTargetException {
+        final Object raw = method.invoke(constraintValidation.getAnnotation());
         Class<?>[] garr;
         if (raw instanceof Class<?>) {
             garr = new Class[] { (Class<?>) raw };
@@ -189,9 +196,9 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         }
 
         if (garr == null || garr.length == 0) {
-            garr = GroupsComputer.getDefaultGroupArray();
+            garr = GroupsComputer.DEFAULT_GROUP;
         }
-        constraintValidation.setGroups(new HashSet<Class<?>>(Arrays.asList(garr)));
+        constraintValidation.setGroups(garr);
     }
 
     @SuppressWarnings("unchecked")
@@ -203,7 +210,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             payloadSet = Collections.<Class<? extends Payload>> emptySet();
         } else {
             payloadSet = new HashSet<Class<? extends Payload>>(payload_raw.length);
-            payloadSet.addAll(Arrays.asList(payload_raw));
+            Collections.addAll(payloadSet, payload_raw);
         }
         constraintValidation.setPayload(payloadSet);
     }
@@ -341,14 +348,6 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             }
             Annotation newAnnot = apb.createAnnotation();
             ((ConstraintValidation<Annotation>) composite).setAnnotation(newAnnot);
-        }
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
         }
     }
 

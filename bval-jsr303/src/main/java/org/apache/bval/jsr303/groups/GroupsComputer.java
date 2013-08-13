@@ -31,19 +31,12 @@ import java.util.*;
  * Implementation is thread-safe.
  */
 public class GroupsComputer {
+    public static final Class<?>[] DEFAULT_GROUP = new Class<?>[]{Default.class};
+
     /** The default group array used in case any of the validate methods is called without a group. */
     private static final Groups DEFAULT_GROUPS;
-
     static {
-        DEFAULT_GROUPS = new GroupsComputer().computeGroups(Arrays.asList(getDefaultGroupArray()));
-    }
-
-    /**
-     * Get the default group array.
-     * @return <code>{@link Default}.class</code> only
-     */
-    public static Class<?>[] getDefaultGroupArray() {
-        return new Class<?>[] { Default.class };
+        DEFAULT_GROUPS = new GroupsComputer().computeGroups(Arrays.asList(DEFAULT_GROUP));
     }
 
     /** caching resolved groups in a thread-safe map. */

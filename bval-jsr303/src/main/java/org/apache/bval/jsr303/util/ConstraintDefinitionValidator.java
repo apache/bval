@@ -18,17 +18,12 @@
  */
 package org.apache.bval.jsr303.util;
 
+import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
+
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintTarget;
-
-import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
-
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Locale;
 
 /**
  * Internal validator that ensures the correct definition of constraint
@@ -49,43 +44,14 @@ public class ConstraintDefinitionValidator {
     public static void validateConstraintDefinition(final Annotation annotation) {
         final Class<? extends Annotation> type = annotation.annotationType();
 
-        ConstraintAnnotationAttributes.GROUPS.validateOn(type);
-        ConstraintAnnotationAttributes.PAYLOAD.validateOn(type);
-        ConstraintAnnotationAttributes.MESSAGE.validateOn(type);
-        ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.validateOn(type);
+        ConstraintAnnotationAttributes.GROUPS.analyze(type).valid();
+        ConstraintAnnotationAttributes.PAYLOAD.analyze(type).valid();
+        ConstraintAnnotationAttributes.MESSAGE.analyze(type).valid();
 
-        final Object defaultValidationApplies = ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getDefaultValue(type);
-        if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.isDeclaredOn(type) && !ConstraintTarget.IMPLICIT.equals(defaultValidationApplies)) {
+        final ConstraintAnnotationAttributes.Worker<? extends Annotation> validationAppliesToWorker = ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.analyze(type);
+
+        if (validationAppliesToWorker.isValid() && !ConstraintTarget.IMPLICIT.equals(validationAppliesToWorker.defaultValue)) {
             throw new ConstraintDefinitionException("validationAppliesTo default value should be IMPLICIT");
-        }
-
-        validAttributes(annotation);
-    }
-
-    /**
-     * Check that the annotation has no methods that start with "valid".
-     * 
-     * @param annotation
-     *            The annotation to check.
-     */
-    private static void validAttributes(final Annotation annotation) {
-        /*
-        final Method[] methods = run(SecureActions.getDeclaredMethods(annotation.annotationType()));
-        for (Method method : methods ){
-            // Currently case insensitive, the spec is unclear about this
-            if (method.getName().toLowerCase(Locale.ENGLISH).startsWith("valid")) {
-                throw new ConstraintDefinitionException(
-                    "A constraint annotation cannot have methods which start with 'valid'");
-            }
-        }
-        */
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
         }
     }
 }

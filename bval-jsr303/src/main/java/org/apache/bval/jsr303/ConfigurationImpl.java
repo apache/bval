@@ -22,7 +22,6 @@ package org.apache.bval.jsr303;
 import org.apache.bval.jsr303.parameter.DefaultParameterNameProvider;
 import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr303.util.IOs;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.jsr303.xml.ValidationParser;
 
 import javax.validation.BootstrapConfiguration;
@@ -270,16 +269,23 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @throws ValidationException if the ValidatorFactory cannot be built
      */
     public ValidatorFactory buildValidatorFactory() {
-        return run(SecureActions.doPrivBuildValidatorFactory(this));
+        if (System.getSecurityManager() == null) {
+            return doPrivBuildValidatorFactory(this);
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<ValidatorFactory>() {
+            public ValidatorFactory run() {
+                return doPrivBuildValidatorFactory(ConfigurationImpl.this);
+            }
+        });
     }
 
-    public ValidatorFactory doPrivBuildValidatorFactory() {
+    public ValidatorFactory doPrivBuildValidatorFactory(final ConfigurationImpl impl) {
         prepare();
         parser.ensureValidatorFactoryCanBeBuilt();
         if (provider != null) {
-            return provider.buildValidatorFactory(this);
+            return provider.buildValidatorFactory(impl);
         } else {
-            return findProvider().buildValidatorFactory(this);
+            return findProvider().buildValidatorFactory(impl);
         }
     }
 
@@ -361,14 +367,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     public void setProviderClass(Class<? extends ValidationProvider<?>> providerClass) {
         this.providerClass = providerClass;
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 
     public void setExecutableValidation(final Collection<ExecutableType> executableValidation) {

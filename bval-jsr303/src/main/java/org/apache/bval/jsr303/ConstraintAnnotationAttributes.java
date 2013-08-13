@@ -16,14 +16,13 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.jsr303.util.SecureActions;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
-import javax.validation.ValidationException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -41,27 +40,27 @@ public enum ConstraintAnnotationAttributes {
     /**
      * "message"
      */
-    MESSAGE(false, false, "message"),
+    MESSAGE(false, "message"),
 
     /**
      * "groups"
      */
-    GROUPS(false, false, "groups"),
+    GROUPS(false, "groups"),
 
     /**
      * "payload"
      */
-    PAYLOAD(false, false, "payload"),
+    PAYLOAD(false, "payload"),
 
     /**
      * "validationAppliesTo"
      */
-    VALIDATION_APPLIES_TO(true, true, "validationAppliesTo"),
+    VALIDATION_APPLIES_TO(true, "validationAppliesTo"),
 
     /**
      * "value" for multi-valued constraints
      */
-    VALUE(false, true, "value");
+    VALUE(true, "value");
 
     @SuppressWarnings("unused")
     private static class Types {
@@ -75,11 +74,9 @@ public enum ConstraintAnnotationAttributes {
     private final Type type;
     private final boolean permitNullDefaultValue;
     private final String attributeName;
-    private final boolean quiet;
 
-    private ConstraintAnnotationAttributes(final boolean quiet, final boolean permitNullDefaultValue, final String name) {
+    private ConstraintAnnotationAttributes(final boolean permitNullDefaultValue, final String name) {
         this.permitNullDefaultValue = permitNullDefaultValue;
-        this.quiet = quiet;
         this.attributeName = name;
         try {
             this.type = Types.class.getDeclaredField(getAttributeName()).getGenericType();
@@ -117,9 +114,6 @@ public enum ConstraintAnnotationAttributes {
      * @return previous value mapped to <code>this.attributeName</code>
      */
     public <V> Object put(Map<? super String, ? super V> map, V value) {
-        if (!TypeUtils.isInstance(value, getType())) {
-            throw new IllegalArgumentException(String.format("Invalid '%s' value: %s", getAttributeName(), value));
-        }
         return map.put(getAttributeName(), value);
     }
 
@@ -139,133 +133,73 @@ public enum ConstraintAnnotationAttributes {
         return result;
     }
 
-    /**
-     * Verify that this attribute is validly defined on the given type.
-     * 
-     * @param type
-     * @throws ConstraintDefinitionException
-     */
-    public <A extends Annotation> void validateOn(Class<A> type) {
-        new Worker<A>(type, quiet);
+    public <C extends Annotation> Worker<C> analyze(final Class<C> clazz) {
+        return new Worker<C>(clazz);
     }
 
-    /**
-     * Benign means of checking for an attribute's existence.
-     * 
-     * @param type
-     * @return whether the attribute was (properly) declared
-     */
-    public <A extends Annotation> boolean isDeclaredOn(Class<A> type) {
-        return new Worker<A>(type, true).valid;
-    }
-
-    /**
-     * Get the value of this attribute from the specified constraint annotation.
-     * 
-     * @param constraint
-     * @return Object
-     */
-    public <T> T getValue(Annotation constraint) {
-        try {
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            T result = (T) new Worker(constraint.annotationType()).read(constraint);
-            return result;
-        } catch (Exception e) {
-            throw new ValidationException(String.format("Could not get value of %1$s() from %2$s", getType(),
-                constraint));
-        }
-    }
-
-    /**
-     * Get the default value of this attribute on the given annotation type.
-     * @param <T>
-     * @param type
-     * @return Object
-     */
-    public <T, A extends Annotation> T getDefaultValue(Class<A> type) {
-        return  (T) new Worker<A>(type, quiet).defaultValue;
-    }
-
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
-    }
-
-    private class Worker<C> {
-        final Method method;
-        final Object defaultValue;
-        final boolean valid;
+    public class Worker<C extends Annotation> {
+        public final Method method;
+        public final Object defaultValue;
+        private RuntimeException error;
 
         /**
          * Create a new Worker instance.
          * @param constraintType to handle
          */
-        Worker(Class<C> constraintType) {
-            this(constraintType, false);
-        }
-
-        /**
-         * Create a new Worker instance.
-         * @param constraintType to handle
-         * @param quiet whether to simply set !valid rather than throw an Exception on error
-         */
-        Worker(Class<C> constraintType, boolean quiet) {
-            super();
-            boolean _valid = true;
+        Worker(final Class<C> constraintType) {
             Object _defaultValue = null;
             try {
-                method = doPrivileged(SecureActions.getPublicMethod(constraintType, getAttributeName()));
+                method = Reflection.INSTANCE.getPublicMethod(constraintType, getAttributeName());
                 if (method == null) {
-                    if (quiet) {
-                        _valid = false;
-                        return;
-                    }
-                    throw new ConstraintDefinitionException(String.format("Annotation %1$s has no %2$s() method",
-                        constraintType, getAttributeName()));
+                    error = new ConstraintDefinitionException(String.format("Annotation %1$s has no %2$s() method", constraintType, getAttributeName()));
+                    return;
                 }
 
                 if (!TypeUtils.isAssignable(method.getReturnType(), getType())) {
-                    if (quiet) {
-                        _valid = false;
-                        return;
-                    }
-                    throw new ConstraintDefinitionException(String.format(
-                        "Return type for %1$s() must be of type %2$s", getAttributeName(), getType()));
+                    error = new ConstraintDefinitionException(String.format("Return type for %1$s() must be of type %2$s", getAttributeName(), getType()));
+                    return;
                 }
                 _defaultValue = method.getDefaultValue();
                 if (_defaultValue == null && permitNullDefaultValue) {
                     return;
                 }
                 if (TypeUtils.isArrayType(getType()) && Array.getLength(_defaultValue) > 0) {
-                    if (quiet) {
-                        _valid = false;
-                        return;
-                    }
-                    throw new ConstraintDefinitionException(String.format(
-                        "Default value for %1$s() must be an empty array", getAttributeName()));
+                    error = new ConstraintDefinitionException(String.format("Default value for %1$s() must be an empty array", getAttributeName()));
                 }
             } finally {
-                valid = _valid;
                 defaultValue = _defaultValue;
             }
         }
 
-        <T> T read(final C constraint) {
-            @SuppressWarnings("unchecked")
-            T result = (T) doPrivileged(new PrivilegedAction<Object>() {
+        public boolean isValid() {
+            return error == null;
+        }
+
+        public Worker<C> valid() {
+            if (!isValid()) {
+                throw error;
+            }
+            return this;
+        }
+
+        public Object read(final Annotation constraint) {
+            if (System.getSecurityManager() == null) {
+                return doInvoke(constraint);
+            }
+            return AccessController.doPrivileged(new PrivilegedAction<Object>() {
                 public Object run() {
-                    try {
-                        method.setAccessible(true);
-                        return method.invoke(constraint);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+                    return doInvoke(constraint);
                 }
             });
-            return result;
+        }
+
+        private Object doInvoke(final Annotation constraint) {
+            try {
+                method.setAccessible(true);
+                return method.invoke(constraint);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

@@ -36,12 +36,16 @@ public class FieldAccess extends AccessStrategy {
     public FieldAccess(final Field field) {
         this.field = field;
         if (!field.isAccessible()) {
-            run(new PrivilegedAction<Void>() {
-                public Void run() {
-                    field.setAccessible(true);
-                    return null;
-                }
-            });
+            if (System.getSecurityManager() == null) {
+                field.setAccessible(true);
+            } else {
+                AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                    public Void run() {
+                        field.setAccessible(true);
+                        return null;
+                    }
+                });
+            }
         }
     }
 
@@ -101,13 +105,5 @@ public class FieldAccess extends AccessStrategy {
      */
     public int hashCode() {
         return field.hashCode();
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

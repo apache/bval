@@ -635,12 +635,12 @@
         <module>bval-core</module>
         <module>bval-xstream</module>
         <module>bval-jsr303</module>
-        <module>bundle</module>
         <module>bval-json</module>
         <module>bval-guice</module>
         <module>bval-tck</module>
         <module>bval-extras</module>
         <module>bval-tck11</module>
+        <!--<module>bundle</module>-->
     </modules>
 
 </project>

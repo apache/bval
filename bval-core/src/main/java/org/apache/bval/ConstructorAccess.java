@@ -20,7 +20,6 @@ import org.apache.bval.util.AccessStrategy;
 
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -32,12 +31,16 @@ public class ConstructorAccess extends AccessStrategy {
     public ConstructorAccess(final Constructor<?> constructor) {
         this.constructor = constructor;
         if (!constructor.isAccessible()) {
-            run(new PrivilegedAction<Void>() {
-                public Void run() {
-                    constructor.setAccessible(true);
-                    return null;
-                }
-            });
+            if (System.getSecurityManager() == null) {
+                constructor.setAccessible(true);
+            } else {
+                AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                    public Void run() {
+                        constructor.setAccessible(true);
+                        return null;
+                    }
+                });
+            }
         }
     }
 
@@ -78,13 +81,5 @@ public class ConstructorAccess extends AccessStrategy {
 
     public int hashCode() {
         return constructor.hashCode();
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

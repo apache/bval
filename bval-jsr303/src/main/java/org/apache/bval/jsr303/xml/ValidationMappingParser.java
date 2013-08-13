@@ -21,9 +21,9 @@ import org.apache.bval.jsr303.ApacheValidatorFactory;
 import org.apache.bval.jsr303.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr303.util.EnumerationConverter;
 import org.apache.bval.jsr303.util.IOUtils;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.Converter;
 import org.apache.commons.lang3.StringUtils;
@@ -200,7 +200,7 @@ public class ValidationMappingParser {
 
     private <A extends Annotation> Class<?> getAnnotationParameterType(
           final Class<A> annotationClass, final String name) {
-        final Method m = doPrivileged(SecureActions.getPublicMethod(annotationClass, name));
+        final Method m = Reflection.INSTANCE.getPublicMethod(annotationClass, name);
         if (m == null) {
             throw new ValidationException("Annotation of type " + annotationClass.getName() +
                   " does not contain a parameter " + name + ".");
@@ -385,7 +385,7 @@ public class ValidationMappingParser {
             } else {
                 methodNames.add(methodName);
             }
-            final Method method = doPrivileged(SecureActions.getDeclaredMethod(beanClass, methodName, toTypes(methodType.getParameter(), defaultPackage)));
+            final Method method = Reflection.INSTANCE.getDeclaredMethod(beanClass, methodName, toTypes(methodType.getParameter(), defaultPackage));
             if (method == null) {
                 throw new ValidationException(beanClass.getName() + " does not contain the method  " + methodName);
             }
@@ -466,7 +466,7 @@ public class ValidationMappingParser {
 
     private <A> void processConstructorLevel(final List<ConstructorType> constructors, final Class<A> beanClass, final String defaultPackage, final boolean parentIgnore) {
         for (final ConstructorType constructorType : constructors) {
-            final Constructor<?> constructor = doPrivileged(SecureActions.getDeclaredConstructor(beanClass, toTypes(constructorType.getParameter(), defaultPackage)));
+            final Constructor<?> constructor = Reflection.INSTANCE.getDeclaredConstructor(beanClass, toTypes(constructorType.getParameter(), defaultPackage));
             if (constructor == null) {
                 throw new ValidationException(beanClass.getName() + " does not contain the constructor  " + constructorType);
             }
@@ -575,7 +575,7 @@ public class ValidationMappingParser {
             } else {
                 fieldNames.add(fieldName);
             }
-            final Field field = doPrivileged(SecureActions.getDeclaredField(beanClass, fieldName));
+            final Field field = Reflection.INSTANCE.getDeclaredField(beanClass, fieldName);
             if (field == null) {
                 throw new ValidationException(
                       beanClass.getName() + " does not contain the fieldType  " + fieldName);
@@ -747,40 +747,34 @@ public class ValidationMappingParser {
         return clazz.contains(".");
     }
 
-
-
-    private static <T> T doPrivileged(final PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
-    }
-
-
-
     private static Method getGetter(final Class<?> clazz, final String propertyName) {
-        return doPrivileged(new PrivilegedAction<Method>() {
+        if (System.getSecurityManager() == null) {
+            return doGetGetter(propertyName, clazz);
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<Method>() {
             public Method run() {
-                try {
-                    final String p = StringUtils.capitalize(propertyName);
-                    try {
-                        return clazz.getMethod("get" + p);
-                    } catch (NoSuchMethodException e) {
-                        return clazz.getMethod("is" + p);
-                    }
-                } catch (NoSuchMethodException e) {
-                    return null;
-                }
+                return doGetGetter(propertyName, clazz);
             }
         });
 
     }
 
+    private static Method doGetGetter(String propertyName, Class<?> clazz) {
+        try {
+            final String p = StringUtils.capitalize(propertyName);
+            try {
+                return clazz.getMethod("get" + p);
+            } catch (NoSuchMethodException e) {
+                return clazz.getMethod("is" + p);
+            }
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
 
 
     private Class<?> loadClass(final String className) {
-        ClassLoader loader = doPrivileged(SecureActions.getContextClassLoader());
+        ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationMappingParser.class);
         if (loader == null)
             loader = getClass().getClassLoader();
 

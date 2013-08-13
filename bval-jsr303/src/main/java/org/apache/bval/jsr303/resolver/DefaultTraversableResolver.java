@@ -16,22 +16,19 @@
  */
 package org.apache.bval.jsr303.resolver;
 
-import java.lang.annotation.ElementType;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.lang3.ClassUtils;
 
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
-
-import org.apache.bval.jsr303.util.ClassHelper;
-import org.apache.bval.util.PrivilegedActions;
-import org.apache.commons.lang3.ClassUtils;
+import java.lang.annotation.ElementType;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** @see javax.validation.TraversableResolver */
 public class DefaultTraversableResolver implements TraversableResolver, CachingRelevant {
     private static final Logger log = Logger.getLogger(DefaultTraversableResolver.class.getName());
+    private static final boolean LOG_FINEST = log.isLoggable(Level.FINEST);
 
     /** Class to load to check whether JPA 2 is on the classpath. */
     private static final String PERSISTENCE_UTIL_CLASSNAME =
@@ -76,9 +73,11 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private void initJpa() {
         final ClassLoader classLoader = getClassLoader();
         try {
-            PrivilegedActions.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
-            log.log(Level.FINEST, String.format("Found %s on classpath.", PERSISTENCE_UTIL_CLASSNAME));
-        } catch (Exception e) {
+            Reflection.INSTANCE.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
+            if (LOG_FINEST) {
+                log.log(Level.FINEST, String.format("Found %s on classpath.", PERSISTENCE_UTIL_CLASSNAME));
+            }
+        } catch (final Exception e) {
             log.log(Level.FINEST, String.format("Cannot find %s on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME));
             return;
         }
@@ -88,12 +87,11 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
               (Class<? extends TraversableResolver>)
                 ClassUtils.getClass(classLoader, JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, true);
             jpaTR = jpaAwareResolverClass.newInstance();
-            log.log(Level.FINEST, String.format("Instantiated an instance of %s.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME));
-        } catch (Exception e) {
-			log.log(Level.WARNING,
-					String.format(
-							"Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.",
-							JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, e));
+            if (LOG_FINEST) {
+                log.log(Level.FINEST, String.format("Instantiated an instance of %s.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME));
+            }
+        } catch (final Exception e) {
+			log.log(Level.WARNING, String.format("Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME), e);
         }
     }
 
@@ -106,18 +104,6 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
 
     private static ClassLoader getClassLoader()
     {
-      return (System.getSecurityManager() == null)
-        ? getClassLoader0()
-        : AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
-              public ClassLoader run() {
-                return getClassLoader0();
-              }
-          });
-    }
-
-    private static ClassLoader getClassLoader0()
-    {
-      final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      return (loader != null) ? loader : ClassHelper.class.getClassLoader();
+      return Reflection.INSTANCE.getClassLoader(DefaultTraversableResolver.class);
     }
 }

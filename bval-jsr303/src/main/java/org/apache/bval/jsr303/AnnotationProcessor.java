@@ -18,15 +18,12 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.jsr303.groups.Group;
-import org.apache.bval.jsr303.groups.GroupConversionDescriptorImpl;
 import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
-import org.apache.bval.jsr303.util.SecureActions;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.Meta;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.bval.util.PropertyAccess;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -95,30 +92,14 @@ public final class AnnotationProcessor {
         AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
         boolean changed = false;
-        for (Annotation annotation : element.getDeclaredAnnotations()) {
+        for (final Annotation annotation : element.getDeclaredAnnotations()) {
+            final Class<?> type = annotation.annotationType();
+            if (type.getName().startsWith("java.lang.annotation")) {
+                continue;
+            }
             changed |= processAnnotation(annotation, prop, owner, access, appender, true);
         }
         return changed;
-    }
-
-    /**
-     * Convenience method to process a single class-level annotation.
-     * 
-     * @param <A>
-     *            annotation type
-     * @param annotation
-     *            to process
-     * @param owner
-     *            bean type
-     * @param appender
-     *            handling accumulation
-     * @return whether any processing took place
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     */
-    public final <A extends Annotation> boolean processAnnotation(A annotation, Class<?> owner, AppendValidation appender)
-        throws IllegalAccessException, InvocationTargetException {
-        return processAnnotation(annotation, null, owner, null, appender, true);
     }
 
     /**
@@ -176,7 +157,7 @@ public final class AnnotationProcessor {
          * annotated by @Constraint) whose value element has a return type of an
          * array of constraint annotations in a special way.
          */
-        final Object result = SecureActions.getAnnotationValue(annotation, ConstraintAnnotationAttributes.VALUE.getAttributeName());
+        final Object result = Reflection.INSTANCE.getAnnotationValue(annotation, ConstraintAnnotationAttributes.VALUE.getAttributeName());
         if (result instanceof Annotation[]) {
             boolean changed = false;
             for (final Annotation each : (Annotation[]) result) {

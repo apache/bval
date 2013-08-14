@@ -25,7 +25,6 @@ import javax.el.ExpressionFactory;
 import javax.el.FunctionMapper;
 import javax.el.ListELResolver;
 import javax.el.MapELResolver;
-import javax.el.PropertyNotWritableException;
 import javax.el.ResourceBundleELResolver;
 import javax.el.ValueExpression;
 import javax.el.VariableMapper;
@@ -46,18 +45,18 @@ public final class ELFacade implements MessageEvaluator {
         }
         EXPRESSION_FACTORY = ef;
     }
+    private static final ELResolver RESOLVER = initResolver();
 
     public String interpolate(final String message, final Map<String, Object> annotationParameters, final Object validatedValue) {
-        final ELResolver resolver = initResolver();
-        final BValELContext context = new BValELContext(resolver);
-        final VariableMapper variables = context.getVariableMapper();
-        for (final Map.Entry<String, Object> var : annotationParameters.entrySet()) {
-            variables.setVariable(var.getKey(), new ValueExpressionLiteral(var.getValue()));
-        }
-        variables.setVariable("validatedValue", new ValueExpressionLiteral(validatedValue));
-
         try {
             if (EXPRESSION_FACTORY != null) {
+                final BValELContext context = new BValELContext();
+                final VariableMapper variables = context.getVariableMapper();
+                for (final Map.Entry<String, Object> var : annotationParameters.entrySet()) {
+                    variables.setVariable(var.getKey(), EXPRESSION_FACTORY.createValueExpression(var.getValue(), Object.class));
+                }
+                variables.setVariable("validatedValue", EXPRESSION_FACTORY.createValueExpression(validatedValue, Object.class));
+
                 // #{xxx} shouldn't be evaluated
                 return EXPRESSION_FACTORY.createValueExpression(context, message.replace("#{", "\\#{"), String.class).getValue(context).toString();
             }
@@ -79,19 +78,17 @@ public final class ELFacade implements MessageEvaluator {
     }
 
     private static class BValELContext extends ELContext {
-        private final ELResolver resolver;
         private final FunctionMapper functions;
         private final VariableMapper variables;
 
-        public BValELContext(final ELResolver resolver) {
-            this.resolver = resolver;
+        public BValELContext() {
             this.variables = new BValVariableMapper();
             this.functions = new BValFunctionMapper();
         }
 
         @Override
         public ELResolver getELResolver() {
-            return resolver;
+            return RESOLVER;
         }
 
         @Override
@@ -118,7 +115,7 @@ public final class ELFacade implements MessageEvaluator {
         @Override
         public ValueExpression resolveVariable(final String variable) {
             if ("formatter".equals(variable)) {
-                return new ValueExpressionLiteral(new BValFormatter());
+                return EXPRESSION_FACTORY.createValueExpression(new BValFormatter(), Object.class);
             }
             return variables.get(variable);
         }
@@ -136,65 +133,6 @@ public final class ELFacade implements MessageEvaluator {
 
         public Formatter format(final String format, final Object ... args) {
             return formatter.format(format, args);
-        }
-    }
-
-    private static final class ValueExpressionLiteral extends ValueExpression {
-        private final Object value;
-
-        public ValueExpressionLiteral(final Object value) {
-            this.value = value;
-        }
-
-        @Override
-        public Object getValue(final ELContext context) {
-            return value;
-        }
-
-        @Override
-        public void setValue(final ELContext context, final Object value) {
-            throw new PropertyNotWritableException(value.toString());
-        }
-
-        @Override
-        public boolean isReadOnly(final ELContext context) {
-            return true;
-        }
-
-        @Override
-        public Class<?> getType(final ELContext context) {
-            return (this.value != null) ? this.value.getClass() : null;
-        }
-
-        @Override
-        public Class<?> getExpectedType() {
-            return String.class;
-        }
-
-        @Override
-        public String getExpressionString() {
-            return (this.value != null) ? this.value.toString() : null;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return (obj instanceof ValueExpressionLiteral && this
-                    .equals((ValueExpressionLiteral) obj));
-        }
-
-        public boolean equals(final ValueExpressionLiteral ve) {
-            return (ve != null && (this.value != null && ve.value != null && (this.value == ve.value || this.value
-                    .equals(ve.value))));
-        }
-
-        @Override
-        public int hashCode() {
-            return (this.value != null) ? this.value.hashCode() : 0;
-        }
-
-        @Override
-        public boolean isLiteralText() {
-            return true;
         }
     }
 }

@@ -206,8 +206,7 @@ public class BValExtension implements Extension {
                     result = bmi.loadTimeBm;
                 }
                 if (result == null) {
-                    throw new IllegalStateException("Unable to find BeanManager. " +
-                            "Please ensure that you configured the CDI implementation of your choice properly.");
+                    return null;
                 }
                 bmi.finalBm = result;
             }
@@ -251,6 +250,9 @@ public class BValExtension implements Extension {
     public static <T> Releasable<T> inject(final Class<T> clazz) {
         try {
             final BeanManager beanManager = getInstance().getBeanManager();
+            if (beanManager == null) {
+                return null;
+            }
             final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
             final InjectionTarget<T> it = beanManager.createInjectionTarget(annotatedType);
             final CreationalContext<T> context = beanManager.createCreationalContext(null);

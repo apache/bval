@@ -94,7 +94,7 @@ public final class AnnotationProcessor {
         boolean changed = false;
         for (final Annotation annotation : element.getDeclaredAnnotations()) {
             final Class<?> type = annotation.annotationType();
-            if (type.getName().startsWith("java.lang.annotation")) {
+            if (type.getName().startsWith("java.lang.annotation.")) {
                 continue;
             }
             changed |= processAnnotation(annotation, prop, owner, access, appender, true);
@@ -161,6 +161,10 @@ public final class AnnotationProcessor {
         if (result instanceof Annotation[]) {
             boolean changed = false;
             for (final Annotation each : (Annotation[]) result) {
+                if (each.annotationType().getName().startsWith("java.lang.annotation")) {
+                    continue;
+                }
+
                 changed |= processAnnotation(each, prop, owner, access, appender, reflection);
             }
             return changed;

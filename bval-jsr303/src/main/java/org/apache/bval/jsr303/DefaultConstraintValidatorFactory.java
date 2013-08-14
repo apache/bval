@@ -34,6 +34,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory, Closeable {
     private final Collection< BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
+    private Boolean useCdi = null; // store it to avoid NoClassDefFoundError when cdi is not present (it is slow) + lazily (to wait cdi is started)
 
     /**
      * Instantiate a Constraint.
@@ -42,16 +43,35 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
      *         The ConstraintFactory is <b>not</b> responsible for calling Constraint#initialize
      */
     public <T extends ConstraintValidator<?, ?>> T getInstance(final Class<T> constraintClass) {
+        if (useCdi == null) {
+            synchronized (this) {
+                if (useCdi == null) {
+                    try {
+                        useCdi = BValExtension.getInstance() != null && BValExtension.getInstance().getBeanManager() != null;
+                    } catch (final NoClassDefFoundError error) {
+                        useCdi = false;
+                    } catch (final Exception e) {
+                        useCdi = false;
+                    }
+                }
+            }
+        }
+
         // 2011-03-27 jw: Do not use PrivilegedAction.
         // Otherwise any user code would be executed with the privileges of this class.
         try {
-            try {
-                return BValExtension.inject(constraintClass).getInstance();
-            } catch (final Exception e) {
-                return constraintClass.newInstance();
-            } catch (final NoClassDefFoundError error) {
-                return constraintClass.newInstance();
+            if (useCdi) {
+                try {
+                    final BValExtension.Releasable<T> instance = BValExtension.inject(constraintClass);
+                    releasables.add(instance);
+                    return instance.getInstance();
+                } catch (final Exception e) {
+                    return constraintClass.newInstance();
+                } catch (final NoClassDefFoundError error) {
+                    return constraintClass.newInstance();
+                }
             }
+            return constraintClass.newInstance();
         } catch (final Exception ex) {
             throw new ValidationException("Cannot instantiate : " + constraintClass, ex);
         }

@@ -82,9 +82,11 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     protected final ApacheFactoryContext factoryContext;
     private final AnnotationProcessor annotationProcessor;
     private Set<ConstructorDescriptor> constrainedConstructors = new CopyOnWriteArraySet<ConstructorDescriptor>();
-    private Map<Method, MethodDescriptor> methodConstraints = new HashMap<Method, MethodDescriptor>();
+    private Map<String, MethodDescriptor> methodConstraints = new HashMap<String, MethodDescriptor>();
     private Set<MethodDescriptor> containedMethods = new CopyOnWriteArraySet<MethodDescriptor>();
-    private Map<Constructor<?>, ConstructorDescriptor> contructorConstraints = new HashMap<Constructor<?>, ConstructorDescriptor>();
+    private Map<String, ConstructorDescriptor> contructorConstraints = new HashMap<String, ConstructorDescriptor>();
+    private Boolean isBeanConstrained = null;
+    private Boolean hasAnyContraints = null;
 
     protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean) {
         super(metaBean, metaBean.getBeanClass(), metaBean.getValidations());
@@ -120,8 +122,8 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             if (!methodFound) {
                 final String name = Character.toUpperCase(prop.getName().charAt(0)) + prop.getName().substring(1);
                 for (final Method method : Arrays.asList(
-                                    Reflection.INSTANCE.getDeclaredMethod(current, "is" + name),
-                                    Reflection.INSTANCE.getDeclaredMethod(current, "get" + name))) {
+                    Reflection.INSTANCE.getDeclaredMethod(current, "is" + name),
+                    Reflection.INSTANCE.getDeclaredMethod(current, "get" + name))) {
 
                     if (method != null) {
                         final ConvertGroup.List convertGroupList = method.getAnnotation(ConvertGroup.List.class);
@@ -178,23 +180,45 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      * @return true if the bean involves validation
      */
     public boolean isBeanConstrained() {
-        if (hasAnyConstraints())
-            return true;
-        for (MetaProperty mprop : metaBean.getProperties()) {
-            if (mprop.getMetaBean() != null || mprop.getFeature(Features.Property.REF_CASCADE) != null)
-                return true;
+        if (isBeanConstrained == null) {
+            synchronized (this) {
+                if (isBeanConstrained == null) {
+                    if (hasAnyConstraints()) {
+                        isBeanConstrained = true;
+                    } else {
+                        isBeanConstrained = false;
+                        for (final MetaProperty mprop : metaBean.getProperties()) {
+                            if (mprop.getMetaBean() != null || mprop.getFeature(Features.Property.REF_CASCADE) != null) {
+                                isBeanConstrained = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return false;
+        return isBeanConstrained;
     }
 
     private boolean hasAnyConstraints() {
-        if (hasConstraints())
-            return true;
-        for (MetaProperty mprop : metaBean.getProperties()) {
-            if (getConstraintDescriptors(mprop.getValidations()).size() > 0)
-                return true;
+        if (hasAnyContraints == null) {
+            synchronized (this) {
+                if (hasAnyContraints == null) {
+                    if (hasConstraints()) {
+                        hasAnyContraints = true;
+                    } else {
+                        hasAnyContraints = false;
+                        for (final MetaProperty mprop : metaBean.getProperties()) {
+                            if (getConstraintDescriptors(mprop.getValidations()).size() > 0) {
+                                hasAnyContraints = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return false;
+        return hasAnyContraints;
     }
 
     /**
@@ -238,63 +262,22 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         Set<PropertyDescriptor> validatedProperties = new HashSet<PropertyDescriptor>();
         for (MetaProperty prop : metaBean.getProperties()) {
             if (prop.getValidations().length > 0
-                    || (prop.getMetaBean() != null || prop.getFeature(Features.Property.REF_CASCADE) != null)) {
+                || (prop.getMetaBean() != null || prop.getFeature(Features.Property.REF_CASCADE) != null)) {
                 validatedProperties.add(getPropertyDescriptor(prop));
             }
         }
         return Collections.unmodifiableSet(validatedProperties);
     }
 
-    public MethodDescriptor getConstraintsForMethod(String methodName, Class<?>... parameterTypes) {
+    public MethodDescriptor getConstraintsForMethod(final String methodName, final Class<?>... parameterTypes) {
         if (methodName == null) {
             throw new IllegalArgumentException("Method name can't be null");
         }
-
-        Class<?> beanClass = metaBean.getBeanClass();
-        Method method = null;
-        do {
-            try {
-                method = beanClass.getDeclaredMethod(methodName, parameterTypes);
-                break;
-            } catch (final NoSuchMethodException e) {
-                // no-op
-            }
-            beanClass = beanClass.getSuperclass();
-        } while (beanClass != Object.class && beanClass != null);
-        if (method == null) {
-            return null;
+        final MethodDescriptor methodDescriptor = methodConstraints.get(methodName + Arrays.toString(parameterTypes));
+        if (methodDescriptor != null && (methodDescriptor.hasConstrainedParameters() || methodDescriptor.hasConstrainedReturnValue())) {
+            return methodDescriptor;
         }
-
-        final MethodDescriptor descriptor = methodConstraints.get(method);
-        if (descriptor != null) {
-            final boolean hasConstraint = descriptor.hasConstrainedParameters() || descriptor.hasConstrainedReturnValue();
-            if (!hasConstraint) {
-                return null;
-            }
-            return descriptor;
-        }
-
-        // TODO: surely remove it
-        for (final MetaMethod metaMethod : metaBean.getMethods()) {
-            if (metaMethod.getMethod().equals(method)) {
-                final MethodDescriptorImpl methodDescriptor = createMethodDescriptor(metaMethod);
-                ensureNotNullDescriptors(metaMethod.getMethod().getReturnType(), methodDescriptor);
-                methodConstraints.put(method, methodDescriptor);
-                containedMethods.add(methodDescriptor);
-                return methodDescriptor;
-            }
-        }
-
         return null;
-    }
-
-    private MethodDescriptorImpl createMethodDescriptor(final MetaMethod metaMethod) {
-        MethodDescriptorImpl edesc = metaMethod.getFeature(Jsr303Features.Method.MethodDescriptor);
-        if (edesc == null) {
-            edesc = new MethodDescriptorImpl(metaBean, metaMethod);
-            metaMethod.putFeature(Jsr303Features.Method.MethodDescriptor, edesc);
-        }
-        return edesc;
     }
 
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
@@ -318,7 +301,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     if (getter) {
                         list.add(d);
                     }
-                break;
+                    break;
 
                 case NON_GETTER:
                     if (!getter) {
@@ -329,15 +312,8 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return list;
     }
 
-    public ConstructorDescriptor getConstraintsForConstructor(Class<?>... parameterTypes) {
-        final Constructor<?> declaredConstructor;
-        try {
-            declaredConstructor = metaBean.getBeanClass().getDeclaredConstructor(parameterTypes);
-        } catch (final NoSuchMethodException e) {
-            return null;
-        }
-
-        final ConstructorDescriptor descriptor = contructorConstraints.get(declaredConstructor);
+    public ConstructorDescriptor getConstraintsForConstructor(final Class<?>... parameterTypes) {
+        final ConstructorDescriptor descriptor = contructorConstraints.get(Arrays.toString(parameterTypes));
         if (descriptor != null && (descriptor.hasConstrainedParameters() || descriptor.hasConstrainedReturnValue())) {
             return descriptor;
         }
@@ -383,7 +359,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     private void buildConstructorConstraints() throws InvocationTargetException, IllegalAccessException {
         for (final Constructor<?> cons : Reflection.INSTANCE.getDeclaredConstructors(getMetaBean().getBeanClass())) {
             final ConstructorDescriptorImpl consDesc = new ConstructorDescriptorImpl(getMetaBean(), new Validation[0]);
-            contructorConstraints.put(cons, consDesc);
+            contructorConstraints.put(Arrays.toString(cons.getParameterTypes()), consDesc);
 
             final List<String> names = factoryContext.getParameterNameProvider().getParameterNames(cons);
             final boolean isInnerClass = cons.getDeclaringClass().getEnclosingClass() != null && !Modifier.isStatic(cons.getDeclaringClass().getModifiers());
@@ -518,115 +494,124 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
     private void buildMethodConstraints() throws InvocationTargetException, IllegalAccessException {
 
-        final Class<?> beanClass = getMetaBean().getBeanClass();
-        final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), beanClass);
+        final Class<?> current = getMetaBean().getBeanClass();
+        final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), current);
+        classHierarchy.remove(current);
 
-        Class<?> current = beanClass;
-        do {
-            classHierarchy.remove(current);
+        for (final Method method : Reflection.INSTANCE.getDeclaredMethods(current)) {
+            if (Modifier.isStatic(method.getModifiers()) || method.isSynthetic()) {
+                continue;
+            }
 
-            for (final Method method : Reflection.INSTANCE.getDeclaredMethods(current)) {
-                if (Modifier.isStatic(method.getModifiers()) || method.isSynthetic()) {
-                    continue;
-                }
+            final boolean getter = (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != Void.TYPE;
 
-                final boolean getter = (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != Void.TYPE;
+            final String key = method.getName() + Arrays.toString(method.getParameterTypes());
+            MethodDescriptorImpl methodDesc = MethodDescriptorImpl.class.cast(methodConstraints.get(key));
+            if (methodDesc == null) {
+                methodDesc = new MethodDescriptorImpl(getMetaBean(), EMPTY_VALIDATION, method);
+                methodConstraints.put(key, methodDesc);
+            } else {
+                continue;
+            }
 
-                final MethodDescriptorImpl methodDesc = new MethodDescriptorImpl(getMetaBean(), EMPTY_VALIDATION, method);
-                methodConstraints.put(method, methodDesc);
-
-                final Collection<Method> parents = new ArrayList<Method>();
-                for (final Class<?> clazz : classHierarchy) {
-                    final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
-                    if (overriden != null) {
-                        parents.add(overriden);
-                        processMethod(overriden, methodDesc);
-                    }
-                }
-
-                processMethod(method, methodDesc);
-
-                ensureNotNullDescriptors(method.getReturnType(), methodDesc);
-
-                if (current == beanClass && parents != null) { // only valid beanClass, other validations are done through inheritance meta building
-                    if (parents.size() > 1) {
-                        for (final Method parent : parents) {
-                            final MethodDescriptor parentDec = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
-                            if (parentDec != null) {
-                                ensureNoParameterConstraint(InvocableElementDescriptor.class.cast(parentDec), "Parameter constraints can't be defined for parallel interfaces/parents");
-                            } else {
-                                ensureMethodDoesntDefineParameterConstraint(methodDesc);
-                            }
-                            ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parentDec, "Return value constraints should be the same for parent and children");
-                        }
-                    } else if (!parents.isEmpty()) {
-                        final Method parent = parents.iterator().next();
-                        final MethodDescriptor parentDesc = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
-                        ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parentDesc, "Return value constraints should be at least the same for parent and children");
-
-                        if (parentDesc != null) {
-                            final Iterator<ParameterDescriptor> parentPd = parentDesc.getParameterDescriptors().iterator();
-                            for (final ParameterDescriptor pd : methodDesc.getParameterDescriptors()) {
-                                final ParameterDescriptor next = parentPd.next();
-                                if (pd.getConstraintDescriptors().size() != next.getConstraintDescriptors().size()) {
-                                    throw new ConstraintDeclarationException("child shouldn't get more constraint than parent");
-                                }
-                                if (pd.isCascaded() != next.isCascaded()) { // @Valid
-                                    throw new ConstraintDeclarationException("child shouldn't get more constraint than parent");
-                                }
-                            }
-                        } else {
-                            ensureMethodDoesntDefineParameterConstraint(methodDesc);
-                        }
-                    }
-
-                    final Class<?>[] interfaces = method.getDeclaringClass().getInterfaces();
-                    final Collection<Method> itfWithThisMethod = new ArrayList<Method>();
-                    for (final Class<?> i : interfaces) {
-                        final Method m = Reflection.INSTANCE.getDeclaredMethod(i, method.getName(), method.getParameterTypes());
-                        if (m != null) {
-                            itfWithThisMethod.add(m);
-                        }
-                    }
-                    if (itfWithThisMethod.size() > 1) {
-                        for (final Method m : itfWithThisMethod) {
-                            ensureNoConvertGroup(m, "ConvertGroup can't be used in parallel interfaces");
-                        }
-                    } else if (itfWithThisMethod.size() == 1) {
-                        ensureNoConvertGroup(itfWithThisMethod.iterator().next(), "ConvertGroup can't be used in interface AND parent class");
-                    }
-
-                    int returnValid = 0;
-                    if (method.getAnnotation(Valid.class) != null) {
-                        returnValid++;
-                    }
-                    for (final Class<?> clazz : classHierarchy) {
-                        final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
-                        if (overriden != null) {
-                            if (overriden.getAnnotation(Valid.class) != null) {
-                                returnValid++;
-                            }
-                        }
-                    }
-                    if (returnValid > 1 && !(interfaces.length == returnValid && method.getAnnotation(Valid.class) == null)) {
-                        throw new ConstraintDeclarationException("@Valid on returned value can't be set more than once");
-                    }
-                }
-
-                if (getter) {
-                    final MetaProperty prop = metaBean.getProperty(Introspector.decapitalize(method.getName().substring(3)));
-                    if (prop != null && prop.getFeature(Features.Property.REF_CASCADE) != null) {
-                        methodDesc.setCascaded(true);
-                    }
-                }
-
-                if (!methodDesc.getGroupConversions().isEmpty() && !methodDesc.isCascaded()) {
-                    throw new ConstraintDeclarationException("@Valid is needed to define a group conversion");
+            final Collection<Method> parents = new ArrayList<Method>();
+            for (final Class<?> clazz : classHierarchy) {
+                final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
+                if (overriden != null) {
+                    parents.add(overriden);
+                    processMethod(overriden, methodDesc);
                 }
             }
 
-            current = current.getSuperclass();
-        } while (current != null && current != Object.class);
+            processMethod(method, methodDesc);
+
+            ensureNotNullDescriptors(method.getReturnType(), methodDesc);
+
+            if (parents != null) {
+                if (parents.size() > 1) {
+                    for (final Method parent : parents) {
+                        final MethodDescriptor parentDec = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
+                        if (parentDec != null) {
+                            ensureNoParameterConstraint(InvocableElementDescriptor.class.cast(parentDec), "Parameter constraints can't be defined for parallel interfaces/parents");
+                        } else {
+                            ensureMethodDoesntDefineParameterConstraint(methodDesc);
+                        }
+                        ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parentDec, "Return value constraints should be the same for parent and children");
+                    }
+                } else if (!parents.isEmpty()) {
+                    final Method parent = parents.iterator().next();
+                    final MethodDescriptor parentDesc = factoryContext.getValidator().getConstraintsForClass(parent.getDeclaringClass()).getConstraintsForMethod(parent.getName(), parent.getParameterTypes());
+                    ensureNoReturnValueAddedInChild(methodDesc.getReturnValueDescriptor(), parentDesc, "Return value constraints should be at least the same for parent and children");
+
+                    if (parentDesc != null) {
+                        final Iterator<ParameterDescriptor> parentPd = parentDesc.getParameterDescriptors().iterator();
+                        for (final ParameterDescriptor pd : methodDesc.getParameterDescriptors()) {
+                            final ParameterDescriptor next = parentPd.next();
+                            if (pd.getConstraintDescriptors().size() != next.getConstraintDescriptors().size()) {
+                                throw new ConstraintDeclarationException("child shouldn't get more constraint than parent");
+                            }
+                            if (pd.isCascaded() != next.isCascaded()) { // @Valid
+                                throw new ConstraintDeclarationException("child shouldn't get more constraint than parent");
+                            }
+                        }
+                    } else {
+                        ensureMethodDoesntDefineParameterConstraint(methodDesc);
+                    }
+                }
+
+                final Class<?>[] interfaces = method.getDeclaringClass().getInterfaces();
+                final Collection<Method> itfWithThisMethod = new ArrayList<Method>();
+                for (final Class<?> i : interfaces) {
+                    final Method m = Reflection.INSTANCE.getDeclaredMethod(i, method.getName(), method.getParameterTypes());
+                    if (m != null) {
+                        itfWithThisMethod.add(m);
+                    }
+                }
+                if (itfWithThisMethod.size() > 1) {
+                    for (final Method m : itfWithThisMethod) {
+                        ensureNoConvertGroup(m, "ConvertGroup can't be used in parallel interfaces");
+                    }
+                } else if (itfWithThisMethod.size() == 1) {
+                    ensureNoConvertGroup(itfWithThisMethod.iterator().next(), "ConvertGroup can't be used in interface AND parent class");
+                }
+
+                int returnValid = 0;
+                if (method.getAnnotation(Valid.class) != null) {
+                    returnValid++;
+                }
+                for (final Class<?> clazz : classHierarchy) {
+                    final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
+                    if (overriden != null) {
+                        if (overriden.getAnnotation(Valid.class) != null) {
+                            returnValid++;
+                        }
+                    }
+                }
+                if (returnValid > 1 && !(interfaces.length == returnValid && method.getAnnotation(Valid.class) == null)) {
+                    throw new ConstraintDeclarationException("@Valid on returned value can't be set more than once");
+                }
+            }
+
+            if (getter) {
+                final MetaProperty prop = metaBean.getProperty(Introspector.decapitalize(method.getName().substring(3)));
+                if (prop != null && prop.getFeature(Features.Property.REF_CASCADE) != null) {
+                    methodDesc.setCascaded(true);
+                }
+            }
+
+            if (!methodDesc.getGroupConversions().isEmpty() && !methodDesc.isCascaded()) {
+                throw new ConstraintDeclarationException("@Valid is needed to define a group conversion");
+            }
+        }
+
+        for (final Class<?> parent : classHierarchy) {
+            final BeanDescriptorImpl desc = BeanDescriptorImpl.class.cast(factoryContext.getValidator().getConstraintsForClass(parent));
+            for (final String s : desc.methodConstraints.keySet()) {
+                if (!methodConstraints.containsKey(s)) { // method from the parent only
+                    methodConstraints.put(s, desc.methodConstraints.get(s));
+                }
+            }
+        }
     }
 
     private void ensureMethodDoesntDefineParameterConstraint(MethodDescriptorImpl methodDesc) {
@@ -736,7 +721,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     }
 
     private AppendValidationToList processAnnotations(InvocableElementDescriptor methodDesc, Annotation[] paramAnnos, AccessStrategy access, int idx, String name)
-            throws InvocationTargetException, IllegalAccessException {
+        throws InvocationTargetException, IllegalAccessException {
         final AppendValidationToList validations = new AppendValidationToList();
         boolean cascaded = false;
 
@@ -773,7 +758,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
         if (paramDesc == null) {
             paramDesc = new ParameterDescriptorImpl(Class.class.cast(access.getJavaType()), // set from getParameterTypes() so that's a Class<?>
-                    validations.getValidations().toArray(new Validation[validations.getValidations().size()]), name);
+                validations.getValidations().toArray(new Validation[validations.getValidations().size()]), name);
             paramDesc.setIndex(idx);
             final List<ParameterDescriptor> parameterDescriptors = methodDesc.getParameterDescriptors();
             if (!parameterDescriptors.contains(paramDesc)) {

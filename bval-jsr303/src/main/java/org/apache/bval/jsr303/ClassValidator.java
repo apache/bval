@@ -1117,7 +1117,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     private <T> MethodDescriptorImpl findMethodDescriptor(final T object, final Method method) {
-        return MethodDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(object.getClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes()));
+        // return MethodDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(object.getClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes()));
+        return MethodDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(method.getDeclaringClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes()));
     }
 
     private <T> void initMetaBean(final GroupValidationContext<T> context, final MetaBeanFinder metaBeanFinder, final Class<?> directValueClass) {

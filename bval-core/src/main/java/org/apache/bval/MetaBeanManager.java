@@ -19,7 +19,12 @@ package org.apache.bval;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 
-import static org.apache.bval.model.Features.Property.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
+import static org.apache.bval.model.Features.Property.REF_BEAN_TYPE;
+import static org.apache.bval.model.Features.Property.REF_CASCADE;
 
 /**
  * Description: Default implementation for the interface to find, register and
@@ -35,6 +40,8 @@ public class MetaBeanManager implements MetaBeanFinder {
     protected final MetaBeanBuilder builder;
     /** Complete flag */
     protected boolean complete = false;
+
+    protected final ConcurrentMap<Object, Object> cacheLocks = new ConcurrentHashMap<Object, Object>();
 
     /**
      * Create a new MetaBeanManager instance.
@@ -73,40 +80,69 @@ public class MetaBeanManager implements MetaBeanFinder {
     /**
      * {@inheritDoc}
      */
-    public MetaBean findForId(String beanInfoId) {
+    public MetaBean findForId(final String beanInfoId) {
         MetaBean beanInfo = cache.findForId(beanInfoId);
-        if (beanInfo != null)
+        if (beanInfo != null) {
             return beanInfo;
-        try {
-            beanInfo = builder.buildForId(beanInfoId);
-            cache.cache(beanInfo);
-            computeRelationships(beanInfo);
-            return beanInfo;
-        } catch (RuntimeException e) {
-            throw e; // do not wrap runtime exceptions
-        } catch (Exception e) {
-            throw new IllegalArgumentException("error creating beanInfo with id: " + beanInfoId, e);
         }
+
+        synchronized (getLockFor(beanInfoId)) {
+            beanInfo = cache.findForId(beanInfoId);
+            if (beanInfo != null) {
+                return beanInfo;
+            }
+
+            try {
+                beanInfo = builder.buildForId(beanInfoId);
+                cache.cache(beanInfo);
+                computeRelationships(beanInfo);
+                return beanInfo;
+            } catch (final RuntimeException e) {
+                throw e; // do not wrap runtime exceptions
+            } catch (final Exception e) {
+                throw new IllegalArgumentException("error creating beanInfo with id: " + beanInfoId, e);
+            }
+        }
+    }
+
+    private Object getLockFor(final Object key) {
+        final Object newLock = new Object();
+        Object lock = cacheLocks.putIfAbsent(key, newLock);
+        if (lock == null) {
+            lock = newLock;
+        }
+        return lock;
     }
 
     /**
      * {@inheritDoc}
      */
-    public MetaBean findForClass(Class<?> clazz) {
-        if (clazz == null)
+    public MetaBean findForClass(final Class<?> clazz) {
+        if (clazz == null) {
             return null;
+        }
+
         MetaBean beanInfo = cache.findForClass(clazz);
-        if (beanInfo != null)
+        if (beanInfo != null) {
             return beanInfo;
-        try {
-            beanInfo = builder.buildForClass(clazz);
-            cache.cache(beanInfo);
-            computeRelationships(beanInfo);
-            return beanInfo;
-        } catch (RuntimeException e) {
-            throw e; // do not wrap runtime exceptions
-        } catch (Exception e) {
-            throw new IllegalArgumentException("error creating beanInfo for " + clazz, e);
+        }
+
+        synchronized (getLockFor(clazz)) {
+            beanInfo = cache.findForClass(clazz);
+            if (beanInfo != null) {
+                return beanInfo;
+            }
+
+            try {
+                beanInfo = builder.buildForClass(clazz);
+                cache.cache(beanInfo);
+                computeRelationships(beanInfo);
+                return beanInfo;
+            } catch (final RuntimeException e) {
+                throw e; // do not wrap runtime exceptions
+            } catch (final Exception e) {
+                throw new IllegalArgumentException("error creating beanInfo for " + clazz, e);
+            }
         }
     }
 
@@ -118,8 +154,8 @@ public class MetaBeanManager implements MetaBeanFinder {
      *            - the bean for which to compute relationships
      */
     protected void computeRelationships(MetaBean beanInfo) {
-        for (MetaProperty prop : beanInfo.getProperties()) {
-            String beanRef = (String) prop.getFeature(REF_BEAN_ID);
+        for (final MetaProperty prop : beanInfo.getProperties()) {
+            final String beanRef = prop.getFeature(REF_BEAN_ID);
             computeRelatedMetaBean(prop, beanRef);
         }
     }

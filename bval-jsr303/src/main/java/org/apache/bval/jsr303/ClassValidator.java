@@ -100,6 +100,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      */
     protected final GroupsComputer groupsComputer = new GroupsComputer();
 
+    private final MetaBeanFinder metaBeanFinder;
+
     /**
      * Create a new ClassValidator instance.
      *
@@ -107,16 +109,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      */
     public ClassValidator(ApacheFactoryContext factoryContext) {
         this.factoryContext = factoryContext;
-    }
-
-    /**
-     * Get the metabean finder associated with this validator.
-     *
-     * @return a MetaBeanFinder
-     * @see org.apache.bval.MetaBeanManagerFactory#getFinder()
-     */
-    protected MetaBeanFinder getMetaBeanFinder() {
-        return factoryContext.getMetaBeanFinder();
+        metaBeanFinder = factoryContext.getMetaBeanFinder();
     }
 
     // Validator implementation
@@ -144,7 +137,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         try {
 
             final Class<T> objectClass = (Class<T>) object.getClass();
-            final MetaBean objectMetaBean = getMetaBeanFinder().findForClass(objectClass);
+            final MetaBean objectMetaBean = metaBeanFinder.findForClass(objectClass);
             final GroupValidationContext<T> context = createContext(objectMetaBean, object, objectClass, groups);
             return validateBeanWithGroups(context, context.getGroups());
         } catch (final RuntimeException ex) {
@@ -266,7 +259,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             throw new IllegalArgumentException("Class cannot be null");
         }
         try {
-            MetaBean metaBean = getMetaBeanFinder().findForClass(clazz); // don't throw an exception because of a missing validator here
+            MetaBean metaBean = metaBeanFinder.findForClass(clazz); // don't throw an exception because of a missing validator here
             BeanDescriptorImpl edesc = metaBean.getFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR);
             if (edesc == null) {
                 edesc = createBeanDescriptor(metaBean);
@@ -1248,7 +1241,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         checkGroups(groups);
 
         try {
-            final MetaBean initialMetaBean = new DynamicMetaBean(getMetaBeanFinder());
+            final MetaBean initialMetaBean = new DynamicMetaBean(metaBeanFinder);
             initialMetaBean.setBeanClass(beanType);
             GroupValidationContext<T> context = createContext(initialMetaBean, object, beanType, groups);
             ValidationContextTraversal contextTraversal = createValidationContextTraversal(context);
@@ -1259,7 +1252,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             if (value != VALIDATE_PROPERTY) {
                 assert !context.getPropertyPath().isRootPath();
                 if (prop == null && value != null) {
-                    context.setMetaBean(getMetaBeanFinder().findForClass(value.getClass()));
+                    context.setMetaBean(metaBeanFinder.findForClass(value.getClass()));
                 }
                 if (!cascade) {
                     //TCK doesn't care what type a property is if there are no constraints to validate:

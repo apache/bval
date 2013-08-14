@@ -36,6 +36,7 @@ public interface Features {
         String UNIQUE_KEY = "uniqueKey";
 
         String EXECUTABLES = "executables";
+        String PROPERTIES = "properties";
     }
 
     /** Features of {@link MetaProperty} */

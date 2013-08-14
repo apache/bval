@@ -47,6 +47,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     private final boolean reportAsSingleViolation;
     private final ConstraintTarget validationAppliesTo;
     private final String template;
+    private final int hashCode;
 
     /**
      * Create a new ConstraintDescriptorImpl instance.
@@ -84,6 +85,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
         this.reportAsSingleViolation = reportAsSingleViolation;
         this.validationAppliesTo = validationAppliesTo;
         this.template = messageTemplate;
+        this.hashCode = computeHashCode();
     }
 
     /**
@@ -167,6 +169,10 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
 
     @Override
     public int hashCode() {
+        return hashCode;
+    }
+
+    public int computeHashCode() {
         int result = annotation.annotationType().hashCode();
         result = 31 * result + (groups != null ? groups.hashCode() : 0);
         result = 31 * result + (payload != null ? payload.hashCode() : 0);

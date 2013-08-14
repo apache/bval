@@ -25,12 +25,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Description: a node (property) as part of a Path.
- * (Implementation based on reference implementation) <br/>
- *
- * TODO: split it in several impl
- */
 public class NodeImpl implements Path.Node, Serializable {
 
     private static final long serialVersionUID = 1L;

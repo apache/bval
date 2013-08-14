@@ -45,6 +45,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     private final ConstraintDescriptor<?> constraintDescriptor;
     private final Object returnValue;
     private final Object[] parameters;
+    private final int hashCode;
 
     /**
      * Create a new ConstraintViolationImpl instance.
@@ -75,6 +76,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
         this.elementType = elementType;
         this.returnValue = returnValue;
         this.parameters = parameters;
+        this.hashCode = computeHashCode();
     }
 
     /**
@@ -192,6 +194,10 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
 
     @Override
     public int hashCode() {
+        return hashCode;
+    }
+
+    public int computeHashCode() {
         int result = messageTemplate != null ? messageTemplate.hashCode() : 0;
         result = 31 * result + (message != null ? message.hashCode() : 0);
         result = 31 * result + (rootBean != null ? rootBean.hashCode() : 0);

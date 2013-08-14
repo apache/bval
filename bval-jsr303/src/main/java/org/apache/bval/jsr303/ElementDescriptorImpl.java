@@ -48,7 +48,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      * @param validations
      * @return {@link ConstraintDescriptor} set
      */
-    protected static Set<ConstraintDescriptor<?>> getConstraintDescriptors(Validation[] validations) {
+    protected static Set<ConstraintDescriptor<?>> getConstraintDescriptors(final Validation[] validations) {
         final Set<ConstraintDescriptor<?>> result = new HashSet<ConstraintDescriptor<?>>(validations.length);
         for (Validation validation : validations) {
             if (validation instanceof ConstraintValidation<?>) {

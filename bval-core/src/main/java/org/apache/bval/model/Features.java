@@ -34,6 +34,8 @@ public interface Features {
 
         //        String DISPLAY_NAME = "displayName";
         String UNIQUE_KEY = "uniqueKey";
+
+        String EXECUTABLES = "executables";
     }
 
     /** Features of {@link MetaProperty} */

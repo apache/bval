@@ -72,18 +72,13 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     public DefaultMessageInterpolator(ResourceBundle resourceBundle) {
         defaultLocale = Locale.getDefault();
 
+        // feed the cache with defaults at least
+        findDefaultResourceBundle(defaultLocale);
         if (resourceBundle == null) {
-            ResourceBundle bundle = getFileBasedResourceBundle(defaultLocale);
-            if (bundle != null) {
-                userBundlesMap.put(defaultLocale, bundle);
-            }
-
+            findUserResourceBundle(defaultLocale);
         } else {
             userBundlesMap.put(defaultLocale, resourceBundle);
         }
-
-        defaultBundlesMap.put(defaultLocale,
-                ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, defaultLocale));
 
         MessageEvaluator ev = null;
         try {

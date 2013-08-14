@@ -79,14 +79,26 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      * The {@link ApacheFactoryContext} (not) used by this
      * {@link BeanDescriptorImpl}
      */
-    private Set<ConstructorDescriptor> constrainedConstructors = new CopyOnWriteArraySet<ConstructorDescriptor>();
-    private Set<MethodDescriptor> containedMethods = new CopyOnWriteArraySet<MethodDescriptor>();
+    private final Set<ConstructorDescriptor> constrainedConstructors;
+    private final Set<MethodDescriptor> containedMethods;
     private final ExecutableMeta meta;
-    private Boolean isBeanConstrained = null;
-    private Boolean hasAnyContraints = null;
+    private final Boolean isBeanConstrained;
+    private final Set<PropertyDescriptor> validatedProperties;
 
-    protected BeanDescriptorImpl(ApacheFactoryContext factoryContext, MetaBean metaBean) {
+    protected BeanDescriptorImpl(final ApacheFactoryContext factoryContext, final MetaBean metaBean) {
         super(metaBean, metaBean.getBeanClass(), metaBean.getValidations());
+
+        Set<PropertyDescriptor> procedureDescriptors = metaBean.getFeature(Jsr303Features.Bean.PROPERTIES);
+        if (procedureDescriptors == null) {
+            procedureDescriptors = new HashSet<PropertyDescriptor>();
+            for (final MetaProperty prop : metaBean.getProperties()) {
+                if (prop.getValidations().length > 0
+                    || (prop.getMetaBean() != null || prop.getFeature(Features.Property.REF_CASCADE) != null)) {
+                    procedureDescriptors.add(getPropertyDescriptor(prop));
+                }
+            }
+            metaBean.putFeature(Jsr303Features.Bean.PROPERTIES, procedureDescriptors);
+        }
 
         ExecutableMeta executables = metaBean.getFeature(Jsr303Features.Bean.EXECUTABLES);
         if (executables == null) { // caching the result of it is important to avoid to compute it for each Validator
@@ -94,11 +106,11 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             metaBean.putFeature(Jsr303Features.Bean.EXECUTABLES, executables);
         }
 
+        validatedProperties = Collections.unmodifiableSet(procedureDescriptors);
         meta = executables;
         isBeanConstrained = meta.isBeanConstrained;
-        hasAnyContraints = meta.hasAnyContraints;
-        setConstrained(containedMethods, meta.methodConstraints.values());
-        setConstrained(constrainedConstructors, meta.contructorConstraints.values());
+        containedMethods = toConstrained(meta.methodConstraints.values());
+        constrainedConstructors = toConstrained(meta.contructorConstraints.values());
     }
 
     private static void addGroupConvertion(final MetaProperty prop, final PropertyDescriptorImpl edesc) {
@@ -188,15 +200,6 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return isBeanConstrained;
     }
 
-    private boolean hasAnyConstraints() {
-        if (hasAnyContraints == null) {
-            synchronized (this) {
-
-            }
-        }
-        return hasAnyContraints;
-    }
-
     /**
      * Return the property level constraints for a given propertyName or {@code null} if
      * either the property does not exist or has no constraint. The returned
@@ -235,13 +238,6 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      * @return the property descriptors having at least a constraint defined
      */
     public Set<PropertyDescriptor> getConstrainedProperties() {
-        Set<PropertyDescriptor> validatedProperties = new HashSet<PropertyDescriptor>();
-        for (MetaProperty prop : metaBean.getProperties()) {
-            if (prop.getValidations().length > 0
-                || (prop.getMetaBean() != null || prop.getFeature(Features.Property.REF_CASCADE) != null)) {
-                validatedProperties.add(getPropertyDescriptor(prop));
-            }
-        }
         return Collections.unmodifiableSet(validatedProperties);
     }
 
@@ -308,12 +304,14 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return "BeanDescriptorImpl{" + "returnType=" + elementClass + '}';
     }
 
-    private <A extends ExecutableDescriptor> void setConstrained(final Set<A> dest, final Collection<A> src) {
+    private static <A extends ExecutableDescriptor> Set<A> toConstrained(final Collection<A> src) {
+        final Set<A> dest = new HashSet<A>();
         for (final A d : src) {
             if (d.hasConstrainedParameters() || d.hasConstrainedReturnValue()) {
                 dest.add(d);
             }
         }
+        return Collections.unmodifiableSet(dest);
     }
 
     private static class ExecutableMeta {
@@ -323,7 +321,6 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         private final Map<String, MethodDescriptor> methodConstraints = new HashMap<String, MethodDescriptor>();
         private final Map<String, ConstructorDescriptor> contructorConstraints = new HashMap<String, ConstructorDescriptor>();
         private Boolean isBeanConstrained = null;
-        private Boolean hasAnyContraints = null;
 
         private ExecutableMeta(final ApacheFactoryContext factoryContext, final MetaBean metaBean1, final Collection<ConstraintDescriptor<?>> constraintDescriptors) {
             this.metaBean = metaBean1;
@@ -332,7 +329,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
             buildExecutableDescriptors();
 
-            // cache hasAnyContraints
+            boolean hasAnyContraints = false;
             if (!constraintDescriptors.isEmpty()) {
                 hasAnyContraints = true;
             } else {

@@ -132,8 +132,13 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
         final Pair validationTarget = computeValidationTarget(annotation.validatedBy());
         for (final Annotation a : annotationType.getAnnotations()) {
-            final Constraint inheritedConstraint = a.annotationType().getAnnotation(Constraint.class);
-            if (inheritedConstraint != null && !a.annotationType().getName().startsWith("javax.validation.constraints.")) {
+            final Class<? extends Annotation> aClass = a.annotationType();
+            if (aClass.getName().startsWith("java.lang.annotation.")) {
+                continue;
+            }
+
+            final Constraint inheritedConstraint = aClass.getAnnotation(Constraint.class);
+            if (inheritedConstraint != null && !aClass.getName().startsWith("javax.validation.constraints.")) {
                 final Pair validationTargetInherited = computeValidationTarget(inheritedConstraint.validatedBy());
                 if ((validationTarget.a > 0 && validationTargetInherited.b > 0 && validationTarget.b == 0)
                         || (validationTarget.b > 0 && validationTargetInherited.a > 0 && validationTarget.a == 0)) {

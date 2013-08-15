@@ -106,7 +106,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private Map<String, String> properties = new HashMap<String, String>();
     private boolean ignoreXmlConfiguration = false;
 
-    private ValidationParser parser;
+    private volatile ValidationParser parser;
 
     /**
      * Create a new ConfigurationImpl instance.
@@ -251,15 +251,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     public BootstrapConfiguration getBootstrapConfiguration() {
-        if (bootstrapConfiguration == null) {
-            synchronized (this) {
-                if (bootstrapConfiguration == null) {
-                    parser = parseValidationXml();
-                    bootstrapConfiguration = parser.getBootstrap();
-                }
-            }
-        }
-        return bootstrapConfiguration;
+        return createBootstrapConfiguration();
     }
 
     /**
@@ -294,14 +286,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             return this;
         }
 
-        if (parser == null) {
-            parser = parseValidationXml(); // already done if BootstrapConfiguration already looked up
-            synchronized (this) { // this synchro should be done in a better way
-                if (bootstrapConfiguration == null) {
-                    bootstrapConfiguration = parser.getBootstrap();
-                }
-            }
-        }
+        createBootstrapConfiguration();
         parser.applyConfigWithInstantiation(this); // instantiate the config if needed
 
         // TODO: maybe find a better way to communicate between validator factory and config
@@ -311,6 +296,14 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
         prepared = true;
         return this;
+    }
+
+    private BootstrapConfiguration createBootstrapConfiguration() {
+        if (parser == null) {
+            parser = parseValidationXml(); // already done if BootstrapConfiguration already looked up
+            bootstrapConfiguration = parser.getBootstrap();
+        }
+        return bootstrapConfiguration;
     }
 
     /** Check whether a validation.xml file exists and parses it with JAXB */

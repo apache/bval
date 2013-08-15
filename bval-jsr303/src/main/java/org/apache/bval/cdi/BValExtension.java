@@ -199,15 +199,17 @@ public class BValExtension implements Extension {
         final BeanManagerInfo bmi = getBeanManagerInfo(loader());
 
         BeanManager result = bmi.finalBm;
-        if (result == null) {
+        if (result == null && bmi.cdi == null) {
             synchronized (this) {
                 result = resolveBeanManagerViaJndi();
                 if (result == null) {
                     result = bmi.loadTimeBm;
                 }
                 if (result == null) {
+                    bmi.cdi = false;
                     return null;
                 }
+                bmi.cdi = true;
                 bmi.finalBm = result;
             }
         }
@@ -272,6 +274,7 @@ public class BValExtension implements Extension {
     private static class BeanManagerInfo {
         private BeanManager loadTimeBm = null;
         private BeanManager finalBm = null;
+        private Boolean cdi = null;
     }
 
     public static class Releasable<T> {

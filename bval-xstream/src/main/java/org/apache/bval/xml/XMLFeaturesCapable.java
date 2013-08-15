@@ -88,11 +88,9 @@ public class XMLFeaturesCapable implements Serializable {
 
     public void mergeFeaturesInto(FeaturesCapable fc) {
         if (getFeatures() != null) {
-            fc.optimizeRead(false);
             for (XMLMetaFeature each : getFeatures()) {
                 fc.putFeature(each.getKey(), each.getValue());
             }
-            fc.optimizeRead(true);
         }
     }
 }

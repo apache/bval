@@ -149,22 +149,22 @@ public enum ConstraintAnnotationAttributes {
         Worker(final Class<C> constraintType) {
             Object _defaultValue = null;
             try {
-                method = Reflection.INSTANCE.getPublicMethod(constraintType, getAttributeName());
+                method = Reflection.INSTANCE.getPublicMethod(constraintType, attributeName);
                 if (method == null) {
-                    error = new ConstraintDefinitionException(String.format("Annotation %1$s has no %2$s() method", constraintType, getAttributeName()));
+                    error = new ConstraintDefinitionException("Annotation " + constraintType + " has no " + attributeName + " method");
                     return;
                 }
 
-                if (!TypeUtils.isAssignable(method.getReturnType(), getType())) {
-                    error = new ConstraintDefinitionException(String.format("Return type for %1$s() must be of type %2$s", getAttributeName(), getType()));
+                 if (!TypeUtils.isAssignable(method.getReturnType(), type)) {
+                    error = new ConstraintDefinitionException("Return type for " + attributeName + "() must be of type " + type);
                     return;
                 }
                 _defaultValue = method.getDefaultValue();
                 if (_defaultValue == null && permitNullDefaultValue) {
                     return;
                 }
-                if (TypeUtils.isArrayType(getType()) && Array.getLength(_defaultValue) > 0) {
-                    error = new ConstraintDefinitionException(String.format("Default value for %1$s() must be an empty array", getAttributeName()));
+                if (TypeUtils.isArrayType(type) && Array.getLength(_defaultValue) > 0) {
+                    error = new ConstraintDefinitionException("Default value for " + attributeName + "() must be an empty array");
                 }
             } finally {
                 defaultValue = _defaultValue;

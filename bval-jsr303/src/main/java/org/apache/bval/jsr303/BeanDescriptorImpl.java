@@ -329,7 +329,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
             buildExecutableDescriptors();
 
-            boolean hasAnyContraints = false;
+            boolean hasAnyContraints;
             if (!constraintDescriptors.isEmpty()) {
                 hasAnyContraints = true;
             } else {

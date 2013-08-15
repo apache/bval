@@ -24,6 +24,7 @@ import javax.validation.GroupSequence;
 import javax.validation.ValidationException;
 import javax.validation.groups.Default;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Description: compute group order, based on the RI behavior as to guarantee
@@ -40,8 +41,7 @@ public class GroupsComputer {
     }
 
     /** caching resolved groups in a thread-safe map. */
-    private final Map<Class<?>, List<Group>> resolvedSequences = Collections
-        .synchronizedMap(new HashMap<Class<?>, List<Group>>());
+    private final Map<Class<?>, List<Group>> resolvedSequences = new ConcurrentHashMap<Class<?>, List<Group>>();
 
     /**
      * Compute groups from an array of group classes.

@@ -97,13 +97,13 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     procedureDescriptors.add(getPropertyDescriptor(prop));
                 }
             }
-            metaBean.putFeature(Jsr303Features.Bean.PROPERTIES, procedureDescriptors);
+            procedureDescriptors = metaBean.initFeature(Jsr303Features.Bean.PROPERTIES, procedureDescriptors);
         }
 
         ExecutableMeta executables = metaBean.getFeature(Jsr303Features.Bean.EXECUTABLES);
         if (executables == null) { // caching the result of it is important to avoid to compute it for each Validator
             executables = new ExecutableMeta(factoryContext, metaBean, getConstraintDescriptors());
-            metaBean.putFeature(Jsr303Features.Bean.EXECUTABLES, executables);
+            executables = metaBean.initFeature(Jsr303Features.Bean.EXECUTABLES, executables);
         }
 
         validatedProperties = Collections.unmodifiableSet(procedureDescriptors);

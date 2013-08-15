@@ -323,8 +323,7 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
         GroupSequence annotation = beanClass.getAnnotation(GroupSequence.class);
         List<Group> groupSeq = metabean.getFeature(key);
         if (groupSeq == null) {
-            groupSeq = new ArrayList<Group>(annotation == null ? 1 : annotation.value().length);
-            metabean.putFeature(key, groupSeq);
+            groupSeq = metabean.initFeature(key, new ArrayList<Group>(annotation == null ? 1 : annotation.value().length));
         }
         Class<?>[] groupClasses = factoryContext.getFactory().getDefaultSequence(beanClass);
         if (groupClasses == null || groupClasses.length == 0) {

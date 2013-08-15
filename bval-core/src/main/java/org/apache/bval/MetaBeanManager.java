@@ -19,9 +19,6 @@ package org.apache.bval;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
 import static org.apache.bval.model.Features.Property.REF_BEAN_TYPE;
 import static org.apache.bval.model.Features.Property.REF_CASCADE;
@@ -41,8 +38,6 @@ public class MetaBeanManager implements MetaBeanFinder {
     /** Complete flag */
     protected boolean complete = false;
 
-    protected final ConcurrentMap<Object, Object> cacheLocks = new ConcurrentHashMap<Object, Object>();
-
     /**
      * Create a new MetaBeanManager instance.
      */
@@ -53,7 +48,7 @@ public class MetaBeanManager implements MetaBeanFinder {
     /**
      * Create a new MetaBeanManager instance.
      * 
-     * @param builder
+     * @param builder meta bean builder
      */
     public MetaBeanManager(MetaBeanBuilder builder) {
         this.builder = builder;
@@ -86,32 +81,16 @@ public class MetaBeanManager implements MetaBeanFinder {
             return beanInfo;
         }
 
-        synchronized (getLockFor(beanInfoId)) {
-            beanInfo = cache.findForId(beanInfoId);
-            if (beanInfo != null) {
-                return beanInfo;
-            }
-
-            try {
-                beanInfo = builder.buildForId(beanInfoId);
-                cache.cache(beanInfo);
-                computeRelationships(beanInfo);
-                return beanInfo;
-            } catch (final RuntimeException e) {
-                throw e; // do not wrap runtime exceptions
-            } catch (final Exception e) {
-                throw new IllegalArgumentException("error creating beanInfo with id: " + beanInfoId, e);
-            }
+        try {
+            beanInfo = builder.buildForId(beanInfoId);
+            cache.cache(beanInfo);
+            computeRelationships(beanInfo);
+            return beanInfo;
+        } catch (final RuntimeException e) {
+            throw e; // do not wrap runtime exceptions
+        } catch (final Exception e) {
+            throw new IllegalArgumentException("error creating beanInfo with id: " + beanInfoId, e);
         }
-    }
-
-    private Object getLockFor(final Object key) {
-        final Object newLock = new Object();
-        Object lock = cacheLocks.putIfAbsent(key, newLock);
-        if (lock == null) {
-            lock = newLock;
-        }
-        return lock;
     }
 
     /**
@@ -127,22 +106,15 @@ public class MetaBeanManager implements MetaBeanFinder {
             return beanInfo;
         }
 
-        synchronized (getLockFor(clazz)) {
-            beanInfo = cache.findForClass(clazz);
-            if (beanInfo != null) {
-                return beanInfo;
-            }
-
-            try {
-                beanInfo = builder.buildForClass(clazz);
-                cache.cache(beanInfo);
-                computeRelationships(beanInfo);
-                return beanInfo;
-            } catch (final RuntimeException e) {
-                throw e; // do not wrap runtime exceptions
-            } catch (final Exception e) {
-                throw new IllegalArgumentException("error creating beanInfo for " + clazz, e);
-            }
+        try {
+            beanInfo = builder.buildForClass(clazz);
+            cache.cache(beanInfo);
+            computeRelationships(beanInfo);
+            return beanInfo;
+        } catch (final RuntimeException e) {
+            throw e; // do not wrap runtime exceptions
+        } catch (final Exception e) {
+            throw new IllegalArgumentException("error creating beanInfo for " + clazz, e);
         }
     }
 
@@ -163,8 +135,8 @@ public class MetaBeanManager implements MetaBeanFinder {
     /**
      * Compute a single related {@link MetaBean}.
      * 
-     * @param prop
-     * @param beanRef
+     * @param prop meta property
+     * @param beanRef bean reference
      */
     protected void computeRelatedMetaBean(MetaProperty prop, String beanRef) {
         Class<?> beanType = prop.getFeature(REF_BEAN_TYPE);

@@ -34,20 +34,18 @@ import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import javax.validation.executable.ExecutableType;
 import javax.validation.spi.ConfigurationState;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Description: a factory is a complete configurated object that can create
@@ -74,10 +72,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * access strategies for properties with cascade validation @Valid support
      */
-    private final Map<Class<?>, List<AccessStrategy>> validAccesses;
-    private final Map<Class<?>, List<MetaConstraint<?, ? extends Annotation>>> constraintMap;
+    private final ConcurrentMap<Class<?>, List<AccessStrategy>> validAccesses;
+    private final ConcurrentMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>> constraintMap;
 
-    private final Collection<ExecutableType> executableTypes = new CopyOnWriteArrayList<ExecutableType>();
     private final Collection<Closeable> toClose = new ArrayList<Closeable>();
 
     /**
@@ -85,10 +82,14 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @return {@link ApacheValidatorFactory}
      */
-    public static synchronized ApacheValidatorFactory getDefault() {
+    public static ApacheValidatorFactory getDefault() {
         if (DEFAULT_FACTORY == null) {
-            DEFAULT_FACTORY = Validation.byProvider(ApacheValidationProvider.class).configure()
-                    .buildValidatorFactory().unwrap(ApacheValidatorFactory.class);
+            synchronized (ApacheValidatorFactory.class) {
+                if (DEFAULT_FACTORY == null) {
+                    DEFAULT_FACTORY = Validation.byProvider(ApacheValidationProvider.class).configure()
+                        .buildValidatorFactory().unwrap(ApacheValidatorFactory.class);
+                }
+            }
         }
         return DEFAULT_FACTORY;
     }
@@ -108,8 +109,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     public ApacheValidatorFactory(ConfigurationState configurationState) {
         properties = new HashMap<String, String>();
         defaultSequences = new HashMap<Class<?>, Class<?>[]>();
-        validAccesses = new HashMap<Class<?>, List<AccessStrategy>>();
-        constraintMap = new HashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
+        validAccesses = new ConcurrentHashMap<Class<?>, List<AccessStrategy>>();
+        constraintMap = new ConcurrentHashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
         configure(configurationState);
     }
 
@@ -128,15 +129,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
         if (ConfigurationImpl.class.isInstance(configuration)) {
             final ConfigurationImpl impl = ConfigurationImpl.class.cast(configuration);
-            executableTypes.addAll(impl.getExecutableValidation());
             toClose.add(impl.getClosable());
-        } else {
-            final String executableTypesStr = getProperties().remove(ApacheValidatorConfiguration.Properties.EXECUTABLE_VALIDATION_TYPES);
-            if (executableTypesStr != null && !executableTypesStr.isEmpty()) {
-                for (final String s : executableTypesStr.split(",")) {
-                    executableTypes.add(ExecutableType.valueOf(s.trim()));
-                }
-            }
         }
 
         new ValidationMappingParser(this).processMappingConfig(configuration.getMappingStreams());
@@ -342,12 +335,12 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public void addMetaConstraint(final Class<?> beanClass,
                                   final MetaConstraint<?, ?> metaConstraint) {
-        List<MetaConstraint<?, ? extends Annotation>> slot;
-        synchronized (constraintMap) {
-            slot = constraintMap.get(beanClass);
-            if (slot == null) {
-                slot = new ArrayList<MetaConstraint<?, ? extends Annotation>>();
-                constraintMap.put(beanClass, slot);
+        List<MetaConstraint<?, ? extends Annotation>> slot = constraintMap.get(beanClass);
+        if (slot == null) {
+            slot = new ArrayList<MetaConstraint<?, ? extends Annotation>>();
+            final List<MetaConstraint<?, ? extends Annotation>> old = constraintMap.putIfAbsent(beanClass, slot);
+            if (old != null) {
+                slot = old;
             }
         }
         slot.add(metaConstraint);
@@ -361,12 +354,12 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *            defining the property to validate
      */
     public void addValid(Class<?> beanClass, AccessStrategy accessStrategy) {
-        List<AccessStrategy> slot;
-        synchronized (validAccesses) {
-            slot = validAccesses.get(beanClass);
-            if (slot == null) {
-                slot = new ArrayList<AccessStrategy>();
-                validAccesses.put(beanClass, slot);
+        List<AccessStrategy> slot = validAccesses.get(beanClass);
+        if (slot == null) {
+            slot = new ArrayList<AccessStrategy>();
+            final List<AccessStrategy> old = validAccesses.putIfAbsent(beanClass, slot);
+            if (old != null) {
+                slot = old;
             }
         }
         slot.add(accessStrategy);
@@ -380,10 +373,6 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public void addDefaultSequence(Class<?> beanClass, Class<?>... groupSequence) {
         defaultSequences.put(beanClass, safeArray(groupSequence));
-    }
-
-    public Collection<ExecutableType> getExecutableTypes() {
-        return executableTypes;
     }
 
     /**

@@ -254,16 +254,15 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      *                                  discovery or if some constraints are invalid.
      */
     // @Override - not allowed in 1.5 for Interface methods
-    public BeanDescriptor getConstraintsForClass(Class<?> clazz) {
+    public BeanDescriptor getConstraintsForClass(final Class<?> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("Class cannot be null");
         }
         try {
-            MetaBean metaBean = metaBeanFinder.findForClass(clazz); // don't throw an exception because of a missing validator here
+            final MetaBean metaBean = metaBeanFinder.findForClass(clazz); // don't throw an exception because of a missing validator here
             BeanDescriptorImpl edesc = metaBean.getFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR);
             if (edesc == null) {
-                edesc = createBeanDescriptor(metaBean);
-                metaBean.putFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR, edesc);
+                edesc = metaBean.initFeature(Jsr303Features.Bean.BEAN_DESCRIPTOR, createBeanDescriptor(metaBean));
             }
             return edesc;
         } catch (final ConstraintDefinitionException definitionEx) {

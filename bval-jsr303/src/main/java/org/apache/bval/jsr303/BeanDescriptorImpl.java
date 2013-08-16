@@ -51,6 +51,7 @@ import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.ReturnValueDescriptor;
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -121,42 +122,22 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             if (!fieldFound) {
                 final Field field = Reflection.INSTANCE.getDeclaredField(current, prop.getName());
                 if (field != null) {
-                    final ConvertGroup.List convertGroupList = field.getAnnotation(ConvertGroup.List.class);
-                    if (convertGroupList != null) {
-                        for (final ConvertGroup convertGroup : convertGroupList.value()) {
-                            edesc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(convertGroup.from()), new Group(convertGroup.to())));
-                        }
-                    }
-
-                    final ConvertGroup convertGroup = field.getAnnotation(ConvertGroup.class);
-                    if (convertGroup != null) {
-                        edesc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(convertGroup.from()), new Group(convertGroup.to())));
-                    }
+                    processConvertGroup(edesc, field);
                     fieldFound = true;
                 }
             }
 
             if (!methodFound) {
                 final String name = Character.toUpperCase(prop.getName().charAt(0)) + prop.getName().substring(1);
-                for (final Method method : Arrays.asList(
-                    Reflection.INSTANCE.getDeclaredMethod(current, "is" + name),
-                    Reflection.INSTANCE.getDeclaredMethod(current, "get" + name))) {
-
-                    if (method != null) {
-                        final ConvertGroup.List convertGroupList = method.getAnnotation(ConvertGroup.List.class);
-                        if (convertGroupList != null) {
-                            for (final ConvertGroup convertGroup : convertGroupList.value()) {
-                                edesc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(convertGroup.from()), new Group(convertGroup.to())));
-                            }
-                        }
-
-                        final ConvertGroup convertGroup = method.getAnnotation(ConvertGroup.class);
-                        if (convertGroup != null) {
-                            edesc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(convertGroup.from()), new Group(convertGroup.to())));
-                        }
-
+                Method m = Reflection.INSTANCE.getDeclaredMethod(current, "get" + name);
+                if (m != null) {
+                    processConvertGroup(edesc, m);
+                    methodFound = true;
+                } else {
+                    m = Reflection.INSTANCE.getDeclaredMethod(current, "is" + name);
+                    if (m != null) {
+                        processConvertGroup(edesc, m);
                         methodFound = true;
-                        break;
                     }
                 }
             }
@@ -183,6 +164,20 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
         if (!edesc.getGroupConversions().isEmpty() && !edesc.isCascaded()) {
             throw new ConstraintDeclarationException("@Valid is needed for group conversion");
+        }
+    }
+
+    private static void processConvertGroup(final ElementDescriptorImpl edesc, final AccessibleObject accessible) {
+        final ConvertGroup.List convertGroupList = accessible.getAnnotation(ConvertGroup.List.class);
+        if (convertGroupList != null) {
+            for (final ConvertGroup convertGroup : convertGroupList.value()) {
+                edesc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(convertGroup.from()), new Group(convertGroup.to())));
+            }
+        }
+
+        final ConvertGroup convertGroup = accessible.getAnnotation(ConvertGroup.class);
+        if (convertGroup != null) {
+            edesc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(convertGroup.from()), new Group(convertGroup.to())));
         }
     }
 
@@ -222,7 +217,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return getPropertyDescriptor(prop);
     }
 
-    private PropertyDescriptor getPropertyDescriptor(MetaProperty prop) {
+    private PropertyDescriptor getPropertyDescriptor(final MetaProperty prop) {
         PropertyDescriptorImpl edesc = prop.getFeature(Jsr303Features.Property.PropertyDescriptor);
         if (edesc == null) {
             edesc = new PropertyDescriptorImpl(prop);
@@ -358,7 +353,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
         private void buildConstructorConstraints() throws InvocationTargetException, IllegalAccessException {
             for (final Constructor<?> cons : Reflection.INSTANCE.getDeclaredConstructors(metaBean.getBeanClass())) {
-                final ConstructorDescriptorImpl consDesc = new ConstructorDescriptorImpl(metaBean, new Validation[0]);
+                final ConstructorDescriptorImpl consDesc = new ConstructorDescriptorImpl(metaBean, EMPTY_VALIDATION);
                 contructorConstraints.put(Arrays.toString(cons.getParameterTypes()), consDesc);
 
                 final List<String> names = factoryContext.getParameterNameProvider().getParameterNames(cons);
@@ -660,10 +655,11 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         private void processMethod(final Method method, final MethodDescriptorImpl methodDesc) throws InvocationTargetException, IllegalAccessException {
             final AnnotationIgnores annotationIgnores = factoryContext.getFactory().getAnnotationIgnores();
 
+
             { // reflection
                 if (!annotationIgnores.isIgnoreAnnotations(method)) {
                     // return value validations and/or cross-parameter validation
-                    for (Annotation anno : method.getAnnotations()) {
+                    for (final Annotation anno : method.getAnnotations()) {
                         if (anno instanceof Valid || anno instanceof Validate) {
                             methodDesc.setCascaded(true);
                         } else {
@@ -681,7 +677,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                         final ParameterAccess access = new ParameterAccess(method.getParameterTypes()[idx], idx);
                         processAnnotations(methodDesc, paramAnnos, access, idx, names.get(idx));
                     } else {
-                        final ParameterDescriptorImpl parameterDescriptor = new ParameterDescriptorImpl(metaBean, new Validation[0], names.get(idx));
+                        final ParameterDescriptorImpl parameterDescriptor = new ParameterDescriptorImpl(metaBean, EMPTY_VALIDATION, names.get(idx));
                         parameterDescriptor.setIndex(idx);
                         methodDesc.getParameterDescriptors().add(parameterDescriptor);
                     }
@@ -745,7 +741,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                         to[i] = new Group(groups[i].to());
                     }
                 } else {
-                    processAnnotation(anno, methodDesc, access, validations);
+                    processConstraint(anno, methodDesc, access, validations);
                 }
             }
 
@@ -812,20 +808,25 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     desc.addGroupConversion(new GroupConversionDescriptorImpl(new Group(cg.from()), new Group(cg.to())));
                 }
             } else {
-                Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
-                if (vcAnno != null) {
-                    annotationProcessor.processAnnotation(annotation, null, ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()), access, validations, true);
-                } else {
-                    /**
-                     * Multi-valued constraints
-                     */
-                    final ConstraintAnnotationAttributes.Worker<? extends Annotation> worker = ConstraintAnnotationAttributes.VALUE.analyze(annotation.annotationType());
-                    if (worker.isValid()) {
-                        Annotation[] children = Annotation[].class.cast(worker.read(annotation));
-                        if (children != null) {
-                            for (Annotation child : children) {
-                                processAnnotation(child, desc, access, validations); // recursion
-                            }
+                processConstraint(annotation, desc, access, validations);
+            }
+        }
+
+        private <A extends Annotation> void processConstraint(final A annotation, final InvocableElementDescriptor desc,
+                                                              final AccessStrategy access, final AppendValidation validations) throws IllegalAccessException, InvocationTargetException {
+            Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
+            if (vcAnno != null) {
+                annotationProcessor.processAnnotation(annotation, null, ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()), access, validations, true);
+            } else {
+                /**
+                 * Multi-valued constraints
+                 */
+                final ConstraintAnnotationAttributes.Worker<? extends Annotation> worker = ConstraintAnnotationAttributes.VALUE.analyze(annotation.annotationType());
+                if (worker.isValid()) {
+                    Annotation[] children = Annotation[].class.cast(worker.read(annotation));
+                    if (children != null) {
+                        for (Annotation child : children) {
+                            processAnnotation(child, desc, access, validations); // recursion
                         }
                     }
                 }

@@ -25,8 +25,6 @@ import org.apache.bval.jsr303.util.PathImpl;
 
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ElementKind;
-import javax.validation.Path;
-import java.util.Iterator;
 
 public class NodeContextBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
     private final PathImpl path;

@@ -18,10 +18,10 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
-import static java.lang.Character.getNumericValue;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
+import static java.lang.Character.getNumericValue;
 
 /**
  * <b>Verhoeff</b> (Dihedral) Check Digit calculation/validation.

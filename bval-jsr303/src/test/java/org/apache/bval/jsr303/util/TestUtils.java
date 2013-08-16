@@ -18,15 +18,14 @@
  */
 package org.apache.bval.jsr303.util;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Set;
+import junit.framework.Assert;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
-
-import junit.framework.Assert;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Description: <br/>

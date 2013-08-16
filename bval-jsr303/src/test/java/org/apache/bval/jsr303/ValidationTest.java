@@ -18,31 +18,8 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
 import org.apache.bval.constraints.NotNullValidator;
 import org.apache.bval.jsr303.example.AccessTestBusinessObject;
 import org.apache.bval.jsr303.example.AccessTestBusinessObjectSub;
@@ -56,6 +33,27 @@ import org.apache.bval.jsr303.example.First;
 import org.apache.bval.jsr303.example.Last;
 import org.apache.bval.jsr303.example.RecursiveFoo;
 import org.apache.bval.jsr303.util.TestUtils;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.validation.groups.Default;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Description: <br/>

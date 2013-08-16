@@ -18,14 +18,13 @@
  */
 package org.apache.bval.extras.constraints.net;
 
-import static java.util.Arrays.asList;
-
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import static java.util.Arrays.asList;
 
 /**
  * <p><b>Domain name</b> validation routines.</p>

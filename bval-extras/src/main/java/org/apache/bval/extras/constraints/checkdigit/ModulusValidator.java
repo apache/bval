@@ -18,13 +18,12 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
-import static java.lang.Character.getNumericValue;
-import static java.lang.Character.isDigit;
-
-import java.lang.annotation.Annotation;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import java.lang.annotation.Annotation;
+
+import static java.lang.Character.getNumericValue;
+import static java.lang.Character.isDigit;
 
 /**
  * Abstract <b>Modulus</b> Check digit calculation/validation.

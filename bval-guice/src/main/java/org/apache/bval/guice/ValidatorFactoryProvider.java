@@ -16,13 +16,13 @@
  */
 package org.apache.bval.guice;
 
+import org.apache.bval.jsr303.ApacheValidationProvider;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
-
-import org.apache.bval.jsr303.ApacheValidationProvider;
 
 /**
  * Validator Factory guice provider implementation.

@@ -22,7 +22,11 @@ package org.apache.bval.jsr303;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import javax.validation.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Size;
 import java.util.Locale;
 import java.util.Set;

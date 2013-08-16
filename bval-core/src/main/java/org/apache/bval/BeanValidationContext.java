@@ -16,7 +16,11 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.*;
+import org.apache.bval.model.FeaturesCapable;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
 

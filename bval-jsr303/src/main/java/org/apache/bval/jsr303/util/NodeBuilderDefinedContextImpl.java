@@ -23,7 +23,6 @@ import org.apache.bval.jsr303.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ElementKind;
-import javax.validation.Path;
 
 /**
  * Description: Implementation of {@link NodeBuilderDefinedContext}.<br/>

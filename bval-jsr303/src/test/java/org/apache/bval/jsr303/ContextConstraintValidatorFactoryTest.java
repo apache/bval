@@ -18,13 +18,7 @@
  */
 package org.apache.bval.jsr303;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.TestCase;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -34,8 +28,13 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Payload;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
-
-import junit.framework.TestCase;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * <a href="https://issues.apache.org/jira/browse/BVAL-111">https://issues.apache.org/jira/browse/BVAL-111</a>

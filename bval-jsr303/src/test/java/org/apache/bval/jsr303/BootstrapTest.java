@@ -18,11 +18,10 @@
  */
 package org.apache.bval.jsr303;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.constraints.NotNullValidator;
+import org.apache.bval.jsr303.example.Customer;
 
 import javax.validation.Configuration;
 import javax.validation.ConstraintValidator;
@@ -36,12 +35,11 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.bootstrap.ProviderSpecificBootstrap;
 import javax.validation.spi.ValidationProvider;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.constraints.NotNullValidator;
-import org.apache.bval.jsr303.example.Customer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: <br/>

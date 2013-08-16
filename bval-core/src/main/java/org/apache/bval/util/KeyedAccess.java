@@ -16,12 +16,12 @@
  */
 package org.apache.bval.util;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
-
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 /**
  * {@link AccessStrategy} to get a keyed value from a {@link Map}. Contains

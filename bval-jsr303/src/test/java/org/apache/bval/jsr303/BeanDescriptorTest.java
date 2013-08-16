@@ -18,17 +18,9 @@
  */
 package org.apache.bval.jsr303;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import junit.framework.Assert;
+import junit.framework.TestCase;
 import org.apache.bval.jsr303.util.TestUtils;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -37,11 +29,22 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.validation.metadata.*;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
+import javax.validation.metadata.PropertyDescriptor;
+import javax.validation.metadata.Scope;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.Locale;
+import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Tests the implementation of {@link BeanDescriptor} and its dependent

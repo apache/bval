@@ -17,8 +17,6 @@
 package org.apache.bval.model;
 
 
-import org.apache.bval.model.ValidationContext;
-
 import java.io.Serializable;
 
 

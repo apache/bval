@@ -18,39 +18,25 @@
  */
 package org.apache.bval.jsr303;
 
-import org.apache.bval.jsr303.util.ConstraintDefinitionValidator;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.Meta;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 import javax.validation.Constraint;
-import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintValidator;
-import javax.validation.UnexpectedTypeException;
 import javax.validation.Valid;
-import javax.validation.ValidationException;
 import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -146,7 +132,6 @@ public final class AnnotationProcessor {
          */
         Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
         if (vcAnno != null) {
-            ConstraintDefinitionValidator.validateConstraintDefinition(annotation);
             Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
             validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
             return applyConstraint(annotation, validatorClasses, prop, owner, access, appender);

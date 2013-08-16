@@ -33,6 +33,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Description: Holds the information and creates an annotation proxy during xml
@@ -41,16 +43,32 @@ import java.util.Map;
 // TODO move this guy up to org.apache.bval.jsr303 or
 // org.apache.bval.jsr303.model
 final public class AnnotationProxyBuilder<A extends Annotation> {
+    private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<Class<?>, Method[]>();
+
     private final Class<A> type;
     private final Map<String, Object> elements = new HashMap<String, Object>();
+    private final Method[] methods;
 
     /**
      * Create a new AnnotationProxyBuilder instance.
      *
      * @param annotationType
      */
-    public AnnotationProxyBuilder(Class<A> annotationType) {
+    public AnnotationProxyBuilder(final Class<A> annotationType) {
         this.type = annotationType;
+        if (annotationType.getName().startsWith("javax.validation.constraints.")) { // cache built-in constraints only to avoid mem leaks
+            Method[] mtd = METHODS_CACHE.get(annotationType);
+            if (mtd == null) {
+                final Method[] value = Reflection.INSTANCE.getDeclaredMethods(type);
+                mtd = METHODS_CACHE.putIfAbsent(annotationType, value);
+                if (mtd == null) {
+                    mtd = value;
+                }
+            }
+            this.methods = mtd;
+        } else {
+            this.methods = Reflection.INSTANCE.getDeclaredMethods(type);
+        }
     }
 
     /**
@@ -76,7 +94,6 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
     public AnnotationProxyBuilder(A annot) {
         this((Class<A>) annot.annotationType());
         // Obtain the "elements" of the annotation
-        final Method[] methods = Reflection.INSTANCE.getDeclaredMethods(annot.annotationType());
         for (Method m : methods) {
             if (!m.isAccessible()) {
                 m.setAccessible(true);
@@ -93,6 +110,10 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
                 throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
             }
         }
+    }
+
+    public Method[] getMethods() {
+        return methods;
     }
 
     /**

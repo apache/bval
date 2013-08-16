@@ -27,6 +27,7 @@ import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintTarget;
 import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorFactory;
 import javax.validation.OverridesAttribute;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
@@ -63,19 +64,15 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
      * Create a new AnnotationConstraintBuilder instance.
      * 
      * @param validatorClasses
-     * @param constraintValidator
      * @param annotation
      * @param owner
      * @param access
      */
-    public AnnotationConstraintBuilder(Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
-        ConstraintValidator<A, ?> constraintValidator, A annotation, Class<?> owner, AccessStrategy access,
-        ConstraintTarget target, RuntimeException missingValidatorException) {
+    public AnnotationConstraintBuilder(ConstraintValidatorFactory factory, Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
+                                        A annotation, Class<?> owner, AccessStrategy access, ConstraintTarget target) {
         boolean reportFromComposite =
             annotation != null && annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
-        constraintValidation =
-            new ConstraintValidation<A>(validatorClasses, constraintValidator, annotation, owner, access,
-                reportFromComposite, target, missingValidatorException);
+        constraintValidation = new ConstraintValidation<A>(factory, validatorClasses, annotation, owner, access, reportFromComposite, target);
         buildFromAnnotation();
     }
 

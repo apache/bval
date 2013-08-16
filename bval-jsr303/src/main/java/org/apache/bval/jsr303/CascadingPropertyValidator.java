@@ -16,11 +16,10 @@
  */
 package org.apache.bval.jsr303;
 
-import java.util.Set;
-
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
+import java.util.Set;
 
 /**
  * Per the bean validation spec, {@link Valid} is not honored by the

@@ -16,6 +16,8 @@
  */
 package org.apache.bval.guice;
 
+import org.apache.bval.jsr303.ConfigurationImpl;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.validation.ConstraintValidatorFactory;
@@ -25,9 +27,6 @@ import javax.validation.executable.ExecutableType;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-
-import org.apache.bval.jsr303.ConfigurationImpl;
-
 import java.util.Collections;
 
 /**

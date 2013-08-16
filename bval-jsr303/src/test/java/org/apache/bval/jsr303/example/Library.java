@@ -18,14 +18,13 @@
  */
 package org.apache.bval.jsr303.example;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Description: <br/>

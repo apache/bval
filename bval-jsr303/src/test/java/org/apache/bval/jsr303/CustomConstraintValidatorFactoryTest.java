@@ -44,7 +44,7 @@ import junit.framework.TestCase;
 /**
  * Checks that overriding the default {@link ConstraintValidatorFactory} works
  * as expected.
- * 
+ *
  * @author Carlos Vara
  */
 public class CustomConstraintValidatorFactoryTest extends TestCase {
@@ -55,7 +55,7 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
      * validation exception should be thrown.
      */
     public void testValidationExceptionWhenFactoryReturnsNullValidator() {
-        
+
         ConstraintValidatorFactory customFactory = new ConstraintValidatorFactory() {
             // @Override - not allowed in 1.5 for Interface methods
             public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
@@ -66,11 +66,11 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
                 // no-op
             }
         };
-        
+
         // Create a validator with this factory
         ApacheValidatorConfiguration customConfig = Validation.byProvider(ApacheValidationProvider.class).configure().constraintValidatorFactory(customFactory);
         Validator validator = customConfig.buildValidatorFactory().getValidator();
-        
+
         try {
             validator.validate(new Person());
             fail("ValidationException must be thrown when factory returns a null constraint validator.");
@@ -78,21 +78,21 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
             // correct
         }
     }
-    
+
     @GoodPerson
     public static class Person {
     }
-    
+
     @Constraint(validatedBy = { GoodPersonValidator.class })
     @Target({ METHOD, FIELD, ANNOTATION_TYPE, TYPE })
     @Retention(RUNTIME)
     @Documented
     public static @interface GoodPerson {
-        
+
         String message() default "Not a good person";
         Class<?>[] groups() default { };
         Class<? extends Payload>[] payload() default {};
-        
+
         public static class GoodPersonValidator implements ConstraintValidator<GoodPerson, Person> {
             // @Override - not allowed in 1.5 for Interface methods
             public void initialize(GoodPerson constraintAnnotation) {
@@ -104,5 +104,5 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
             }
         }
     }
-    
+
 }

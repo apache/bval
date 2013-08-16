@@ -18,8 +18,7 @@
  */
 package org.apache.bval.jsr303;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import org.apache.commons.lang3.ClassUtils;
 
 import javax.validation.Configuration;
 import javax.validation.ValidationException;
@@ -27,8 +26,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-
-import org.apache.commons.lang3.ClassUtils;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr303

@@ -16,6 +16,15 @@
  */
 package org.apache.bval.guice;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.Matchers;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.apache.bval.jsr303.ApacheValidationProvider;
+import org.apache.bval.jsr303.DefaultMessageInterpolator;
+import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
+
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.TraversableResolver;
@@ -23,16 +32,6 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-
-import org.aopalliance.intercept.MethodInterceptor;
-import org.apache.bval.jsr303.ApacheValidationProvider;
-import org.apache.bval.jsr303.DefaultMessageInterpolator;
-import org.apache.bval.jsr303.resolver.DefaultTraversableResolver;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
 
 /**
  * The Google-Guice module for Apache BVal.

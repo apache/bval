@@ -20,7 +20,10 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import org.apache.bval.model.MetaProperty;
 
-import static org.apache.bval.model.Features.Property.*;
+import static org.apache.bval.model.Features.Property.MAX_VALUE;
+import static org.apache.bval.model.Features.Property.MIN_VALUE;
+import static org.apache.bval.model.Features.Property.REG_EXP;
+import static org.apache.bval.model.Features.Property.TIME_LAG;
 
 /**
  * Description: <br/>

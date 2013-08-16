@@ -16,16 +16,14 @@
  */
 package org.apache.bval.guice;
 
-import java.util.Set;
+import com.google.inject.Guice;
+import junit.framework.TestCase;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
-
-import junit.framework.TestCase;
-
-import com.google.inject.Guice;
+import java.util.Set;
 
 /**
  * 

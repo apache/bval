@@ -22,7 +22,11 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.bval.jsr303.DefaultMessageInterpolator;
 
-import javax.validation.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.GroupSequence;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import java.util.Locale;

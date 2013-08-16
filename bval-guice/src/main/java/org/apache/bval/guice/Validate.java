@@ -16,14 +16,13 @@
  */
 package org.apache.bval.guice;
 
+import com.google.inject.BindingAnnotation;
+
+import javax.validation.ConstraintViolationException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import javax.validation.ConstraintViolationException;
-
-import com.google.inject.BindingAnnotation;
 
 /**
  * Marker for methods which arguments have to be validated.

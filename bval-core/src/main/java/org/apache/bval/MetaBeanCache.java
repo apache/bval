@@ -16,12 +16,12 @@
  */
 package org.apache.bval;
 
+import org.apache.bval.model.MetaBean;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.apache.bval.model.MetaBean;
 
 /**
  * Description: a cache to hold metabeans by id and by class.<br/>

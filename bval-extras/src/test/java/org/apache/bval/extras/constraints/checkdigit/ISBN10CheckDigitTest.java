@@ -16,9 +16,8 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
-import java.lang.annotation.Annotation;
-
 import javax.validation.ConstraintValidator;
+import java.lang.annotation.Annotation;
 
 /**
  * ISBN-10 Check Digit Test.

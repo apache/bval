@@ -33,7 +33,6 @@ import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
 import org.apache.bval.util.reflection.Reflection;
 
-import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
@@ -185,43 +184,6 @@ public class Jsr303MetaBeanFactory implements MetaBeanFactory {
             }
         }
         missingValid.clear();
-    }
-
-    /**
-     * Learn whether a given Method has validation constraints defined via JSR303 annotations.
-     * 
-     * @param method
-     * @return <code>true</code> if constraints detected
-     */
-    protected boolean hasValidationConstraintsDefined(Method method) {
-        for (Annotation annot : method.getDeclaredAnnotations()) {
-            if (hasValidationConstraintsDefined(annot)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasValidationConstraintsDefined(final Annotation annot) {
-        // If it is annotated with @Constraint
-        if (annot.annotationType().getAnnotation(Constraint.class) != null) {
-            return true;
-        }
-
-        // Check whether it is a multivalued constraint:
-        final ConstraintAnnotationAttributes.Worker<?> worker = ConstraintAnnotationAttributes.VALUE.analyze(annot.annotationType());
-        if (worker.isValid()) {
-            Annotation[] children = Annotation[].class.cast(worker.read(annot));
-            if (children != null) {
-                for (final Annotation child : children) {
-                    if (hasValidationConstraintsDefined(child)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     /**

@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr303;
 
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.TestCase;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Payload;
@@ -27,10 +27,8 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
-
-import junit.framework.TestCase;
-
-import org.apache.bval.jsr303.util.TestUtils;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: test that payload information can be retrieved

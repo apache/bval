@@ -34,7 +34,7 @@ public abstract class BaseAppendValidation implements AppendValidation {
      * Append operation divided in 3 stages: pre & post processing and the
      * "real" append process.
      */
-    public final <T extends Annotation> void append(ConstraintValidation<T> validation) {
+    public final <T extends Annotation> void append(final ConstraintValidation<T> validation) {
         preProcessValidation(validation);
         performAppend(validation);
         postProcessValidation(validation);
@@ -50,7 +50,7 @@ public abstract class BaseAppendValidation implements AppendValidation {
      * @param validation
      *            The validation to be appended.
      */
-    public abstract <T extends Annotation> void performAppend(ConstraintValidation<T> validation);
+    public abstract <T extends Annotation> void performAppend(final ConstraintValidation<T> validation);
 
     /**
      * Pre-process the validation before appending it.
@@ -60,21 +60,21 @@ public abstract class BaseAppendValidation implements AppendValidation {
      * @param validation
      *            The validation to be appended.
      */
-    public <T extends Annotation> void preProcessValidation(ConstraintValidation<T> validation) {
+    public <T extends Annotation> void preProcessValidation(final ConstraintValidation<T> validation) {
         // No generic pre-processing
     }
     
     /**
-     * Post-process the validation once it has been appended.
+     * Post-process the validation once it postProcessValidationhas been appended.
      * 
      * @param <T>
      *            The type of the validation.
      * @param validation
      *            The validation to be appended.
      */
-    public <T extends Annotation> void postProcessValidation(ConstraintValidation<T> validation) {
-        // Initialize the validator
-        validation.initialize();
+    public <T extends Annotation> void postProcessValidation(final ConstraintValidation<T> validation) {
+        // done lazily to ensure CDI is available
+        // validation.initialize();
     }
     
 }

@@ -38,8 +38,7 @@ public final class AnnotationIgnores {
      * xml configuration. 
      * If 'ignore-annotations' is not specified: default = true
      */
-    private final Map<Class<?>, Boolean> ignoreAnnotationDefaults =
-          new HashMap<Class<?>, Boolean>();
+    private final Map<Class<?>, Boolean> ignoreAnnotationDefaults = new HashMap<Class<?>, Boolean>();
 
     /**
      * Keeps track of explicitly excluded members (fields and properties) for a given class.

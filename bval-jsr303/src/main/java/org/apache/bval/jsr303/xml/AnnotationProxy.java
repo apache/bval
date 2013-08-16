@@ -16,8 +16,6 @@
  */
 package org.apache.bval.jsr303.xml;
 
-import org.apache.bval.util.reflection.Reflection;
-
 import javax.validation.Valid;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -54,10 +52,9 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
     }
 
     private <A extends Annotation> Map<String, Object> getAnnotationValues(AnnotationProxyBuilder<A> descriptor) {
-        Map<String, Object> result = new HashMap<String, Object>();
+        final Map<String, Object> result = new HashMap<String, Object>();
         int processedValuesFromDescriptor = 0;
-        final Method[] declaredMethods = Reflection.INSTANCE.getDeclaredMethods(annotationType);
-        for (Method m : declaredMethods) {
+        for (final Method m : descriptor.getMethods()) {
             if (descriptor.contains(m.getName())) {
                 result.put(m.getName(), descriptor.getValue(m.getName()));
                 processedValuesFromDescriptor++;

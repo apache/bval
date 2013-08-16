@@ -30,6 +30,8 @@ import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Defines the well-known attributes of {@link Constraint} annotations.
@@ -88,8 +90,6 @@ public enum ConstraintAnnotationAttributes {
 
     /**
      * Get the expected type of the represented attribute.
-     * 
-     * @return Class<?>
      */
     public Type getType() {
         return type;
@@ -137,7 +137,18 @@ public enum ConstraintAnnotationAttributes {
         return new Worker<C>(clazz);
     }
 
+    // this is static but related to Worker
+    private static final ConcurrentMap<Class<?>, ConcurrentMap<String, Method>> METHOD_BY_NAME_AND_CLASS = new ConcurrentHashMap<Class<?>, ConcurrentMap<String, Method>>();
+    private static final Method NULL_METHOD;
+    static {
+        try {
+            NULL_METHOD = Object.class.getMethod("hashCode"); // whatever, the only constraint here is to not use a constraint method, this value is used to cache null
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Impossible normally");
+        }
+    }
     public class Worker<C extends Annotation> {
+
         public final Method method;
         public final Object defaultValue;
         private RuntimeException error;
@@ -149,8 +160,8 @@ public enum ConstraintAnnotationAttributes {
         Worker(final Class<C> constraintType) {
             Object _defaultValue = null;
             try {
-                method = Reflection.INSTANCE.getPublicMethod(constraintType, attributeName);
-                if (method == null) {
+                method = findMethod(constraintType, attributeName);
+                if (method == null || method == NULL_METHOD) {
                     error = new ConstraintDefinitionException("Annotation " + constraintType + " has no " + attributeName + " method");
                     return;
                 }
@@ -169,6 +180,32 @@ public enum ConstraintAnnotationAttributes {
             } finally {
                 defaultValue = _defaultValue;
             }
+        }
+
+        private Method findMethod(final Class<C> constraintType, final String attributeName) {
+            ConcurrentMap<String, Method> cache = METHOD_BY_NAME_AND_CLASS.get(constraintType);
+            if (cache == null) {
+                cache = new ConcurrentHashMap<String, Method>();
+                final ConcurrentMap<String, Method> old = METHOD_BY_NAME_AND_CLASS.putIfAbsent(constraintType, cache);
+                if (old != null) {
+                    cache = old;
+                }
+            }
+
+            final Method found = cache.get(attributeName);
+            if (found != null) {
+                return found;
+            }
+            final Method m = Reflection.INSTANCE.getPublicMethod(constraintType, attributeName);
+            if (m == null) {
+                cache.putIfAbsent(attributeName, NULL_METHOD);
+                return null;
+            }
+            final Method oldMtd = cache.putIfAbsent(attributeName, m);
+            if (oldMtd != null) {
+                return oldMtd;
+            }
+            return m;
         }
 
         public boolean isValid() {

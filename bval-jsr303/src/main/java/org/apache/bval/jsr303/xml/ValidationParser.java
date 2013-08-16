@@ -53,6 +53,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
@@ -64,9 +66,9 @@ import java.util.logging.Logger;
 @SuppressWarnings("restriction")
 public class ValidationParser implements Closeable {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
-    private static final String VALIDATION_CONFIGURATION_XSD =
-            "META-INF/validation-configuration-1.1.xsd";
+    private static final String VALIDATION_CONFIGURATION_XSD = "META-INF/validation-configuration-1.1.xsd";
     private static final Logger log = Logger.getLogger(ValidationParser.class.getName());
+    private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<String, Schema>(1);
 
     private ValidationConfigType xmlConfig;
     private BootstrapConfigurationImpl bootstrap;
@@ -191,16 +193,16 @@ public class ValidationParser implements Closeable {
         }
     }
 
-    protected static InputStream getInputStream(String path) throws IOException {
-        ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
-        InputStream inputStream = loader.getResourceAsStream(path);
+    protected static InputStream getInputStream(final String path) throws IOException {
+        final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
+        final InputStream inputStream = loader.getResourceAsStream(path);
 
         if (inputStream != null) {
             // spec says: If more than one META-INF/validation.xml file
             // is found in the classpath, a ValidationException is raised.
-            Enumeration<URL> urls = loader.getResources(path);
+            final Enumeration<URL> urls = loader.getResources(path);
             if (urls.hasMoreElements()) {
-                String url = urls.nextElement().toString();
+                final String url = urls.nextElement().toString();
                 while (urls.hasMoreElements()) {
                     if (!url.equals(urls.nextElement().toString())) { // complain when first duplicate found
                         throw new ValidationException("More than one " + path + " is found in the classpath");
@@ -217,11 +219,21 @@ public class ValidationParser implements Closeable {
     }
 
     static Schema getSchema(final String xsd) {
+        final Schema schema = SCHEMA_CACHE.get(xsd);
+        if (schema != null) {
+            return schema;
+        }
+
         final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
         final SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         final URL schemaUrl = loader.getResource(xsd);
         try {
-            return sf.newSchema(schemaUrl);
+            Schema s = sf.newSchema(schemaUrl);
+            final Schema old = SCHEMA_CACHE.putIfAbsent(xsd, s);
+            if (old != null) {
+                s = old;
+            }
+            return s;
         } catch (SAXException e) {
             log.log(Level.WARNING, String.format("Unable to parse schema: %s", xsd), e);
             return null;

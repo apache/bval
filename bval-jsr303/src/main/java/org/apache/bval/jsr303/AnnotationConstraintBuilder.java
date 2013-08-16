@@ -21,7 +21,6 @@ package org.apache.bval.jsr303;
 import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.bval.util.reflection.Reflection;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
@@ -99,7 +98,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     private void doBuildFromAnnotations() {
         final Class<? extends Annotation> annotationType = constraintValidation.getAnnotation().annotationType();
 
-        for (final Method method : Reflection.INSTANCE.getDeclaredMethods(annotationType)) {
+        for (final Method method : AnnotationProxyBuilder.findMethods(annotationType)) {
             // groups + payload must also appear in attributes (also
             // checked by TCK-Tests)
             if (method.getParameterTypes().length == 0) {

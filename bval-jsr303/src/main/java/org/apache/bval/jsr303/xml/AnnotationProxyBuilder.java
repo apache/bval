@@ -56,19 +56,22 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      */
     public AnnotationProxyBuilder(final Class<A> annotationType) {
         this.type = annotationType;
+        this.methods = findMethods(annotationType);
+    }
+
+    public static <A> Method[] findMethods(final Class<A> annotationType) {
         if (annotationType.getName().startsWith("javax.validation.constraints.")) { // cache built-in constraints only to avoid mem leaks
             Method[] mtd = METHODS_CACHE.get(annotationType);
             if (mtd == null) {
-                final Method[] value = Reflection.INSTANCE.getDeclaredMethods(type);
+                final Method[] value = Reflection.INSTANCE.getDeclaredMethods(annotationType);
                 mtd = METHODS_CACHE.putIfAbsent(annotationType, value);
                 if (mtd == null) {
                     mtd = value;
                 }
             }
-            this.methods = mtd;
-        } else {
-            this.methods = Reflection.INSTANCE.getDeclaredMethods(type);
+            return mtd;
         }
+        return Reflection.INSTANCE.getDeclaredMethods(annotationType);
     }
 
     /**

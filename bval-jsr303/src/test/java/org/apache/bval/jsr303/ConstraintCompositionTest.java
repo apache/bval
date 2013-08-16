@@ -19,17 +19,8 @@
 
 package org.apache.bval.jsr303;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintViolation;
@@ -43,9 +34,17 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.Locale;
+import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Checks that groups are correctly inherited from the root constraint to its

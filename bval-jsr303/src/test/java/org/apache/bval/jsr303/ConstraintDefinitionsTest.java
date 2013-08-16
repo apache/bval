@@ -18,16 +18,9 @@
  */
 package org.apache.bval.jsr303;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.constraints.NotNullValidator;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
@@ -38,11 +31,16 @@ import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Min;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.Locale;
+import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.constraints.NotNullValidator;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Checks the correct parsing of constraint definitions.

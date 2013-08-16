@@ -16,12 +16,12 @@
  */
 package org.apache.bval.guice;
 
+import com.google.inject.Injector;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorFactory;
-
-import com.google.inject.Injector;
 
 /**
  * {@code javax.validation.ConstraintValidatorFactory} implementation that

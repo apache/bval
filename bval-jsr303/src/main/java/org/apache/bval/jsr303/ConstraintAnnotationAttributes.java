@@ -20,11 +20,9 @@ import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 import javax.validation.Constraint;
-import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.security.AccessController;
@@ -134,10 +132,19 @@ public enum ConstraintAnnotationAttributes {
     }
 
     public <C extends Annotation> Worker<C> analyze(final Class<C> clazz) {
+        if (clazz.getName().startsWith("javax.validation.constraint.")) { // cache only APIs classes to avoid memory leaks
+            Worker<C> w = Worker.class.cast(WORKER_CACHE.get(clazz));
+            if (w == null) {
+                w = new Worker<C>(clazz);
+                WORKER_CACHE.putIfAbsent(clazz, w);
+                return w;
+            }
+        }
         return new Worker<C>(clazz);
     }
 
     // this is static but related to Worker
+    private static final ConcurrentMap<Class<?>, Worker<?>> WORKER_CACHE = new ConcurrentHashMap<Class<?>, Worker<?>>();
     private static final ConcurrentMap<Class<?>, ConcurrentMap<String, Method>> METHOD_BY_NAME_AND_CLASS = new ConcurrentHashMap<Class<?>, ConcurrentMap<String, Method>>();
     private static final Method NULL_METHOD;
     static {
@@ -150,36 +157,13 @@ public enum ConstraintAnnotationAttributes {
     public class Worker<C extends Annotation> {
 
         public final Method method;
-        public final Object defaultValue;
-        private RuntimeException error;
 
         /**
          * Create a new Worker instance.
          * @param constraintType to handle
          */
         Worker(final Class<C> constraintType) {
-            Object _defaultValue = null;
-            try {
-                method = findMethod(constraintType, attributeName);
-                if (method == null || method == NULL_METHOD) {
-                    error = new ConstraintDefinitionException("Annotation " + constraintType + " has no " + attributeName + " method");
-                    return;
-                }
-
-                 if (!TypeUtils.isAssignable(method.getReturnType(), type)) {
-                    error = new ConstraintDefinitionException("Return type for " + attributeName + "() must be of type " + type);
-                    return;
-                }
-                _defaultValue = method.getDefaultValue();
-                if (_defaultValue == null && permitNullDefaultValue) {
-                    return;
-                }
-                if (TypeUtils.isArrayType(type) && Array.getLength(_defaultValue) > 0) {
-                    error = new ConstraintDefinitionException("Default value for " + attributeName + "() must be an empty array");
-                }
-            } finally {
-                defaultValue = _defaultValue;
-            }
+            method = findMethod(constraintType, attributeName);
         }
 
         private Method findMethod(final Class<C> constraintType, final String attributeName) {
@@ -205,18 +189,14 @@ public enum ConstraintAnnotationAttributes {
             if (oldMtd != null) {
                 return oldMtd;
             }
+            if (!m.isAccessible()) {
+                m.setAccessible(true);
+            }
             return m;
         }
 
         public boolean isValid() {
-            return error == null;
-        }
-
-        public Worker<C> valid() {
-            if (!isValid()) {
-                throw error;
-            }
-            return this;
+            return method != null && method != NULL_METHOD;
         }
 
         public Object read(final Annotation constraint) {
@@ -232,7 +212,6 @@ public enum ConstraintAnnotationAttributes {
 
         private Object doInvoke(final Annotation constraint) {
             try {
-                method.setAccessible(true);
                 return method.invoke(constraint);
             } catch (Exception e) {
                 throw new RuntimeException(e);

@@ -18,14 +18,13 @@
  */
 package org.apache.bval.jsr303.util;
 
-import java.util.Iterator;
-
-import javax.validation.Path;
-import javax.validation.ValidationException;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import javax.validation.Path;
+import javax.validation.ValidationException;
+import java.util.Iterator;
 
 /**
  * PathImpl Tester.

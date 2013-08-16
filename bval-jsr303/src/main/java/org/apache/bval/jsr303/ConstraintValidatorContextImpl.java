@@ -28,7 +28,6 @@ import org.apache.bval.model.ValidationListener;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ElementKind;
-import javax.validation.ParameterNameProvider;
 import javax.validation.Path;
 import javax.validation.ValidationException;
 import java.lang.reflect.Method;

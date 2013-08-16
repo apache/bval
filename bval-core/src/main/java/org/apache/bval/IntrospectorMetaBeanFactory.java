@@ -27,7 +27,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Enumeration;
 
-import static org.apache.bval.model.Features.Property.*;
+import static org.apache.bval.model.Features.Property.HIDDEN;
+import static org.apache.bval.model.Features.Property.PREFERRED;
+import static org.apache.bval.model.Features.Property.READONLY;
 
 /**
  * Description: use information from java.beans.Introspector in MetaBeans. The PropertyDescriptor can contain info about

@@ -16,7 +16,11 @@
  */
 package org.apache.bval.xml;
 
-import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
+import org.apache.bval.MetaBeanFactory;
+import org.apache.bval.model.FeaturesCapable;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.routines.StandardValidation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,11 +32,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.bval.MetaBeanFactory;
-import org.apache.bval.model.FeaturesCapable;
-import org.apache.bval.model.MetaBean;
-import org.apache.bval.model.MetaProperty;
-import org.apache.bval.routines.StandardValidation;
+import static org.apache.bval.model.Features.Property.JAVASCRIPT_VALIDATION_FUNCTIONS;
 
 /**
  * Description: Create or enrich MetaBeans from apache beanInfos xml<br/>

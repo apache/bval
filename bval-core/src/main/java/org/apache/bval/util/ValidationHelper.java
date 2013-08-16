@@ -18,14 +18,15 @@
  */
 package org.apache.bval.util;
 
-import java.util.List;
-import java.util.Map;
 import org.apache.bval.DynamicMetaBean;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
+
+import java.util.List;
+import java.util.Map;
 
 
 /**

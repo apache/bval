@@ -21,6 +21,7 @@ package org.apache.bval.jsr303;
 import org.apache.bval.jsr303.groups.GroupsComputer;
 import org.apache.bval.jsr303.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang3.reflect.TypeUtils;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
@@ -95,6 +96,11 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     private void doBuildFromAnnotations() {
         final Class<? extends Annotation> annotationType = constraintValidation.getAnnotation().annotationType();
 
+        boolean foundPayload = false;
+        boolean foundGroups = false;
+        Method validationAppliesTo = null;
+        boolean foundMessage = false;
+
         for (final Method method : AnnotationProxyBuilder.findMethods(annotationType)) {
             // groups + payload must also appear in attributes (also
             // checked by TCK-Tests)
@@ -103,13 +109,22 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
                     final String name = method.getName();
                     if (ConstraintAnnotationAttributes.PAYLOAD.getAttributeName().equals(name)) {
                         buildPayload(method);
+                        foundPayload = true;
                     } else if (ConstraintAnnotationAttributes.GROUPS.getAttributeName().equals(name)) {
                         buildGroups(method);
+                        foundGroups = true;
                     } else if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName().equals(name)) {
                         buildValidationAppliesTo(method);
+                        validationAppliesTo = method;
                     } else if (name.startsWith("valid")) {
                         throw new ConstraintDefinitionException("constraints parameters can't start with valid: " + name);
                     } else {
+                        if (ConstraintAnnotationAttributes.MESSAGE.getAttributeName().equals(name)) {
+                            foundMessage = true;
+                            if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.MESSAGE.getType())) {
+                                throw new ConstraintDefinitionException("Return type for message() must be of type " + ConstraintAnnotationAttributes.MESSAGE.getType());
+                            }
+                        }
                         constraintValidation.getAttributes().put(name, method.invoke(constraintValidation.getAnnotation()));
                     }
                 } catch (final ConstraintDefinitionException cde) {
@@ -118,6 +133,19 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
                     log.log(Level.WARNING, String.format("Error processing annotation: %s ", constraintValidation.getAnnotation()), e);
                 }
             }
+        }
+
+        if (!foundMessage) {
+            throw new ConstraintDefinitionException("Annotation " + annotationType.getName() + " has no message method");
+        }
+        if (!foundPayload) {
+            throw new ConstraintDefinitionException("Annotation " + annotationType.getName() + " has no payload method");
+        }
+        if (!foundGroups) {
+            throw new ConstraintDefinitionException("Annotation " + annotationType.getName() + " has no groups method");
+        }
+        if (validationAppliesTo != null && !ConstraintTarget.IMPLICIT.equals(validationAppliesTo.getDefaultValue())) {
+            throw new ConstraintDefinitionException("validationAppliesTo default value should be IMPLICIT");
         }
 
         // valid validationAppliesTo
@@ -177,6 +205,9 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     private void buildValidationAppliesTo(final Method method) throws InvocationTargetException, IllegalAccessException {
+        if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getType())) {
+            throw new ConstraintDefinitionException("Return type for validationAppliesTo() must be of type " + ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getType());
+        }
         final Object validationAppliesTo = method.invoke(constraintValidation.getAnnotation());
         if (ConstraintTarget.class.isInstance(validationAppliesTo)) {
             constraintValidation.setValidationAppliesTo(ConstraintTarget.class.cast(validationAppliesTo));
@@ -186,12 +217,19 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     private void buildGroups(final Method method) throws IllegalAccessException, InvocationTargetException {
+        if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.GROUPS.getType())) {
+            throw new ConstraintDefinitionException("Return type for groups() must be of type " + ConstraintAnnotationAttributes.GROUPS.getType());
+        }
+
         final Object raw = method.invoke(constraintValidation.getAnnotation());
         Class<?>[] garr;
         if (raw instanceof Class<?>) {
             garr = new Class[] { (Class<?>) raw };
         } else if (raw instanceof Class<?>[]) {
             garr = (Class<?>[]) raw;
+            if (Object[].class.cast(method.getDefaultValue()).length > 0) {
+                throw new ConstraintDefinitionException("Default value for groups() must be an empty array");
+            }
         } else {
             garr = null;
         }
@@ -203,7 +241,14 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     @SuppressWarnings("unchecked")
-    private void buildPayload(Method method) throws IllegalAccessException, InvocationTargetException {
+    private void buildPayload(final Method method) throws IllegalAccessException, InvocationTargetException {
+        if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.PAYLOAD.getType())) {
+            throw new ConstraintDefinitionException("Return type for payload() must be of type " + ConstraintAnnotationAttributes.PAYLOAD.getType());
+        }
+        if (Object[].class.cast(method.getDefaultValue()).length > 0) {
+            throw new ConstraintDefinitionException("Default value for payload() must be an empty array");
+        }
+
         Class<? extends Payload>[] payload_raw =
             (Class<? extends Payload>[]) method.invoke(constraintValidation.getAnnotation());
         Set<Class<? extends Payload>> payloadSet;

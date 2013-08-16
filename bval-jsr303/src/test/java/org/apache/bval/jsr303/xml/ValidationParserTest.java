@@ -27,7 +27,11 @@ import org.apache.bval.jsr303.ConfigurationImpl;
 import org.apache.bval.jsr303.example.XmlEntitySampleBean;
 import org.apache.bval.jsr303.resolver.SimpleTraversableResolver;
 
-import javax.validation.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.util.Set;
 

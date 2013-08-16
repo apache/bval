@@ -21,9 +21,7 @@ package org.apache.bval.jsr303;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
 
-import javax.validation.metadata.GroupConversionDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
-import java.util.Set;
 
 /**
  * Description: {@link PropertyDescriptor} implementation.<br/>

@@ -16,12 +16,11 @@
  */
 package org.apache.bval.jsr303.util;
 
-import java.io.StringWriter;
-import java.text.ParsePosition;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import javax.validation.ValidationException;
-
-import org.apache.commons.lang3.StringEscapeUtils;
+import java.io.StringWriter;
+import java.text.ParsePosition;
 
 /**
  * Defines a path navigation algorithm and a means of interacting with same.

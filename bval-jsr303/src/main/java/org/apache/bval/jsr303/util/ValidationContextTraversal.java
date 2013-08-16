@@ -16,8 +16,6 @@
  */
 package org.apache.bval.jsr303.util;
 
-import java.lang.reflect.Type;
-
 import org.apache.bval.DynamicMetaBean;
 import org.apache.bval.jsr303.Jsr303MetaBeanFactory;
 import org.apache.bval.jsr303.UnknownPropertyException;
@@ -31,6 +29,8 @@ import org.apache.bval.util.KeyedAccess;
 import org.apache.bval.util.PropertyAccess;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
+
+import java.lang.reflect.Type;
 
 /**
  * {@link ValidationContext} traversal {@link CallbackProcedure}.

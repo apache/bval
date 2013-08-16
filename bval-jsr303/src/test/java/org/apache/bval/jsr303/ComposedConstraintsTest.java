@@ -18,8 +18,11 @@
  */
 package org.apache.bval.jsr303;
 
-import java.util.Locale;
-import java.util.Set;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.apache.bval.jsr303.example.CompanyAddress;
+import org.apache.bval.jsr303.example.FrenchAddress;
+import org.apache.bval.jsr303.util.TestUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -28,13 +31,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.bval.jsr303.example.CompanyAddress;
-import org.apache.bval.jsr303.example.FrenchAddress;
-import org.apache.bval.jsr303.util.TestUtils;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: <br/>

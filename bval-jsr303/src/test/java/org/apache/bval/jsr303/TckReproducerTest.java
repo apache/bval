@@ -27,7 +27,6 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Pattern;
-
 import java.util.Locale;
 import java.util.Set;
 

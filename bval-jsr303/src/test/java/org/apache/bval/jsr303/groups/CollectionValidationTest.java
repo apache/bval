@@ -18,17 +18,7 @@
  */
 package org.apache.bval.jsr303.groups;
 
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-
 import junit.framework.TestCase;
-
 import org.apache.bval.jsr303.DefaultMessageInterpolator;
 import org.apache.bval.jsr303.example.Address;
 import org.apache.bval.jsr303.example.Author;
@@ -39,6 +29,14 @@ import org.apache.bval.jsr303.example.Employee;
 import org.apache.bval.jsr303.example.Library;
 import org.apache.bval.jsr303.example.Person;
 import org.apache.bval.jsr303.util.TestUtils;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Description: <br/>

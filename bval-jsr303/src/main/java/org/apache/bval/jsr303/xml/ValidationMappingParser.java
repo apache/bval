@@ -111,17 +111,16 @@ public class ValidationMappingParser {
     }
 
     /** @param in XML stream to parse using the validation-mapping-1.0.xsd */
-    private ConstraintMappingsType parseXmlMappings(InputStream in) {
+    private ConstraintMappingsType parseXmlMappings(final InputStream in) {
         ConstraintMappingsType mappings;
         try {
-            JAXBContext jc = JAXBContext.newInstance(ConstraintMappingsType.class);
-            Unmarshaller unmarshaller = jc.createUnmarshaller();
+            final JAXBContext jc = JAXBContext.newInstance(ConstraintMappingsType.class);
+            final Unmarshaller unmarshaller = jc.createUnmarshaller();
             unmarshaller.setSchema(getSchema());
-            StreamSource stream = new StreamSource(in);
-            JAXBElement<ConstraintMappingsType> root =
-                  unmarshaller.unmarshal(stream, ConstraintMappingsType.class);
+            final StreamSource stream = new StreamSource(in);
+            final JAXBElement<ConstraintMappingsType> root = unmarshaller.unmarshal(stream, ConstraintMappingsType.class);
             mappings = root.getValue();
-        } catch (JAXBException e) {
+        } catch (final JAXBException e) {
             throw new ValidationException("Failed to parse XML deployment descriptor file.", e);
         } finally {
             IOUtils.closeQuietly(in);

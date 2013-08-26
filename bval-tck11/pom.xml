@@ -36,7 +36,7 @@ under the License.
         <tck.version>1.1.0.Final</tck.version>
         <owb.version>1.2.1-SNAPSHOT</owb.version>
         <arquillian.version>1.0.3.Final</arquillian.version>
-        <validation.provider>org.apache.bval.jsr303.ApacheValidationProvider</validation.provider>
+        <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
 
     <dependencies>
@@ -91,7 +91,7 @@ under the License.
         </dependency>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>bval-jsr303</artifactId>
+            <artifactId>bval-jsr</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -1,0 +1,76 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+//
+// $Id$
+//
+// Allows unit tests to run with a Java Security Manager
+//
+// Cloned from https://svn.apache.org/repos/asf/commons/proper/lang/trunk/src/test/resources/java.policy
+//
+// <argLine>-Djava.security.manager -Djava.security.policy=${basedir}/src/test/resources/java.policy</argLine>
+//
+
+grant
+{
+  // let everyone read target dir
+  permission java.io.FilePermission "${user.dir}/target/-", "read";
+};
+
+// we don't care about the permissions of the testing infrastructure,
+// including maven;
+grant codeBase "file://${user.home}/.m2/repository/org/apache/maven/-"
+{
+  permission java.security.AllPermission;
+};
+
+// junit;
+grant codeBase "file://${user.home}/.m2/repository/junit/-"
+{
+  permission java.security.AllPermission;
+};
+
+// mockito;
+grant codeBase "file://${user.home}/.m2/repository/org/mockito/-"
+{
+  permission java.security.AllPermission;
+};
+
+// objenesis (via mockito);
+grant codeBase "file://${user.home}/.m2/repository/org/objenesis/-"
+{
+  permission java.security.AllPermission;
+};
+
+// and our own testcases
+grant codeBase "file://${user.dir}/target/test-classes/-"
+{
+  permission java.security.AllPermission;
+};
+
+grant codeBase "file://${user.home}/.m2/repository/org/apache/bval/-"
+{
+  permission java.lang.RuntimePermission "accessDeclaredMembers";
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+};
+
+grant codeBase "file://${user.dir}/target/classes/-"
+{
+  permission java.lang.RuntimePermission "accessDeclaredMembers";
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+  permission java.io.FilePermission "${user.home}/.m2/repository/-", "read";
+};

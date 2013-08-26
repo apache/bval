@@ -28,8 +28,8 @@
     </parent>
 
     <artifactId>bval-tck-runner</artifactId>
-    <name>Apache BVal :: bval-tck (TCK Runner)</name>
-    <description>Aggregates dependencies and runs the JSR-303 TCK</description>
+    <name>Apache BVal :: bval-tck-runner (TCK Runner)</name>
+    <description>Aggregates dependencies and runs the JSR-349 TCK</description>
 
     <dependencies>
         <dependency>
@@ -74,7 +74,7 @@
 
     <properties>
         <jboss.home>/opt/jboss-5.1.0.GA</jboss.home>
-        <validation.provider>org.apache.bval.jsr303.ApacheValidationProvider</validation.provider>
+        <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
         <remote.debug />
     </properties>
 

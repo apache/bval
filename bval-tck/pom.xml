@@ -149,23 +149,10 @@
                 </property>
             </activation>
             <dependencies>
-                <!-- Use the geronimo-validation spec instead
-                <dependency>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </dependency>
-                -->
-                <dependency>
-                  <groupId>javax.validation</groupId>
-                  <artifactId>validation-api</artifactId>
-                  <scope>provided</scope>
-                </dependency>
-                <!-- TODO
                 <dependency>
                     <groupId>org.apache.geronimo.specs</groupId>
-                    <artifactId>geronimo-validation_1.0_spec</artifactId>
+                    <artifactId>geronimo-validation_1.1_spec</artifactId>
                 </dependency>
-                -->
                 <dependency>
                     <groupId>org.testng</groupId>
                     <artifactId>testng</artifactId>
@@ -258,22 +245,12 @@
                                             <classifier>suite</classifier>
                                             <overWrite>false</overWrite>
                                         </artifactItem>
-                                        <!-- TODO: use geronimo-validation spec -->
-                                        <artifactItem>
-                                            <groupId>javax.validation</groupId>
-                                            <artifactId>validation-api</artifactId>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
-                                        </artifactItem>
-
-                                        <!-- TODO
                                         <artifactItem>
                                             <groupId>org.apache.geronimo.specs</groupId>
-                                            <artifactId>geronimo-validation_1.0_spec</artifactId>
+                                            <artifactId>geronimo-validation_1.1_spec</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>
-                                        -->
                                         <artifactItem>
                                             <groupId>org.apache.bval</groupId>
                                             <artifactId>org.apache.bval.bundle</artifactId>

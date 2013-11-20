@@ -52,6 +52,19 @@ How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
+Release Notes - BVal - Version 1.1.0-alpha
+==========================================
+
+New Feature
+-----------
+
+    * [BVAL-122] - Implement Bean Validation 1.1
+
+Task
+-----------
+
+    * [BVAL-120] - Add bval-tck11 tck runner for future work on Bean Validation 1.1
+
 
 
 Release Notes - BVal - Version 0.5

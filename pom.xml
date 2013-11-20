@@ -33,7 +33,7 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache BVal :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>1.1.0-alpha-SNAPSHOT</version>
 
     <description>Apache BVal parent pom</description>
 

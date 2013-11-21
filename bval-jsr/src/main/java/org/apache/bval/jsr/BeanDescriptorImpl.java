@@ -236,6 +236,13 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return Collections.unmodifiableSet(validatedProperties);
     }
 
+    public MethodDescriptor getInternalConstraintsForMethod(final String methodName, final Class<?>... parameterTypes) {
+        if (methodName == null) {
+            throw new IllegalArgumentException("Method name can't be null");
+        }
+        return meta.methodConstraints.get(methodName + Arrays.toString(parameterTypes));
+    }
+
     public MethodDescriptor getConstraintsForMethod(final String methodName, final Class<?>... parameterTypes) {
         if (methodName == null) {
             throw new IllegalArgumentException("Method name can't be null");
@@ -823,10 +830,13 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                  */
                 final ConstraintAnnotationAttributes.Worker<? extends Annotation> worker = ConstraintAnnotationAttributes.VALUE.analyze(annotation.annotationType());
                 if (worker.isValid()) {
-                    Annotation[] children = Annotation[].class.cast(worker.read(annotation));
-                    if (children != null) {
-                        for (Annotation child : children) {
-                            processAnnotation(child, desc, access, validations); // recursion
+                    final Object value = worker.read(annotation);
+                    if (Annotation[].class.isInstance(value)) {
+                        final Annotation[] children = Annotation[].class.cast(value);
+                        if (children != null) {
+                            for (Annotation child : children) {
+                                processAnnotation(child, desc, access, validations); // recursion
+                            }
                         }
                     }
                 }

@@ -1064,7 +1064,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         }
 
         final MethodDescriptorImpl methodDescriptor = findMethodDescriptor(object, method);
-        if (methodDescriptor == null) { // no constraint
+        if (methodDescriptor == null || !(methodDescriptor.hasConstrainedParameters() || methodDescriptor.hasConstrainedReturnValue())) { // no constraint
             return Collections.emptySet();
         }
 
@@ -1110,7 +1110,9 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
     private <T> MethodDescriptorImpl findMethodDescriptor(final T object, final Method method) {
         // return MethodDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(object.getClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes()));
-        return MethodDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(method.getDeclaringClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes()));
+        return MethodDescriptorImpl.class.cast(
+            BeanDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(method.getDeclaringClass())))
+                .getInternalConstraintsForMethod(method.getName(), method.getParameterTypes()));
     }
 
     private <T> void initMetaBean(final GroupValidationContext<T> context, final MetaBeanFinder metaBeanFinder, final Class<?> directValueClass) {

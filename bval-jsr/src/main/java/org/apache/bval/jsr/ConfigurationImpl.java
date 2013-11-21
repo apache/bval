@@ -133,6 +133,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * {@inheritDoc}
      */
     public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
+        if (resolver == null) {
+            return this;
+        }
         traversableResolver = resolver;
         this.prepared = false;
         return this;
@@ -154,6 +157,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * {@inheritDoc}
      */
     public ConfigurationImpl messageInterpolator(MessageInterpolator resolver) {
+        if (resolver == null) {
+            return this;
+        }
         this.messageInterpolator = resolver;
         this.prepared = false;
         return this;
@@ -164,12 +170,19 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     public ConfigurationImpl constraintValidatorFactory(
           ConstraintValidatorFactory constraintFactory) {
+        if (constraintFactory == null) {
+            return this;
+        }
+
         this.constraintValidatorFactory = constraintFactory;
         this.prepared = false;
         return this;
     }
 
     public ApacheValidatorConfiguration parameterNameProvider(ParameterNameProvider parameterNameProvider) {
+        if (parameterNameProvider == null) {
+            return this;
+        }
         this.parameterNameProvider = parameterNameProvider;
         return this;
     }
@@ -182,6 +195,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @return this
      */
     public ApacheValidatorConfiguration addMapping(InputStream stream) {
+        if (stream == null) {
+            return this;
+        }
         mappingStreams.add(IOs.convertToMarkableInputStream(stream));
         return this;
     }

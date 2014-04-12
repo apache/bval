@@ -832,7 +832,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                 for (final ConstraintDescriptor<?> constraintDescriptor : paramDesc.getConstraintDescriptors()) {
                     final ConstraintValidation<?> validation = ConstraintValidation.class.cast(constraintDescriptor);
                     parametersContext.setCurrentGroup(paramDesc.mapGroup(current));
-                    validation.validate(parametersContext);
+                    validation.validateGroupContext(parametersContext);
                 }
                 parametersContext.moveUp(null, null);
             }
@@ -840,7 +840,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             for (final ConstraintDescriptor<?> d : crossParamConstraints) {
                 final ConstraintValidation<?> validation = ConstraintValidation.class.cast(d);
                 crossParameterContext.setCurrentGroup(crossParamDescriptor.mapGroup(current));
-                validation.validate(crossParameterContext);
+                validation.validateGroupContext(crossParameterContext);
             }
 
             if (gps.length == 0 && parametersContext.getListener().getConstraintViolations().size() + crossParameterContext.getListener().getConstraintViolations().size() > 0) {
@@ -871,7 +871,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                     for (final ConstraintDescriptor<?> constraintDescriptor : paramDesc.getConstraintDescriptors()) {
                         final ConstraintValidation<?> validation = ConstraintValidation.class.cast(constraintDescriptor);
                         parametersContext.setCurrentGroup(paramDesc.mapGroup(current));
-                        validation.validate(parametersContext);
+                        validation.validateGroupContext(parametersContext);
                     }
                     parametersContext.moveUp(null, null);
                 }
@@ -879,7 +879,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                 for (final ConstraintDescriptor<?> d : crossParamConstraints) {
                     final ConstraintValidation<?> validation = ConstraintValidation.class.cast(d);
                     crossParameterContext.setCurrentGroup(crossParamDescriptor.mapGroup(current));
-                    validation.validate(crossParameterContext);
+                    validation.validateGroupContext(crossParameterContext);
                 }
 
                 if (parametersContext.getListener().getConstraintViolations().size() + crossParameterContext.getListener().getConstraintViolations().size() > 0) {
@@ -996,7 +996,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             for (final ConstraintDescriptor<?> d : returnedValueConstraints) {
                 final ConstraintValidation<?> validation = ConstraintValidation.class.cast(d);
                 context.setCurrentGroup(returnedValueDescriptor.mapGroup(current));
-                validation.validate(context);
+                validation.validateGroupContext(context);
             }
 
             if (gps.length == 0 && !context.getListener().getConstraintViolations().isEmpty()) {
@@ -1025,7 +1025,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                     final ConstraintValidation<?> validation = ConstraintValidation.class.cast(d);
                     // context.setCurrentGroup(returnedValueDescriptor.mapGroup(current)); // mapping is only relevant for cascaded validations
                     context.setCurrentGroup(current);
-                    validation.validate(context);
+                    validation.validateGroupContext(context);
                 }
 
                 if (!context.getListener().getConstraintViolations().isEmpty()) {
@@ -1146,13 +1146,13 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             // 1. process groups
             for (final Group current : groups.getGroups()) {
                 context.setCurrentGroup(current);
-                validation.validate(context);
+                validation.validateGroupContext(context);
             }
             // 2. process sequences
             for (final List<Group> eachSeq : groups.getSequences()) {
                 for (final Group current : eachSeq) {
                     context.setCurrentGroup(current);
-                    validation.validate(context);
+                    validation.validateGroupContext(context);
                     /**
                      * if one of the group process in the sequence leads to one
                      * or more validation failure, the groups following in the

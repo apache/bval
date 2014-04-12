@@ -143,7 +143,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      * {@inheritDoc}
      */
     public <L extends ValidationListener> void validate(ValidationContext<L> context) {
-        validate((GroupValidationContext<?>) context);
+        validateGroupContext((GroupValidationContext<?>) context);
     }
 
     /**
@@ -151,7 +151,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      *
      * @param context root
      */
-    public void validate(final GroupValidationContext<?> context) {
+    public void validateGroupContext(final GroupValidationContext<?> context) {
         if (validator == null) {
             synchronized (this) {
                 if (validator == null) {

@@ -716,4 +716,13 @@ public class ValidationTest extends TestCase {
         Assert.assertFalse(beanDescriptor.isBeanConstrained());
         Assert.assertNull(beanDescriptor.getConstraintsForProperty("[0]"));
     }
+    
+    public void testValidateClassImplementingCloneable() {
+    	Set<ConstraintViolation<TestCloneableClass>> errors = validator.validate(new TestCloneableClass());
+    	Assert.assertTrue(errors.isEmpty());
+    }
+    
+    private static class TestCloneableClass implements Cloneable {
+    	
+    }
 }

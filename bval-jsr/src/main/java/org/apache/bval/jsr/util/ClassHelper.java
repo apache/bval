@@ -44,7 +44,7 @@ public class ClassHelper {
      * @param clazz
      */
     static public List<Class<?>> fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
-        if (clazz == null || clazz == Object.class || clazz == Serializable.class) {
+        if (clazz == null || clazz == Object.class || clazz == Serializable.class || clazz == Cloneable.class) {
             return allClasses;
         }
         if (allClasses.contains(clazz)) {

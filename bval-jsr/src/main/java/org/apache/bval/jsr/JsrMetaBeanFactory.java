@@ -97,10 +97,6 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
             // time of processing
             for (int i = classSequence.size() - 1; i >= 0; i--) {
                 Class<?> eachClass = classSequence.get(i);
-                if (eachClass == Serializable.class || eachClass == Cloneable.class) {
-                    continue;
-                }
-
                 processClass(eachClass, metabean);
                 processGroupSequence(eachClass, metabean, "{GroupSequence:" + eachClass.getCanonicalName() + "}");
             }

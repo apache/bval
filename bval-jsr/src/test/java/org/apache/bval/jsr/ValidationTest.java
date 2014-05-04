@@ -723,6 +723,6 @@ public class ValidationTest extends TestCase {
     }
     
     private static class TestCloneableClass implements Cloneable {
-    	
+
     }
 }

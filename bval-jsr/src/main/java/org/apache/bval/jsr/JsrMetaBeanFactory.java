@@ -149,6 +149,9 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
         }
         final Method[] methods = Reflection.INSTANCE.getDeclaredMethods(beanClass);
         for (final Method method : methods) {
+            if (method.isSynthetic() || method.isBridge()) {
+                continue;
+            }
             String propName = null;
             if (method.getParameterTypes().length == 0) {
                 propName = MethodAccess.getPropertyName(method);

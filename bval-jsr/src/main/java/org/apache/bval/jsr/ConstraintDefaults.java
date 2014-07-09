@@ -82,6 +82,12 @@ public class ConstraintDefaults {
                 constraintProperties.load(stream);
             } catch (IOException e) {
                 log.log(Level.SEVERE, String.format("Cannot load %s", resource), e);
+            } finally {
+                try {
+                    stream.close();
+                } catch (final IOException e) {
+                    // no-op
+                }
             }
         } else {
             log.log(Level.WARNING, String.format("Cannot find %s", resource));

@@ -151,8 +151,8 @@ public class BValExtension implements Extension {
         final int modifiers = javaClass.getModifiers();
         if (!javaClass.getName().startsWith("javax.") && !javaClass.getName().startsWith("org.apache.bval")
                 && !javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
-            ensureFactoryValidator();
             try {
+                ensureFactoryValidator();
                 final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
                 if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
                     || hasValidationAnnotation(annotatedType.getMethods())
@@ -168,7 +168,7 @@ public class BValExtension implements Extension {
                     pat.setAnnotatedType(bValAnnotatedType);
                 }
             } catch (final ValidationException ve) {
-                LOGGER.log(Level.SEVERE, ve.getMessage(), ve);
+                LOGGER.log(Level.FINEST, ve.getMessage(), ve);
             }
         }
     }

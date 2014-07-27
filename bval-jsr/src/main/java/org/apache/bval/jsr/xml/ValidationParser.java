@@ -18,8 +18,6 @@
  */
 package org.apache.bval.jsr.xml;
 
-
-import org.apache.bval.cdi.BValExtension;
 import org.apache.bval.jsr.BootstrapConfigurationImpl;
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.util.IOs;
@@ -41,7 +39,6 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -63,7 +60,7 @@ import java.util.logging.Logger;
  * Description: uses jaxb to parse validation.xml<br/>
  */
 @SuppressWarnings("restriction")
-public class ValidationParser implements Closeable {
+public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final String VALIDATION_CONFIGURATION_XSD = "META-INF/validation-configuration-1.1.xsd";
     private static final Logger log = Logger.getLogger(ValidationParser.class.getName());
@@ -72,7 +69,6 @@ public class ValidationParser implements Closeable {
     private ValidationConfigType xmlConfig;
     private BootstrapConfigurationImpl bootstrap;
     private Collection<ValidationException> exceptions = new CopyOnWriteArrayList<ValidationException>();
-    private Collection<BValExtension.Releasable> releasables = new CopyOnWriteArrayList<BValExtension.Releasable>();
 
     private ValidationParser() {
         // no-op
@@ -273,7 +269,7 @@ public class ValidationParser implements Closeable {
         if (targetConfig.getParameterNameProvider() == targetConfig.getDefaultParameterNameProvider()) { // ref ==
             if (parameterNameProvider != null) {
                 final Class<? extends ParameterNameProvider> clazz = Class.class.cast(loadClass(parameterNameProvider));
-                targetConfig.parameterNameProvider(newInstance(clazz));
+                targetConfig.parameterNameProviderClass(clazz);
                 log.log(Level.INFO, String.format("Using %s as validation provider.", parameterNameProvider));
             }
         }
@@ -298,7 +294,7 @@ public class ValidationParser implements Closeable {
             if (messageInterpolatorClass != null) {
                 Class<MessageInterpolator> clazz = (Class<MessageInterpolator>)
                         loadClass(messageInterpolatorClass);
-                target.messageInterpolator(newInstance(clazz));
+                target.messageInterpolatorClass(clazz);
                 log.log(Level.INFO, String.format("Using %s as message interpolator.", messageInterpolatorClass));
             }
         }
@@ -312,37 +308,9 @@ public class ValidationParser implements Closeable {
             if (traversableResolverClass != null) {
                 Class<TraversableResolver> clazz = (Class<TraversableResolver>)
                         loadClass(traversableResolverClass);
-                target.traversableResolver(newInstance(clazz));
+                target.traversableResolverClass(clazz);
                 log.log(Level.INFO, String.format("Using %s as traversable resolver.", traversableResolverClass));
             }
-        }
-    }
-
-    private <T> T newInstance(final Class<T> cls) {
-        if (System.getSecurityManager() == null) {
-            return doNewInstance(cls);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<T>() {
-            public T run() {
-                return doNewInstance(cls);
-            }
-        });
-    }
-
-    private <T> T doNewInstance(final Class<T> cls) {
-        try {
-            try {
-                final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
-                releasables.add(releasable);
-                return releasable.getInstance();
-            } catch (final Exception e) {
-                return cls.newInstance();
-            } catch (final NoClassDefFoundError error) {
-                return cls.newInstance();
-            }
-        } catch (final Exception ex) {
-            exceptions.add(new ValidationException("Cannot instantiate : " + cls, ex));
-            return null; // ensure BootstrapConfiguration can be read even if class can't be instantiated
         }
     }
 
@@ -354,7 +322,7 @@ public class ValidationParser implements Closeable {
             if (constraintFactoryClass != null) {
                 Class<ConstraintValidatorFactory> clazz = (Class<ConstraintValidatorFactory>)
                         loadClass(constraintFactoryClass);
-                target.constraintValidatorFactory(newInstance(clazz));
+                target.constraintValidatorFactoryClass(clazz);
                 log.log(Level.INFO, String.format("Using %s as constraint factory.", constraintFactoryClass));
             }
         }
@@ -401,12 +369,5 @@ public class ValidationParser implements Closeable {
         if (!exceptions.isEmpty()) {
             throw  exceptions.iterator().next();
         }
-    }
-
-    public void close() throws IOException {
-        for (final BValExtension.Releasable<?> releasable : releasables) {
-            releasable.release();
-        }
-        releasables.clear();
     }
 }

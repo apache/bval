@@ -18,10 +18,13 @@
  */
 package org.apache.bval.cdi;
 
+import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
+
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
+import javax.enterprise.inject.spi.AnnotatedCallable;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -36,11 +39,16 @@ import javax.naming.NamingException;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.Configuration;
 import javax.validation.Validation;
+import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableType;
+import javax.validation.executable.ValidateOnExecution;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.MethodType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +69,14 @@ public class BValExtension implements Extension {
     private boolean validatorFound = Boolean.getBoolean("bval.in-container");
     private boolean validatorFactoryFound = Boolean.getBoolean("bval.in-container");
 
+    private boolean validBean;
+    private boolean validConstructors;
+    private boolean validBusinessMethods;
+    private boolean validGetterMethods;
+
     private final Configuration<?> config;
+    private ValidatorFactory factory;
+    private Validator validator;
 
     private Set<ExecutableType> globalExecutableTypes;
     private boolean isExecutableValidationEnabled;
@@ -72,12 +87,27 @@ public class BValExtension implements Extension {
             final BootstrapConfiguration bootstrap = config.getBootstrapConfiguration();
             globalExecutableTypes = convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes());
             isExecutableValidationEnabled = bootstrap.isExecutableValidationEnabled();
+
+            validBean = globalExecutableTypes.contains(ExecutableType.IMPLICIT) || globalExecutableTypes.contains(ExecutableType.ALL);
+            validConstructors =validBean || globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS);
+            validBusinessMethods = validBean || globalExecutableTypes.contains(ExecutableType.NON_GETTER_METHODS);
+            validGetterMethods = globalExecutableTypes.contains(ExecutableType.ALL) || globalExecutableTypes.contains(ExecutableType.GETTER_METHODS);
         } catch (final Exception e) { // custom providers can throw an exception
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
 
             globalExecutableTypes = Collections.emptySet();
             isExecutableValidationEnabled = false;
         }
+    }
+
+    // lazily to get a small luck to have CDI in place
+    private void ensureFactoryValidator() {
+        if (validator != null) {
+            return;
+        }
+        config.addProperty("bval.before.cdi", "true"); // ignore parts of the config relying on CDI since we didn't start yet
+        factory = factory != null ? factory : config.buildValidatorFactory();
+        validator = factory.getValidator();
     }
 
     private static Set<ExecutableType> convertToRuntimeTypes(final Set<ExecutableType> defaultValidatedExecutableTypes) {
@@ -107,10 +137,6 @@ public class BValExtension implements Extension {
     }
 
     public void addBvalBinding(final @Observes BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
-        if (!isExecutableValidationEnabled) {
-            return;
-        }
-
         beforeBeanDiscovery.addInterceptorBinding(BValBinding.class);
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
     }
@@ -120,12 +146,40 @@ public class BValExtension implements Extension {
             return;
         }
 
-        final Class<A> javaClass = pat.getAnnotatedType().getJavaClass();
+        final AnnotatedType<A> annotatedType = pat.getAnnotatedType();
+        final Class<A> javaClass = annotatedType.getJavaClass();
         final int modifiers = javaClass.getModifiers();
         if (!javaClass.getName().startsWith("javax.") && !javaClass.getName().startsWith("org.apache.bval")
                 && !javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
-            pat.setAnnotatedType(new BValAnnotatedType<A>(pat.getAnnotatedType()));
+            ensureFactoryValidator();
+            try {
+                final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
+                if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
+                    || hasValidationAnnotation(annotatedType.getMethods())
+                    || hasValidationAnnotation(annotatedType.getConstructors())
+                    || (validBean && classConstraints.isBeanConstrained())
+                    || (validConstructors && !classConstraints.getConstrainedConstructors().isEmpty())
+                    || (validBusinessMethods && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty())
+                    || (validGetterMethods && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
+                    // TODO: keep track of bValAnnotatedType and remove @BValBinding in
+                    // ProcessBean event if needed cause here we can't really add @ValidateOnExecution
+                    // through an extension
+                    final BValAnnotatedType<A> bValAnnotatedType = new BValAnnotatedType<A>(annotatedType);
+                    pat.setAnnotatedType(bValAnnotatedType);
+                }
+            } catch (final ValidationException ve) {
+                LOGGER.log(Level.SEVERE, ve.getMessage(), ve);
+            }
         }
+    }
+
+    private static <A> boolean hasValidationAnnotation(final Collection<? extends AnnotatedCallable<? super A>> methods) {
+        for (final AnnotatedCallable<? super A> m : methods) {
+            if (m.isAnnotationPresent(ValidateOnExecution.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public <A> void processBean(final @Observes ProcessBean<A> processBeanEvent) {
@@ -148,35 +202,47 @@ public class BValExtension implements Extension {
     }
 
     public void addBValBeans(final @Observes AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
-        captureBeanManager(beanManager);
+        if (factory != null) { // cleanup cache used to discover ValidateOnException before factory is recreated
+            factory.close();
+        }
+
+        captureBeanManager(beanManager); // next method will need it
         cdiIntegration(afterBeanDiscovery, beanManager);
     }
 
     private void captureBeanManager(final BeanManager beanManager) {
         // bean manager holder
         if (bmpSingleton == null) {
-            bmpSingleton = this;
+            synchronized (LOGGER) { // a static instance
+                if (bmpSingleton == null) {
+                    bmpSingleton = this;
+                }
+            }
         }
+
         final BeanManagerInfo bmi = getBeanManagerInfo(loader());
         bmi.loadTimeBm = beanManager;
     }
 
     private void cdiIntegration(final AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
-        // add validator and validatorFactory if needed
-        ValidatorFactory factory = null;
+        try {
+            config.addProperty("bval.before.cdi", "false"); // now take into account all the config
+        } catch (final Exception e) {
+            // no-op: sadly tck does it
+        }
+
         if (!validatorFactoryFound) {
-            try {
-                factory = config.buildValidatorFactory();
-                afterBeanDiscovery.addBean(new ValidatorFactoryBean(factory));
+            try { // recreate the factory
+                afterBeanDiscovery.addBean(new ValidatorFactoryBean(factory = config.buildValidatorFactory()));
             } catch (final Exception e) { // can throw an exception with custom providers
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
         if (!validatorFound) {
             try {
-                if (factory == null) {
+                if (validatorFactoryFound) {
                     factory = config.buildValidatorFactory();
-                }
+                } // else fresh factory already created in previous if
                 afterBeanDiscovery.addBean(new ValidatorBean(factory.getValidator()));
                 validatorFound = true;
             } catch (final Exception e) { // getValidator can throw an exception with custom providers
@@ -216,14 +282,14 @@ public class BValExtension implements Extension {
         return result;
     }
 
-    public void cleanupFinalBeanManagers(final @Observes AfterDeploymentValidation adv) {
+    public void cleanupFinalBeanManagers(final @Observes AfterDeploymentValidation ignored) {
         for (final BeanManagerInfo bmi : bmpSingleton.bmInfos.values()) {
             bmi.finalBm = null;
         }
     }
 
-    public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown beforeShutdown) {
-        if (bmpSingleton.bmInfos != null) {
+    public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown ignored) {
+        if (bmpSingleton != null && bmpSingleton.bmInfos != null) {
             bmpSingleton.bmInfos.remove(loader());
         }
     }

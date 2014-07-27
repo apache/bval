@@ -58,8 +58,8 @@ public class BValExtension implements Extension {
     private static BValExtension bmpSingleton = null;
     private volatile Map<ClassLoader, BeanManagerInfo> bmInfos = new ConcurrentHashMap<ClassLoader, BeanManagerInfo>();
 
-    private boolean validatorFound = false;
-    private boolean validatorFactoryFound = false;
+    private boolean validatorFound = Boolean.getBoolean("bval.in-container");
+    private boolean validatorFactoryFound = Boolean.getBoolean("bval.in-container");
 
     private final Configuration<?> config;
 

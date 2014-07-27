@@ -223,7 +223,9 @@ public class BValExtension implements Extension {
     }
 
     public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown beforeShutdown) {
-        bmpSingleton.bmInfos.remove(loader());
+        if (bmpSingleton.bmInfos != null) {
+            bmpSingleton.bmInfos.remove(loader());
+        }
     }
 
     private static BeanManager resolveBeanManagerViaJndi() {

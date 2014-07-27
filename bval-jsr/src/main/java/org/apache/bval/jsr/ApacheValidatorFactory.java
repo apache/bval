@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
-    private static final ConstraintDefaults defaultConstraints = new ConstraintDefaults();
+    private static final ConstraintDefaults DEFAULT_CONSTRAINTS = new ConstraintDefaults();
 
     private MessageInterpolator messageResolver;
     private TraversableResolver traversableResolver;
@@ -76,6 +76,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final ConcurrentMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>> constraintMap;
 
     private final Collection<Closeable> toClose = new ArrayList<Closeable>();
+    private volatile boolean init;
 
     /**
      * Convenience method to retrieve a default global ApacheValidatorFactory
@@ -122,10 +123,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     protected void configure(final ConfigurationState configuration) {
         getProperties().putAll(configuration.getProperties());
-        setParameterNameProvider(configuration.getParameterNameProvider());
-        setMessageInterpolator(configuration.getMessageInterpolator());
-        setTraversableResolver(configuration.getTraversableResolver());
-        setConstraintValidatorFactory(configuration.getConstraintValidatorFactory());
+
+        parameterNameProvider = configuration.getParameterNameProvider();
+        messageResolver = configuration.getMessageInterpolator();
+        traversableResolver = configuration.getTraversableResolver();
+        constraintValidatorFactory = configuration.getConstraintValidatorFactory();
 
         if (ConfigurationImpl.class.isInstance(configuration)) {
             final ConfigurationImpl impl = ConfigurationImpl.class.cast(configuration);
@@ -305,7 +307,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return ConstraintDefaults
      */
     public ConstraintDefaults getDefaultConstraints() {
-        return defaultConstraints;
+        return DEFAULT_CONSTRAINTS;
     }
 
     /**

@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr;
 
-
+import org.apache.bval.cdi.BValExtension;
 import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
 import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr.util.IOs;
@@ -37,6 +37,7 @@ import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -46,7 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Description: used to configure apache-validation for jsr.
@@ -55,8 +56,6 @@ import java.util.logging.Logger;
  * <br/>
  */
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
-    private static final Logger log = Logger.getLogger(ConfigurationImpl.class.getName());
-
     /**
      * Configured {@link ValidationProvider}
      */
@@ -78,22 +77,30 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     protected MessageInterpolator defaultMessageInterpolator = new DefaultMessageInterpolator();
     protected MessageInterpolator messageInterpolator = defaultMessageInterpolator;
+    protected Class<? extends MessageInterpolator> messageInterpolatorClass = null;
 
     /**
      * Configured {@link ConstraintValidatorFactory}
      */
     protected ConstraintValidatorFactory defaultConstraintValidatorFactory = new DefaultConstraintValidatorFactory();
     protected ConstraintValidatorFactory constraintValidatorFactory = defaultConstraintValidatorFactory;
+    protected Class<? extends ConstraintValidatorFactory> constraintValidatorFactoryClass = null;
 
-    private TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
-    private TraversableResolver traversableResolver = defaultTraversableResolver;
+    protected TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
+    protected TraversableResolver traversableResolver = defaultTraversableResolver;
+    protected Class<? extends TraversableResolver> traversableResolverClass = null;
 
     protected ParameterNameProvider defaultParameterNameProvider = new DefaultParameterNameProvider();
     protected ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
+    protected Class<? extends ParameterNameProvider> parameterNameProviderClass = null;
 
     protected BootstrapConfiguration  bootstrapConfiguration;
 
     protected Collection<ExecutableType> executableValidation;
+
+    private Collection<BValExtension.Releasable> releasables = new CopyOnWriteArrayList<BValExtension.Releasable>();
+
+    private boolean beforeCdi = false;
 
     // BEGIN DEFAULTS
     /**
@@ -110,8 +117,8 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     /**
      * Create a new ConfigurationImpl instance.
-     * @param aState
-     * @param aProvider
+     * @param aState bootstrap state
+     * @param aProvider provider
      */
     public ConfigurationImpl(BootstrapState aState, ValidationProvider<?> aProvider) {
         if (aProvider != null) {
@@ -136,7 +143,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (resolver == null) {
             return this;
         }
-        traversableResolver = resolver;
+
+        this.traversableResolverClass = null;
+        this.traversableResolver = resolver;
         this.prepared = false;
         return this;
     }
@@ -160,6 +169,8 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (resolver == null) {
             return this;
         }
+
+        this.messageInterpolatorClass = null;
         this.messageInterpolator = resolver;
         this.prepared = false;
         return this;
@@ -174,6 +185,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             return this;
         }
 
+        this.constraintValidatorFactoryClass = null;
         this.constraintValidatorFactory = constraintFactory;
         this.prepared = false;
         return this;
@@ -183,6 +195,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (parameterNameProvider == null) {
             return this;
         }
+        this.parameterNameProviderClass = null;
         this.parameterNameProvider = parameterNameProvider;
         return this;
     }
@@ -211,7 +224,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @return this
      */
     public ApacheValidatorConfiguration addProperty(String name, String value) {
-        properties.put(name, value);
+        if ("bval.before.cdi".equals(name)) {
+            beforeCdi = Boolean.parseBoolean(value);
+        } else {
+            properties.put(name, value);
+        }
         return this;
     }
 
@@ -263,6 +280,17 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * {@inheritDoc}
      */
     public MessageInterpolator getMessageInterpolator() {
+        if (beforeCdi) {
+            return defaultMessageInterpolator;
+        }
+
+        if (messageInterpolator == defaultMessageInterpolator && messageInterpolatorClass != null) {
+            synchronized (this) {
+                if (messageInterpolator == defaultMessageInterpolator && messageInterpolatorClass != null) {
+                    messageInterpolator = newInstance(messageInterpolatorClass);
+                }
+            }
+        }
         return messageInterpolator;
     }
 
@@ -332,6 +360,17 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @return the constraint validator factory of this configuration.
      */
     public ConstraintValidatorFactory getConstraintValidatorFactory() {
+        if (beforeCdi) {
+            return constraintValidatorFactory;
+        }
+
+        if (constraintValidatorFactory == defaultConstraintValidatorFactory && constraintValidatorFactoryClass != null) {
+            synchronized (this) {
+                if (constraintValidatorFactory == defaultConstraintValidatorFactory && constraintValidatorFactoryClass != null) {
+                    constraintValidatorFactory = newInstance(constraintValidatorFactoryClass);
+                }
+            }
+        }
         return constraintValidatorFactory;
     }
 
@@ -339,10 +378,32 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * {@inheritDoc}
      */
     public TraversableResolver getTraversableResolver() {
+        if (beforeCdi) {
+            return defaultTraversableResolver;
+        }
+
+        if (traversableResolver == defaultTraversableResolver && traversableResolverClass != null) {
+            synchronized (this) {
+                if (traversableResolver == defaultTraversableResolver && traversableResolverClass != null) {
+                    traversableResolver = newInstance(traversableResolverClass);
+                }
+            }
+        }
         return traversableResolver;
     }
 
     public ParameterNameProvider getParameterNameProvider() {
+        if (beforeCdi) {
+            return defaultParameterNameProvider;
+        }
+
+        if (parameterNameProvider == defaultParameterNameProvider && parameterNameProviderClass != null) {
+            synchronized (this) {
+                if (parameterNameProvider == defaultParameterNameProvider && parameterNameProviderClass != null) {
+                    parameterNameProvider = newInstance(parameterNameProviderClass);
+                }
+            }
+        }
         return parameterNameProvider;
     }
 
@@ -372,7 +433,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     /**
      * Set {@link ValidationProvider} class.
-     * @param providerClass
+     * @param providerClass the provider type
      */
     public void setProviderClass(Class<? extends ValidationProvider<?>> providerClass) {
         this.providerClass = providerClass;
@@ -400,14 +461,64 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     public Closeable getClosable() {
-        return parser;
+        return new Closeable() {
+            public void close() throws IOException {
+                for (final BValExtension.Releasable<?> releasable : releasables) {
+                    releasable.release();
+                }
+                releasables.clear();
+            }
+        };
     }
 
-    public ValidationParser getParser() {
-        return parser;
+    private <T> T newInstance(final Class<T> cls) {
+        if (System.getSecurityManager() == null) {
+            return createInstance(cls);
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<T>() {
+            public T run() {
+                return createInstance(cls);
+            }
+        });
     }
 
-    public void setParser(ValidationParser parser) {
-        this.parser = parser;
+    private <T> T createInstance(final Class<T> cls) {
+        try {
+            final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
+            releasables.add(releasable);
+            return releasable.getInstance();
+        } catch (final Exception e) {
+            try {
+                return cls.newInstance();
+            } catch (final InstantiationException e1) {
+                throw new ValidationException(e1.getMessage(), e1);
+            } catch (final IllegalAccessException e1) {
+                throw new ValidationException(e1.getMessage(), e1);
+            }
+        } catch (final NoClassDefFoundError error) {
+            try {
+                return cls.newInstance();
+            } catch (final InstantiationException e1) {
+                throw new ValidationException(e1.getMessage(), e1);
+            } catch (final IllegalAccessException e1) {
+                throw new ValidationException(e1.getMessage(), e1);
+            }
+        }
+    }
+
+    public void traversableResolverClass(final Class<TraversableResolver> clazz) {
+        traversableResolverClass = clazz;
+    }
+
+    public void constraintValidatorFactoryClass(final Class<ConstraintValidatorFactory> clazz) {
+        constraintValidatorFactoryClass = clazz;
+    }
+
+    public void messageInterpolatorClass(final Class<MessageInterpolator> clazz) {
+        messageInterpolatorClass = clazz;
+    }
+
+    public void parameterNameProviderClass(final Class<? extends ParameterNameProvider> clazz) {
+        parameterNameProviderClass = clazz;
     }
 }

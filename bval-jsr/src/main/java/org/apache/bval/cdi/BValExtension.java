@@ -157,10 +157,10 @@ public class BValExtension implements Extension {
                 if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
                     || hasValidationAnnotation(annotatedType.getMethods())
                     || hasValidationAnnotation(annotatedType.getConstructors())
-                    || (validBean && classConstraints.isBeanConstrained())
-                    || (validConstructors && !classConstraints.getConstrainedConstructors().isEmpty())
-                    || (validBusinessMethods && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty())
-                    || (validGetterMethods && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
+                    || (validBean && classConstraints != null && classConstraints.isBeanConstrained())
+                    || (validConstructors && classConstraints != null && !classConstraints.getConstrainedConstructors().isEmpty())
+                    || (validBusinessMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty())
+                    || (validGetterMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
                     // TODO: keep track of bValAnnotatedType and remove @BValBinding in
                     // ProcessBean event if needed cause here we can't really add @ValidateOnExecution
                     // through an extension

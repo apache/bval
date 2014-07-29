@@ -333,11 +333,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         createBootstrapConfiguration();
         parser.applyConfigWithInstantiation(this); // instantiate the config if needed
 
-        // TODO: maybe find a better way to communicate between validator factory and config
-        if (getBootstrapConfiguration().isExecutableValidationEnabled()) {
-            getProperties().put(Properties.EXECUTABLE_VALIDATION_TYPES, executableValidationTypesAsString());
-        }
-
         prepared = true;
         return this;
     }

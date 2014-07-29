@@ -63,7 +63,9 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
             if (useCdi) {
                 try {
                     final BValExtension.Releasable<T> instance = BValExtension.inject(constraintClass);
-                    releasables.add(instance);
+                    if (instance != null) {
+                        releasables.add(instance);
+                    }
                     return instance.getInstance();
                 } catch (final Exception e) {
                     return constraintClass.newInstance();

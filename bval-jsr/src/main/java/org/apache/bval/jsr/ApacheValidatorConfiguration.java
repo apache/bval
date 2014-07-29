@@ -87,7 +87,5 @@ public interface ApacheValidatorConfiguration
          * </ol>
          */
          String METABEAN_FACTORY_CLASSNAMES = "apache.bval.metabean-factory-classnames";
-
-        String EXECUTABLE_VALIDATION_TYPES = "apache.bval.executable-validation.types";
     }
 }

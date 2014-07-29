@@ -89,7 +89,7 @@ public class BValInterceptor {
         final Object result = context.proceed();
 
         {
-            final Set<ConstraintViolation<?>> violations = executableValidator.validateConstructorReturnValue(constructor, result);
+            final Set<ConstraintViolation<?>> violations = executableValidator.validateConstructorReturnValue(constructor, context.getTarget());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }

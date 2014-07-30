@@ -18,13 +18,11 @@
  */
 package org.apache.bval.arquillian;
 
-import org.jboss.arquillian.container.test.spi.client.deployment.ApplicationArchiveProcessor;
 import org.jboss.arquillian.core.spi.LoadableExtension;
 import org.jboss.arquillian.test.spi.TestEnricher;
 
 public class BValArquillianExtension implements LoadableExtension {
     public void register(final ExtensionBuilder builder) {
-        builder.service(TestEnricher.class, EJBEnricher.class)
-            .service(ApplicationArchiveProcessor.class, CdiMethodValidationProcessor.class);
+        builder.service(TestEnricher.class, EJBEnricher.class);
     }
 }

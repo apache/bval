@@ -18,8 +18,6 @@
  */
 package org.apache.bval.cdi;
 
-import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
-
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -243,17 +241,14 @@ public class BValExtension implements Extension {
                 if (validatorFactoryFound) {
                     factory = config.buildValidatorFactory();
                 } // else fresh factory already created in previous if
-                afterBeanDiscovery.addBean(new ValidatorBean(factory.getValidator()));
+                afterBeanDiscovery.addBean(new ValidatorBean(factory, factory.getValidator()));
                 validatorFound = true;
             } catch (final Exception e) { // getValidator can throw an exception with custom providers
+                afterBeanDiscovery.addBean(new ValidatorBean(factory, null));
+                validatorFound = true;
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
-
-        // add our interceptor, after having added validator if needed since it is injected in the interceptor
-        if (validatorFound) {
-            afterBeanDiscovery.addBean(new BValInterceptorBean(beanManager));
-        } // else we couldn't resolve the interceptor injection point
     }
 
     private static ClassLoader loader() {

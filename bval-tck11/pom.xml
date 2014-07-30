@@ -34,7 +34,7 @@ under the License.
 
     <properties>
         <tck.version>1.1.0.Final</tck.version>
-        <owb.version>1.2.1</owb.version>
+        <owb.version>2.0.0-SNAPSHOT</owb.version>
         <arquillian.version>1.0.3.Final</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
@@ -100,7 +100,7 @@ under the License.
         </dependency>
         <dependency>
             <groupId>org.apache.openwebbeans</groupId>
-            <artifactId>openwebbeans-cdi11-preview</artifactId>
+            <artifactId>openwebbeans-impl</artifactId>
             <version>${owb.version}</version>
             <scope>test</scope>
         </dependency>

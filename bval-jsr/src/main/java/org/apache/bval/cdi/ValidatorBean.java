@@ -24,6 +24,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -33,9 +34,11 @@ import java.util.Set;
 public class ValidatorBean implements Bean<Validator> , PassivationCapable{
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
-    private final Validator instance;
+    private final ValidatorFactory factory;
+    private volatile Validator instance;
 
-    public ValidatorBean(Validator validator) {
+    public ValidatorBean(final ValidatorFactory factory, final Validator validator) {
+        this.factory = factory;
         this.instance = validator;
 
         types = new HashSet<Type>();
@@ -84,6 +87,13 @@ public class ValidatorBean implements Bean<Validator> , PassivationCapable{
     }
 
     public Validator create(final CreationalContext<Validator> context) {
+        if (instance == null) {
+            synchronized (this) {
+                if (instance == null) {
+                    instance = factory.getValidator();
+                }
+            }
+        }
         return instance;
     }
 

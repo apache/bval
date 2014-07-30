@@ -21,7 +21,7 @@ think to add -Dvalidation.provider=org.apache.bval.jsr303.ApacheValidationProvid
 <suite name="tmp" verbose="1">
   <test name="tmp">
     <classes>
-      <class name="org.hibernate.beanvalidation.tck.tests.constraints.invalidconstraintdefinitions.InvalidConstraintDefinitionsTest">
+      <class name="org.hibernate.beanvalidation.tck.tests.bootstrap.customprovider.BootstrapCustomProviderDefinedInServiceFileTest">
         <methods>
 
         </methods>

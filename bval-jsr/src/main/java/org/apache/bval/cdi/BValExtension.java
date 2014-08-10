@@ -48,6 +48,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,6 +61,17 @@ import java.util.logging.Logger;
 // TODO: get rid of beans.xml adding interceptor automatically
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
+
+    // extension point, we can add a SPI if needed, today mainly a fallback "API" for TomEE if we encounter an issue
+    public static Collection<String> SKIPPED_PREFIXES = new HashSet<String>();
+    static {
+        SKIPPED_PREFIXES.add("java.");
+        SKIPPED_PREFIXES.add("javax.");
+        SKIPPED_PREFIXES.add("org.apache.bval.");
+        SKIPPED_PREFIXES.add("org.apache.openejb.");
+        SKIPPED_PREFIXES.add("org.apache.deltaspike."); // should be checked when upgrading
+        SKIPPED_PREFIXES.add("org.apache.myfaces."); // should be checked when upgrading
+    }
 
     private static BValExtension bmpSingleton = null;
     private volatile Map<ClassLoader, BeanManagerInfo> bmInfos = new ConcurrentHashMap<ClassLoader, BeanManagerInfo>();
@@ -139,6 +151,15 @@ public class BValExtension implements Extension {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
     }
 
+    protected boolean skip(final String name) {
+        for (final String p : SKIPPED_PREFIXES) {
+            if (name.startsWith(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat) {
         if (!isExecutableValidationEnabled) {
             return;
@@ -147,8 +168,12 @@ public class BValExtension implements Extension {
         final AnnotatedType<A> annotatedType = pat.getAnnotatedType();
         final Class<A> javaClass = annotatedType.getJavaClass();
         final int modifiers = javaClass.getModifiers();
-        if (!javaClass.getName().startsWith("javax.") && !javaClass.getName().startsWith("org.apache.bval")
-                && !javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
+        final String name = javaClass.getName();
+        if (skip(name)) {
+            return;
+        }
+
+        if (!javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
             try {
                 ensureFactoryValidator();
                 final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);

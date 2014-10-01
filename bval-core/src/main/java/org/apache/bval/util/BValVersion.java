@@ -18,18 +18,21 @@
  */
 package org.apache.bval.util;
 
-import org.apache.bval.util.reflection.Reflection;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.StringTokenizer;
+
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * This class contains version information for BVal.
  * It uses Ant's filter tokens to convert the template into a java
  * file with current information.
  */
+@Privilizing(@CallTo(Reflection.class))
 public class BValVersion {
 
     /** Project name */
@@ -157,7 +160,7 @@ public class BValVersion {
      * {@inheritDoc}
      */
     public String toString() {
-        StringBuilder buf = new StringBuilder(80 * 40);
+        final StringBuilder buf = new StringBuilder(80 * 40);
         appendBanner(buf);
         buf.append("\n");
 
@@ -169,8 +172,7 @@ public class BValVersion {
         appendProperty("java.vendor", buf).append("\n\n");
 
         buf.append("java.class.path:\n");
-        StringTokenizer tok = new StringTokenizer(
-            Reflection.INSTANCE.getProperty("java.class.path"));
+        final StringTokenizer tok = new StringTokenizer(Reflection.getProperty("java.class.path"));
         while (tok.hasMoreTokens()) {
             buf.append("\t").append(tok.nextToken());
             buf.append("\n");
@@ -191,7 +193,6 @@ public class BValVersion {
     }
 
     private StringBuilder appendProperty(String prop, StringBuilder buf) {
-        return buf.append(prop).append(": ").append(
-            Reflection.INSTANCE.getProperty(prop));
+        return buf.append(prop).append(": ").append(Reflection.getProperty(prop));
     }
 }

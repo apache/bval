@@ -33,6 +33,8 @@ import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
@@ -49,6 +51,7 @@ import javax.validation.metadata.MethodType;
 import javax.validation.metadata.ParameterDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.ReturnValueDescriptor;
+
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -72,6 +75,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * Description: Implements {@link BeanDescriptor}.<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDescriptor {
     private static final CopyOnWriteArraySet<ConstraintValidation<?>> NO_CONSTRAINTS = new CopyOnWriteArraySet<ConstraintValidation<?>>();
     private static final Validation[] EMPTY_VALIDATION = new Validation[0];
@@ -120,7 +124,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         Class<?> current = prop.getParentMetaBean().getBeanClass();
         while (current != null && current != Object.class && (!methodFound || !fieldFound)) {
             if (!fieldFound) {
-                final Field field = Reflection.INSTANCE.getDeclaredField(current, prop.getName());
+                final Field field = Reflection.getDeclaredField(current, prop.getName());
                 if (field != null) {
                     processConvertGroup(edesc, field);
                     fieldFound = true;
@@ -129,12 +133,12 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
             if (!methodFound) {
                 final String name = Character.toUpperCase(prop.getName().charAt(0)) + prop.getName().substring(1);
-                Method m = Reflection.INSTANCE.getDeclaredMethod(current, "get" + name);
+                Method m = Reflection.getDeclaredMethod(current, "get" + name);
                 if (m != null) {
                     processConvertGroup(edesc, m);
                     methodFound = true;
                 } else {
-                    m = Reflection.INSTANCE.getDeclaredMethod(current, "is" + name);
+                    m = Reflection.getDeclaredMethod(current, "is" + name);
                     if (m != null) {
                         processConvertGroup(edesc, m);
                         methodFound = true;
@@ -359,7 +363,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         }
 
         private void buildConstructorConstraints() throws InvocationTargetException, IllegalAccessException {
-            for (final Constructor<?> cons : Reflection.INSTANCE.getDeclaredConstructors(metaBean.getBeanClass())) {
+            for (final Constructor<?> cons : Reflection.getDeclaredConstructors(metaBean.getBeanClass())) {
                 final ConstructorDescriptorImpl consDesc = new ConstructorDescriptorImpl(metaBean, EMPTY_VALIDATION);
                 contructorConstraints.put(Arrays.toString(cons.getParameterTypes()), consDesc);
 
@@ -500,7 +504,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
             final List<Class<?>> classHierarchy = ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), current);
             classHierarchy.remove(current);
 
-            for (final Method method : Reflection.INSTANCE.getDeclaredMethods(current)) {
+            for (final Method method : Reflection.getDeclaredMethods(current)) {
                 if (Modifier.isStatic(method.getModifiers()) || method.isSynthetic()) {
                     continue;
                 }
@@ -518,10 +522,10 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
 
                 final Collection<Method> parents = new ArrayList<Method>();
                 for (final Class<?> clazz : classHierarchy) {
-                    final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
-                    if (overriden != null) {
-                        parents.add(overriden);
-                        processMethod(overriden, methodDesc);
+                    final Method overridden = Reflection.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
+                    if (overridden != null) {
+                        parents.add(overridden);
+                        processMethod(overridden, methodDesc);
                     }
                 }
 
@@ -564,7 +568,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     final Class<?>[] interfaces = method.getDeclaringClass().getInterfaces();
                     final Collection<Method> itfWithThisMethod = new ArrayList<Method>();
                     for (final Class<?> i : interfaces) {
-                        final Method m = Reflection.INSTANCE.getDeclaredMethod(i, method.getName(), method.getParameterTypes());
+                        final Method m = Reflection.getDeclaredMethod(i, method.getName(), method.getParameterTypes());
                         if (m != null) {
                             itfWithThisMethod.add(m);
                         }
@@ -582,9 +586,9 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                         returnValid++;
                     }
                     for (final Class<?> clazz : classHierarchy) {
-                        final Method overriden = Reflection.INSTANCE.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
-                        if (overriden != null) {
-                            if (overriden.getAnnotation(Valid.class) != null) {
+                        final Method overridden = Reflection.getDeclaredMethod(clazz, method.getName(), method.getParameterTypes());
+                        if (overridden != null) {
+                            if (overridden.getAnnotation(Valid.class) != null) {
                                 returnValid++;
                             }
                         }

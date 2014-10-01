@@ -234,7 +234,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     }
 
     private <A extends Annotation, T> ConstraintValidator<A, ? super T> getConstraintValidator(A annotation,
-                                                                                               Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
+        Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
         if (constraintClasses != null && constraintClasses.length > 0) {
             Type type = determineTargetedType(owner, access);
 

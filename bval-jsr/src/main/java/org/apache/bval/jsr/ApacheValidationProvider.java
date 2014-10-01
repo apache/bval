@@ -18,16 +18,15 @@
  */
 package org.apache.bval.jsr;
 
-import org.apache.commons.lang3.ClassUtils;
-
 import javax.validation.Configuration;
 import javax.validation.ValidationException;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr
@@ -98,15 +97,10 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
         // No privileges should be required to access the constructor,
         // because the classloader of ApacheValidationProvider will always
         // be an ancestor of the loader of validatorFactoryClass.
-        return (System.getSecurityManager() == null)
-            ? instantiateValidatorFactory(validatorFactoryClass, configuration) : AccessController
-                .doPrivileged(new PrivilegedAction<ValidatorFactory>() {
-                    public ValidatorFactory run() {
-                        return instantiateValidatorFactory(validatorFactoryClass, configuration);
-                    }
-                });
+        return instantiateValidatorFactory(validatorFactoryClass, configuration);
     }
 
+    @Privileged
     private static ValidatorFactory instantiateValidatorFactory(
         final Class<? extends ValidatorFactory> validatorFactoryClass, final ConfigurationState configuration) {
         try {

@@ -18,10 +18,19 @@
  */
 package org.apache.bval.jsr;
 
-import org.apache.bval.jsr.groups.GroupsComputer;
-import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
-import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
@@ -34,21 +43,12 @@ import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
 import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.bval.jsr.groups.GroupsComputer;
+import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
+import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
  * Description: helper class that builds a {@link ConstraintValidation} or its
@@ -78,22 +78,11 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     /** build attributes, payload, groups from 'annotation' */
+    @Privileged
     private void buildFromAnnotation() {
-        if (constraintValidation.getAnnotation() != null) {
-            if (System.getSecurityManager() == null) {
-                doBuildFromAnnotations();
-            } else {
-                AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                    public Object run() {
-                        doBuildFromAnnotations();
-                        return null;
-                    }
-                });
-            }
+        if (constraintValidation.getAnnotation() == null) {
+            return;
         }
-    }
-
-    private void doBuildFromAnnotations() {
         final Class<? extends Annotation> annotationType = constraintValidation.getAnnotation().annotationType();
 
         boolean foundPayload = false;

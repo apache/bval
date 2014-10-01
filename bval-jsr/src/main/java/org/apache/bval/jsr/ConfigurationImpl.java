@@ -18,11 +18,16 @@
  */
 package org.apache.bval.jsr;
 
-import org.apache.bval.cdi.BValExtension;
-import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
-import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
-import org.apache.bval.jsr.util.IOs;
-import org.apache.bval.jsr.xml.ValidationParser;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.validation.BootstrapConfiguration;
 import javax.validation.ConstraintValidatorFactory;
@@ -36,18 +41,13 @@ import javax.validation.executable.ExecutableType;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.apache.bval.cdi.BValExtension;
+import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
+import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
+import org.apache.bval.jsr.util.IOs;
+import org.apache.bval.jsr.xml.ValidationParser;
+import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
  * Description: used to configure apache-validation for jsr.
@@ -98,7 +98,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     protected Collection<ExecutableType> executableValidation;
 
-    private Collection<BValExtension.Releasable> releasables = new CopyOnWriteArrayList<BValExtension.Releasable>();
+    private Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
 
     private boolean beforeCdi = false;
 
@@ -305,27 +305,18 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * @throws ValidationException if the ValidatorFactory cannot be built
      */
     public ValidatorFactory buildValidatorFactory() {
-        if (System.getSecurityManager() == null) {
-            return doPrivBuildValidatorFactory(this);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<ValidatorFactory>() {
-            public ValidatorFactory run() {
-                return doPrivBuildValidatorFactory(ConfigurationImpl.this);
-            }
-        });
+            return doBuildValidatorFactory();
     }
 
-    public ValidatorFactory doPrivBuildValidatorFactory(final ConfigurationImpl impl) {
+    @Privileged
+    private ValidatorFactory doBuildValidatorFactory() {
         prepare();
         parser.ensureValidatorFactoryCanBeBuilt();
-        if (provider != null) {
-            return provider.buildValidatorFactory(impl);
-        } else {
-            return findProvider().buildValidatorFactory(impl);
-        }
+        final ValidationProvider<?> useProvider = provider == null ? findProvider() : provider;
+        return useProvider.buildValidatorFactory(this);
     }
 
-    public ConfigurationImpl prepare() {
+    private ConfigurationImpl prepare() {
         if (prepared) {
             return this;
         }
@@ -466,38 +457,19 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         };
     }
 
+    @Privileged
     private <T> T newInstance(final Class<T> cls) {
-        if (System.getSecurityManager() == null) {
-            return createInstance(cls);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<T>() {
-            public T run() {
-                return createInstance(cls);
-            }
-        });
-    }
-
-    private <T> T createInstance(final Class<T> cls) {
         try {
             final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
             releasables.add(releasable);
             return releasable.getInstance();
         } catch (final Exception e) {
-            try {
-                return cls.newInstance();
-            } catch (final InstantiationException e1) {
-                throw new ValidationException(e1.getMessage(), e1);
-            } catch (final IllegalAccessException e1) {
-                throw new ValidationException(e1.getMessage(), e1);
-            }
         } catch (final NoClassDefFoundError error) {
-            try {
-                return cls.newInstance();
-            } catch (final InstantiationException e1) {
-                throw new ValidationException(e1.getMessage(), e1);
-            } catch (final IllegalAccessException e1) {
-                throw new ValidationException(e1.getMessage(), e1);
-            }
+        }
+        try {
+            return cls.newInstance();
+        } catch (final Exception e) {
+            throw new ValidationException(e.getMessage(), e);
         }
     }
 

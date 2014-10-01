@@ -18,6 +18,33 @@
  */
 package org.apache.bval.jsr;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
+import javax.validation.ConstraintViolation;
+import javax.validation.ElementKind;
+import javax.validation.ValidationException;
+import javax.validation.executable.ExecutableValidator;
+import javax.validation.groups.Default;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.ParameterDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
+
 import org.apache.bval.DynamicMetaBean;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.jsr.groups.Group;
@@ -40,34 +67,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
-
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintTarget;
-import javax.validation.ConstraintViolation;
-import javax.validation.ElementKind;
-import javax.validation.ValidationException;
-import javax.validation.executable.ExecutableValidator;
-import javax.validation.groups.Default;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.ParameterDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.weaver.privilizer.Privileged;
 
 // TODO: centralize treatMapsLikeBeans
 
@@ -312,18 +312,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         return this;
     }
 
+    @Privileged
     private <T> T newInstance(final Class<T> cls) {
-        if (System.getSecurityManager() == null) {
-            return doNewInstance(cls);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<T>() {
-            public T run() {
-                return doNewInstance(cls);
-            }
-        });
-    }
-
-    private <T> T doNewInstance(final Class<T> cls) {
         try {
             Constructor<T> cons = cls.getConstructor(ApacheFactoryContext.class);
             if (!cons.isAccessible()) {
@@ -399,6 +389,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
                 // For each owner in the hierarchy
                 for (final Class<?> owner : classHierarchy) {
+                    
                     context.setCurrentOwner(owner);
 
                     int numViolations = result.violationsSize();

@@ -18,15 +18,17 @@ package org.apache.bval.jsr;
 
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.commons.weaver.privilizer.Privileged;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,27 +42,27 @@ public enum ConstraintAnnotationAttributes {
     /**
      * "message"
      */
-    MESSAGE(false, "message"),
+    MESSAGE("message"),
 
     /**
      * "groups"
      */
-    GROUPS(false, "groups"),
+    GROUPS("groups"),
 
     /**
      * "payload"
      */
-    PAYLOAD(false, "payload"),
+    PAYLOAD("payload"),
 
     /**
      * "validationAppliesTo"
      */
-    VALIDATION_APPLIES_TO(true, "validationAppliesTo"),
+    VALIDATION_APPLIES_TO("validationAppliesTo"),
 
     /**
      * "value" for multi-valued constraints
      */
-    VALUE(true, "value");
+    VALUE("value");
 
     @SuppressWarnings("unused")
     private static class Types {
@@ -72,11 +74,9 @@ public enum ConstraintAnnotationAttributes {
     }
 
     private final Type type;
-    private final boolean permitNullDefaultValue;
     private final String attributeName;
 
-    private ConstraintAnnotationAttributes(final boolean permitNullDefaultValue, final String name) {
-        this.permitNullDefaultValue = permitNullDefaultValue;
+    private ConstraintAnnotationAttributes(final String name) {
         this.attributeName = name;
         try {
             this.type = Types.class.getDeclaredField(getAttributeName()).getGenericType();
@@ -133,6 +133,7 @@ public enum ConstraintAnnotationAttributes {
 
     public <C extends Annotation> Worker<C> analyze(final Class<C> clazz) {
         if (clazz.getName().startsWith("javax.validation.constraint.")) { // cache only APIs classes to avoid memory leaks
+            @SuppressWarnings("unchecked")
             Worker<C> w = Worker.class.cast(WORKER_CACHE.get(clazz));
             if (w == null) {
                 w = new Worker<C>(clazz);
@@ -154,6 +155,8 @@ public enum ConstraintAnnotationAttributes {
             throw new RuntimeException("Impossible normally");
         }
     }
+
+    @Privilizing(@CallTo(Reflection.class))
     public class Worker<C extends Annotation> {
 
         public final Method method;
@@ -180,7 +183,7 @@ public enum ConstraintAnnotationAttributes {
             if (found != null) {
                 return found;
             }
-            final Method m = Reflection.INSTANCE.getPublicMethod(constraintType, attributeName);
+            final Method m = Reflection.getPublicMethod(constraintType, attributeName);
             if (m == null) {
                 cache.putIfAbsent(attributeName, NULL_METHOD);
                 return null;
@@ -199,17 +202,13 @@ public enum ConstraintAnnotationAttributes {
             return method != null && method != NULL_METHOD;
         }
 
-        public Object read(final Annotation constraint) {
-            if (System.getSecurityManager() == null) {
-                return doInvoke(constraint);
-            }
-            return AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                public Object run() {
-                    return doInvoke(constraint);
-                }
-            });
+        public <T> T read(final Annotation constraint) {
+            @SuppressWarnings("unchecked")
+            final T result = (T) doInvoke(constraint);
+            return result;
         }
 
+        @Privileged
         private Object doInvoke(final Annotation constraint) {
             try {
                 return method.invoke(constraint);

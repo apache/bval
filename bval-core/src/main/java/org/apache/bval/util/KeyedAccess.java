@@ -16,6 +16,7 @@
  */
 package org.apache.bval.util;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 import java.lang.annotation.ElementType;
@@ -43,13 +44,13 @@ public class KeyedAccess extends AccessStrategy {
     public static Type getJavaElementType(Type containerType) {
         if (TypeUtils.isAssignable(containerType, Map.class)) {
             Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(containerType, Map.class);
-            return typeArguments.containsKey(MAP_TYPEVARS[1]) ? typeArguments.get(MAP_TYPEVARS[1]) : Object.class;
+            return ObjectUtils.defaultIfNull(TypeUtils.unrollVariables(typeArguments, MAP_TYPEVARS[1]), Object.class);
         }
         return null;
     }
 
-    private Type containerType;
-    private Object key;
+    private final Type containerType;
+    private final Object key;
 
     /**
      * Create a new KeyedAccess instance.
@@ -71,7 +72,7 @@ public class KeyedAccess extends AccessStrategy {
         if (instance instanceof Map<?, ?>) {
             Map<?, ?> map = (Map<?, ?>) instance;
             Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(containerType, Map.class);
-            Type keyType = typeArguments.get(MAP_TYPEVARS[0]);
+            Type keyType = TypeUtils.unrollVariables(typeArguments, MAP_TYPEVARS[0]);
             if (key == null || keyType == null || TypeUtils.isInstance(key, keyType)) {
                 return map.get(key);
             }
@@ -106,7 +107,7 @@ public class KeyedAccess extends AccessStrategy {
      */
     @Override
     public Type getJavaType() {
-        Type result = getJavaElementType(containerType);
+        final Type result = getJavaElementType(containerType);
         return result == null ? Object.class : result;
     }
 

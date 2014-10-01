@@ -18,11 +18,20 @@
  */
 package org.apache.bval.jsr.xml;
 
-import org.apache.bval.jsr.BootstrapConfigurationImpl;
-import org.apache.bval.jsr.ConfigurationImpl;
-import org.apache.bval.jsr.util.IOs;
-import org.apache.bval.util.reflection.Reflection;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -39,27 +48,20 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.bval.jsr.BootstrapConfigurationImpl;
+import org.apache.bval.jsr.ConfigurationImpl;
+import org.apache.bval.jsr.util.IOs;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privileged;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
+import org.xml.sax.SAXException;
 
 /**
  * Description: uses jaxb to parse validation.xml<br/>
  */
-@SuppressWarnings("restriction")
+@Privilizing(@CallTo(Reflection.class))
 public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final String VALIDATION_CONFIGURATION_XSD = "META-INF/validation-configuration-1.1.xsd";
@@ -160,6 +162,7 @@ public class ValidationParser {
         return map;
     }
 
+    @Privileged
     private static ValidationConfigType parseXmlConfig(final String validationXmlFile) {
         InputStream inputStream = null;
         try {
@@ -189,7 +192,7 @@ public class ValidationParser {
     }
 
     protected static InputStream getInputStream(final String path) throws IOException {
-        final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
+        final ClassLoader loader = Reflection.getClassLoader(ValidationParser.class);
         final InputStream inputStream = loader.getResourceAsStream(path);
 
         if (inputStream != null) {
@@ -219,7 +222,7 @@ public class ValidationParser {
             return schema;
         }
 
-        final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
+        final ClassLoader loader = Reflection.getClassLoader(ValidationParser.class);
         final SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         final URL schemaUrl = loader.getResource(xsd);
         try {
@@ -268,7 +271,8 @@ public class ValidationParser {
         final String parameterNameProvider = xmlConfig.getParameterNameProvider();
         if (targetConfig.getParameterNameProvider() == targetConfig.getDefaultParameterNameProvider()) { // ref ==
             if (parameterNameProvider != null) {
-                final Class<? extends ParameterNameProvider> clazz = Class.class.cast(loadClass(parameterNameProvider));
+                final Class<? extends ParameterNameProvider> clazz =
+                    loadClass(parameterNameProvider).asSubclass(ParameterNameProvider.class);
                 targetConfig.parameterNameProviderClass(clazz);
                 log.log(Level.INFO, String.format("Using %s as validation provider.", parameterNameProvider));
             }
@@ -354,7 +358,7 @@ public class ValidationParser {
     }
 
     private Class<?> loadClass(final String className) {
-        final ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationParser.class);
+        final ClassLoader loader = Reflection.getClassLoader(ValidationParser.class);
         try {
             return Class.forName(className, true, loader);
         } catch (final ClassNotFoundException ex) {

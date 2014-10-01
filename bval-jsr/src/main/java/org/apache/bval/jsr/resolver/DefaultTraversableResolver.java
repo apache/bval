@@ -18,14 +18,18 @@ package org.apache.bval.jsr.resolver;
 
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
+
 import java.lang.annotation.ElementType;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** @see javax.validation.TraversableResolver */
+@Privilizing(@CallTo(Reflection.class))
 public class DefaultTraversableResolver implements TraversableResolver, CachingRelevant {
     private static final Logger log = Logger.getLogger(DefaultTraversableResolver.class.getName());
     private static final boolean LOG_FINEST = log.isLoggable(Level.FINEST);
@@ -71,9 +75,9 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     /** Tries to load detect and load JPA. */
     @SuppressWarnings("unchecked")
     private void initJpa() {
-        final ClassLoader classLoader = getClassLoader();
+        final ClassLoader classLoader = Reflection.getClassLoader(DefaultTraversableResolver.class);
         try {
-            Reflection.INSTANCE.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
+            Reflection.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
             if (LOG_FINEST) {
                 log.log(Level.FINEST, String.format("Found %s on classpath.", PERSISTENCE_UTIL_CLASSNAME));
             }
@@ -100,10 +104,5 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
      */
     public boolean needsCaching() {
         return jpaTR != null && CachingTraversableResolver.needsCaching(jpaTR);
-    }
-
-    private static ClassLoader getClassLoader()
-    {
-      return Reflection.INSTANCE.getClassLoader(DefaultTraversableResolver.class);
     }
 }

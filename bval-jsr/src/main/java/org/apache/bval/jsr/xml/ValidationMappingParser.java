@@ -16,17 +16,23 @@
  */
 package org.apache.bval.jsr.xml;
 
-
-import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.ConstraintAnnotationAttributes;
-import org.apache.bval.jsr.util.EnumerationConverter;
-import org.apache.bval.jsr.util.IOs;
-import org.apache.bval.util.FieldAccess;
-import org.apache.bval.util.MethodAccess;
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.Converter;
-import org.apache.commons.lang3.StringUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -38,30 +44,25 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr.util.EnumerationConverter;
+import org.apache.bval.jsr.util.IOs;
+import org.apache.bval.util.FieldAccess;
+import org.apache.bval.util.MethodAccess;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.Converter;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.weaver.privilizer.Privileged;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Uses JAXB to parse constraints.xml based on validation-mapping-1.0.xsd.<br>
  */
-@SuppressWarnings("restriction")
+@Privilizing(@CallTo(Reflection.class))
 public class ValidationMappingParser {
     //    private static final Log log = LogFactory.getLog(ValidationMappingParser.class);
     private static final String VALIDATION_MAPPING_XSD = "META-INF/validation-mapping-1.1.xsd";
@@ -199,7 +200,7 @@ public class ValidationMappingParser {
 
     private <A extends Annotation> Class<?> getAnnotationParameterType(
           final Class<A> annotationClass, final String name) {
-        final Method m = Reflection.INSTANCE.getPublicMethod(annotationClass, name);
+        final Method m = Reflection.getPublicMethod(annotationClass, name);
         if (m == null) {
             throw new ValidationException("Annotation of type " + annotationClass.getName() +
                   " does not contain a parameter " + name + ".");
@@ -384,7 +385,7 @@ public class ValidationMappingParser {
             } else {
                 methodNames.add(methodName);
             }
-            final Method method = Reflection.INSTANCE.getDeclaredMethod(beanClass, methodName, toTypes(methodType.getParameter(), defaultPackage));
+            final Method method = Reflection.getDeclaredMethod(beanClass, methodName, toTypes(methodType.getParameter(), defaultPackage));
             if (method == null) {
                 throw new ValidationException(beanClass.getName() + " does not contain the method  " + methodName);
             }
@@ -418,7 +419,7 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : p.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConverGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         constraint.setIndex(i);
                         factory.addMetaConstraint(beanClass, constraint);
                     }
@@ -445,7 +446,7 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : returnValue.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConverGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         factory.addMetaConstraint(beanClass, constraint);
                     }
                 }
@@ -465,7 +466,7 @@ public class ValidationMappingParser {
 
     private <A> void processConstructorLevel(final List<ConstructorType> constructors, final Class<A> beanClass, final String defaultPackage, final boolean parentIgnore) {
         for (final ConstructorType constructorType : constructors) {
-            final Constructor<?> constructor = Reflection.INSTANCE.getDeclaredConstructor(beanClass, toTypes(constructorType.getParameter(), defaultPackage));
+            final Constructor<?> constructor = Reflection.getDeclaredConstructor(beanClass, toTypes(constructorType.getParameter(), defaultPackage));
             if (constructor == null) {
                 throw new ValidationException(beanClass.getName() + " does not contain the constructor  " + constructorType);
             }
@@ -499,7 +500,7 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : p.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, new AnnotationProxyBuilder.ConverGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         constraint.setIndex(i);
                         factory.addMetaConstraint(beanClass, constraint);
                     }
@@ -531,7 +532,7 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : returnValue.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, new AnnotationProxyBuilder.ConverGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         constraint.setIndex(-1);
                         factory.addMetaConstraint(beanClass, constraint);
                     }
@@ -574,7 +575,7 @@ public class ValidationMappingParser {
             } else {
                 fieldNames.add(fieldName);
             }
-            final Field field = Reflection.INSTANCE.getDeclaredField(beanClass, fieldName);
+            final Field field = Reflection.getDeclaredField(beanClass, fieldName);
             if (field == null) {
                 throw new ValidationException(
                       beanClass.getName() + " does not contain the fieldType  " + fieldName);
@@ -592,7 +593,7 @@ public class ValidationMappingParser {
             for (final GroupConversionType conversion : fieldType.getConvertGroup()) {
                 final Class<?> from = loadClass(conversion.getFrom(), defaultPackage);
                 final Class<?> to = loadClass(conversion.getTo(), defaultPackage);
-                final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, field, new AnnotationProxyBuilder.ConverGroupAnnotation(from, to));
+                final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, field, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                 factory.addMetaConstraint(beanClass, constraint);
             }
 
@@ -637,7 +638,7 @@ public class ValidationMappingParser {
             for (final GroupConversionType conversion : getterType.getConvertGroup()) {
                 final Class<?> from = loadClass(conversion.getFrom(), defaultPackage);
                 final Class<?> to = loadClass(conversion.getTo(), defaultPackage);
-                final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConverGroupAnnotation(from, to));
+                final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                 factory.addMetaConstraint(beanClass, constraint);
             }
 
@@ -746,19 +747,8 @@ public class ValidationMappingParser {
         return clazz.contains(".");
     }
 
-    private static Method getGetter(final Class<?> clazz, final String propertyName) {
-        if (System.getSecurityManager() == null) {
-            return doGetGetter(propertyName, clazz);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<Method>() {
-            public Method run() {
-                return doGetGetter(propertyName, clazz);
-            }
-        });
-
-    }
-
-    private static Method doGetGetter(String propertyName, Class<?> clazz) {
+    @Privileged
+    private static Method getGetter(Class<?> clazz,String propertyName) {
         try {
             final String p = StringUtils.capitalize(propertyName);
             try {
@@ -771,9 +761,8 @@ public class ValidationMappingParser {
         }
     }
 
-
     private Class<?> loadClass(final String className) {
-        ClassLoader loader = Reflection.INSTANCE.getClassLoader(ValidationMappingParser.class);
+        ClassLoader loader = Reflection.getClassLoader(ValidationMappingParser.class);
         if (loader == null)
             loader = getClass().getClassLoader();
 

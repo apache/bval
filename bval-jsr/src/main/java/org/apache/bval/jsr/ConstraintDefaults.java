@@ -18,12 +18,9 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.ConstraintValidator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -32,10 +29,17 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.validation.ConstraintValidator;
+
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
+
 /**
  * Description: Provides access to the default constraints/validator implementation classes built into the framework.
  * These are configured in DefaultConstraints.properties.<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class ConstraintDefaults {
     private static final Logger log = Logger.getLogger(ConstraintDefaults.class.getName());
     private static final String DEFAULT_CONSTRAINTS =
@@ -101,31 +105,11 @@ public class ConstraintDefaults {
             while (tokens.hasMoreTokens()) {
                 final String eachClassName = tokens.nextToken();
 
-                Class<?> constraintValidatorClass;
-                if (System.getSecurityManager() == null) {
-                    try {
-                        constraintValidatorClass = Class.forName(eachClassName, true, classloader);
-                    } catch (final ClassNotFoundException e) {
-                        log.log(Level.SEVERE, String.format("Cannot find class %s", eachClassName), e);
-                        constraintValidatorClass = null;
-                    }
-                } else {
-                    constraintValidatorClass = AccessController.doPrivileged(new PrivilegedAction<Class<?>>() {
-                          public Class<?> run() {
-                              try {
-                                  return Class.forName(eachClassName, true, classloader);
-                              } catch (final ClassNotFoundException e) {
-                                  log.log(Level.SEVERE, String.format("Cannot find class %s", eachClassName), e);
-                                  return null;
-                              }
-                          }
-                      });
+                try {
+                    classes.add(Reflection.getClass(classloader, eachClassName));
+                } catch (Exception e) {
+                    log.log(Level.SEVERE, String.format("Cannot find class %s", eachClassName), e);
                 }
-
-                if (constraintValidatorClass != null) {
-                    classes.add(constraintValidatorClass);
-                }
-
             }
 
             loadedConstraints.put((String) entry.getKey(), classes.toArray(new Class[classes.size()]));

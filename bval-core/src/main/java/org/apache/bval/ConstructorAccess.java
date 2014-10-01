@@ -16,13 +16,11 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.util.AccessStrategy;
-
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+import org.apache.bval.util.AccessStrategy;
 
 public class ConstructorAccess extends AccessStrategy {
 
@@ -30,18 +28,7 @@ public class ConstructorAccess extends AccessStrategy {
 
     public ConstructorAccess(final Constructor<?> constructor) {
         this.constructor = constructor;
-        if (!constructor.isAccessible()) {
-            if (System.getSecurityManager() == null) {
-                constructor.setAccessible(true);
-            } else {
-                AccessController.doPrivileged(new PrivilegedAction<Void>() {
-                    public Void run() {
-                        constructor.setAccessible(true);
-                        return null;
-                    }
-                });
-            }
-        }
+        setAccessible(constructor);
     }
 
     @Override

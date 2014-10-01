@@ -32,12 +32,15 @@ import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
+
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -55,6 +58,7 @@ import java.util.logging.Logger;
  * Description: process the class annotations for JSR303 constraint validations to build the MetaBean with information
  * from annotations and JSR303 constraint mappings (defined in xml)<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class JsrMetaBeanFactory implements MetaBeanFactory {
     /** Shared log instance */
     // of dubious utility as it's static :/
@@ -87,8 +91,8 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
             processGroupSequence(beanClass, metabean);
 
             // process class, superclasses and interfaces
-            List<Class<?>> classSequence = new ArrayList<Class<?>>();
-            ClassHelper.fillFullClassHierarchyAsList(classSequence, beanClass);
+            final List<Class<?>> classSequence =
+                ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), beanClass);
 
             // start with superclasses and go down the hierarchy so that
             // the child classes are processed last to have the chance to
@@ -126,7 +130,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
 
         final Collection<String> missingValid = new ArrayList<String>();
 
-        final Field[] fields = Reflection.INSTANCE.getDeclaredFields(beanClass);
+        final Field[] fields = Reflection.getDeclaredFields(beanClass);
         for (final Field field : fields) {
             MetaProperty metaProperty = metabean.getProperty(field.getName());
             // create a property for those fields for which there is not yet a
@@ -147,7 +151,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
                 }
             }
         }
-        final Method[] methods = Reflection.INSTANCE.getDeclaredMethods(beanClass);
+        final Method[] methods = Reflection.getDeclaredMethods(beanClass);
         for (final Method method : methods) {
             if (method.isSynthetic() || method.isBridge()) {
                 continue;

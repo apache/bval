@@ -46,6 +46,10 @@
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-weaver-privilizer-api</artifactId>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>junit</groupId>
@@ -88,6 +92,10 @@
         <configuration>
             <excludeFilterFile>findbugs-exclude-filter.xml</excludeFilterFile>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-weaver-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

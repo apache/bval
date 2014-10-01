@@ -18,6 +18,18 @@
  */
 package org.apache.bval.jsr;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.ConstraintValidatorFactory;
+import javax.validation.MessageInterpolator;
+import javax.validation.ParameterNameProvider;
+import javax.validation.TraversableResolver;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.ValidatorContext;
+
 import org.apache.bval.IntrospectorMetaBeanFactory;
 import org.apache.bval.MetaBeanBuilder;
 import org.apache.bval.MetaBeanFactory;
@@ -29,24 +41,15 @@ import org.apache.bval.xml.XMLMetaBeanFactory;
 import org.apache.bval.xml.XMLMetaBeanManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ParameterNameProvider;
-import javax.validation.TraversableResolver;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorContext;
-import java.lang.reflect.Constructor;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.weaver.privilizer.Privileged;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Description: Represents the context that is used to create
  * <code>ClassValidator</code> instances.<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class ApacheFactoryContext implements ValidatorContext {
     private final ApacheValidatorFactory factory;
     private final MetaBeanFinder metaBeanFinder;
@@ -238,18 +241,8 @@ public class ApacheFactoryContext implements ValidatorContext {
         return new MetaBeanManager(new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
     }
 
+    @Privileged
     private <F extends MetaBeanFactory> F createMetaBeanFactory(final Class<F> cls) {
-        if (System.getSecurityManager() == null) {
-            return doCreateMetaBeanFactory(cls);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<F>() {
-            public F run() {
-                return doCreateMetaBeanFactory(cls);
-            }
-        });
-    }
-
-    private <F extends MetaBeanFactory> F doCreateMetaBeanFactory(final Class<F> cls) {
         try {
             Constructor<F> c = ConstructorUtils.getMatchingAccessibleConstructor(cls, ApacheFactoryContext.this.getClass());
             if (c != null) {
@@ -294,7 +287,7 @@ public class ApacheFactoryContext implements ValidatorContext {
 
     private Class<?> loadClass(final String className) {
         try {
-            return Class.forName(className, true, Reflection.INSTANCE.getClassLoader(ApacheFactoryContext.class));
+            return Class.forName(className, true, Reflection.getClassLoader(ApacheFactoryContext.class));
         } catch (ClassNotFoundException ex) {
             throw new ValidationException("Unable to load class: " + className, ex);
         }

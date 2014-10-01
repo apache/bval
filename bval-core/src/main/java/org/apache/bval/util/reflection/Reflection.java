@@ -21,44 +21,122 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
-public interface Reflection {
-    static final Reflection INSTANCE = ReflectionFactory.newInstance();
+import org.apache.commons.lang3.ClassUtils;
 
-    Class<?> getClass(final ClassLoader classLoader, final String className) throws Exception;
+/**
+ * Security-agnostic "blueprint" class for reflection-related operations.
+ * 
+ * @version $Rev$ $Date$
+ */
+public class Reflection {
 
-    Object getAnnotationValue(final Annotation annotation, final String name) throws IllegalAccessException, InvocationTargetException;
-
-    ClassLoader getClassLoader(final Class<?> clazz);
-
-    String getProperty(final String name);
-
-    Field getDeclaredField(final Class<?> clazz, final String fieldName);
-
-    Field[] getDeclaredFields(final Class<?> clazz);
-
-    Constructor<?> getDeclaredConstructor(final Class<?> clazz, final Class<?>... parameters);
-
-    Method getDeclaredMethod(final Class<?> clazz, final String name, final Class<?>... parameters);
-
-    Method[] getDeclaredMethods(final Class<?> clazz);
-
-    Constructor<?>[] getDeclaredConstructors(final Class<?> clazz);
-
-    Method getPublicMethod(final Class<?> clazz, final String methodName);
-
-    <T> T newInstance(final Class<T> cls);
-
-    public static class ReflectionFactory {
-        public static Reflection newInstance() {
-            if (System.getSecurityManager() != null) {
-                return new SecurityManagerReflection();
-            }
-            return new DefaultReflection();
-        }
-
-        private ReflectionFactory() {
-            // no-op
+    private static void setAccessibility(final Field field) {
+        // FIXME 2011-03-27 jw:
+        // - Why not simply call field.setAccessible(true)?
+        // - Fields can not be abstract.
+        if (!Modifier.isPublic(field.getModifiers())
+            || (Modifier.isPublic(field.getModifiers()) && Modifier.isAbstract(field.getModifiers()))) {
+            field.setAccessible(true);
         }
     }
+
+    public static Class<?> getClass(final ClassLoader classLoader, final String className) throws Exception {
+        return ClassUtils.getClass(classLoader, className, true);
+    }
+
+    public static Object getAnnotationValue(final Annotation annotation, final String name)
+        throws IllegalAccessException, InvocationTargetException {
+        Method valueMethod;
+        try {
+            valueMethod = annotation.annotationType().getDeclaredMethod(name);
+        } catch (final NoSuchMethodException ex) {
+            // do nothing
+            valueMethod = null;
+        }
+        if (null != valueMethod) {
+            if (!valueMethod.isAccessible()) {
+                valueMethod.setAccessible(true);
+            }
+            return valueMethod.invoke(annotation);
+        }
+        return null;
+    }
+
+    public static ClassLoader getClassLoader(final Class<?> clazz) {
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl != null) {
+            return cl;
+        }
+        return clazz.getClassLoader();
+    }
+
+    public static String getProperty(final String name) {
+        return System.getProperty(name);
+    }
+
+    public static Field getDeclaredField(final Class<?> clazz, final String fieldName) {
+        final Field f;
+        try {
+            f = clazz.getDeclaredField(fieldName);
+        } catch (final NoSuchFieldException e) {
+            return null;
+        }
+        setAccessibility(f);
+        return f;
+    }
+
+    public static Field[] getDeclaredFields(final Class<?> clazz) {
+        final Field[] fields = clazz.getDeclaredFields();
+        if (fields.length > 0) {
+            for (final Field f : fields) {
+                if (!f.isAccessible()) {
+                    f.setAccessible(true);
+                }
+            }
+        }
+        return fields;
+    }
+
+    public static Constructor<?> getDeclaredConstructor(final Class<?> clazz, final Class<?>... parameters) {
+        try {
+            return clazz.getDeclaredConstructor(parameters);
+        } catch (final NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    public static Method getDeclaredMethod(final Class<?> clazz, final String name, final Class<?>... parameters) {
+        try {
+            return clazz.getDeclaredMethod(name, parameters);
+        } catch (final NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    public static Method[] getDeclaredMethods(final Class<?> clazz) {
+        return clazz.getDeclaredMethods();
+    }
+
+    public static Constructor<?>[] getDeclaredConstructors(final Class<?> clazz) {
+        return clazz.getDeclaredConstructors();
+    }
+
+    public static Method getPublicMethod(final Class<?> clazz, final String methodName) {
+        try {
+            return clazz.getMethod(methodName);
+        } catch (final NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    public static <T> T newInstance(final Class<T> cls) {
+        try {
+            return cls.newInstance();
+        } catch (final Exception ex) {
+            throw new RuntimeException("Cannot instantiate : " + cls, ex);
+        }
+    }
+
 }

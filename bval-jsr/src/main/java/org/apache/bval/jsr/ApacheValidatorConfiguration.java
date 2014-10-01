@@ -72,7 +72,7 @@ public interface ApacheValidatorConfiguration
          * class is presumed have a constructor that accepts a single
          * {@link ConfigurationState} argument.
          */
-         String VALIDATOR_FACTORY_CLASSNAME = "apache.bval.validator-factory-classname";
+        String VALIDATOR_FACTORY_CLASSNAME = "apache.bval.validator-factory-classname";
 
         /**
          * Specifies the names, delimited by whitespace, of
@@ -86,6 +86,6 @@ public interface ApacheValidatorConfiguration
          * <li>default (no-args) constructor</li>
          * </ol>
          */
-         String METABEAN_FACTORY_CLASSNAMES = "apache.bval.metabean-factory-classnames";
+        String METABEAN_FACTORY_CLASSNAMES = "apache.bval.metabean-factory-classnames";
     }
 }

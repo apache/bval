@@ -18,19 +18,21 @@ package org.apache.bval.jsr.xml;
 
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privileged;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.Payload;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.validation.groups.ConvertGroup;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +44,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 // TODO move this guy up to org.apache.bval.jsr or
 // org.apache.bval.jsr.model
+@Privilizing(@CallTo(Reflection.class))
 final public class AnnotationProxyBuilder<A extends Annotation> {
     private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<Class<?>, Method[]>();
 
@@ -63,7 +66,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
         if (annotationType.getName().startsWith("javax.validation.constraints.")) { // cache built-in constraints only to avoid mem leaks
             Method[] mtd = METHODS_CACHE.get(annotationType);
             if (mtd == null) {
-                final Method[] value = Reflection.INSTANCE.getDeclaredMethods(annotationType);
+                final Method[] value = Reflection.getDeclaredMethods(annotationType);
                 mtd = METHODS_CACHE.putIfAbsent(annotationType, value);
                 if (mtd == null) {
                     mtd = value;
@@ -71,7 +74,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
             }
             return mtd;
         }
-        return Reflection.INSTANCE.getDeclaredMethods(annotationType);
+        return Reflection.getDeclaredMethods(annotationType);
     }
 
     /**
@@ -201,20 +204,14 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
      * @return {@link Annotation}
      */
     public A createAnnotation() {
-        ClassLoader classLoader = Reflection.INSTANCE.getClassLoader(getType());
+        final ClassLoader classLoader = Reflection.getClassLoader(getType());
         @SuppressWarnings("unchecked")
         final Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
         final InvocationHandler handler = new AnnotationProxy(this);
-        if (System.getSecurityManager() == null) {
-            return doCreateAnnotation(proxyClass, handler);
-        }
-        return AccessController.doPrivileged(new PrivilegedAction<A>() {
-            public A run() {
-                return doCreateAnnotation(proxyClass, handler);
-            }
-        });
+        return doCreateAnnotation(proxyClass, handler);
     }
 
+    @Privileged
     private A doCreateAnnotation(final Class<A> proxyClass, final InvocationHandler handler) {
         try {
             Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
@@ -232,11 +229,11 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
         }
     }
 
-    public static final class ConverGroupAnnotation implements ConvertGroup {
+    public static final class ConvertGroupAnnotation implements ConvertGroup {
         private final Class<?> from;
         private final Class<?> to;
 
-        public ConverGroupAnnotation(final Class<?> from, final Class<?> to) {
+        public ConvertGroupAnnotation(final Class<?> from, final Class<?> to) {
             this.from = from;
             this.to = to;
         }

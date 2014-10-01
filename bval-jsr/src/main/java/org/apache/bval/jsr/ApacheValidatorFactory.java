@@ -25,6 +25,8 @@ import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -35,6 +37,7 @@ import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
+
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -52,6 +55,7 @@ import java.util.concurrent.ConcurrentMap;
  * validators.<br/>
  * This instance is not thread-safe.<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
     private static final ConstraintDefaults DEFAULT_CONSTRAINTS = new ConstraintDefaults();
@@ -295,7 +299,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     private <T> T newInstance(final Class<T> cls) {
         try {
-            return Reflection.INSTANCE.newInstance(cls);
+            return Reflection.newInstance(cls);
         } catch (final RuntimeException e) {
             throw new ValidationException(e.getCause());
         }

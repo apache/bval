@@ -43,6 +43,7 @@ public class ClassHelper {
      *            The current list of classes in the hierarchy.
      * @param clazz
      */
+    @Deprecated
     static public List<Class<?>> fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
         if (clazz == null || clazz == Object.class || clazz == Serializable.class || clazz == Cloneable.class) {
             return allClasses;
@@ -58,26 +59,4 @@ public class ClassHelper {
         return allClasses;
     }
 
-    /**
-     * @deprecated Will be removed for security reasons.
-     *
-     * Perform ClassUtils.getClass functions with Java 2 Security enabled.
-     */
-    @Deprecated
-    public static Class<?> getClass(String className) throws ClassNotFoundException {
-        return getClass(className, true);
-    }
-
-    /**
-     * @deprecated Will be removed for security reasons.
-     *
-     * Perform ClassUtils.getClass functions with Java 2 Security enabled.
-     */
-    @Deprecated
-    public static Class<?> getClass(String className, boolean initialize) throws ClassNotFoundException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        if (loader == null)
-          loader = ClassHelper.class.getClassLoader();
-        return ClassUtils.getClass(loader, className, initialize);
-    }
 }

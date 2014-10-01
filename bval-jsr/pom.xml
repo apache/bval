@@ -79,13 +79,73 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-testResources</id>
+                                <phase />
+                                <goals>
+                                    <goal>testResources</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>filter-testResources</id>
+                                <phase>process-test-resources</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${project.build.testOutputDirectory}" />
+                                        <condition property="slash" value="/" else="">
+                                            <os family="windows" />
+                                        </condition>
+                                        <copy todir="${project.build.testOutputDirectory}" overwrite="true">
+                                            <fileset dir="${project.basedir}/src/test/resources" excludes="java.policy" />
+                                        </copy>
+                                        <copy todir="${project.build.testOutputDirectory}" overwrite="true">
+                                            <fileset file="${project.basedir}/src/test/resources/java.policy" />
+                                            <filterchain>
+                                                <expandproperties />
+                                                <!-- append extra slash on windows only -->
+                                                <replacestring from="file://" to="file://${slash}" />
+                                                <replacestring from="${file.separator}" to="/" />
+                                                <!-- preserve system-specific file separator -->
+                                                <expandproperties>
+                                                    <propertyset>
+                                                        <propertyref prefix="project." />
+                                                        <globmapper from="*" to="preserve.*" />
+                                                    </propertyset>
+                                                </expandproperties>
+                                            </filterchain>
+                                        </copy>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant</artifactId>
+                                <version>1.9.3</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <includes>
                                 <include>**/*Test.java</include>
                                 <include>**/*TestCase.java</include>
                             </includes>
-                            <argLine>-Djava.security.manager -Djava.security.policy=${project.basedir}/src/test/resources/java.policy</argLine>
+                            <argLine>-Djava.security.manager -Djava.security.policy=${project.build.testOutputDirectory}/java.policy</argLine>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -102,6 +162,10 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-weaver-privilizer-api</artifactId>
         </dependency>
         <!-- optional dependencies -->
         <dependency>
@@ -234,6 +298,10 @@
                         <include>**/*TestCase.java</include>
                     </includes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-weaver-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

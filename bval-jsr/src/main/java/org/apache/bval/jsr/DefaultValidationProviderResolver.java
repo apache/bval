@@ -17,19 +17,23 @@
 package org.apache.bval.jsr;
 
 
-import javax.validation.ValidationException;
-import javax.validation.ValidationProviderResolver;
-import javax.validation.spi.ValidationProvider;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import javax.validation.ValidationException;
+import javax.validation.ValidationProviderResolver;
+import javax.validation.spi.ValidationProvider;
+
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
+
+@Privilizing(@CallTo(Reflection.class))
 public class DefaultValidationProviderResolver implements ValidationProviderResolver {
 
     //TODO - Spec recommends caching per classloader
@@ -49,7 +53,7 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
             // find all service provider cfgs
             Enumeration<URL> cfgs = cl.getResources(SPI_CFG);
             while (cfgs.hasMoreElements()) {
-                URL url = cfgs.nextElement();
+                final URL url = cfgs.nextElement();
                 BufferedReader br = null;
                 try {
                     br = new BufferedReader(new InputStreamReader(url.openStream()), 256);
@@ -60,27 +64,11 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
                         if (!line.startsWith("#")) {
                             try {
                                 // try loading the specified class
-                                final Class<?> provider = cl.loadClass(line);
+                                @SuppressWarnings("rawtypes")
+                                final Class<? extends ValidationProvider> providerType =
+                                    cl.loadClass(line).asSubclass(ValidationProvider.class);
                                 // create an instance to return
-                                final ValidationProvider<?> vp;
-                                if (System.getSecurityManager() == null) {
-                                    try {
-                                        vp = (ValidationProvider<?>) provider.newInstance();
-                                    } catch (final Exception ex) {
-                                        throw new ValidationException("Cannot instantiate : " + provider, ex);
-                                    }
-                                } else {
-                                    vp = AccessController.doPrivileged(new PrivilegedAction<ValidationProvider<?>>() {
-                                        public ValidationProvider<?> run() {
-                                            try {
-                                                return (ValidationProvider<?>) provider.newInstance();
-                                            } catch (final Exception ex) {
-                                                throw new ValidationException("Cannot instantiate : " + provider, ex);
-                                            }
-                                        }
-                                    });
-                                }
-                                providers.add(vp);
+                                providers.add(Reflection.newInstance(providerType.asSubclass(ValidationProvider.class)));
 
                             } catch (ClassNotFoundException e) {
                                 throw new ValidationException("Failed to load provider " +
@@ -89,12 +77,12 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
                         }
                         line = br.readLine();
                     }
-                    br.close();
                 } catch (IOException e) {
                     throw new ValidationException("Error trying to read " + url, e);
                 } finally {
-                    if (br != null)
+                    if (br != null) {
                         br.close();
+                    }
                 }
             }
         } catch (IOException e) {

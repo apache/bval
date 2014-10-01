@@ -24,6 +24,8 @@ import org.apache.bval.model.MetaBean;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -32,6 +34,7 @@ import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -44,6 +47,7 @@ import java.util.Set;
  * annotations, including composed constraints and the resolution of
  * {@link ConstraintValidator} implementations.
  */
+@Privilizing(@CallTo(Reflection.class))
 public final class AnnotationProcessor {
     /** {@link ApacheFactoryContext} used */
     private final ApacheFactoryContext factoryContext;
@@ -142,7 +146,8 @@ public final class AnnotationProcessor {
          * annotated by @Constraint) whose value element has a return type of an
          * array of constraint annotations in a special way.
          */
-        final Object result = Reflection.INSTANCE.getAnnotationValue(annotation, ConstraintAnnotationAttributes.VALUE.getAttributeName());
+        final Object result =
+            Reflection.getAnnotationValue(annotation, ConstraintAnnotationAttributes.VALUE.getAttributeName());
         if (result instanceof Annotation[]) {
             boolean changed = false;
             for (final Annotation each : (Annotation[]) result) {

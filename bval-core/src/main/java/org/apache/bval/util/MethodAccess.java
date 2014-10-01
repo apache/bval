@@ -21,8 +21,6 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 /**
  * Description: invoke a zero-argument method (getter)<br/>
@@ -47,18 +45,7 @@ public class MethodAccess extends AccessStrategy {
     public MethodAccess(String propertyName, final Method method) {
         this.method = method;
         this.propertyName = propertyName;
-        if (!method.isAccessible()) {
-            if (System.getSecurityManager() == null) {
-                method.setAccessible(true);
-            } else {
-                AccessController.doPrivileged(new PrivilegedAction<Void>() {
-                    public Void run() {
-                        method.setAccessible(true);
-                        return null;
-                    }
-                });
-            }
-        }
+        setAccessible(method);
     }
 
     /**
@@ -69,21 +56,14 @@ public class MethodAccess extends AccessStrategy {
      *         the method name id not according to the JavaBeans standard.
      */
     public static String getPropertyName(Method member) {
-        String name = null;
-        String methodName = member.getName();
+        final String methodName = member.getName();
         if (methodName.startsWith("is")) {
-            name = Introspector.decapitalize(methodName.substring(2));
-        } /* else if ( methodName.startsWith("has")) {
-				name = Introspector.decapitalize( methodName.substring( 3 ) );
-			} */
-        // setter annotation is NOT supported in the spec
-        /*  else if (method.getName().startsWith("set") && method.getParameterTypes().length == 1) {
-           propName = Introspector.decapitalize(method.getName().substring(3));
-       } */
-        else if (methodName.startsWith("get")) {
-            name = Introspector.decapitalize(methodName.substring(3));
+            return Introspector.decapitalize(methodName.substring(2));
         }
-        return name;
+        if (methodName.startsWith("get")) {
+            return Introspector.decapitalize(methodName.substring(3));
+        }
+        return null;
     }
 
     /**

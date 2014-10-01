@@ -17,6 +17,8 @@
 package org.apache.bval.model;
 
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import java.beans.Introspector;
 import java.lang.reflect.Constructor;
@@ -34,6 +36,7 @@ import java.util.TreeMap;
  * 
  * @see MetaProperty
  */
+@Privilizing(@CallTo(Reflection.class))
 public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bean {
     private static final long serialVersionUID = 2L;
 
@@ -280,7 +283,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             int i = 0;
             Class<?> clazz = beanClass;
             while (clazz != null && clazz != Object.class) {
-                for (final Field f : Reflection.INSTANCE.getDeclaredFields(clazz)) {
+                for (final Field f : Reflection.getDeclaredFields(clazz)) {
                     i++;
                     final String name = f.getName();
                     if (!fields.containsKey(name)) {
@@ -321,7 +324,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         protected MethodComparator(final Class<?> beanClass) {
             Class<?> clazz = beanClass;
             while (clazz != null && clazz != Object.class) {
-                for (final Method m : Reflection.INSTANCE.getDeclaredMethods(clazz)) {
+                for (final Method m : Reflection.getDeclaredMethods(clazz)) {
                     methods.put(m, Arrays.hashCode(m.getParameterTypes()));
                 }
                 clazz = clazz.getSuperclass();
@@ -345,7 +348,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         private final Map<Constructor<?>, Integer> constructors = new HashMap<Constructor<?>, Integer>();
 
         protected ConstructorComparator(final Class<?> beanClass) {
-            for (final Constructor<?> c : Reflection.INSTANCE.getDeclaredConstructors(beanClass)) {
+            for (final Constructor<?> c : Reflection.getDeclaredConstructors(beanClass)) {
                 constructors.put(c, Arrays.hashCode(c.getParameterTypes()));
             }
         }

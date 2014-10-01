@@ -19,8 +19,6 @@ package org.apache.bval.util;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 /**
  * Description: direct field access strategy.<br/>
@@ -35,18 +33,7 @@ public class FieldAccess extends AccessStrategy {
      */
     public FieldAccess(final Field field) {
         this.field = field;
-        if (!field.isAccessible()) {
-            if (System.getSecurityManager() == null) {
-                field.setAccessible(true);
-            } else {
-                AccessController.doPrivileged(new PrivilegedAction<Void>() {
-                    public Void run() {
-                        field.setAccessible(true);
-                        return null;
-                    }
-                });
-            }
-        }
+        setAccessible(field);
     }
 
     /**

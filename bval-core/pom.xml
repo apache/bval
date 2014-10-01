@@ -46,6 +46,10 @@
             <artifactId>commons-beanutils-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-weaver-privilizer-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -117,6 +121,10 @@ build.timestamp=${timestamp}
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+            	<groupId>org.apache.commons</groupId>
+            	<artifactId>commons-weaver-maven-plugin</artifactId>
             </plugin>
         </plugins>
         <pluginManagement>

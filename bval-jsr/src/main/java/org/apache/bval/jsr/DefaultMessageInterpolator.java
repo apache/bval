@@ -19,8 +19,11 @@ package org.apache.bval.jsr;
 import org.apache.bval.el.MessageEvaluator;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.MessageInterpolator;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -37,6 +40,7 @@ import java.util.regex.Pattern;
  * into human-readable messages. It uses ResourceBundles to find the messages.
  * This class is threadsafe.<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class DefaultMessageInterpolator implements MessageInterpolator {
     private static final Logger log = Logger.getLogger(DefaultMessageInterpolator.class.getName());
     private static final boolean LOG_FINEST = log.isLoggable(Level.FINEST);
@@ -168,7 +172,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
         ResourceBundle rb = null;
-        final ClassLoader classLoader = Reflection.INSTANCE.getClassLoader(DefaultMessageInterpolator.class);
+        final ClassLoader classLoader = Reflection.getClassLoader(DefaultMessageInterpolator.class);
         if (classLoader != null) {
             rb = loadBundle(classLoader, locale,
                   USER_VALIDATION_MESSAGES + " not found by thread local classloader");

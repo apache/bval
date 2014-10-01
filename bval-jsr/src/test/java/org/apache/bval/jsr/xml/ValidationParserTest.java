@@ -21,18 +21,24 @@ package org.apache.bval.jsr.xml;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
 import org.apache.bval.jsr.ApacheValidationProvider;
 import org.apache.bval.jsr.ApacheValidatorConfiguration;
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.example.XmlEntitySampleBean;
 import org.apache.bval.jsr.resolver.SimpleTraversableResolver;
+import org.apache.bval.util.reflection.Reflection;
+import org.junit.Assume;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+
 import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Set;
 
 /**
@@ -50,6 +56,13 @@ public class ValidationParserTest extends TestCase
 
     public void testGetInputStream() throws IOException {
         assertNotNull(ValidationParser.getInputStream("sample-validation.xml"));
+
+        // make sure there are duplicate resources on the classpath before the next checks:
+        final Enumeration<URL> resources = Reflection.getClassLoader(ValidationParser.class).getResources("META-INF/MANIFEST.MF");
+        
+        Assume.assumeTrue(resources.hasMoreElements());
+        resources.nextElement();
+        Assume.assumeTrue(resources.hasMoreElements());
 
         try {
             ValidationParser.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully

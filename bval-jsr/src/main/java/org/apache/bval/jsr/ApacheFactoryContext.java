@@ -192,19 +192,19 @@ public class ApacheFactoryContext implements ValidatorContext {
      * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
      */
     protected MetaBeanFinder buildMetaBeanFinder() {
-        List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>();
+        final List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>();
         if (Boolean.parseBoolean(factory.getProperties().get(
             ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
             builders.add(new IntrospectorMetaBeanFactory());
         }
-        String[] factoryClassNames =
-            StringUtils.split(
-                factory.getProperties().get(ApacheValidatorConfiguration.Properties.METABEAN_FACTORY_CLASSNAMES));
+        final String[] factoryClassNames =
+            StringUtils.split(factory.getProperties().get(
+                ApacheValidatorConfiguration.Properties.METABEAN_FACTORY_CLASSNAMES));
         if (factoryClassNames != null) {
             for (String clsName : factoryClassNames) {
                 // cast, relying on #createMetaBeanFactory to throw the exception if incompatible:
                 @SuppressWarnings("unchecked")
-                Class<? extends MetaBeanFactory> factoryClass = (Class<? extends MetaBeanFactory>) loadClass(clsName);
+                final Class<? extends MetaBeanFactory> factoryClass = (Class<? extends MetaBeanFactory>) loadClass(clsName);
                 builders.add(createMetaBeanFactory(factoryClass));
             }
         }
@@ -216,8 +216,9 @@ public class ApacheFactoryContext implements ValidatorContext {
             builders.add(new JsrMetaBeanFactory(this));
         }
         @SuppressWarnings("deprecation")
-        boolean enableMetaBeansXml = Boolean.parseBoolean(factory.getProperties().get(
-            ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML));
+        final boolean enableMetaBeansXml =
+            Boolean.parseBoolean(factory.getProperties().get(
+                ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML));
         if (enableMetaBeansXml) {
             XMLMetaBeanManagerCreator.addFactory(builders);
         }

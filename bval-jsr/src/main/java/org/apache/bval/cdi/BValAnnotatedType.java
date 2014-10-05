@@ -23,6 +23,7 @@ import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.util.AnnotationLiteral;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashSet;
@@ -37,7 +38,7 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
 
         annotations = new HashSet<Annotation>(annotatedType.getAnnotations().size());
         annotations.addAll(annotatedType.getAnnotations());
-        annotations.add(BValBindingLitteral.INSTANCE);
+        annotations.add(BValBindingLiteral.INSTANCE);
     }
 
     public Class<A> getJavaClass() {
@@ -67,7 +68,9 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
     public <T extends Annotation> T getAnnotation(final Class<T> annotationType) {
         for (final Annotation ann : annotations) {
             if (ann.annotationType().equals(annotationType)) {
-                return (T) ann;
+                @SuppressWarnings("unchecked")
+                final T result = (T) ann;
+                return result;
             }
         }
         return null;
@@ -86,8 +89,10 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
         return false;
     }
 
-    public static class BValBindingLitteral extends AnnotationLiteral<BValBinding> implements BValBinding {
-        public static final Annotation INSTANCE = new BValBindingLitteral();
+    public static class BValBindingLiteral extends AnnotationLiteral<BValBinding> implements BValBinding {
+        private static final long serialVersionUID = 1L;
+
+        public static final Annotation INSTANCE = new BValBindingLiteral();
 
         public Class<? extends Annotation> annotationType() {
             return BValBinding.class;

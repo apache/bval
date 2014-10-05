@@ -78,8 +78,8 @@ public final class AnnotationProcessor {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public boolean processAnnotations(Meta prop, Class<?> owner, AnnotatedElement element,
-        AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
+    public boolean processAnnotations(Meta prop, Class<?> owner, AnnotatedElement element, AccessStrategy access,
+        AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
         boolean changed = false;
         for (final Annotation annotation : element.getDeclaredAnnotations()) {
@@ -112,7 +112,8 @@ public final class AnnotationProcessor {
      * @throws InvocationTargetException
      */
     public <A extends Annotation> boolean processAnnotation(A annotation, Meta prop, Class<?> owner,
-        AccessStrategy access, AppendValidation appender, boolean reflection) throws IllegalAccessException, InvocationTargetException {
+        AccessStrategy access, AppendValidation appender, boolean reflection) throws IllegalAccessException,
+        InvocationTargetException {
         if (annotation instanceof Valid) {
             return addAccessStrategy(prop, access);
         }
@@ -134,7 +135,7 @@ public final class AnnotationProcessor {
          * policy contains RUNTIME and if the annotation itself is annotated
          * with javax.validation.Constraint.
          */
-        Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
+        final Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
         if (vcAnno != null) {
             Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
             validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
@@ -177,13 +178,12 @@ public final class AnnotationProcessor {
         AccessStrategy[] strategies = prop.getFeature(Features.Property.REF_CASCADE);
         if (strategies == null) {
             strategies = new AccessStrategy[] { access };
-            prop.putFeature(Features.Property.REF_CASCADE, strategies);
-        } else if (!ArrayUtils.contains(strategies, access)) {
-            AccessStrategy[] newStrategies = new AccessStrategy[strategies.length + 1];
-            System.arraycopy(strategies, 0, newStrategies, 0, strategies.length);
-            newStrategies[strategies.length] = access;
-            prop.putFeature(Features.Property.REF_CASCADE, newStrategies);
+        } else if (ArrayUtils.contains(strategies, access)) {
+            return false;
+        } else {
+            strategies = ArrayUtils.add(strategies, access);
         }
+        prop.putFeature(Features.Property.REF_CASCADE, strategies);
         return true;
     }
 
@@ -201,9 +201,9 @@ public final class AnnotationProcessor {
         if (vcAnno == null) {
             vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
         }
-        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
-        Class<A> annotationType = (Class<A>) annotation.annotationType();
-        validatorClasses = factoryContext.getFactory().getConstraintsCache().getConstraintValidators(annotationType);
+        final Class<A> annotationType = (Class<A>) annotation.annotationType();
+        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses =
+            factoryContext.getFactory().getConstraintsCache().getConstraintValidators(annotationType);
         if (validatorClasses == null) {
             validatorClasses = (Class<? extends ConstraintValidator<A, ?>>[]) vcAnno.validatedBy();
             if (validatorClasses.length == 0) {
@@ -237,17 +237,18 @@ public final class AnnotationProcessor {
         Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, Meta prop, Class<?> owner,
         AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
-        Class<? extends ConstraintValidator<A, ?>>[] constraintClasses = select(rawConstraintClasses, access);
+        final Class<? extends ConstraintValidator<A, ?>>[] constraintClasses = select(rawConstraintClasses, access);
         if (constraintClasses != null && constraintClasses.length == 0 && rawConstraintClasses.length > 0) {
             return false;
         }
 
         final AnnotationConstraintBuilder<A> builder =
-            new AnnotationConstraintBuilder<A>(factoryContext.getConstraintValidatorFactory(), constraintClasses, annotation, owner, access, null);
+            new AnnotationConstraintBuilder<A>(factoryContext.getConstraintValidatorFactory(), constraintClasses,
+                annotation, owner, access, null);
 
         // JSR-303 3.4.4: Add implicit groups
         if (prop != null && prop.getParentMetaBean() != null) {
-            MetaBean parentMetaBean = prop.getParentMetaBean();
+            final MetaBean parentMetaBean = prop.getParentMetaBean();
             // If:
             // - the owner is an interface
             // - the class of the metabean being build is different than the
@@ -284,26 +285,29 @@ public final class AnnotationProcessor {
     }
 
     private static <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] select(
-            final Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, final AccessStrategy access) {
+        final Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, final AccessStrategy access) {
         final boolean isReturn = ReturnAccess.class.isInstance(access);
         final boolean isParam = ParametersAccess.class.isInstance(access);
         if (rawConstraintClasses != null && (isReturn || isParam)) {
-            final Collection<Class<? extends ConstraintValidator<A, ?>>> selected = new ArrayList<Class<? extends ConstraintValidator<A, ?>>>();
+            final Collection<Class<? extends ConstraintValidator<A, ?>>> selected =
+                new ArrayList<Class<? extends ConstraintValidator<A, ?>>>();
             for (final Class<? extends ConstraintValidator<A, ?>> constraint : rawConstraintClasses) {
                 final SupportedValidationTarget target = constraint.getAnnotation(SupportedValidationTarget.class);
                 if (target == null && isReturn) {
                     selected.add(constraint);
                 } else if (target != null) {
                     for (final ValidationTarget validationTarget : target.value()) {
-                        if (isReturn && ValidationTarget.ANNOTATED_ELEMENT.equals(validationTarget)) {
+                        if (isReturn && ValidationTarget.ANNOTATED_ELEMENT == validationTarget) {
                             selected.add(constraint);
-                        } else if (isParam && ValidationTarget.PARAMETERS.equals(validationTarget)) {
+                        } else if (isParam && ValidationTarget.PARAMETERS == validationTarget) {
                             selected.add(constraint);
                         }
                     }
+                }
             }
-            }
-            return selected.toArray(new Class[selected.size()]);
+            @SuppressWarnings("unchecked")
+            final Class<? extends ConstraintValidator<A, ?>>[] result = selected.toArray(new Class[selected.size()]);
+            return result;
         }
         return rawConstraintClasses;
     }

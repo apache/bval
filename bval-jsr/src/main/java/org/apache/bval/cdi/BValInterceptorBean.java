@@ -49,7 +49,9 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
         qualifiers.add(AnyLiteral.INSTANCE);
 
         injectionTarget = bm.createInjectionTarget(bm.createAnnotatedType(BValInterceptor.class));
-        injectionPoints = Collections.singleton(InjectionPoint.class.cast(new BValInterceptorInjectionPoint(this, injectionTarget.getInjectionPoints().iterator().next())));
+        injectionPoints =
+            Collections.singleton(InjectionPoint.class.cast(new BValInterceptorInjectionPoint(this, injectionTarget
+                .getInjectionPoints().iterator().next())));
     }
 
     public Set<Type> getTypes() {

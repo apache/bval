@@ -47,6 +47,7 @@ import javax.validation.constraintvalidation.ValidationTarget;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.commons.weaver.privilizer.Privileged;
 
@@ -69,11 +70,14 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
      * @param owner
      * @param access
      */
-    public AnnotationConstraintBuilder(ConstraintValidatorFactory factory, Class<? extends ConstraintValidator<A, ?>>[] validatorClasses,
-                                        A annotation, Class<?> owner, AccessStrategy access, ConstraintTarget target) {
-        boolean reportFromComposite =
+    public AnnotationConstraintBuilder(ConstraintValidatorFactory factory,
+        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses, A annotation, Class<?> owner,
+        AccessStrategy access, ConstraintTarget target) {
+        final boolean reportFromComposite =
             annotation != null && annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
-        constraintValidation = new ConstraintValidation<A>(factory, validatorClasses, annotation, owner, access, reportFromComposite, target);
+        constraintValidation =
+            new ConstraintValidation<A>(factory, validatorClasses, annotation, owner, access, reportFromComposite,
+                target);
         buildFromAnnotation();
     }
 
@@ -182,12 +186,12 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
         if (annotatedElt == 0 && param >= 1 && constraintValidation.getValidationAppliesTo() != null) { // pure cross param
             throw new ConstraintDefinitionException("pure cross parameter constraints shouldn't get validationAppliesTo attribute");
-        } else {
-            if (param >= 1 && annotatedElt >= 1 && constraintValidation.getValidationAppliesTo() == null) { // generic and cross param
-                throw new ConstraintDefinitionException("cross parameter AND generic constraints should get validationAppliesTo attribute");
-            } else if (param == 0 && constraintValidation.getValidationAppliesTo() != null) { // pure generic
-                throw new ConstraintDefinitionException("pure generic constraints shouldn't get validationAppliesTo attribute");
-            }
+        }
+        if (param >= 1 && annotatedElt >= 1 && constraintValidation.getValidationAppliesTo() == null) { // generic and cross param
+            throw new ConstraintDefinitionException("cross parameter AND generic constraints should get validationAppliesTo attribute");
+        }
+        if (param == 0 && constraintValidation.getValidationAppliesTo() != null) { // pure generic
+            throw new ConstraintDefinitionException("pure generic constraints shouldn't get validationAppliesTo attribute");
         }
 
         return new Pair(annotatedElt, param);
@@ -195,19 +199,20 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
     private void buildValidationAppliesTo(final Method method) throws InvocationTargetException, IllegalAccessException {
         if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getType())) {
-            throw new ConstraintDefinitionException("Return type for validationAppliesTo() must be of type " + ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getType());
+            throw new ConstraintDefinitionException("Return type for validationAppliesTo() must be of type "
+                + ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getType());
         }
         final Object validationAppliesTo = method.invoke(constraintValidation.getAnnotation());
-        if (ConstraintTarget.class.isInstance(validationAppliesTo)) {
-            constraintValidation.setValidationAppliesTo(ConstraintTarget.class.cast(validationAppliesTo));
-        } else {
+        if (!ConstraintTarget.class.isInstance(validationAppliesTo)) {
             throw new ConstraintDefinitionException("validationAppliesTo type is " + ConstraintTarget.class.getName());
         }
+        constraintValidation.setValidationAppliesTo(ConstraintTarget.class.cast(validationAppliesTo));
     }
 
     private void buildGroups(final Method method) throws IllegalAccessException, InvocationTargetException {
         if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.GROUPS.getType())) {
-            throw new ConstraintDefinitionException("Return type for groups() must be of type " + ConstraintAnnotationAttributes.GROUPS.getType());
+            throw new ConstraintDefinitionException("Return type for groups() must be of type "
+                + ConstraintAnnotationAttributes.GROUPS.getType());
         }
 
         final Object raw = method.invoke(constraintValidation.getAnnotation());
@@ -223,7 +228,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             garr = null;
         }
 
-        if (garr == null || garr.length == 0) {
+        if (ArrayUtils.isEmpty(garr)) {
             garr = GroupsComputer.DEFAULT_GROUP;
         }
         constraintValidation.setGroups(garr);
@@ -232,15 +237,17 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     @SuppressWarnings("unchecked")
     private void buildPayload(final Method method) throws IllegalAccessException, InvocationTargetException {
         if (!TypeUtils.isAssignable(method.getReturnType(), ConstraintAnnotationAttributes.PAYLOAD.getType())) {
-            throw new ConstraintDefinitionException("Return type for payload() must be of type " + ConstraintAnnotationAttributes.PAYLOAD.getType());
+            throw new ConstraintDefinitionException("Return type for payload() must be of type "
+                + ConstraintAnnotationAttributes.PAYLOAD.getType());
         }
         if (Object[].class.cast(method.getDefaultValue()).length > 0) {
             throw new ConstraintDefinitionException("Default value for payload() must be an empty array");
         }
 
-        Class<? extends Payload>[] payload_raw =
+        final Class<? extends Payload>[] payload_raw =
             (Class<? extends Payload>[]) method.invoke(constraintValidation.getAnnotation());
-        Set<Class<? extends Payload>> payloadSet;
+
+        final Set<Class<? extends Payload>> payloadSet;
         if (payload_raw == null) {
             payloadSet = Collections.<Class<? extends Payload>> emptySet();
         } else {
@@ -278,10 +285,10 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             buildOverridesAttributes();
         }
         if (!overrides.isEmpty()) {
-            int index = computeIndex(composite);
+            final int index = computeIndex(composite);
 
             // Search for the overrides to apply
-            ConstraintOverrides generalOverride = findOverride(composite.getAnnotation().annotationType(), -1);
+            final ConstraintOverrides generalOverride = findOverride(composite.getAnnotation().annotationType(), -1);
             if (generalOverride != null) {
                 if (index > 0) {
                     throw new ConstraintDeclarationException("Wrong OverridesAttribute declaration for "
@@ -291,11 +298,10 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
                 generalOverride.applyOn(composite);
             }
 
-            ConstraintOverrides override = findOverride(composite.getAnnotation().annotationType(), index);
+            final ConstraintOverrides override = findOverride(composite.getAnnotation().annotationType(), index);
             if (override != null) {
                 override.applyOn(composite);
             }
-
         }
     }
 
@@ -322,15 +328,15 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     private void buildOverridesAttributes() {
         overrides = new LinkedList<ConstraintOverrides>();
         for (Method method : constraintValidation.getAnnotation().annotationType().getDeclaredMethods()) {
-            OverridesAttribute.List annoOAL = method.getAnnotation(OverridesAttribute.List.class);
-            if (annoOAL != null) {
-                for (OverridesAttribute annoOA : annoOAL.value()) {
-                    parseConstraintOverride(method.getName(), annoOA);
+            final OverridesAttribute.List overridesAttributeList = method.getAnnotation(OverridesAttribute.List.class);
+            if (overridesAttributeList != null) {
+                for (OverridesAttribute overridesAttribute : overridesAttributeList.value()) {
+                    parseConstraintOverride(method.getName(), overridesAttribute);
                 }
             }
-            OverridesAttribute annoOA = method.getAnnotation(OverridesAttribute.class);
-            if (annoOA != null) {
-                parseConstraintOverride(method.getName(), annoOA);
+            final OverridesAttribute overridesAttribute = method.getAnnotation(OverridesAttribute.class);
+            if (overridesAttribute != null) {
+                parseConstraintOverride(method.getName(), overridesAttribute);
             }
         }
     }
@@ -376,12 +382,12 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             composite.getAttributes().putAll(values);
 
             // And the annotation
-            Annotation originalAnnot = composite.getAnnotation();
-            AnnotationProxyBuilder<Annotation> apb = new AnnotationProxyBuilder<Annotation>(originalAnnot);
+            final Annotation originalAnnot = composite.getAnnotation();
+            final AnnotationProxyBuilder<Annotation> apb = new AnnotationProxyBuilder<Annotation>(originalAnnot);
             for (String key : values.keySet()) {
                 apb.putValue(key, values.get(key));
             }
-            Annotation newAnnot = apb.createAnnotation();
+            final Annotation newAnnot = apb.createAnnotation();
             ((ConstraintValidation<Annotation>) composite).setAnnotation(newAnnot);
         }
     }

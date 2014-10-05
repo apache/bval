@@ -73,7 +73,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
     public ValidatorFactory buildValidatorFactory(final ConfigurationState configuration) {
         final Class<? extends ValidatorFactory> validatorFactoryClass;
         try {
-            String validatorFactoryClassname =
+            final String validatorFactoryClassname =
                 configuration.getProperties().get(ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME);
 
             if (validatorFactoryClassname == null) {

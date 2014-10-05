@@ -88,21 +88,6 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
             throw new ValidationException("error building ValidatorFactory", ex);
         }
 
-        // FIXME 2011-03-27 jw:
-        // Should not use privileged action, but to avoid breaking things
-        // doing it here like the former version of this class did.
-        //
-        // The privileged action should be applied by the ValidatorFactory
-        // itself, if required.
-        // No privileges should be required to access the constructor,
-        // because the classloader of ApacheValidationProvider will always
-        // be an ancestor of the loader of validatorFactoryClass.
-        return instantiateValidatorFactory(validatorFactoryClass, configuration);
-    }
-
-    @Privileged
-    private static ValidatorFactory instantiateValidatorFactory(
-        final Class<? extends ValidatorFactory> validatorFactoryClass, final ConfigurationState configuration) {
         try {
             return validatorFactoryClass.getConstructor(ConfigurationState.class).newInstance(configuration);
         } catch (final Exception ex) {

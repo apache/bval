@@ -278,7 +278,6 @@ public class BValInterceptor {
 
     private static boolean isGetter(final Method method) {
         final String name = method.getName();
-        return (name.startsWith("get") || name.startsWith("is")) && Void.TYPE.equals(method.getReturnType())
-            && method.getParameterTypes().length == 0;
+        return (name.startsWith("get") || name.startsWith("is")) && method.getParameterTypes().length == 0;
     }
 }

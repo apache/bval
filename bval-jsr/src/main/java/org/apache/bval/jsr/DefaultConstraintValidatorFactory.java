@@ -47,7 +47,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
             synchronized (this) {
                 if (useCdi == null) {
                     try {
-                        useCdi = BValExtension.getInstance() != null && BValExtension.getInstance().getBeanManager() != null;
+                        useCdi = BValExtension.getBeanManager() != null;
                     } catch (final NoClassDefFoundError error) {
                         useCdi = false;
                     } catch (final Exception e) {
@@ -65,8 +65,9 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
                     final BValExtension.Releasable<T> instance = BValExtension.inject(constraintClass);
                     if (instance != null) {
                         releasables.add(instance);
+                        return instance.getInstance();
                     }
-                    return instance.getInstance();
+                    throw new IllegalStateException("Can't create " + constraintClass.getName());
                 } catch (final Exception e) {
                     return constraintClass.newInstance();
                 } catch (final NoClassDefFoundError error) {

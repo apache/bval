@@ -21,19 +21,16 @@ package org.apache.bval.cdi;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AfterDeploymentValidation;
 import javax.enterprise.inject.spi.AnnotatedCallable;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
-import javax.enterprise.inject.spi.BeforeShutdown;
+import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessBean;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.Configuration;
 import javax.validation.Validation;
@@ -49,16 +46,11 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// mainly copied from deltaspike to not force users to use deltaspike
-// which would be a pain in app servers
-// TODO: get rid of beans.xml adding interceptor automatically
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
@@ -72,9 +64,6 @@ public class BValExtension implements Extension {
         SKIPPED_PREFIXES.add("org.apache.deltaspike."); // should be checked when upgrading
         SKIPPED_PREFIXES.add("org.apache.myfaces."); // should be checked when upgrading
     }
-
-    private static BValExtension bmpSingleton = null;
-    private volatile Map<ClassLoader, BeanManagerInfo> bmInfos = new ConcurrentHashMap<ClassLoader, BeanManagerInfo>();
 
     private boolean validatorFound = Boolean.getBoolean("bval.in-container");
     private boolean validatorFactoryFound = Boolean.getBoolean("bval.in-container");
@@ -140,10 +129,6 @@ public class BValExtension implements Extension {
 
     public Set<ExecutableType> getGlobalExecutableTypes() {
         return globalExecutableTypes;
-    }
-
-    public static BValExtension getInstance() {
-        return bmpSingleton;
     }
 
     public void addBvalBinding(final @Observes BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
@@ -229,22 +214,7 @@ public class BValExtension implements Extension {
             factory.close();
         }
 
-        captureBeanManager(beanManager); // next method will need it
         cdiIntegration(afterBeanDiscovery, beanManager);
-    }
-
-    private void captureBeanManager(final BeanManager beanManager) {
-        // bean manager holder
-        if (bmpSingleton == null) {
-            synchronized (LOGGER) { // a static instance
-                if (bmpSingleton == null) {
-                    bmpSingleton = this;
-                }
-            }
-        }
-
-        final BeanManagerInfo bmi = getBeanManagerInfo(loader());
-        bmi.loadTimeBm = beanManager;
     }
 
     private void cdiIntegration(final AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
@@ -280,65 +250,9 @@ public class BValExtension implements Extension {
         return Thread.currentThread().getContextClassLoader();
     }
 
-    public BeanManager getBeanManager() {
-        final BeanManagerInfo bmi = getBeanManagerInfo(loader());
-
-        BeanManager result = bmi.finalBm;
-        if (result == null && bmi.cdi == null) {
-            synchronized (this) {
-                result = resolveBeanManagerViaJndi();
-                if (result == null) {
-                    result = bmi.loadTimeBm;
-                }
-                if (result == null) {
-                    bmi.cdi = false;
-                    return null;
-                }
-                bmi.cdi = true;
-                bmi.finalBm = result;
-            }
-        }
-
-        return result;
-    }
-
-    public void cleanupFinalBeanManagers(final @Observes AfterDeploymentValidation ignored) {
-        for (final BeanManagerInfo bmi : bmpSingleton.bmInfos.values()) {
-            bmi.finalBm = null;
-        }
-    }
-
-    public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown ignored) {
-        if (bmpSingleton != null && bmpSingleton.bmInfos != null) {
-            bmpSingleton.bmInfos.remove(loader());
-        }
-    }
-
-    private static BeanManager resolveBeanManagerViaJndi() {
-        try {
-            return (BeanManager) new InitialContext().lookup("java:comp/BeanManager");
-        } catch (final NamingException e) {
-            return null;
-        }
-    }
-
-    private BeanManagerInfo getBeanManagerInfo(final ClassLoader cl) {
-        BeanManagerInfo bmi = bmpSingleton.bmInfos.get(cl);
-        if (bmi == null) {
-            synchronized (this) {
-                bmi = bmpSingleton.bmInfos.get(cl);
-                if (bmi == null) {
-                    bmi = new BeanManagerInfo();
-                    bmpSingleton.bmInfos.put(cl, bmi);
-                }
-            }
-        }
-        return bmi;
-    }
-
     public static <T> Releasable<T> inject(final Class<T> clazz) {
         try {
-            final BeanManager beanManager = getInstance().getBeanManager();
+            final BeanManager beanManager = CDI.current().getBeanManager();
             if (beanManager == null) {
                 return null;
             }
@@ -358,10 +272,8 @@ public class BValExtension implements Extension {
         return null;
     }
 
-    private static class BeanManagerInfo {
-        private BeanManager loadTimeBm = null;
-        private BeanManager finalBm = null;
-        private Boolean cdi = null;
+    public static BeanManager getBeanManager() {
+        return CDI.current().getBeanManager();
     }
 
     public static class Releasable<T> {

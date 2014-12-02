@@ -161,19 +161,23 @@ public class BValExtension implements Extension {
         if (!javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
             try {
                 ensureFactoryValidator();
-                final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
-                if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
-                    || hasValidationAnnotation(annotatedType.getMethods())
-                    || hasValidationAnnotation(annotatedType.getConstructors())
-                    || (validBean && classConstraints != null && classConstraints.isBeanConstrained())
-                    || (validConstructors && classConstraints != null && !classConstraints.getConstrainedConstructors().isEmpty())
-                    || (validBusinessMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty())
-                    || (validGetterMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
-                    // TODO: keep track of bValAnnotatedType and remove @BValBinding in
-                    // ProcessBean event if needed cause here we can't really add @ValidateOnExecution
-                    // through an extension
-                    final BValAnnotatedType<A> bValAnnotatedType = new BValAnnotatedType<A>(annotatedType);
-                    pat.setAnnotatedType(bValAnnotatedType);
+                try {
+                    final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
+                    if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
+                            || hasValidationAnnotation(annotatedType.getMethods())
+                            || hasValidationAnnotation(annotatedType.getConstructors())
+                            || (validBean && classConstraints != null && classConstraints.isBeanConstrained())
+                            || (validConstructors && classConstraints != null && !classConstraints.getConstrainedConstructors().isEmpty())
+                            || (validBusinessMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty())
+                            || (validGetterMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
+                        // TODO: keep track of bValAnnotatedType and remove @BValBinding in
+                        // ProcessBean event if needed cause here we can't really add @ValidateOnExecution
+                        // through an extension
+                        final BValAnnotatedType<A> bValAnnotatedType = new BValAnnotatedType<A>(annotatedType);
+                        pat.setAnnotatedType(bValAnnotatedType);
+                    }
+                } catch (final NoClassDefFoundError ncdfe) {
+                    // skip
                 }
             } catch (final ValidationException ve) {
                 LOGGER.log(Level.FINEST, ve.getMessage(), ve);

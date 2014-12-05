@@ -17,10 +17,7 @@
 package org.apache.bval.util;
 
 import java.lang.annotation.ElementType;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
-
-import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
  * Description: abstract class to encapsulate different strategies
@@ -59,20 +56,4 @@ public abstract class AccessStrategy {
      */
     public abstract String getPropertyName();
 
-    /**
-     * Set {@code accessibleObject} as being accessible
-     * @param accessibleObject
-     */
-    protected boolean setAccessible(AccessibleObject accessibleObject) {
-        if (accessibleObject.isAccessible()) {
-            return false;
-        }
-        doSetAccessible(accessibleObject);
-        return true;
-    }
-
-    @Privileged
-    private void doSetAccessible(AccessibleObject accessibleObject) {
-        accessibleObject.setAccessible(true);
-    }
 }

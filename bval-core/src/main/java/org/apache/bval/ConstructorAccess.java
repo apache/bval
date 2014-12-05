@@ -28,6 +28,7 @@ public class ConstructorAccess extends AccessStrategy {
 
     public ConstructorAccess(final Constructor<?> constructor) {
         this.constructor = constructor;
+        setAccessible(constructor);
     }
 
     @Override

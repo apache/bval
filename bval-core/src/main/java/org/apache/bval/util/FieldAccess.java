@@ -20,14 +20,9 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.weaver.privilizer.Privilizing;
-import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
-
 /**
  * Description: direct field access strategy.<br/>
  */
-@Privilizing(@CallTo(Reflection.class))
 public class FieldAccess extends AccessStrategy {
 
     private final Field field;
@@ -38,21 +33,17 @@ public class FieldAccess extends AccessStrategy {
      */
     public FieldAccess(final Field field) {
         this.field = field;
+        setAccessible(field);
     }
 
     /**
      * {@inheritDoc}
      */
     public Object get(final Object instance) {
-        final boolean mustUnset = Reflection.setAccessible(field, true);
         try {
             return field.get(instance);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
-        } finally {
-            if (mustUnset) {
-                Reflection.setAccessible(field, false);
-            }
         }
     }
 

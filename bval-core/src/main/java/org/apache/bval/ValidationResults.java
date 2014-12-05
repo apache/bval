@@ -193,8 +193,9 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @see {@link Error#getReason()}
      */
     public boolean hasErrorForReason(String reason) {
-        if (errorsByReason == null)
+        if (errorsByReason == null) {
             return false;
+        }
         List<Error> errors = errorsByReason.get(reason);
         return errors != null && !errors.isEmpty();
     }

@@ -19,6 +19,8 @@ package org.apache.bval.model;
 import java.lang.reflect.Method;
 
 public class MetaMethod extends MetaInvocable {
+    private static final long serialVersionUID = 1L;
+
     private final Method method;
 
     public MetaMethod(final MetaBean parent, final Method method) {

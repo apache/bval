@@ -263,17 +263,11 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
     }
 
     public MetaMethod getMethod(final Method method) {
-        if (methods == null) {
-            return null;
-        }
-        return methods.get(method);
+        return methods == null ? null : methods.get(method);
     }
 
     public MetaConstructor getConstructor(final Constructor<?> constructor) {
-        if (constructors == null) {
-            return null;
-        }
-        return constructors.get(constructor);
+        return constructors == null ? null : constructors.get(constructor);
     }
 
     protected static class FieldComparator implements Comparator<String> {
@@ -311,10 +305,10 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
 
         private int fieldIndex(final String o2) {
             final Integer idx = fields.get(o2);
-            if (idx != null) {
-                return idx;
+            if (idx == null) {
+                return Integer.MIN_VALUE; // to avoid collision and false positive in get() due to equals
             }
-            return Integer.MIN_VALUE; // to avoid collision and false positive in get() due to equals
+            return idx;
         }
     }
 
@@ -337,10 +331,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             }
 
             final int i = o1.getName().compareTo(o2.getName());
-            if (i != 0) {
-                return i;
-            }
-            return methods.get(o1) - methods.get(o2);
+            return i == 0 ? methods.get(o1) - methods.get(o2) : i;
         }
     }
 
@@ -359,10 +350,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             }
 
             final int i = o1.getName().compareTo(o2.getName());
-            if (i != 0) {
-                return i;
-            }
-            return constructors.get(o1) - constructors.get(o2);
+            return i == 0 ? constructors.get(o1) - constructors.get(o2) : i;
         }
     }
 }

@@ -19,6 +19,8 @@ package org.apache.bval.model;
 import java.lang.reflect.Constructor;
 
 public class MetaConstructor extends MetaInvocable {
+    private static final long serialVersionUID = 1L;
+
     private final Constructor<?> constructor;
 
     public MetaConstructor(final MetaBean metabean, final Constructor<?> constructor) {

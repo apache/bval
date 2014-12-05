@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -55,8 +56,7 @@ public class BValVersion {
     static {
         Properties revisionProps = new Properties();
         try {
-            InputStream in = BValVersion.class.getResourceAsStream
-                ("/META-INF/org.apache.bval.revision.properties");
+            InputStream in = BValVersion.class.getResourceAsStream("/META-INF/org.apache.bval.revision.properties");
             if (in != null) {
                 try {
                     revisionProps.load(in);
@@ -93,7 +93,7 @@ public class BValVersion {
         }
 
         String revision = revisionProps.getProperty("svn.revision");
-        if (revision == null || "".equals(revision.trim())) {
+        if (StringUtils.isBlank(revision)) {
             revision = "unknown";
         } else {
             tok = new StringTokenizer(revision, ":");
@@ -104,8 +104,9 @@ public class BValVersion {
                 } catch (Exception e) {
                 }
             }
-            if (strTok != null)
+            if (strTok != null) {
                 revision = strTok;
+            }
         }
 
         MAJOR_RELEASE = major;

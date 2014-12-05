@@ -156,19 +156,16 @@ public class BeanValidationContext<T extends ValidationListener>
      */
     public Object getPropertyValue() {
         if (access == null) { // undefined access strategy
-            return getPropertyValue(
-                  new PropertyAccess(bean.getClass(), metaProperty.getName()));
-        } else {
-            return getPropertyValue(access);
+            return getPropertyValue(new PropertyAccess(bean.getClass(), metaProperty.getName()));
         }
+        return getPropertyValue(access);
     }
 
     /**
      * {@inheritDoc}
      * Caches retrieved value.
      */
-    public Object getPropertyValue(AccessStrategy access)
-          throws IllegalArgumentException, IllegalStateException {
+    public Object getPropertyValue(AccessStrategy access) throws IllegalArgumentException, IllegalStateException {
         if (propertyValue == UNKNOWN || (this.access != access && !fixed)) {
             propertyValue = access.get(bean);
             this.access = access;
@@ -293,8 +290,8 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      */
     public String toString() {
-        return "BeanValidationContext{ bean=" + bean + ", metaProperty=" + metaProperty +
-              ", propertyValue=" + propertyValue + '}';
+        return "BeanValidationContext{ bean=" + bean + ", metaProperty=" + metaProperty + ", propertyValue="
+            + propertyValue + '}';
     }
 
     /**

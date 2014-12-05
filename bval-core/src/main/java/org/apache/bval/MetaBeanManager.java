@@ -140,11 +140,12 @@ public class MetaBeanManager implements MetaBeanFinder {
      */
     protected void computeRelatedMetaBean(MetaProperty prop, String beanRef) {
         Class<?> beanType = prop.getFeature(REF_BEAN_TYPE);
-        if (beanType != null) {
+        if (beanType == null) {
+            if (prop.getFeature(REF_CASCADE) != null) { // dynamic type resolution:
+                prop.setMetaBean(new DynamicMetaBean(this));
+            }
+        } else {
             prop.setMetaBean(findForClass(beanType));
-        } else if (prop.getFeature(REF_CASCADE) != null) { // dynamic type
-                                                           // resolution:
-            prop.setMetaBean(new DynamicMetaBean(this));
         }
     }
 

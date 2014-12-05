@@ -27,8 +27,7 @@ import java.lang.reflect.Type;
  * @see Validation
  * @see MetaBean
  */
-public class MetaProperty extends Meta
-      implements Cloneable, Features.Property {
+public class MetaProperty extends Meta implements Cloneable, Features.Property {
     private static final long serialVersionUID = 1L;
 
     private String name;
@@ -95,13 +94,11 @@ public class MetaProperty extends Meta
      * @return Class, <code>null</code> if cannot be determined
      */
     public Class<?> getTypeClass() {
-        Type targetType = type instanceof DynaType ? ((DynaType) type)
-                .getRawType() : type;
+        Type targetType = type instanceof DynaType ? ((DynaType) type).getRawType() : type;
         if (targetType == null) {
             return null;
         }
-        Type assigningType = getParentMetaBean() == null ? null
-                : getParentMetaBean().getBeanClass();
+        Type assigningType = getParentMetaBean() == null ? null : getParentMetaBean().getBeanClass();
         return TypeUtils.getRawType(targetType, assigningType);
     }
 

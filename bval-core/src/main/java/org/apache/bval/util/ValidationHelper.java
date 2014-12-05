@@ -28,7 +28,6 @@ import org.apache.bval.model.ValidationListener;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * Stateless helper methods used by the validators.
  * 
@@ -110,10 +109,10 @@ public class ValidationHelper {
                 if (each == null) {
                     continue; // Null values are not validated
                 }
-                if (dyn != null) {
-                    context.setBean(each, dyn.resolveMetaBean(each));
-                } else {
+                if (dyn == null) {
                     context.setBean(each);
+                } else {
+                    context.setBean(each, dyn.resolveMetaBean(each));
                 }
                 s.validate();
             }
@@ -149,10 +148,10 @@ public class ValidationHelper {
                 if (each == null) {
                     continue; // Null values are not validated
                 }
-                if (dyn != null) {
-                    context.setBean(each, dyn.resolveMetaBean(each));
-                } else {
+                if (dyn == null) {
                     context.setBean(each);
+                } else {
+                    context.setBean(each, dyn.resolveMetaBean(each));
                 }
                 s.validate();
             }

@@ -18,7 +18,9 @@
  */
 package org.apache.bval.model;
 
-public class Meta extends FeaturesCapable {
+public abstract class Meta extends FeaturesCapable {
+    private static final long serialVersionUID = 1L;
+
     protected MetaBean parentMetaBean;
 
     public MetaBean getParentMetaBean() {

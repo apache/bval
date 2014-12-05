@@ -91,11 +91,9 @@ public abstract class FeaturesCapable implements Serializable {
     }
 
     public <T> T initFeature(final String key, final T value) {
-        final T old = (T) features.putIfAbsent(key, value);
-        if (old != null) {
-            return old;
-        }
-        return value;
+        @SuppressWarnings("unchecked")
+        final T faster = (T) features.putIfAbsent(key, value);
+        return faster == null ? value : faster;
     }
 
     /**
@@ -169,11 +167,13 @@ public abstract class FeaturesCapable implements Serializable {
      * @return true if found
      */
     public boolean hasValidation(Validation aValidation) {
-        if (validations == null)
+        if (validations == null) {
             return false;
+        }
         for (Validation validation : validations) {
-            if (validation.equals(aValidation))
+            if (validation.equals(aValidation)) {
                 return true;
+            }
         }
         return false;
     }

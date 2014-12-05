@@ -92,8 +92,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
      */
     public void cache(MetaBean beanInfo) {
         cacheById.put(beanInfo.getId(), beanInfo);
-        if (beanInfo.getBeanClass() != null &&
-                beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
+        if (beanInfo.getBeanClass() != null && beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
             cacheByClass.putIfAbsent(beanInfo.getBeanClass(), beanInfo);
         }
     }
@@ -104,8 +103,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
      */
     public void removeFromCache(MetaBean beanInfo) {
         cacheById.remove(beanInfo.getId());
-        if (beanInfo.getBeanClass() != null &&
-                beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
+        if (beanInfo.getBeanClass() != null && beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
             cacheByClass.remove(beanInfo.getBeanClass());
         }
     }

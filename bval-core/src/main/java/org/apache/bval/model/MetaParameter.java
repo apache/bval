@@ -16,12 +16,11 @@
  */
 package org.apache.bval.model;
 
-import java.lang.annotation.Annotation;
+public class MetaParameter extends MetaAnnotated {
+    private static final long serialVersionUID = 1L;
 
-public class MetaParameter extends Meta {
     private final MetaInvocable invocable;
     private final Integer index;
-    private Annotation[] annotations = new Annotation[0];
 
     public MetaParameter(final MetaInvocable metaMethod, final Integer index) {
         this.invocable = metaMethod;
@@ -36,14 +35,8 @@ public class MetaParameter extends Meta {
         return index;
     }
 
-    public Annotation[] getAnnotations() {
-        return annotations;
-    }
-
-    public void addAnnotation(final Annotation annotation) {
-        final Annotation[] a = new Annotation[annotations.length + 1];
-        System.arraycopy(annotations, 0, a, 0, annotations.length);
-        a[a.length - 1] = annotation;
-        this.annotations = a;
+    @Override
+    public MetaBean getParentMetaBean() {
+        return invocable.getParentMetaBean();
     }
 }

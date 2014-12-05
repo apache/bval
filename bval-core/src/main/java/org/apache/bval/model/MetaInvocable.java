@@ -16,15 +16,15 @@
  */
 package org.apache.bval.model;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class MetaInvocable extends Meta {
+public abstract class MetaInvocable extends MetaAnnotated {
+    private static final long serialVersionUID = 1L;
+
     private Map<Integer, MetaParameter> parameters = new HashMap<Integer, MetaParameter>();
-    private Annotation[] annotations = new Annotation[0];
 
     public Collection<MetaParameter> getParameters() {
         return new ArrayList<MetaParameter>(parameters.values());
@@ -32,17 +32,6 @@ public abstract class MetaInvocable extends Meta {
 
     public void addParameter(final int idx, final MetaParameter param) {
         parameters.put(idx, param);
-    }
-
-    public Annotation[] getAnnotations() {
-        return annotations;
-    }
-
-    public void addAnnotation(final Annotation annotation) {
-        final Annotation[] a = new Annotation[annotations.length + 1];
-        System.arraycopy(annotations, 0, a, 0, annotations.length);
-        a[a.length - 1] = annotation;
-        this.annotations = a;
     }
 
     public MetaParameter getParameter(final Integer index) {

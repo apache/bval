@@ -22,9 +22,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
+
 /**
  * Description: invoke a zero-argument method (getter)<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class MethodAccess extends AccessStrategy {
     private final Method method;
     private final String propertyName;
@@ -45,7 +50,6 @@ public class MethodAccess extends AccessStrategy {
     public MethodAccess(String propertyName, final Method method) {
         this.method = method;
         this.propertyName = propertyName;
-        setAccessible(method);
     }
 
     /**
@@ -80,12 +84,17 @@ public class MethodAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public Object get(final Object instance) {
+        final boolean mustUnset = Reflection.setAccessible(method, true);
         try {
             return method.invoke(instance);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e);
+        } finally {
+            if (mustUnset) {
+                Reflection.setAccessible(method, false);
+            }
         }
     }
 

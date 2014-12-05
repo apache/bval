@@ -16,7 +16,6 @@
  */
 package org.apache.bval.util;
 
-import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.beanutils.PropertyUtils;
 
 import java.beans.PropertyDescriptor;
@@ -150,17 +149,6 @@ public class PropertyAccess extends AccessStrategy {
         return null;
     }
 
-    private static Object readField(Field field, Object bean) throws IllegalAccessException {
-        final boolean mustUnset = Reflection.setAccessible(field, true);
-        try {
-            return field.get(bean);
-        } finally {
-            if (mustUnset) {
-                Reflection.setAccessible(field, false);
-            }
-        }
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -174,7 +162,7 @@ public class PropertyAccess extends AccessStrategy {
     public Object get(Object bean) {
         try {
             if (rememberField != null) { // cache field of previous access
-                return readField(rememberField, bean);
+                return rememberField.get(bean);
             }
             try { // try public method
                 return getPublicProperty(bean, propertyName);
@@ -192,12 +180,15 @@ public class PropertyAccess extends AccessStrategy {
         Field field = getField(propertyName, beanClass);
         if (field != null) {
             cacheField(field);
-            return readField(rememberField, bean);
+            return rememberField.get(bean);
         }
         throw new IllegalArgumentException("cannot access field " + propertyName);
     }
 
     private void cacheField(Field field) {
+        if (!field.isAccessible()) {
+            field.setAccessible(true);
+        }
         this.rememberField = field;
     }
 

@@ -54,6 +54,7 @@ import org.apache.bval.util.MethodAccess;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.Converter;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -95,8 +96,7 @@ public class ValidationMappingParser {
                 if (!processedClasses.add(beanClass)) {
                     // spec: A given class must not be described more than once amongst all
                     //  the XML mapping descriptors.
-                    throw new ValidationException(
-                          beanClass.getName() + " has already be configured in xml.");
+                    throw new ValidationException(beanClass.getName() + " has already be configured in xml.");
                 }
 
                 boolean ignoreAnnotations = bean.getIgnoreAnnotations() == null ? true : bean.getIgnoreAnnotations();
@@ -151,8 +151,7 @@ public class ValidationMappingParser {
         }
 
         // group sequence
-        Class<?>[] groupSequence =
-              createGroupSequence(classType.getGroupSequence(), defaultPackage);
+        Class<?>[] groupSequence = createGroupSequence(classType.getGroupSequence(), defaultPackage);
         if (groupSequence != null) {
             factory.addDefaultSequence(beanClass, groupSequence);
         }
@@ -198,8 +197,7 @@ public class ValidationMappingParser {
         }
     }
 
-    private <A extends Annotation> Class<?> getAnnotationParameterType(
-          final Class<A> annotationClass, final String name) {
+    private <A extends Annotation> Class<?> getAnnotationParameterType(final Class<A> annotationClass, final String name) {
         final Method m = Reflection.getPublicMethod(annotationClass, name);
         if (m == null) {
             throw new ValidationException("Annotation of type " + annotationClass.getName() +
@@ -219,14 +217,12 @@ public class ValidationMappingParser {
                       "Attempt to specify an array where single value is expected.");
             }
             return getSingleValue(elementType.getContent().get(0), returnType, defaultPackage);
-        } else {
-            List<Object> values = new ArrayList<Object>();
-            for (Serializable s : elementType.getContent()) {
-                values.add(getSingleValue(s, returnType.getComponentType(), defaultPackage));
-            }
-            return values.toArray(
-                  (Object[]) Array.newInstance(returnType.getComponentType(), values.size()));
         }
+        List<Object> values = new ArrayList<Object>();
+        for (Serializable s : elementType.getContent()) {
+            values.add(getSingleValue(s, returnType.getComponentType(), defaultPackage));
+        }
+        return values.toArray((Object[]) Array.newInstance(returnType.getComponentType(), values.size()));
     }
 
     private void removeEmptyContentElements(ElementType elementType) {
@@ -240,40 +236,31 @@ public class ValidationMappingParser {
     }
 
     @SuppressWarnings("unchecked")
-    private Object getSingleValue(Serializable serializable, Class<?> returnType,
-                                  String defaultPackage) {
-
-        Object returnValue;
+    private Object getSingleValue(Serializable serializable, Class<?> returnType, String defaultPackage) {
         if (serializable instanceof String) {
             String value = (String) serializable;
-            returnValue = convertToResultType(returnType, value, defaultPackage);
-        } else if (serializable instanceof JAXBElement<?> &&
-              ((JAXBElement<?>) serializable).getDeclaredType()
-                    .equals(String.class)) {
-            JAXBElement<?> elem = (JAXBElement<?>) serializable;
-            String value = (String) elem.getValue();
-            returnValue = convertToResultType(returnType, value, defaultPackage);
-        } else if (serializable instanceof JAXBElement<?> &&
-              ((JAXBElement<?>) serializable).getDeclaredType()
-                    .equals(AnnotationType.class)) {
-            JAXBElement<?> elem = (JAXBElement<?>) serializable;
-            AnnotationType annotationType = (AnnotationType) elem.getValue();
-            try {
-                Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) returnType;
-                returnValue =
-                      createAnnotation(annotationType, annotationClass, defaultPackage);
-            } catch (ClassCastException e) {
-                throw new ValidationException("Unexpected parameter value");
-            }
-        } else {
-            throw new ValidationException("Unexpected parameter value");
+            return convertToResultType(returnType, value, defaultPackage);
         }
-        return returnValue;
-
+        if (serializable instanceof JAXBElement<?>) {
+            JAXBElement<?> elem = (JAXBElement<?>) serializable;
+            if (String.class.equals(elem.getDeclaredType())) {
+                String value = (String) elem.getValue();
+                return convertToResultType(returnType, value, defaultPackage);
+            }
+            if (AnnotationType.class.equals(elem.getDeclaredType())) {
+                AnnotationType annotationType = (AnnotationType) elem.getValue();
+                try {
+                    Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) returnType;
+                    return createAnnotation(annotationType, annotationClass, defaultPackage);
+                } catch (ClassCastException e) {
+                    throw new ValidationException("Unexpected parameter value");
+                }
+            }
+        }
+        throw new ValidationException("Unexpected parameter value");
     }
 
-    private Object convertToResultType(Class<?> returnType, String value,
-                                       String defaultPackage) {
+    private Object convertToResultType(Class<?> returnType, String value, String defaultPackage) {
         /**
          * Class is represented by the fully qualified class name of the class.
          * spec: Note that if the raw string is unqualified,
@@ -281,21 +268,29 @@ public class ValidationMappingParser {
          */
         if (returnType.equals(Class.class)) {
             value = toQualifiedClassName(value, defaultPackage);
-        } else if (Byte.class.equals(returnType) || byte.class.equals(returnType)) { // spec mandates it
+        }
+        if (Byte.class.equals(returnType) || byte.class.equals(returnType)) { // spec mandates it
             return Byte.parseByte(value);
-        } else if (Short.class.equals(returnType) || short.class.equals(returnType)) {
+        }
+        if (Short.class.equals(returnType) || short.class.equals(returnType)) {
             return Short.parseShort(value);
-        } else if (Integer.class.equals(returnType) || int.class.equals(returnType)) {
+        }
+        if (Integer.class.equals(returnType) || int.class.equals(returnType)) {
             return Integer.parseInt(value);
-        } else if (Long.class.equals(returnType) || long.class.equals(returnType)) {
+        }
+        if (Long.class.equals(returnType) || long.class.equals(returnType)) {
             return Long.parseLong(value);
-        } else if (Float.class.equals(returnType) || float.class.equals(returnType)) {
+        }
+        if (Float.class.equals(returnType) || float.class.equals(returnType)) {
             return Float.parseFloat(value);
-        } else if (Double.class.equals(returnType) || double.class.equals(returnType)) {
+        }
+        if (Double.class.equals(returnType) || double.class.equals(returnType)) {
             return Double.parseDouble(value);
-        } else if (Boolean.class.equals(returnType) || boolean.class.equals(returnType)) {
+        }
+        if (Boolean.class.equals(returnType) || boolean.class.equals(returnType)) {
             return Boolean.parseBoolean(value);
-        } else if (Character.class.equals(returnType) || char.class.equals(returnType)) {
+        }
+        if (Character.class.equals(returnType) || char.class.equals(returnType)) {
             if (value.length() > 1) {
                 throw new IllegalArgumentException("a char has a length of 1");
             }
@@ -308,11 +303,10 @@ public class ValidationMappingParser {
             converter = EnumerationConverter.getInstance();
         }
 
-        if (converter != null) {
-            return converter.convert(returnType, value);
-        } else {
+        if (converter == null) {
             return converter;
         }
+        return converter.convert(returnType, value);
     }
 
     private <A extends Annotation> Annotation createAnnotation(AnnotationType annotationType,
@@ -330,7 +324,7 @@ public class ValidationMappingParser {
 
     private Class<?>[] getGroups(GroupsType groupsType, String defaultPackage) {
         if (groupsType == null) {
-            return new Class[]{};
+            return ArrayUtils.EMPTY_CLASS_ARRAY;
         }
 
         List<Class<?>> groupList = new ArrayList<Class<?>>();
@@ -340,10 +334,8 @@ public class ValidationMappingParser {
         return groupList.toArray(new Class[groupList.size()]);
     }
 
-
     @SuppressWarnings("unchecked")
-    private Class<? extends Payload>[] getPayload(PayloadType payloadType,
-                                                  String defaultPackage) {
+    private Class<? extends Payload>[] getPayload(PayloadType payloadType, String defaultPackage) {
         if (payloadType == null) {
             return new Class[]{};
         }
@@ -354,15 +346,13 @@ public class ValidationMappingParser {
             if (!Payload.class.isAssignableFrom(payload)) {
                 throw new ValidationException("Specified payload class " + payload.getName() +
                       " does not implement javax.validation.Payload");
-            } else {
-                payloadList.add((Class<? extends Payload>) payload);
             }
+            payloadList.add((Class<? extends Payload>) payload);
         }
         return payloadList.toArray(new Class[payloadList.size()]);
     }
 
-    private Class<?>[] createGroupSequence(GroupSequenceType groupSequenceType,
-                                               String defaultPackage) {
+    private Class<?>[] createGroupSequence(GroupSequenceType groupSequenceType, String defaultPackage) {
         if (groupSequenceType != null) {
             Class<?>[] groupSequence = new Class<?>[groupSequenceType.getValue().size()];
             int i=0;
@@ -371,20 +361,20 @@ public class ValidationMappingParser {
                 groupSequence[i++] = group;
             }
             return groupSequence;
-        } else {
-            return null;
         }
+        return null;
     }
 
-    private <A> void processMethodLevel(final List<MethodType> methods, final Class<A> beanClass, final String defaultPackage, final boolean parentIgnoreAnn, final Collection<String> getters) {
+    private <A> void processMethodLevel(final List<MethodType> methods, final Class<A> beanClass,
+        final String defaultPackage, final boolean parentIgnoreAnn, final Collection<String> getters) {
         final List<String> methodNames = new ArrayList<String>();
         for (final MethodType methodType : methods) {
             final String methodName = methodType.getName();
             if (methodNames.contains(methodName) || getters.contains(methodName)) {
                 throw new ValidationException(methodName + " is defined more than once in mapping xml for bean " + beanClass.getName());
-            } else {
-                methodNames.add(methodName);
-            }
+            } 
+            methodNames.add(methodName);
+
             final Method method = Reflection.getDeclaredMethod(beanClass, methodName, toTypes(methodType.getParameter(), defaultPackage));
             if (method == null) {
                 throw new ValidationException(beanClass.getName() + " does not contain the method  " + methodName);
@@ -395,10 +385,10 @@ public class ValidationMappingParser {
             factory.getAnnotationIgnores().setIgnoreAnnotationsOnMember(method, ignoreMethodAnnotation);
 
             final boolean ignoreAnn;
-            if (methodType.getIgnoreAnnotations() != null) {
-                ignoreAnn = methodType.getIgnoreAnnotations();
-            } else {
+            if (methodType.getIgnoreAnnotations() == null) {
                 ignoreAnn = parentIgnoreAnn;
+            } else {
+                ignoreAnn = methodType.getIgnoreAnnotations();
             }
 
             // constraints
@@ -410,7 +400,9 @@ public class ValidationMappingParser {
                     factory.addMetaConstraint(beanClass, constraint);
                 }
                 if (p.getValid() != null) {
-                    final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
+                    final MetaConstraint<?, ?> constraint =
+                        new MetaConstraint<A, Annotation>(beanClass, method,
+                            AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
                     constraint.setIndex(i);
                     factory.addMetaConstraint(beanClass, constraint);
                 }
@@ -419,7 +411,9 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : p.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint =
+                            new MetaConstraint<A, Annotation>(beanClass, method,
+                                new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         constraint.setIndex(i);
                         factory.addMetaConstraint(beanClass, constraint);
                     }
@@ -438,7 +432,9 @@ public class ValidationMappingParser {
                     factory.addMetaConstraint(beanClass, constraint);
                 }
                 if (returnValue.getValid() != null) {
-                    final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
+                    final MetaConstraint<?, ?> constraint =
+                        new MetaConstraint<A, Annotation>(beanClass, method,
+                            AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
                     factory.addMetaConstraint(beanClass, constraint);
                 }
 
@@ -446,11 +442,14 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : returnValue.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, method, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint =
+                            new MetaConstraint<A, Annotation>(beanClass, method,
+                                new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         factory.addMetaConstraint(beanClass, constraint);
                     }
                 }
-                factory.getAnnotationIgnores().setIgnoreAnnotationOnReturn(method, returnValue.getIgnoreAnnotations() == null ? ignoreAnn : returnValue.getIgnoreAnnotations());
+                factory.getAnnotationIgnores().setIgnoreAnnotationOnReturn(method,
+                    returnValue.getIgnoreAnnotations() == null ? ignoreAnn : returnValue.getIgnoreAnnotations());
             }
 
             final CrossParameterType crossParameter = methodType.getCrossParameter();
@@ -459,27 +458,31 @@ public class ValidationMappingParser {
                     final MetaConstraint<?, ?> constraint = createConstraint(constraintType, beanClass, method, defaultPackage);
                     factory.addMetaConstraint(beanClass, constraint);
                 }
-                factory.getAnnotationIgnores().setIgnoreAnnotationOnCrossParameter(method, crossParameter.getIgnoreAnnotations() != null ? crossParameter.getIgnoreAnnotations() : ignoreAnn);
+                factory.getAnnotationIgnores().setIgnoreAnnotationOnCrossParameter(method,
+                    crossParameter.getIgnoreAnnotations() != null ? crossParameter.getIgnoreAnnotations() : ignoreAnn);
             }
         }
     }
 
-    private <A> void processConstructorLevel(final List<ConstructorType> constructors, final Class<A> beanClass, final String defaultPackage, final boolean parentIgnore) {
+    private <A> void processConstructorLevel(final List<ConstructorType> constructors, final Class<A> beanClass,
+        final String defaultPackage, final boolean parentIgnore) {
         for (final ConstructorType constructorType : constructors) {
-            final Constructor<?> constructor = Reflection.getDeclaredConstructor(beanClass, toTypes(constructorType.getParameter(), defaultPackage));
+            final Constructor<?> constructor =
+                Reflection.getDeclaredConstructor(beanClass, toTypes(constructorType.getParameter(), defaultPackage));
             if (constructor == null) {
                 throw new ValidationException(beanClass.getName() + " does not contain the constructor  " + constructorType);
             }
 
             // ignore annotations
-            final boolean ignoreMethodAnnotation = constructorType.getIgnoreAnnotations() == null ? parentIgnore : constructorType.getIgnoreAnnotations();
+            final boolean ignoreMethodAnnotation =
+                constructorType.getIgnoreAnnotations() == null ? parentIgnore : constructorType.getIgnoreAnnotations();
             factory.getAnnotationIgnores().setIgnoreAnnotationsOnMember(constructor, ignoreMethodAnnotation);
 
             final boolean ignoreAnn;
-            if (constructorType.getIgnoreAnnotations() != null) {
-                ignoreAnn = constructorType.getIgnoreAnnotations();
-            } else {
+            if (constructorType.getIgnoreAnnotations() == null) {
                 ignoreAnn = parentIgnore;
+            } else {
+                ignoreAnn = constructorType.getIgnoreAnnotations();
             }
 
             // constraints
@@ -491,7 +494,9 @@ public class ValidationMappingParser {
                     factory.addMetaConstraint(beanClass, constraint);
                 }
                 if (p.getValid() != null) {
-                    final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
+                    final MetaConstraint<?, ?> constraint =
+                        new MetaConstraint<A, Annotation>(beanClass, constructor,
+                            AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
                     constraint.setIndex(i);
                     factory.addMetaConstraint(beanClass, constraint);
                 }
@@ -500,17 +505,21 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : p.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint =
+                            new MetaConstraint<A, Annotation>(beanClass, constructor,
+                                new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         constraint.setIndex(i);
                         factory.addMetaConstraint(beanClass, constraint);
                     }
                 }
 
-                boolean ignoreParametersAnnotation = p.getIgnoreAnnotations() == null ? ignoreMethodAnnotation : p.getIgnoreAnnotations();
+                boolean ignoreParametersAnnotation =
+                    p.getIgnoreAnnotations() == null ? ignoreMethodAnnotation : p.getIgnoreAnnotations();
                 if (ignoreParametersAnnotation || (ignoreMethodAnnotation && p.getIgnoreAnnotations() == null)) {
-
+                    // TODO what ?
                 }
-                factory.getAnnotationIgnores().setIgnoreAnnotationsOnParameter(constructor, i, p.getIgnoreAnnotations() != null ? p.getIgnoreAnnotations() : ignoreAnn);
+                factory.getAnnotationIgnores().setIgnoreAnnotationsOnParameter(constructor, i,
+                    p.getIgnoreAnnotations() != null ? p.getIgnoreAnnotations() : ignoreAnn);
 
                 i++;
             }
@@ -523,7 +532,9 @@ public class ValidationMappingParser {
                     factory.addMetaConstraint(beanClass, constraint);
                 }
                 if (returnValue.getValid() != null) {
-                    final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
+                    final MetaConstraint<?, ?> constraint =
+                        new MetaConstraint<A, Annotation>(beanClass, constructor,
+                            AnnotationProxyBuilder.ValidAnnotation.INSTANCE);
                     constraint.setIndex(-1);
                     factory.addMetaConstraint(beanClass, constraint);
                 }
@@ -532,12 +543,15 @@ public class ValidationMappingParser {
                     for (final GroupConversionType groupConversion : returnValue.getConvertGroup()) {
                         final Class<?> from = loadClass(groupConversion.getFrom(), defaultPackage);
                         final Class<?> to = loadClass(groupConversion.getTo(), defaultPackage);
-                        final MetaConstraint<?, ?> constraint = new MetaConstraint<A, Annotation>(beanClass, constructor, new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
+                        final MetaConstraint<?, ?> constraint =
+                            new MetaConstraint<A, Annotation>(beanClass, constructor,
+                                new AnnotationProxyBuilder.ConvertGroupAnnotation(from, to));
                         constraint.setIndex(-1);
                         factory.addMetaConstraint(beanClass, constraint);
                     }
                 }
-                factory.getAnnotationIgnores().setIgnoreAnnotationOnReturn(constructor, returnValue.getIgnoreAnnotations() != null ? returnValue.getIgnoreAnnotations() : ignoreAnn);
+                factory.getAnnotationIgnores().setIgnoreAnnotationOnReturn(constructor,
+                    returnValue.getIgnoreAnnotations() != null ? returnValue.getIgnoreAnnotations() : ignoreAnn);
             }
 
             final CrossParameterType crossParameter = constructorType.getCrossParameter();
@@ -546,7 +560,8 @@ public class ValidationMappingParser {
                     final MetaConstraint<?, ?> constraint = createConstraint(constraintType, beanClass, constructor, defaultPackage);
                     factory.addMetaConstraint(beanClass, constraint);
                 }
-                factory.getAnnotationIgnores().setIgnoreAnnotationOnCrossParameter(constructor, crossParameter.getIgnoreAnnotations() != null ? crossParameter.getIgnoreAnnotations() : ignoreAnn);
+                factory.getAnnotationIgnores().setIgnoreAnnotationOnCrossParameter(constructor,
+                    crossParameter.getIgnoreAnnotations() != null ? crossParameter.getIgnoreAnnotations() : ignoreAnn);
             }
         }
     }
@@ -569,16 +584,14 @@ public class ValidationMappingParser {
         for (FieldType fieldType : fields) {
             String fieldName = fieldType.getName();
             if (fieldNames.contains(fieldName)) {
-                throw new ValidationException(fieldName +
-                      " is defined more than once in mapping xml for bean " +
-                      beanClass.getName());
-            } else {
-                fieldNames.add(fieldName);
-            }
+                throw new ValidationException(fieldName + " is defined more than once in mapping xml for bean "
+                    + beanClass.getName());
+            } 
+            fieldNames.add(fieldName);
+
             final Field field = Reflection.getDeclaredField(beanClass, fieldName);
             if (field == null) {
-                throw new ValidationException(
-                      beanClass.getName() + " does not contain the fieldType  " + fieldName);
+                throw new ValidationException(beanClass.getName() + " does not contain the fieldType  " + fieldName);
             }
 
             // ignore annotations
@@ -616,9 +629,9 @@ public class ValidationMappingParser {
                 throw new ValidationException(getterName +
                       " is defined more than once in mapping xml for bean " +
                       beanClass.getName());
-            } else {
-                getterNames.add(methodName);
             }
+            getterNames.add(methodName);
+
             final Method method = getGetter(beanClass, getterName);
             if (method == null) {
                 throw new ValidationException(
@@ -716,14 +729,14 @@ public class ValidationMappingParser {
 
         Class<? extends ConstraintValidator<?, ?>>[] validator =
               factory.getDefaultConstraints().getValidatorClasses(annotationType);
-        if (validator != null) {
-            classes
-                  .addAll(Arrays.asList(validator));
-        } else {
-            Class<? extends ConstraintValidator<?, ?>>[] validatedBy = annotationType
-                  .getAnnotation(Constraint.class)
-                  .validatedBy();
+        if (validator == null) {
+            /* Collections.addAll() would be more straightforward here, but there is an Oracle compiler bug of some sort
+             * that precludes this:
+             */
+            Class<? extends ConstraintValidator<?, ?>>[] validatedBy = annotationType.getAnnotation(Constraint.class).validatedBy();
             classes.addAll(Arrays.asList(validatedBy));
+        } else {
+            Collections.addAll(classes, validator);
         }
         return classes;
     }
@@ -748,7 +761,7 @@ public class ValidationMappingParser {
     }
 
     @Privileged
-    private static Method getGetter(Class<?> clazz,String propertyName) {
+    private static Method getGetter(Class<?> clazz, String propertyName) {
         try {
             final String p = StringUtils.capitalize(propertyName);
             try {

@@ -17,89 +17,112 @@
 package org.apache.bval.util.reflection;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
 
 /**
- * Security-agnostic "blueprint" class for reflection-related operations.
+ * Security-agnostic "blueprint" class for reflection-related operations. Intended for use by Apache BVal code.
  * 
  * @version $Rev$ $Date$
  */
 public class Reflection {
 
-    private static void setAccessibility(final Field field) {
-        // FIXME 2011-03-27 jw:
-        // - Why not simply call field.setAccessible(true)?
-        // - Fields can not be abstract.
-        if (!Modifier.isPublic(field.getModifiers())
-            || (Modifier.isPublic(field.getModifiers()) && Modifier.isAbstract(field.getModifiers()))) {
-            field.setAccessible(true);
-        }
-    }
-
+    /**
+     * Get the named {@link Class} from the specified {@link ClassLoader}.
+     * @param classLoader
+     * @param className
+     * @return Class
+     * @throws Exception
+     */
     public static Class<?> getClass(final ClassLoader classLoader, final String className) throws Exception {
         return ClassUtils.getClass(classLoader, className, true);
     }
 
+    /**
+     * Get the named value from the specified {@link Annotation}.
+     * @param annotation
+     * @param name
+     * @return Object value
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
     public static Object getAnnotationValue(final Annotation annotation, final String name)
         throws IllegalAccessException, InvocationTargetException {
-        Method valueMethod;
+        final Method valueMethod;
         try {
             valueMethod = annotation.annotationType().getDeclaredMethod(name);
         } catch (final NoSuchMethodException ex) {
             // do nothing
-            valueMethod = null;
+            return null;
         }
-        if (null != valueMethod) {
-            if (!valueMethod.isAccessible()) {
-                valueMethod.setAccessible(true);
-            }
+        final boolean mustUnset = setAccessible(valueMethod, true);
+        try {
             return valueMethod.invoke(annotation);
+        } finally {
+            if (mustUnset) {
+                setAccessible(valueMethod, false);
+            }
         }
-        return null;
     }
 
+    /**
+     * Get a usable {@link ClassLoader}: that of {@code clazz} if {@link Thread#getContextClassLoader()} returns {@code null}.
+     * @param clazz
+     * @return {@link ClassLoader}
+     */
     public static ClassLoader getClassLoader(final Class<?> clazz) {
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        if (cl != null) {
-            return cl;
-        }
-        return clazz.getClassLoader();
+        return cl == null ? clazz.getClassLoader() : cl;
     }
 
+    /**
+     * Convenient point for {@link Privilizing} {@link System#getProperty(String)}.
+     * @param name
+     * @return String
+     */
     public static String getProperty(final String name) {
         return System.getProperty(name);
     }
 
+    /**
+     * Get the declared field from {@code clazz}.
+     * @param clazz
+     * @param fieldName
+     * @return {@link Field} or {@code null}
+     */
     public static Field getDeclaredField(final Class<?> clazz, final String fieldName) {
-        final Field f;
         try {
-            f = clazz.getDeclaredField(fieldName);
+            return clazz.getDeclaredField(fieldName);
         } catch (final NoSuchFieldException e) {
             return null;
         }
-        setAccessibility(f);
-        return f;
     }
 
+    /**
+     * Convenient point for {@link Privilizing} {@link Class#getDeclaredFields()}.
+     * @param clazz
+     * @return {@link Field} array
+     */
     public static Field[] getDeclaredFields(final Class<?> clazz) {
-        final Field[] fields = clazz.getDeclaredFields();
-        if (fields.length > 0) {
-            for (final Field f : fields) {
-                if (!f.isAccessible()) {
-                    f.setAccessible(true);
-                }
-            }
-        }
-        return fields;
+        return clazz.getDeclaredFields();
     }
 
-    public static Constructor<?> getDeclaredConstructor(final Class<?> clazz, final Class<?>... parameters) {
+    /**
+     * Get the declared constructor from {@code clazz}.
+     * @param T generic type
+     * @param clazz
+     * @param parameters
+     * @return {@link Constructor} or {@code null}
+     */
+    public static <T> Constructor<T> getDeclaredConstructor(final Class<T> clazz, final Class<?>... parameters) {
         try {
             return clazz.getDeclaredConstructor(parameters);
         } catch (final NoSuchMethodException e) {
@@ -107,6 +130,13 @@ public class Reflection {
         }
     }
 
+    /**
+     * Get the declared method from {@code clazz}.
+     * @param clazz
+     * @param name
+     * @param parameters
+     * @return {@link Method} or {@code null}
+     */
     public static Method getDeclaredMethod(final Class<?> clazz, final String name, final Class<?>... parameters) {
         try {
             return clazz.getDeclaredMethod(name, parameters);
@@ -115,28 +145,84 @@ public class Reflection {
         }
     }
 
+    /**
+     * Convenient point for {@link Privilizing} {@link Class#getDeclaredMethods()}.
+     * @param clazz
+     * @return {@link Method} array
+     */
     public static Method[] getDeclaredMethods(final Class<?> clazz) {
         return clazz.getDeclaredMethods();
     }
 
+    /**
+     * Convenient point for {@link Privilizing} {@link Class#getDeclaredConstructors()}.
+     * @param clazz
+     * @return {@link Constructor} array
+     */
     public static Constructor<?>[] getDeclaredConstructors(final Class<?> clazz) {
         return clazz.getDeclaredConstructors();
     }
 
-    public static Method getPublicMethod(final Class<?> clazz, final String methodName) {
+    /**
+     * Get the specified {@code public} {@link Method} from {@code clazz}.
+     * @param clazz
+     * @param methodName
+     * @return {@link Method} or {@code null}
+     */
+    public static Method getPublicMethod(final Class<?> clazz, final String methodName, Class<?>... parameterTypes) {
         try {
-            return clazz.getMethod(methodName);
+            return clazz.getMethod(methodName, parameterTypes);
         } catch (final NoSuchMethodException e) {
             return null;
         }
     }
 
+    /**
+     * Construct a new instance of {@code cls} using its default constructor.
+     * @param cls
+     * @return T
+     */
     public static <T> T newInstance(final Class<T> cls) {
         try {
             return cls.newInstance();
         } catch (final Exception ex) {
             throw new RuntimeException("Cannot instantiate : " + cls, ex);
         }
+    }
+
+    /**
+     * Set the accessibility of {@code o} to {@code accessible}.
+     * @param o
+     * @param accessible
+     * @return whether a change was made.
+     */
+    public static boolean setAccessible(final AccessibleObject o, boolean accessible) {
+        if (o == null || o.isAccessible() == accessible) {
+            return false;
+        }
+        final Member m = (Member) o;
+        if (Modifier.isPublic(m.getModifiers())) {
+            /*
+             * For objects with public accessibility, we do nothing and return with one exception.
+             * 
+             * Following explanation copied from Apache Commons [lang] MemberUtils:
+             * When a {@code public} class has a default access superclass with {@code public} members,
+             * these members are accessible. Calling them from compiled code works fine.
+             * Unfortunately, on some JVMs, using reflection to invoke these members
+             * seems to (wrongly) prevent access even when the modifier is {@code public}.
+             * Calling {@code setAccessible(true)} solves the problem but will only work from
+             * sufficiently privileged code.
+             */
+            if (!isPackageAccess(m.getDeclaringClass().getModifiers())) {
+                return false;
+            }
+        }
+        o.setAccessible(accessible);
+        return true;
+    }
+
+    private static boolean isPackageAccess(final int modifiers) {
+        return (modifiers & (Modifier.PRIVATE | Modifier.PROTECTED | Modifier.PUBLIC)) == 0;
     }
 
 }

@@ -30,7 +30,6 @@ import javax.validation.groups.ConvertGroup;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -42,8 +41,7 @@ import java.util.concurrent.ConcurrentMap;
  * Description: Holds the information and creates an annotation proxy during xml
  * parsing of validation mapping constraints. <br/>
  */
-// TODO move this guy up to org.apache.bval.jsr or
-// org.apache.bval.jsr.model
+// TODO move this guy up to org.apache.bval.jsr or org.apache.bval.jsr.model
 @Privilizing(@CallTo(Reflection.class))
 final public class AnnotationProxyBuilder<A extends Annotation> {
     private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<Class<?>, Method[]>();
@@ -101,19 +99,16 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
         this((Class<A>) annot.annotationType());
         // Obtain the "elements" of the annotation
         for (Method m : methods) {
-            if (!m.isAccessible()) {
-                m.setAccessible(true);
-            }
+            final boolean mustUnset = Reflection.setAccessible(m, true);
             try {
                 Object value = m.invoke(annot);
                 this.elements.put(m.getName(), value);
-            } catch (IllegalArgumentException e) {
-                // No args, so should not happen
-                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
-            } catch (IllegalAccessException e) {
-                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
-            } catch (InvocationTargetException e) {
-                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName());
+            } catch (Exception e) {
+                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName(), e);
+            } finally {
+                if (mustUnset) {
+                    Reflection.setAccessible(m, false);
+                }
             }
         }
     }

@@ -201,28 +201,13 @@ public class Reflection {
             return false;
         }
         final Member m = (Member) o;
-        if (Modifier.isPublic(m.getModifiers())) {
-            /*
-             * For objects with public accessibility, we do nothing and return with one exception.
-             * 
-             * Following explanation copied from Apache Commons [lang] MemberUtils:
-             * When a {@code public} class has a default access superclass with {@code public} members,
-             * these members are accessible. Calling them from compiled code works fine.
-             * Unfortunately, on some JVMs, using reflection to invoke these members
-             * seems to (wrongly) prevent access even when the modifier is {@code public}.
-             * Calling {@code setAccessible(true)} solves the problem but will only work from
-             * sufficiently privileged code.
-             */
-            if (!isPackageAccess(m.getDeclaringClass().getModifiers())) {
-                return false;
-            }
+
+        // For public members whose declaring classes are public, we need do nothing:
+        if (Modifier.isPublic(m.getModifiers()) && Modifier.isPublic(m.getDeclaringClass().getModifiers())) {
+            return false;
         }
         o.setAccessible(accessible);
         return true;
-    }
-
-    private static boolean isPackageAccess(final int modifiers) {
-        return (modifiers & (Modifier.PRIVATE | Modifier.PROTECTED | Modifier.PUBLIC)) == 0;
     }
 
 }

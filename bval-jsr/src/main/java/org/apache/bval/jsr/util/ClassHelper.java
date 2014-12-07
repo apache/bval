@@ -18,8 +18,6 @@
  */
 package org.apache.bval.jsr.util;
 
-import org.apache.commons.lang3.ClassUtils;
-
 import java.io.Serializable;
 import java.security.AccessController;
 import java.util.List;
@@ -43,8 +41,7 @@ public class ClassHelper {
      *            The current list of classes in the hierarchy.
      * @param clazz
      */
-    @Deprecated
-    static public List<Class<?>> fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
+    public static List<Class<?>> fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
         if (clazz == null || clazz == Object.class || clazz == Serializable.class || clazz == Cloneable.class) {
             return allClasses;
         }

@@ -271,10 +271,14 @@ public class ValidationParser {
         final String parameterNameProvider = xmlConfig.getParameterNameProvider();
         if (targetConfig.getParameterNameProvider() == targetConfig.getDefaultParameterNameProvider()) { // ref ==
             if (parameterNameProvider != null) {
-                final Class<? extends ParameterNameProvider> clazz =
-                    loadClass(parameterNameProvider).asSubclass(ParameterNameProvider.class);
-                targetConfig.parameterNameProviderClass(clazz);
-                log.log(Level.INFO, String.format("Using %s as validation provider.", parameterNameProvider));
+                final Class<?> loaded = loadClass(parameterNameProvider);
+                if (loaded != null) {
+                    final Class<? extends ParameterNameProvider> clazz = loaded.asSubclass(ParameterNameProvider.class);
+                    targetConfig.parameterNameProviderClass(clazz);
+                    log.log(Level.INFO, String.format("Using %s as validation provider.", parameterNameProvider));
+                } else {
+                    log.log(Level.SEVERE, "Can't load " + parameterNameProvider);
+                }
             }
         }
     }

@@ -34,6 +34,7 @@ import org.apache.commons.weaver.privilizer.Privilizing;
  * @version $Rev$ $Date$
  */
 public class Reflection {
+    private static final boolean hasSecurityManager = System.getSecurityManager() != null;
 
     /**
      * Get the named {@link Class} from the specified {@link ClassLoader}.
@@ -191,13 +192,18 @@ public class Reflection {
     }
 
     /**
-     * Set the accessibility of {@code o} to {@code accessible}.
+     * Set the accessibility of {@code o} to {@code accessible}. If running without a {@link SecurityManager}
+     * and {@code accessible == false}, this call is ignored (because any code could reflectively make any
+     * object accessible at any time).
      * @param o
      * @param accessible
      * @return whether a change was made.
      */
     public static boolean setAccessible(final AccessibleObject o, boolean accessible) {
         if (o == null || o.isAccessible() == accessible) {
+            return false;
+        }
+        if (!accessible && !hasSecurityManager) {
             return false;
         }
         final Member m = (Member) o;

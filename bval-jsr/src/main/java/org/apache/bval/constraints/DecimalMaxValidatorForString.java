@@ -27,8 +27,7 @@ import java.math.BigDecimal;
  * Check that the String being validated represents a number, and has a value
  * <= maxvalue
  */
-public class DecimalMaxValidatorForString
-      implements ConstraintValidator<DecimalMax, String> {
+public class DecimalMaxValidatorForString implements ConstraintValidator<DecimalMax, String> {
 
     private BigDecimal maxValue;
 
@@ -36,8 +35,7 @@ public class DecimalMaxValidatorForString
         try {
             this.maxValue = new BigDecimal(annotation.value());
         } catch (NumberFormatException nfe) {
-            throw new IllegalArgumentException(
-                  annotation.value() + " does not represent a valid BigDecimal format");
+            throw new IllegalArgumentException(annotation.value() + " does not represent a valid BigDecimal format");
         }
     }
 

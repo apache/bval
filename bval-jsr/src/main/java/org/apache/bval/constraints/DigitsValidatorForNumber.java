@@ -52,12 +52,10 @@ public class DigitsValidatorForNumber implements ConstraintValidator<Digits, Num
         this.integral = annotation.integer();
         this.fractional = annotation.fraction();
         if (integral < 0) {
-            throw new IllegalArgumentException(
-                  "The length of the integer part cannot be negative.");
+            throw new IllegalArgumentException("The length of the integer part cannot be negative.");
         }
         if (fractional < 0) {
-            throw new IllegalArgumentException(
-                  "The length of the fraction part cannot be negative.");
+            throw new IllegalArgumentException("The length of the fraction part cannot be negative.");
         }
     }
 
@@ -74,12 +72,11 @@ public class DigitsValidatorForNumber implements ConstraintValidator<Digits, Num
         }
         bigDecimal = bigDecimal.stripTrailingZeros();
 
-        int intLength = bigDecimal.precision() - bigDecimal.scale();
+        final int intLength = bigDecimal.precision() - bigDecimal.scale();
         if (integral >= intLength) {
             int factionLength = bigDecimal.scale() < 0 ? 0 : bigDecimal.scale();
             return fractional >= factionLength;
-        } else {
-            return false;
         }
+        return false;
     }
 }

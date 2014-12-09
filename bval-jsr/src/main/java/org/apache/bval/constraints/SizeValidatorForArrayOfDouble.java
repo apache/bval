@@ -23,8 +23,7 @@ import javax.validation.ConstraintValidatorContext;
 import javax.validation.constraints.Size;
 import java.lang.reflect.Array;
 
-public class SizeValidatorForArrayOfDouble extends SizeValidator
-      implements ConstraintValidator<Size, double[]> {
+public class SizeValidatorForArrayOfDouble extends SizeValidator implements ConstraintValidator<Size, double[]> {
 
     /**
      * Checks the number of entries in an array.
@@ -39,7 +38,7 @@ public class SizeValidatorForArrayOfDouble extends SizeValidator
         if (array == null) {
             return true;
         }
-        int length = Array.getLength(array);
+        final int length = Array.getLength(array);
         return length >= min && length <= max;
 	}
 }

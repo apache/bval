@@ -31,7 +31,7 @@ public class PatternValidator implements ConstraintValidator<Pattern, String> {
     protected java.util.regex.Pattern pattern;
 
     public void initialize(Pattern annotation) {
-        Pattern.Flag flags[] = annotation.flags();
+        final Pattern.Flag flags[] = annotation.flags();
         int intFlag = 0;
         for (Pattern.Flag flag : flags) {
             intFlag = intFlag | flag.getValue();

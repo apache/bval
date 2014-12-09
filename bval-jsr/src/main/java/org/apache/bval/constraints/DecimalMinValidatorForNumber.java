@@ -25,8 +25,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /** Description: validate that number-value of passed object is >= minvalue<br/> */
-public class DecimalMinValidatorForNumber
-      implements ConstraintValidator<DecimalMin, Number> {
+public class DecimalMinValidatorForNumber implements ConstraintValidator<DecimalMin, Number> {
 
     private BigDecimal minValue;
 
@@ -34,20 +33,20 @@ public class DecimalMinValidatorForNumber
         try {
             this.minValue = new BigDecimal(annotation.value());
         } catch (NumberFormatException nfe) {
-            throw new IllegalArgumentException(
-                  annotation.value() + " does not represent a valid BigDecimal format");
+            throw new IllegalArgumentException(annotation.value() + " does not represent a valid BigDecimal format");
         }
     }
 
     public boolean isValid(Number value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
-        } else if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(minValue) != -1;
-        } else if (value instanceof BigInteger) {
-            return (new BigDecimal((BigInteger) value)).compareTo(minValue) != -1;
-        } else {
-            return (new BigDecimal(value.doubleValue()).compareTo(minValue)) != -1;
         }
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).compareTo(minValue) != -1;
+        }
+        if (value instanceof BigInteger) {
+            return (new BigDecimal((BigInteger) value)).compareTo(minValue) != -1;
+        }
+        return (new BigDecimal(value.doubleValue()).compareTo(minValue)) != -1;
     }
 }

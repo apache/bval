@@ -25,8 +25,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /** Description: validate that number-value of passed object is <= maxvalue<br/> */
-public class DecimalMaxValidatorForNumber
-      implements ConstraintValidator<DecimalMax, Number> {
+public class DecimalMaxValidatorForNumber implements ConstraintValidator<DecimalMax, Number> {
 
     private BigDecimal maxValue;
 
@@ -42,12 +41,13 @@ public class DecimalMaxValidatorForNumber
     public boolean isValid(Number value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
-        } else if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(maxValue) != 1;
-        } else if (value instanceof BigInteger) {
-            return (new BigDecimal((BigInteger) value)).compareTo(maxValue) != 1;
-        } else {
-            return (new BigDecimal(value.doubleValue()).compareTo(maxValue)) != 1;
         }
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).compareTo(maxValue) != 1;
+        }
+        if (value instanceof BigInteger) {
+            return (new BigDecimal((BigInteger) value)).compareTo(maxValue) != 1;
+        }
+        return (new BigDecimal(value.doubleValue()).compareTo(maxValue)) != 1;
     }           
 }

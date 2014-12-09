@@ -28,8 +28,7 @@ import java.math.BigDecimal;
  * Check that the String being validated represents a number, and has a value
  * >= minvalue
  */
-public class DecimalMinValidatorForString
-      implements ConstraintValidator<DecimalMin, String> {
+public class DecimalMinValidatorForString implements ConstraintValidator<DecimalMin, String> {
 
     private BigDecimal minValue;
 
@@ -37,8 +36,7 @@ public class DecimalMinValidatorForString
         try {
             this.minValue = new BigDecimal(annotation.value());
         } catch (NumberFormatException nfe) {
-            throw new IllegalArgumentException(
-                  annotation.value() + " does not represent a valid BigDecimal format");
+            throw new IllegalArgumentException(annotation.value() + " does not represent a valid BigDecimal format");
         }
     }
 

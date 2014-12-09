@@ -31,7 +31,7 @@ public class AssertTrueValidator implements ConstraintValidator<AssertTrue, Bool
     }
 
     public boolean isValid(Boolean value, ConstraintValidatorContext context) {
-        return value == null || value;
+        return value == null || Boolean.TRUE.equals(value);
     }
 
 }

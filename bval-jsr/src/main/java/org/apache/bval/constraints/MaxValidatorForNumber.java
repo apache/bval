@@ -39,12 +39,13 @@ public class MaxValidatorForNumber implements ConstraintValidator<Max, Number> {
     public boolean isValid(Number value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
-        } else if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(max)) != 1;
-        } else if (value instanceof BigInteger) {
-            return ((BigInteger) value).compareTo(BigInteger.valueOf(max)) != 1;
-        } else {
-            return value.longValue() <= max;
         }
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(max)) != 1;
+        }
+        if (value instanceof BigInteger) {
+            return ((BigInteger) value).compareTo(BigInteger.valueOf(max)) != 1;
+        }
+        return value.longValue() <= max;
     }
 }

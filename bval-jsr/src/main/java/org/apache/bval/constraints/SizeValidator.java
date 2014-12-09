@@ -37,8 +37,14 @@ public abstract class SizeValidator {
     public void initialize(Size constraint) {
         min = constraint.min();
         max = constraint.max();
-        if (min < 0) throw new ValidationException("Min cannot be negative");
-        if (max < 0) throw new ValidationException("Max cannot be negative");
-        if (max < min) throw new ValidationException("Max cannot be less than Min");
+        if (min < 0) {
+            throw new ValidationException("Min cannot be negative");
+        }
+        if (max < 0) {
+            throw new ValidationException("Max cannot be negative");
+        }
+        if (max < min) {
+            throw new ValidationException("Max cannot be less than Min");
+        }
     }
 }

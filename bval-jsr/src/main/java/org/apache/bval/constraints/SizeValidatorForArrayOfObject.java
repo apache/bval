@@ -24,8 +24,7 @@ import javax.validation.constraints.Size;
 import java.lang.reflect.Array;
 
 /** Check that the length of an array is between <i>min</i> and <i>max</i> */
-public class SizeValidatorForArrayOfObject extends SizeValidator
-      implements ConstraintValidator<Size, Object[]> {
+public class SizeValidatorForArrayOfObject extends SizeValidator implements ConstraintValidator<Size, Object[]> {
     /**
      * Checks the number of entries in an array.
      *
@@ -39,7 +38,7 @@ public class SizeValidatorForArrayOfObject extends SizeValidator
         if (array == null) {
             return true;
         }
-        int length = Array.getLength(array);
+        final int length = Array.getLength(array);
         return length >= min && length <= max;
     }
 

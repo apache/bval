@@ -38,13 +38,13 @@ public class MinValidatorForNumber implements ConstraintValidator<Min, Number> {
     public boolean isValid(Number value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
-        } else if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(minValue)) != -1;
-        } else if (value instanceof BigInteger) {
-            return ((BigInteger) value).compareTo(BigInteger.valueOf(minValue)) != -1;
-        } else {
-            return value.longValue() >= minValue;
         }
-
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(minValue)) != -1;
+        }
+        if (value instanceof BigInteger) {
+            return ((BigInteger) value).compareTo(BigInteger.valueOf(minValue)) != -1;
+        }
+        return value.longValue() >= minValue;
     }
 }

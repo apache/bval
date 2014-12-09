@@ -30,6 +30,6 @@ public class NotEmptyValidatorForString implements ConstraintValidator<NotEmpty,
     }
 
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return value == null || value.length() > 0;
+        return value == null || !value.isEmpty();
     }
 }

@@ -52,12 +52,10 @@ public class DigitsValidatorForString implements ConstraintValidator<Digits, Str
         this.integral = annotation.integer();
         this.fractional = annotation.fraction();
         if (integral < 0) {
-            throw new IllegalArgumentException(
-                  "The length of the integer part cannot be negative.");
+            throw new IllegalArgumentException("The length of the integer part cannot be negative.");
         }
         if (fractional < 0) {
-            throw new IllegalArgumentException(
-                  "The length of the fraction part cannot be negative.");
+            throw new IllegalArgumentException("The length of the fraction part cannot be negative.");
         }
     }
 
@@ -67,7 +65,7 @@ public class DigitsValidatorForString implements ConstraintValidator<Digits, Str
             return true;
         }
 
-        BigDecimal bigDecimal = getBigDecimalValue(str);
+        final BigDecimal bigDecimal = getBigDecimalValue(str);
         if (bigDecimal == null) {
             return false;
         }
@@ -76,18 +74,15 @@ public class DigitsValidatorForString implements ConstraintValidator<Digits, Str
         if (integral >= intLength) {
             int factionLength = bigDecimal.scale() < 0 ? 0 : bigDecimal.scale();
             return fractional >= factionLength;
-        } else {
-            return false;
         }
+        return false;
     }
 
     private BigDecimal getBigDecimalValue(String str) {
-        BigDecimal bd;
         try {
-            bd = new BigDecimal(str);
+            return new BigDecimal(str);
         } catch (NumberFormatException nfe) {
             return null;
         }
-        return bd;
     }
 }

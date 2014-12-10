@@ -24,7 +24,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-//TODO javadoc
+/**
+ * Custom {@link InterceptorBinding} to invoke executable validations on CDI beans.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 @InterceptorBinding

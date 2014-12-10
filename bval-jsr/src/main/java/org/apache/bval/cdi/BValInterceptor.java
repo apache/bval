@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.interceptor.AroundConstruct;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
+import javax.interceptor.InterceptorBinding;
 import javax.interceptor.InvocationContext;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -42,19 +43,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
+/**
+ * Interceptor class for the {@link BValBinding} {@link InterceptorBinding}.
+ */
 @Interceptor
 @BValBinding
-@Priority(4800) // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to generate another one for CDI 1.1 impl
+@Priority(4800)
+// TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to
+// generate another one for CDI 1.1 impl
 public class BValInterceptor {
     private final Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
-    private Collection<ExecutableType> classConfiguration;
+    private Set<ExecutableType> classConfiguration;
     private Boolean constructorValidated;
 
     @Inject
@@ -65,7 +70,8 @@ public class BValInterceptor {
 
     private ExecutableValidator executableValidator;
 
-    @AroundConstruct // TODO: see previous one
+    @AroundConstruct
+    // TODO: see previous one
     public Object construct(final InvocationContext context) throws Exception {
         @SuppressWarnings("rawtypes")
         final Constructor constructor = context.getConstructor();
@@ -84,7 +90,8 @@ public class BValInterceptor {
 
         {
             @SuppressWarnings("unchecked")
-            final Set<ConstraintViolation<?>> violations = executableValidator.validateConstructorParameters(constructor, context.getParameters());
+            final Set<ConstraintViolation<?>> violations =
+                executableValidator.validateConstructorParameters(constructor, context.getParameters());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
@@ -94,7 +101,8 @@ public class BValInterceptor {
 
         {
             @SuppressWarnings("unchecked")
-            final Set<ConstraintViolation<?>> violations = executableValidator.validateConstructorReturnValue(constructor, context.getTarget());
+            final Set<ConstraintViolation<?>> violations =
+                executableValidator.validateConstructorReturnValue(constructor, context.getTarget());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
@@ -141,7 +149,8 @@ public class BValInterceptor {
         return result;
     }
 
-    private boolean isConstructorValidated(final Class<?> targetClass, final Constructor<?> constructor) throws NoSuchMethodException {
+    private boolean isConstructorValidated(final Class<?> targetClass, final Constructor<?> constructor)
+        throws NoSuchMethodException {
         initClassConfig(targetClass);
 
         if (constructorValidated == null) {
@@ -206,18 +215,22 @@ public class BValInterceptor {
                     if (validateOnExecution == null) {
                         methodConfig = doValidMethod(method, classConfiguration);
                     } else {
-                        final Collection<ExecutableType> config = new HashSet<ExecutableType>();
+                        final Set<ExecutableType> config = EnumSet.noneOf(ExecutableType.class);
                         for (final ExecutableType type : validateOnExecution.type()) {
+                            if (ExecutableType.NONE == type) {
+                                continue;
+                            }
+                            if (ExecutableType.ALL == type) {
+                                config.add(ExecutableType.NON_GETTER_METHODS);
+                                config.add(ExecutableType.GETTER_METHODS);
+                                break;
+                            }
                             if (ExecutableType.IMPLICIT == type) { // on method it just means validate, even on getters
                                 config.add(ExecutableType.NON_GETTER_METHODS);
                                 if (lastClassWithTheMethod == null) {
                                     config.add(ExecutableType.GETTER_METHODS);
                                 } // else the annotation was not on the method so implicit doesn't mean getters
-                            } else if (ExecutableType.ALL == type) {
-                                config.add(ExecutableType.NON_GETTER_METHODS);
-                                config.add(ExecutableType.GETTER_METHODS);
-                                break;
-                            } else if (ExecutableType.NONE != type) {
+                            } else {
                                 config.add(type);
                             }
                         }
@@ -235,22 +248,26 @@ public class BValInterceptor {
         if (classConfiguration == null) {
             synchronized (this) {
                 if (classConfiguration == null) {
-                    classConfiguration = new CopyOnWriteArraySet<ExecutableType>();
+                    classConfiguration = EnumSet.noneOf(ExecutableType.class);
 
                     final ValidateOnExecution annotation = targetClass.getAnnotation(ValidateOnExecution.class);
                     if (annotation == null) {
                         classConfiguration.addAll(globalConfiguration.getGlobalExecutableTypes());
                     } else {
                         for (final ExecutableType type : annotation.type()) {
-                            if (ExecutableType.IMPLICIT ==type) {
-                                classConfiguration.add(ExecutableType.CONSTRUCTORS);
-                                classConfiguration.add(ExecutableType.NON_GETTER_METHODS);
-                            } else if (ExecutableType.ALL == type) {
+                            if (ExecutableType.NONE == type) {
+                                continue;
+                            }
+                            if (ExecutableType.ALL == type) {
                                 classConfiguration.add(ExecutableType.CONSTRUCTORS);
                                 classConfiguration.add(ExecutableType.NON_GETTER_METHODS);
                                 classConfiguration.add(ExecutableType.GETTER_METHODS);
                                 break;
-                            } else if (ExecutableType.NONE != type) {
+                            }
+                            if (ExecutableType.IMPLICIT == type) {
+                                classConfiguration.add(ExecutableType.CONSTRUCTORS);
+                                classConfiguration.add(ExecutableType.NON_GETTER_METHODS);
+                            } else {
                                 classConfiguration.add(type);
                             }
                         }
@@ -270,14 +287,14 @@ public class BValInterceptor {
         }
     }
 
-    private static boolean doValidMethod(final Method method, final Collection<ExecutableType> config) {
-        final boolean getter = isGetter(method);
-        return (!getter && config.contains(ExecutableType.NON_GETTER_METHODS))
-            || (getter && config.contains(ExecutableType.GETTER_METHODS));
+    private static boolean doValidMethod(final Method method, final Set<ExecutableType> config) {
+        return isGetter(method) ? config.contains(ExecutableType.GETTER_METHODS) : config
+            .contains(ExecutableType.NON_GETTER_METHODS);
     }
 
     private static boolean isGetter(final Method method) {
         final String name = method.getName();
-        return (name.startsWith("get") || name.startsWith("is")) && method.getParameterTypes().length == 0;
-    }
+        return method.getParameterTypes().length == 0 && !Void.TYPE.equals(method.getReturnType())
+            && (name.startsWith("get") || name.startsWith("is") && boolean.class.equals(method.getReturnType()));
+   }
 }

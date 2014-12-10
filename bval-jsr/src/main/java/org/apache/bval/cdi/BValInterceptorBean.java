@@ -33,6 +33,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * {@link BValInterceptor} CDI {@link Bean}.
+ */
 public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCapable {
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
@@ -40,13 +43,15 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
     private final InjectionTarget<BValInterceptor> injectionTarget;
 
     public BValInterceptorBean(final BeanManager bm) {
-        types = new HashSet<Type>();
-        types.add(BValInterceptor.class);
-        types.add(Object.class);
+        final Set<Type> t = new HashSet<Type>();
+        t.add(BValInterceptor.class);
+        t.add(Object.class);
+        types = Collections.unmodifiableSet(t);
 
-        qualifiers = new HashSet<Annotation>();
-        qualifiers.add(DefaultLiteral.INSTANCE);
-        qualifiers.add(AnyLiteral.INSTANCE);
+        final Set<Annotation> q = new HashSet<Annotation>();
+        q.add(DefaultLiteral.INSTANCE);
+        q.add(AnyLiteral.INSTANCE);
+        qualifiers = Collections.unmodifiableSet(q);
 
         injectionTarget = bm.createInjectionTarget(bm.createAnnotatedType(BValInterceptor.class));
         injectionPoints =

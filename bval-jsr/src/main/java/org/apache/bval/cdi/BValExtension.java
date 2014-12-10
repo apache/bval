@@ -41,28 +41,34 @@ import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.MethodType;
+
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * CDI {@link Extension} for Apache BVal setup.
+ */
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
     // extension point, we can add a SPI if needed, today mainly a fallback "API" for TomEE if we encounter an issue
-    public static Collection<String> SKIPPED_PREFIXES = new HashSet<String>();
+    public static final Set<String> SKIPPED_PREFIXES;
     static {
-        SKIPPED_PREFIXES.add("java.");
-        SKIPPED_PREFIXES.add("javax.");
-        SKIPPED_PREFIXES.add("org.apache.bval.");
-        SKIPPED_PREFIXES.add("org.apache.openejb.");
-        SKIPPED_PREFIXES.add("org.apache.deltaspike."); // should be checked when upgrading
-        SKIPPED_PREFIXES.add("org.apache.myfaces."); // should be checked when upgrading
+        final Set<String> s = new HashSet<String>();
+        s.add("java.");
+        s.add("javax.");
+        s.add("org.apache.bval.");
+        s.add("org.apache.openejb.");
+        s.add("org.apache.deltaspike."); // should be checked when upgrading
+        s.add("org.apache.myfaces."); // should be checked when upgrading
+        SKIPPED_PREFIXES = Collections.unmodifiableSet(s);
     }
 
     private boolean validatorFound = Boolean.getBoolean("bval.in-container");
@@ -84,11 +90,12 @@ public class BValExtension implements Extension {
         config = Validation.byDefaultProvider().configure();
         try {
             final BootstrapConfiguration bootstrap = config.getBootstrapConfiguration();
-            globalExecutableTypes = convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes());
+            globalExecutableTypes = Collections.unmodifiableSet(convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes()));
             isExecutableValidationEnabled = bootstrap.isExecutableValidationEnabled();
 
+            // TODO we never contain IMPLICIT or ALL
             validBean = globalExecutableTypes.contains(ExecutableType.IMPLICIT) || globalExecutableTypes.contains(ExecutableType.ALL);
-            validConstructors =validBean || globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS);
+            validConstructors = validBean || globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS);
             validBusinessMethods = validBean || globalExecutableTypes.contains(ExecutableType.NON_GETTER_METHODS);
             validGetterMethods = globalExecutableTypes.contains(ExecutableType.ALL) || globalExecutableTypes.contains(ExecutableType.GETTER_METHODS);
         } catch (final Exception e) { // custom providers can throw an exception
@@ -105,22 +112,28 @@ public class BValExtension implements Extension {
             return;
         }
         config.addProperty("bval.before.cdi", "true"); // ignore parts of the config relying on CDI since we didn't start yet
-        factory = factory != null ? factory : config.buildValidatorFactory();
+        if (factory == null) {
+            factory = config.buildValidatorFactory();
+        }
         validator = factory.getValidator();
     }
 
     private static Set<ExecutableType> convertToRuntimeTypes(final Set<ExecutableType> defaultValidatedExecutableTypes) {
-        final Set<ExecutableType> types = new CopyOnWriteArraySet<ExecutableType>();
+        final Set<ExecutableType> types = EnumSet.noneOf(ExecutableType.class);
         for (final ExecutableType type : defaultValidatedExecutableTypes) {
-            if (ExecutableType.IMPLICIT.equals(type)) {
-                types.add(ExecutableType.CONSTRUCTORS);
-                types.add(ExecutableType.NON_GETTER_METHODS);
-            } else if (ExecutableType.ALL.equals(type)) {
+            if (ExecutableType.NONE == type) {
+                continue;
+            }
+            if (ExecutableType.ALL == type) {
                 types.add(ExecutableType.CONSTRUCTORS);
                 types.add(ExecutableType.NON_GETTER_METHODS);
                 types.add(ExecutableType.GETTER_METHODS);
                 break;
-            } else if (!ExecutableType.NONE.equals(type)) {
+            }
+            if (ExecutableType.IMPLICIT == type) {
+                types.add(ExecutableType.CONSTRUCTORS);
+                types.add(ExecutableType.NON_GETTER_METHODS);
+            } else {
                 types.add(type);
             }
         }
@@ -166,10 +179,12 @@ public class BValExtension implements Extension {
                     if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
                             || hasValidationAnnotation(annotatedType.getMethods())
                             || hasValidationAnnotation(annotatedType.getConstructors())
-                            || (validBean && classConstraints != null && classConstraints.isBeanConstrained())
-                            || (validConstructors && classConstraints != null && !classConstraints.getConstrainedConstructors().isEmpty())
-                            || (validBusinessMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty())
-                            || (validGetterMethods && classConstraints != null && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
+                            || classConstraints != null
+                            && (validBean && classConstraints.isBeanConstrained()
+                                || validConstructors && !classConstraints.getConstrainedConstructors().isEmpty()
+                                || validBusinessMethods && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty()
+                                || validGetterMethods && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())
+                            ) {
                         // TODO: keep track of bValAnnotatedType and remove @BValBinding in
                         // ProcessBean event if needed cause here we can't really add @ValidateOnExecution
                         // through an extension
@@ -250,10 +265,11 @@ public class BValExtension implements Extension {
         }
     }
 
-    private static ClassLoader loader() {
-        return Thread.currentThread().getContextClassLoader();
-    }
-
+    /**
+     * Request that an instance of the specified type be provided by the container.
+     * @param clazz
+     * @return the requested instance wrapped in a {@link Releasable}.
+     */
     public static <T> Releasable<T> inject(final Class<T> clazz) {
         try {
             final BeanManager beanManager = CDI.current().getBeanManager();
@@ -280,6 +296,10 @@ public class BValExtension implements Extension {
         return CDI.current().getBeanManager();
     }
 
+    /**
+     * Represents an item that can be released from a {@link CreationalContext} at some point in the future.
+     * @param <T>
+     */
     public static class Releasable<T> {
         private final CreationalContext<T> context;
         private final InjectionTarget<T> injectionTarget;

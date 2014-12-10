@@ -33,8 +33,7 @@ public class DecimalMaxValidatorForNumber implements ConstraintValidator<Decimal
         try {
             this.maxValue = new BigDecimal(annotation.value());
         } catch (NumberFormatException nfe) {
-            throw new IllegalArgumentException(
-                  annotation.value() + " does not represent a valid BigDecimal format");
+            throw new IllegalArgumentException(annotation.value() + " does not represent a valid BigDecimal format");
         }
     }
 

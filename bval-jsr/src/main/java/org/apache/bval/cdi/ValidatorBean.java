@@ -31,7 +31,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ValidatorBean implements Bean<Validator> , PassivationCapable{
+/**
+ * {@link Validator} CDI {@link Bean}.
+ */
+public class ValidatorBean implements Bean<Validator> , PassivationCapable {
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
     private final ValidatorFactory factory;
@@ -41,13 +44,15 @@ public class ValidatorBean implements Bean<Validator> , PassivationCapable{
         this.factory = factory;
         this.instance = validator;
 
-        types = new HashSet<Type>();
-        types.add(Validator.class);
-        types.add(Object.class);
+        final Set<Type> t = new HashSet<Type>();
+        t.add(Validator.class);
+        t.add(Object.class);
+        types = Collections.unmodifiableSet(t);
 
-        qualifiers = new HashSet<Annotation>();
-        qualifiers.add(DefaultLiteral.INSTANCE);
-        qualifiers.add(AnyLiteral.INSTANCE);
+        final Set<Annotation> q = new HashSet<Annotation>();
+        q.add(DefaultLiteral.INSTANCE);
+        q.add(AnyLiteral.INSTANCE);
+        qualifiers = Collections.unmodifiableSet(q);
     }
 
     public Set<Type> getTypes() {

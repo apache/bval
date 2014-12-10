@@ -34,8 +34,6 @@ import org.apache.commons.weaver.privilizer.Privilizing;
  * @version $Rev$ $Date$
  */
 public class Reflection {
-    private static final boolean hasSecurityManager = System.getSecurityManager() != null;
-
     /**
      * Get the named {@link Class} from the specified {@link ClassLoader}.
      * @param classLoader
@@ -203,7 +201,7 @@ public class Reflection {
         if (o == null || o.isAccessible() == accessible) {
             return false;
         }
-        if (!accessible && !hasSecurityManager) {
+        if (!accessible && System.getSecurityManager() == null) {
             return false;
         }
         final Member m = (Member) o;

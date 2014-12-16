@@ -42,12 +42,13 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.MethodType;
 
+import org.apache.commons.lang3.Validate;
+
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,17 +59,21 @@ import java.util.logging.Logger;
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
-    // extension point, we can add a SPI if needed, today mainly a fallback "API" for TomEE if we encounter an issue
-    public static final Set<String> SKIPPED_PREFIXES;
-    static {
-        final Set<String> s = new HashSet<String>();
-        s.add("java.");
-        s.add("javax.");
-        s.add("org.apache.bval.");
-        s.add("org.apache.openejb.");
-        s.add("org.apache.deltaspike."); // should be checked when upgrading
-        s.add("org.apache.myfaces."); // should be checked when upgrading
-        SKIPPED_PREFIXES = Collections.unmodifiableSet(s);
+    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER = new AnnotatedTypeFilter() {
+        
+        @Override
+        public boolean accept(AnnotatedType<?> annotatedType) {
+            if (annotatedType.getJavaClass().getName().startsWith("org.apache.bval.")) {
+                return false;
+            }
+            return true;
+        }
+    };
+
+    private static AnnotatedTypeFilter annotatedTypeFilter = DEFAULT_ANNOTATED_TYPE_FILTER;
+
+    public static void setAnnotatedTypeFilter(AnnotatedTypeFilter annotatedTypeFilter) {
+        BValExtension.annotatedTypeFilter = Validate.notNull(annotatedTypeFilter);
     }
 
     private boolean validatorFound = Boolean.getBoolean("bval.in-container");
@@ -149,28 +154,19 @@ public class BValExtension implements Extension {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
     }
 
-    protected boolean skip(final String name) {
-        for (final String p : SKIPPED_PREFIXES) {
-            if (name.startsWith(p)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat) {
         if (!isExecutableValidationEnabled) {
             return;
         }
 
         final AnnotatedType<A> annotatedType = pat.getAnnotatedType();
-        final Class<A> javaClass = annotatedType.getJavaClass();
-        final int modifiers = javaClass.getModifiers();
-        final String name = javaClass.getName();
-        if (skip(name)) {
+
+        if (!annotatedTypeFilter.accept(annotatedType)) {
             return;
         }
 
+        final Class<A> javaClass = annotatedType.getJavaClass();
+        final int modifiers = javaClass.getModifiers();
         if (!javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
             try {
                 ensureFactoryValidator();
@@ -326,5 +322,15 @@ public class BValExtension implements Extension {
         public T getInstance() {
             return instance;
         }
+    }
+
+    /**
+     * Defines an item that can determine whether a given {@link AnnotatedType} will be processed
+     * by the {@link BValExtension} for executable validation. May be statically applied before
+     * container startup.
+     * @see BValExtension#setAnnotatedTypeFilter(AnnotatedTypeFilter)
+     */
+    public interface AnnotatedTypeFilter {
+        boolean accept(AnnotatedType<?> annotatedType);
     }
 }

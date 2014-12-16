@@ -87,7 +87,7 @@ public final class AnnotationProcessor {
             if (type.getName().startsWith("java.lang.annotation.")) {
                 continue;
             }
-            changed |= processAnnotation(annotation, prop, owner, access, appender, true);
+            changed = processAnnotation(annotation, prop, owner, access, appender, true) || changed;
         }
         return changed;
     }

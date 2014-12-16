@@ -26,7 +26,6 @@ import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr

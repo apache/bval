@@ -63,7 +63,7 @@ public abstract class BaseAppendValidation implements AppendValidation {
     public <T extends Annotation> void preProcessValidation(final ConstraintValidation<T> validation) {
         // No generic pre-processing
     }
-    
+
     /**
      * Post-process the validation once it postProcessValidationhas been appended.
      * 
@@ -73,8 +73,6 @@ public abstract class BaseAppendValidation implements AppendValidation {
      *            The validation to be appended.
      */
     public <T extends Annotation> void postProcessValidation(final ConstraintValidation<T> validation) {
-        // done lazily to ensure CDI is available
-        // validation.initialize();
     }
-    
+
 }

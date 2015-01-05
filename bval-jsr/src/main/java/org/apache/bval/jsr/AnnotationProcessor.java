@@ -176,10 +176,11 @@ public final class AnnotationProcessor {
             return false;
         }
         AccessStrategy[] strategies = prop.getFeature(Features.Property.REF_CASCADE);
+        if (ArrayUtils.contains(strategies, access)) {
+            return false;
+        }
         if (strategies == null) {
             strategies = new AccessStrategy[] { access };
-        } else if (ArrayUtils.contains(strategies, access)) {
-            return false;
         } else {
             strategies = ArrayUtils.add(strategies, access);
         }

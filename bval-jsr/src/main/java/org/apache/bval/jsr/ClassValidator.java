@@ -63,13 +63,13 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.ValidationHelper;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.apache.commons.weaver.privilizer.Privileged;
-
-// TODO: centralize treatMapsLikeBeans
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Objects of this class are able to validate bean instances (and the associated object graphs).
@@ -83,6 +83,7 @@ import org.apache.commons.weaver.privilizer.Privileged;
  * @author Roman Stumm
  * @author Carlos Vara
  */
+@Privilizing(@CallTo(Reflection.class))
 public class ClassValidator implements CascadingPropertyValidator, ExecutableValidator {
     private static final Object VALIDATE_PROPERTY = new Object() {
         public String toString() {
@@ -135,7 +136,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         checkGroups(groups);
 
         try {
-
             final Class<T> objectClass = (Class<T>) object.getClass();
             final MetaBean objectMetaBean = metaBeanFinder.findForClass(objectClass);
             final GroupValidationContext<T> context = createContext(objectMetaBean, object, objectClass, groups);
@@ -201,11 +201,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName, boolean cascade,
         Class<?>... groups) {
 
-        if (object == null)
+        if (object == null) {
             throw new IllegalArgumentException("cannot validate null");
+        }
 
         @SuppressWarnings("unchecked")
-        Set<ConstraintViolation<T>> result =
+        final Set<ConstraintViolation<T>> result =
             validateValueImpl((Class<T>) object.getClass(), object, propertyName, VALIDATE_PROPERTY, cascade, groups);
         return result;
     }
@@ -291,37 +292,43 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         // Can't fix this because don't know which classes this method should support.
 
         if (type.isAssignableFrom(getClass())) {
-            return (T) this;
-        } else if (!(type.isInterface() || Modifier.isAbstract(type.getModifiers()))) {
-            return newInstance(type);
-        } else {
-            try {
-                Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
-                if (type.isAssignableFrom(cls)) {
-                    @SuppressWarnings("unchecked")
-                    final Class<? extends T> implClass = (Class<? extends T>) cls;
-                    return newInstance(implClass);
-                }
-            } catch (ClassNotFoundException e) {
-            }
-            throw new ValidationException("Type " + type + " not supported");
+            @SuppressWarnings("unchecked")
+            final T result = (T) this;
+            return result;
         }
+        if (!(type.isInterface() || Modifier.isAbstract(type.getModifiers()))) {
+            return newInstance(type);
+        }
+        try {
+            final Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+            if (type.isAssignableFrom(cls)) {
+                @SuppressWarnings("unchecked")
+                final Class<? extends T> implClass = (Class<? extends T>) cls;
+                return newInstance(implClass);
+            }
+        } catch (ClassNotFoundException e) {
+        }
+        throw new ValidationException("Type " + type + " not supported");
     }
 
     public ExecutableValidator forExecutables() {
         return this;
     }
 
-    @Privileged
     private <T> T newInstance(final Class<T> cls) {
+        final Constructor<T> cons = Reflection.getDeclaredConstructor(cls, ApacheFactoryContext.class);
+        if (cons == null) {
+            throw new ValidationException("Cannot instantiate " + cls);
+        }
+        final boolean mustUnset = Reflection.setAccessible(cons, true);
         try {
-            Constructor<T> cons = cls.getConstructor(ApacheFactoryContext.class);
-            if (!cons.isAccessible()) {
-                cons.setAccessible(true);
-            }
             return cons.newInstance(factoryContext);
         } catch (final Exception ex) {
-            throw new ValidationException("Cannot instantiate : " + cls, ex);
+            throw new ValidationException("Cannot instantiate " + cls, ex);
+        } finally {
+            if (mustUnset) {
+                Reflection.setAccessible(cons, false);
+            }
         }
     }
 
@@ -405,13 +412,10 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                             break;
                         }
                     }
-
                 }
                 context.setCurrentOwner(initialOwner);
                 context.setCurrentGroup(Group.DEFAULT);
-
             }
-
         }
         // if not the default group, proceed as normal
         else {
@@ -424,23 +428,20 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             final Group mappedGroup;
 
             final Object feature = prop.getFeature(JsrFeatures.Property.PropertyDescriptor);
-            if (feature != null) {
-                mappedGroup = PropertyDescriptorImpl.class.cast(feature).mapGroup(group);
-            } else {
+            if (feature == null) {
                 mappedGroup = group;
+            } else {
+                mappedGroup = PropertyDescriptorImpl.class.cast(feature).mapGroup(group);
             }
 
-
-            if (group != mappedGroup) {
+            if (group == mappedGroup) {
+                validateCascadedBean(context, prop, null);
+            } else {
                 final Groups propertyGroup = groupsComputer.computeGroups(new Class<?>[]{ mappedGroup.getGroup() });
                 validateCascadedBean(context, prop, propertyGroup);
-            } else {
-                validateCascadedBean(context, prop, null);
             }
-
             context.setCurrentGroup(group);
         }
-
     }
 
     // TODO: maybe add a GroupMapper to bval-core to ease this kind of thing and void to fork this method from ValidationHelper
@@ -466,7 +467,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         context.setMetaProperty(null);
         for (final Validation validation : context.getMetaBean().getValidations()) {
             if (ConstraintValidation.class.isInstance(validation)) {
-                final ConstraintValidation constraintValidation = ConstraintValidation.class.cast(validation);
+                final ConstraintValidation<?> constraintValidation = ConstraintValidation.class.cast(validation);
                 if (!constraintValidation.isValidated()) {
                     checkValidationAppliesTo(constraintValidation.getValidationAppliesTo(), ConstraintTarget.PARAMETERS);
                     checkValidationAppliesTo(constraintValidation.getValidationAppliesTo(), ConstraintTarget.RETURN_VALUE);
@@ -484,7 +485,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @param prop    The property to cascade from (in case it is possible).
      */
     private void validateCascadedBean(final GroupValidationContext<?> context, final MetaProperty prop, final Groups groups) {
-        AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
+        final AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
         if (access != null) { // different accesses to relation
             // save old values from context
             final Object bean = context.getBean();
@@ -497,13 +498,13 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                     context.moveDown(prop, each);
                     // validate
                     if (groups == null) {
-                        ValidationHelper.validateContext(context, new JsrValidationCallback(context), treatMapsLikeBeans);
+                        ValidationHelper.validateContext(context, new JsrValidationCallback(context), factoryContext.isTreatMapsLikeBeans());
                     } else {
                         ValidationHelper.validateContext(context, new ValidationHelper.ValidateCallback() {
                             public void validate() {
                                 validateBeanWithGroups(context, groups);
                             }
-                        }, treatMapsLikeBeans);
+                        }, factoryContext.isTreatMapsLikeBeans());
                     }
                     // restore old values in context
                     context.moveUp(bean, mbean);
@@ -539,12 +540,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
         try {
             if (!context.getTraversableResolver().isCascadable(context.getBean(), node,
-                context.getRootMetaBean().getBeanClass(), beanPath, access.getElementType()))
+                context.getRootMetaBean().getBeanClass(), beanPath, access.getElementType())) {
                 return false;
+            }
         } catch (RuntimeException e) {
             throw new ValidationException("Error TraversableResolver.isCascadable() for " + context.getBean(), e);
         }
-
         return true;
     }
 
@@ -556,14 +557,13 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     private List<Group> expandDefaultGroup(GroupValidationContext<?> context) {
         if (context.getCurrentGroup().isDefault()) {
             // mention if metaBean redefines the default group
-            List<Group> groupSeq = context.getMetaBean().getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
+            final List<Group> groupSeq = context.getMetaBean().getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
             if (groupSeq != null) {
                 context.getGroups().assertDefaultGroupSequenceIsExpandable(groupSeq);
             }
             return groupSeq;
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -573,29 +573,25 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @param object
      * @return a {@link RuntimeException} of the appropriate type
      */
-    @SuppressWarnings("finally")
     protected static RuntimeException unrecoverableValidationError(RuntimeException ex, Object object) {
         if (ex instanceof UnknownPropertyException || ex instanceof IncompatiblePropertyValueException) {
             // Convert to IllegalArgumentException
             return new IllegalArgumentException(ex.getMessage(), ex);
-        } else if (ex instanceof ValidationException) {
-            return ex; // do not wrap specific ValidationExceptions (or
-            // instances from subclasses)
+        }
+        if (ex instanceof ValidationException) {
+            return ex; // do not wrap specific ValidationExceptions (or instances from subclasses)
+        }
+        String objectId;
+        if (object == null) {
+            objectId = "<null>";
         } else {
-            String objectId = "";
             try {
-                if (object != null) {
-                    objectId = object.toString();
-                } else {
-                    objectId = "<null>";
-                }
+                objectId = object.toString();
             } catch (Exception e) {
                 objectId = "<unknown>";
-            } finally {
-                return new ValidationException("error during validation of "
-                        + objectId, ex);
             }
         }
+        return new ValidationException("error during validation of " + objectId, ex);
     }
 
     private void validatePropertyInGroup(final GroupValidationContext<?> context) {
@@ -615,17 +611,17 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                 }
             };
         }
-        Group currentGroup = context.getCurrentGroup();
-        List<Group> defaultGroups = expandDefaultGroup(context);
-        if (defaultGroups != null) {
+        final List<Group> defaultGroups = expandDefaultGroup(context);
+        if (defaultGroups == null) {
+            helper.run();
+        } else {
+            final Group currentGroup = context.getCurrentGroup();
             for (Group each : defaultGroups) {
                 context.setCurrentGroup(each);
                 helper.run();
                 // continue validation, even if errors already found
             }
             context.setCurrentGroup(currentGroup); // restore
-        } else {
-            helper.run();
         }
     }
 
@@ -656,9 +652,11 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                         this.factoryContext.getTraversableResolver(), factoryContext.getParameterNameProvider(), metaBean);
         context.setBean(object, metaBean);
         final Groups computedGroup = groupsComputer.computeGroups(groups);
-        if (computedGroup.getGroups().size() == 1 && Group.DEFAULT.equals(computedGroup.getGroups().iterator().next()) && metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE) != null) {
+        if (Collections.singletonList(Group.DEFAULT).equals(computedGroup.getGroups()) && metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE) != null) {
             final Groups sequence = new Groups();
-            sequence.getGroups().addAll(List.class.cast(metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE)));
+            @SuppressWarnings("unchecked")
+            final List<? extends Group> sequenceGroups = List.class.cast(metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE));
+            sequence.getGroups().addAll(sequenceGroups);
             context.setGroups(sequence);
         } else {
             context.setGroups(computedGroup);
@@ -672,47 +670,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @param metaBean
      * @return {@link BeanDescriptorImpl} instance
      */
-    /*
     protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {
         return new BeanDescriptorImpl(factoryContext, metaBean);
-    }
-    */
-    protected BeanDescriptorImpl createBeanDescriptor(MetaBean metaBean) {
-        return new BeanDescriptorImpl(factoryContext, metaBean);
-    }
-
-    private boolean treatMapsLikeBeans = false;
-
-    /**
-     * Behavior configuration -
-     * <p/>
-     * <pre>
-     * @return treatMapsLikeBeans - true (validate maps like beans, so that
-     *                              you can use Maps to validate dynamic classes or
-     *                              beans for which you have the MetaBean but no instances)
-     *                            - false (default), validate maps like collections
-     *                              (validating the values only)
-     * </pre>
-     * <p/>
-     * (is still configuration to better in BeanValidationContext?)
-     */
-    public boolean isTreatMapsLikeBeans() {
-        return treatMapsLikeBeans;
-    }
-
-    /**
-     * Set whether maps are to be treated like beans.
-     * 
-     * <pre>
-     * @param treatMapsLikeBeans - true (validate maps like beans, so that
-     *                             you can use Maps to validate dynamic classes or
-     *                             beans for which you have the MetaBean but no instances)
-     *                           - false (default), validate maps like collections
-     *                             (validating the values only)
-     * </pre>
-     */
-    public void setTreatMapsLikeBeans(boolean treatMapsLikeBeans) {
-        this.treatMapsLikeBeans = treatMapsLikeBeans;
     }
 
     /**
@@ -735,7 +694,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @param propertyName Property name to check.
      */
     private void checkPropertyName(String propertyName) {
-        if (propertyName == null || propertyName.trim().length() == 0) {
+        if (propertyName == null || propertyName.trim().isEmpty()) {
             throw new IllegalArgumentException("Property path cannot be null or empty.");
         }
     }
@@ -770,12 +729,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
         // sanity checks
         if (!constructorDescriptor.isValidated(constructor)) {
-            if (parameterValues.length > 0) {
-                checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
-                checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
-            } else {
+            if (parameterValues.length == 0) {
                 checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.PARAMETERS);
                 checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.PARAMETERS);
+            } else {
+                checkValidationAppliesTo(Collections.singleton(constructorDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
+                checkValidationAppliesTo(constructorDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
             }
             constructorDescriptor.setValidated(constructor);
         }
@@ -788,17 +747,24 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                                                                          final Class<?>[] gps, final NodeImpl rootNode, final Object rootBean) {
         final Set<ConstraintViolation<T>> violations = new HashSet<ConstraintViolation<T>>();
 
+        @SuppressWarnings("unchecked")
+        final GroupValidationContext<ConstraintValidationListener<?>> parametersContext =
+            createInvocableContext(constructorDescriptor.getMetaBean(), rootBean,
+                Class.class.cast(invocable.getDeclaringClass()), gps);
 
-        final GroupValidationContext<ConstraintValidationListener<?>> parametersContext = createInvocableContext(constructorDescriptor.getMetaBean(), rootBean, Class.class.cast(invocable.getDeclaringClass()), gps);
-        final GroupValidationContext<Object> crossParameterContext = createContext(constructorDescriptor.getMetaBean(), rootBean, Class.class.cast(invocable.getDeclaringClass()), gps);
-        if (rootBean != null) { // could be more sexy but that's ok for now
-            final Method m = Method.class.cast(invocable);
-            parametersContext.setMethod(m);
-            crossParameterContext.setMethod(m);
-        } else {
+        @SuppressWarnings("unchecked")
+        final GroupValidationContext<Object> crossParameterContext =
+            createContext(constructorDescriptor.getMetaBean(), rootBean,
+                Class.class.cast(invocable.getDeclaringClass()), gps);
+
+        if (rootBean == null) {
             final Constructor<?> m = Constructor.class.cast(invocable);
             parametersContext.setConstructor(m);
             crossParameterContext.setConstructor(m);
+        } else { // could be more sexy but that's ok for now
+            final Method m = Method.class.cast(invocable);
+            parametersContext.setMethod(m);
+            crossParameterContext.setMethod(m);
         }
 
         final Groups groups = parametersContext.getGroups();
@@ -847,7 +813,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                     parametersContext.moveDown(new NodeImpl.ParameterNodeImpl(paramDesc.getName(), i));
                     initMetaBean(parametersContext, factoryContext.getMetaBeanFinder(), parameterValues[i].getClass());
                     parametersContext.setCurrentGroup(paramDesc.mapGroup(current));
-                    ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), isTreatMapsLikeBeans());
+                    ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), factoryContext.isTreatMapsLikeBeans());
                     parametersContext.moveUp(null, null);
                 }
             }
@@ -886,7 +852,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                         parametersContext.moveDown(new NodeImpl.ParameterNodeImpl(paramDesc.getName(), i));
                         initMetaBean(parametersContext, factoryContext.getMetaBeanFinder(), parameterValues[i].getClass());
                         parametersContext.setCurrentGroup(paramDesc.mapGroup(current));
-                        ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), isTreatMapsLikeBeans());
+                        ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), factoryContext.isTreatMapsLikeBeans());
                         parametersContext.moveUp(null, null);
                     }
                 }
@@ -898,12 +864,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
                 for (final Group current : groups.getGroups()) {
                     parametersContext.setCurrentGroup(constructorDescriptor.mapGroup(current));
-                    ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), isTreatMapsLikeBeans());
+                    ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), factoryContext.isTreatMapsLikeBeans());
                 }
                 for (final List<Group> eachSeq : groups.getSequences()) {
                     for (final Group current : eachSeq) {
                         parametersContext.setCurrentGroup(constructorDescriptor.mapGroup(current));
-                        ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), isTreatMapsLikeBeans());
+                        ValidationHelper.validateContext(parametersContext, new JsrValidationCallback(parametersContext), factoryContext.isTreatMapsLikeBeans());
                         if (!parametersContext.getListener().isEmpty()) {
                             break;
                         }
@@ -915,12 +881,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
                 for (final Group current : groups.getGroups()) {
                     crossParameterContext.setCurrentGroup(constructorDescriptor.mapGroup(current));
-                    ValidationHelper.validateContext(crossParameterContext, new JsrValidationCallback(crossParameterContext), isTreatMapsLikeBeans());
+                    ValidationHelper.validateContext(crossParameterContext, new JsrValidationCallback(crossParameterContext), factoryContext.isTreatMapsLikeBeans());
                 }
                 for (final List<Group> eachSeq : groups.getSequences()) {
                     for (final Group current : eachSeq) {
                         crossParameterContext.setCurrentGroup(constructorDescriptor.mapGroup(current));
-                        ValidationHelper.validateContext(crossParameterContext, new JsrValidationCallback(crossParameterContext), isTreatMapsLikeBeans());
+                        ValidationHelper.validateContext(crossParameterContext, new JsrValidationCallback(crossParameterContext), factoryContext.isTreatMapsLikeBeans());
                         if (!crossParameterContext.getListener().isEmpty()) {
                             break;
                         }
@@ -929,8 +895,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             }
         }
 
-        violations.addAll(Set.class.cast(parametersContext.getListener().getConstraintViolations()));
-        violations.addAll(Set.class.cast(crossParameterContext.getListener().getConstraintViolations()));
+        @SuppressWarnings("unchecked")
+        final Set<ConstraintViolation<T>> parameterViolations = Set.class.cast(parametersContext.getListener().getConstraintViolations());
+        violations.addAll(parameterViolations);
+        @SuppressWarnings("unchecked")
+        final Set<ConstraintViolation<T>> crossParameterViolations = Set.class.cast(crossParameterContext.getListener().getConstraintViolations());
+        violations.addAll(crossParameterViolations);
 
         return violations;
     }
@@ -976,7 +946,10 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         final ElementDescriptorImpl returnedValueDescriptor = ElementDescriptorImpl.class.cast(methodDescriptor.getReturnValueDescriptor());
         final Set<ConstraintDescriptor<?>> returnedValueConstraints = returnedValueDescriptor.getConstraintDescriptors();
 
-        final GroupValidationContext<T> context = createInvocableContext(methodDescriptor.getMetaBean(), createdObject, Class.class.cast(Proxies.classFor(clazz)), gps);
+        @SuppressWarnings("unchecked")
+        final GroupValidationContext<T> context =
+            createInvocableContext(methodDescriptor.getMetaBean(), createdObject,
+                Class.class.cast(Proxies.classFor(clazz)), gps);
         context.moveDown(rootNode);
         context.moveDown(new NodeImpl.ReturnValueNodeImpl());
         context.setReturnValue(rootBean);
@@ -1002,7 +975,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                 initMetaBean(context, factoryContext.getMetaBeanFinder(), context.getValidatedValue().getClass());
 
                 context.setCurrentGroup(methodDescriptor.mapGroup(current));
-                ValidationHelper.validateContext(context, new JsrValidationCallback(context), isTreatMapsLikeBeans());
+                ValidationHelper.validateContext(context, new JsrValidationCallback(context), factoryContext.isTreatMapsLikeBeans());
 
                 if (currentViolationNumber < context.getListener().getConstraintViolations().size()) {
                     break;
@@ -1031,7 +1004,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                     initMetaBean(context, factoryContext.getMetaBeanFinder(), context.getValidatedValue().getClass());
 
                     context.setCurrentGroup(methodDescriptor.mapGroup(current));
-                    ValidationHelper.validateContext(context, new JsrValidationCallback(context), isTreatMapsLikeBeans());
+                    ValidationHelper.validateContext(context, new JsrValidationCallback(context), factoryContext.isTreatMapsLikeBeans());
 
                     if (currentViolationNumber < context.getListener().getConstraintViolations().size()) {
                         break;
@@ -1070,7 +1043,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             methodDescriptor.setValidated(method);
         }
 
-        return validateInvocationParameters(method, parameterValues, methodDescriptor, groups, new NodeImpl.MethodNodeImpl(method.getName(), Arrays.asList(method.getParameterTypes())), object);
+        return validateInvocationParameters(method, parameterValues, methodDescriptor, groups,
+            new NodeImpl.MethodNodeImpl(method.getName(), Arrays.asList(method.getParameterTypes())), object);
     }
 
     private static void notNull(final String entity, final Object shouldntBeNull) {
@@ -1087,7 +1061,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         notNull("method", method);
         notNull("groups", groups);
 
-        MethodDescriptorImpl methodDescriptor = findMethodDescriptor(object, method);
+        final MethodDescriptorImpl methodDescriptor = findMethodDescriptor(object, method);
         if (methodDescriptor == null) {
             throw new ValidationException("Method " + method + " doesn't belong to class " + object.getClass());
         }
@@ -1096,11 +1070,15 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             checkValidationAppliesTo(methodDescriptor.getReturnValueDescriptor().getConstraintDescriptors(), ConstraintTarget.RETURN_VALUE);
         }
 
-        return Set.class.cast(validaReturnedValue(new NodeImpl.MethodNodeImpl(method.getName(), Arrays.asList(method.getParameterTypes())), returnValue, object.getClass(), methodDescriptor, groups, object));
+        @SuppressWarnings("unchecked")
+        final Set<ConstraintViolation<T>> result =
+            Set.class.cast(validaReturnedValue(
+                new NodeImpl.MethodNodeImpl(method.getName(), Arrays.asList(method.getParameterTypes())), returnValue,
+                object.getClass(), methodDescriptor, groups, object));
+        return result;
     }
 
     private <T> MethodDescriptorImpl findMethodDescriptor(final T object, final Method method) {
-        // return MethodDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(object.getClass())).getConstraintsForMethod(method.getName(), method.getParameterTypes()));
         return MethodDescriptorImpl.class.cast(
             BeanDescriptorImpl.class.cast(getConstraintsForClass(Proxies.classFor(method.getDeclaringClass())))
                 .getInternalConstraintsForMethod(method.getName(), method.getParameterTypes()));
@@ -1120,68 +1098,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         } else {
             context.setMetaBean(metaBeanFinder.findForClass(directValueClass.getComponentType()));
         }
-    }
-
-    private <T> Group validateElementInContext(final GroupValidationContext<T> context,
-                                              final ElementDescriptor eltDescriptor) {
-
-        final ElementDescriptorImpl impl = ElementDescriptorImpl.class.cast(eltDescriptor);
-
-        final Groups groups = context.getGroups();
-
-        Group breakOnGroup = null;
-
-        for (final ConstraintDescriptor<?> consDesc : eltDescriptor.getConstraintDescriptors()) {
-            final ConstraintValidation<?> validation = (ConstraintValidation<?>) consDesc;
-
-            // 1. process groups
-            for (final Group current : groups.getGroups()) {
-                context.setCurrentGroup(current);
-                validation.validateGroupContext(context);
-            }
-            // 2. process sequences
-            for (final List<Group> eachSeq : groups.getSequences()) {
-                for (final Group current : eachSeq) {
-                    context.setCurrentGroup(current);
-                    validation.validateGroupContext(context);
-                    /**
-                     * if one of the group process in the sequence leads to one
-                     * or more validation failure, the groups following in the
-                     * sequence must not be processed
-                     */
-                    if (!context.getListener().isEmpty()) {
-                        breakOnGroup = current;
-                        break;
-                    }
-                }
-            }
-        }
-        if (impl.isCascaded() && context.getValidatedValue() != null) {
-            initMetaBean(context, factoryContext.getMetaBeanFinder(), context.getValidatedValue().getClass());
-
-            // 1. process groups
-            for (final Group current : groups.getGroups()) {
-                context.setCurrentGroup(impl.mapGroup(current));
-                ValidationHelper.validateContext(context, new JsrValidationCallback(context), isTreatMapsLikeBeans());
-            }
-            // 2. process sequences
-            for (final List<Group> eachSeq : groups.getSequences()) {
-                for (final Group current : eachSeq) {
-                    context.setCurrentGroup(impl.mapGroup(current));
-                    ValidationHelper.validateContext(context, new JsrValidationCallback(context), isTreatMapsLikeBeans());
-                    /**
-                     * if one of the group process in the sequence leads to one
-                     * or more validation failure, the groups following in the
-                     * sequence must not be processed
-                     */
-                    if (!context.getListener().isEmpty()) {
-                        breakOnGroup = current;
-                        break;
-                    }
-                }
-            }
-        }
-        return breakOnGroup;
     }
 
     /**

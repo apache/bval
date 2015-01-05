@@ -80,7 +80,6 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final ConcurrentMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>> constraintMap;
 
     private final Collection<Closeable> toClose = new ArrayList<Closeable>();
-    private volatile boolean init;
 
     /**
      * Convenience method to retrieve a default global ApacheValidatorFactory
@@ -272,7 +271,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public <T> T unwrap(final Class<T> type) {
         if (type.isInstance(this)) {
-            return (T) this;
+            @SuppressWarnings("unchecked")
+            final T result = (T) this;
+            return result;
         }
 
         // FIXME 2011-03-27 jw:
@@ -285,7 +286,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             return newInstance(type);
         }
         try {
-            Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+            final Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
             if (type.isAssignableFrom(cls)) {
                 @SuppressWarnings("unchecked")
                 T result = (T) newInstance(cls);

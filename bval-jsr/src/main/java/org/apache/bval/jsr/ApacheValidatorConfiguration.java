@@ -27,8 +27,7 @@ import javax.validation.spi.ConfigurationState;
  * Description: Uniquely identify Apache BVal in the Bean Validation bootstrap
  * strategy. Also contains Apache BVal specific configurations<br/>
  */
-public interface ApacheValidatorConfiguration
-      extends Configuration<ApacheValidatorConfiguration> {
+public interface ApacheValidatorConfiguration extends Configuration<ApacheValidatorConfiguration> {
 
     /**
      * Proprietary property keys for {@link ConfigurationImpl}  
@@ -62,7 +61,11 @@ public interface ApacheValidatorConfiguration
         String ENABLE_METABEANS_XML = "apache.bval.enable-metabeans-xml";
 
         /**
-         * BeanValidator.treatMapsLikeBeans.
+         * - true (validate maps like beans, so that
+         *     you can use Maps to validate dynamic classes or
+         *     beans for which you have the MetaBean but no instances)
+         * - false (default), validate maps like collections
+         *     (validating the values only)
          * default: false
          */
         String TREAT_MAPS_LIKE_BEANS = "apache.bval.treat-maps-like-beans";

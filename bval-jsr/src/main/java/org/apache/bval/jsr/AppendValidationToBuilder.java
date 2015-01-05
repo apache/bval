@@ -43,23 +43,23 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
         // JSR-303 2.3:
         // Groups from the main constraint annotation are inherited by the composing annotations.
         // Any groups definition on a composing annotation is ignored.
-        Set<Class<?>> inheritedGroups = builder.getConstraintValidation().getGroups();
+        final Set<Class<?>> inheritedGroups = builder.getConstraintValidation().getGroups();
         validation.setGroups(inheritedGroups);
         
         // JSR-303 2.3 p:
         // Payloads are also inherited
-        Set<Class<? extends Payload>> inheritedPayload = builder.getConstraintValidation().getPayload();
+        final Set<Class<? extends Payload>> inheritedPayload = builder.getConstraintValidation().getPayload();
         validation.setPayload(inheritedPayload);
 
         // Inherited groups and payload values must also be replicated in the 
         // annotation, so it has to be substituted with a new proxy.
-        T originalAnnot = validation.getAnnotation();
-        AnnotationProxyBuilder<T> apb = new AnnotationProxyBuilder<T>(originalAnnot);
+        final T originalAnnot = validation.getAnnotation();
+        final AnnotationProxyBuilder<T> apb = new AnnotationProxyBuilder<T>(originalAnnot);
         apb.putValue(ConstraintAnnotationAttributes.GROUPS.getAttributeName(),
             inheritedGroups.toArray(new Class[inheritedGroups.size()]));
         apb.putValue(ConstraintAnnotationAttributes.PAYLOAD.getAttributeName(),
             inheritedPayload.toArray(new Class[inheritedPayload.size()]));
-        T newAnnot = apb.createAnnotation();
+        final T newAnnot = apb.createAnnotation();
         validation.setAnnotation(newAnnot);
     }
 

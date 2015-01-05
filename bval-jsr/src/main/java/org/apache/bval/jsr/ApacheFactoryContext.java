@@ -142,12 +142,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      * {@inheritDoc}
      */
     public Validator getValidator() {
-        ClassValidator validator = new ClassValidator(this);
-        if (Boolean.parseBoolean(factory.getProperties().get(
-            ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS))) {
-            validator.setTreatMapsLikeBeans(true);
-        }
-        return validator;
+        return new ClassValidator(this);
     }
 
     /**
@@ -170,6 +165,11 @@ public class ApacheFactoryContext implements ValidatorContext {
 
     public ParameterNameProvider getParameterNameProvider() {
         return parameterNameProvider == null ? factory.getParameterNameProvider() : parameterNameProvider;
+    }
+
+    boolean isTreatMapsLikeBeans() {
+        return Boolean.parseBoolean(factory.getProperties().get(
+            ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS));
     }
 
     /**

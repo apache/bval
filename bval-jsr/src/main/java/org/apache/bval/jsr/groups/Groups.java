@@ -31,10 +31,10 @@ import java.util.List;
  */
 public class Groups {
     /** The list of single groups. */
-    protected List<Group> groups = new LinkedList<Group>();
+    final List<Group> groups = new LinkedList<Group>();
 
     /** The list of sequences. */
-    protected List<List<Group>> sequences = new LinkedList<List<Group>>();
+    final List<List<Group>> sequences = new LinkedList<List<Group>>();
 
     /**
      * Get the Groups.

@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +26,6 @@ import java.util.List;
  */
 public class AppendValidationToList extends BaseAppendValidation {
     private final List<ConstraintValidation<?>> validations = new ArrayList<ConstraintValidation<?>>();
-
-    /**
-     * Create a new AppendValidationToList instance.
-     */
-    public AppendValidationToList() {
-    }
 
     /**
      * {@inheritDoc}

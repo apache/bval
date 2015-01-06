@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -402,19 +401,15 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     private ValidationProvider<?> findProvider() {
-        if (providerClass != null) {
-            for (ValidationProvider<?> provider : providerResolver
-                  .getValidationProviders()) {
-                if (providerClass.isAssignableFrom(provider.getClass())) {
-                    return provider;
-                }
+        if (providerClass == null) {
+            return providerResolver.getValidationProviders().get(0);
+        } 
+        for (ValidationProvider<?> provider : providerResolver.getValidationProviders()) {
+            if (providerClass.isAssignableFrom(provider.getClass())) {
+                return provider;
             }
-            throw new ValidationException(
-                  "Unable to find suitable provider: " + providerClass);
-        } else {
-            List<ValidationProvider<?>> providers = providerResolver.getValidationProviders();
-            return providers.get(0);
         }
+        throw new ValidationException("Unable to find suitable provider: " + providerClass);
     }
 
     /**
@@ -431,19 +426,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     public Collection<ExecutableType> getExecutableValidation() {
         return executableValidation;
-    }
-
-    private String executableValidationTypesAsString() {
-        if (executableValidation == null || executableValidation.isEmpty()) {
-            return "";
-        }
-
-        final StringBuilder builder = new StringBuilder();
-        for (final ExecutableType type : executableValidation) {
-            builder.append(type.name()).append(",");
-        }
-        final String s = builder.toString();
-        return s.substring(0, s.length() - 1);
     }
 
     public Closeable getClosable() {

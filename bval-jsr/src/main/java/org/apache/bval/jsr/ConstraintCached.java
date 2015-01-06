@@ -24,26 +24,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Description: hold the relationship annotation->validatedBy[] ConstraintValidator classes
- * that are already parsed in a cache.<br/>
+ * Description: hold the relationship annotation->validatedBy[] ConstraintValidator classes that are already parsed in a
+ * cache.<br/>
  */
 public class ConstraintCached {
     private final Map<Class<? extends Annotation>, Class<? extends ConstraintValidator<?, ?>>[]> classes =
-          new HashMap<Class<? extends Annotation>, Class<? extends ConstraintValidator<?,?>>[]>();
+        new HashMap<Class<? extends Annotation>, Class<? extends ConstraintValidator<?, ?>>[]>();
 
     /**
      * Record the set of validator classes for a given constraint annotation.
+     * 
      * @param annotationClass
      * @param definitionClasses
      */
     public <A extends Annotation> void putConstraintValidator(Class<A> annotationClass,
-                                                              Class<? extends ConstraintValidator<A, ?>>[] definitionClasses) {
+        Class<? extends ConstraintValidator<A, ?>>[] definitionClasses) {
         classes.put(annotationClass, definitionClasses);
     }
 
     /**
      * Learn whether we have cached the validator classes for the requested constraint annotation.
-     * @param annotationClass to look up
+     * 
+     * @param annotationClass
+     *            to look up
      * @return boolean
      */
     public boolean containsConstraintValidator(Class<? extends Annotation> annotationClass) {
@@ -52,12 +55,14 @@ public class ConstraintCached {
 
     /**
      * Get the cached validator classes for the requested constraint annotation.
-     * @param annotationClass to look up
+     * 
+     * @param annotationClass
+     *            to look up
      * @return array of {@link ConstraintValidator} implementation types
      */
     @SuppressWarnings("unchecked")
     public <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] getConstraintValidators(
-          Class<A> annotationClass) {
+        Class<A> annotationClass) {
         return (Class<? extends ConstraintValidator<A, ?>>[]) classes.get(annotationClass);
     }
 

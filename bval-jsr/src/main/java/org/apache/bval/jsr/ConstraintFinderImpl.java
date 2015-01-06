@@ -59,14 +59,13 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
      * {@inheritDoc}
      */
     public ElementDescriptor.ConstraintFinder unorderedAndMatchingGroups(Class<?>... groups) {
-        Set<ConstraintValidation<?>> matchingDescriptors =
+        final Set<ConstraintValidation<?>> matchingDescriptors =
             new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
-        Groups groupChain = new GroupsComputer().computeGroups(groups);
+        final Groups groupChain = new GroupsComputer().computeGroups(groups);
         for (Group group : groupChain.getGroups()) {
             if (group.isDefault()) {
                 // If group is default, check if it gets redefined
-                List<Group> expandedDefaultGroup = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
-                for (Group defaultGroupMember : expandedDefaultGroup) {
+                for (Group defaultGroupMember : metaBean.<List<Group>>getFeature(JsrFeatures.Bean.GROUP_SEQUENCE)) {
                     for (ConstraintValidation<?> descriptor : constraintDescriptors) {
                         if (isInScope(descriptor) && isInGroup(descriptor, defaultGroupMember)) {
                             matchingDescriptors.add(descriptor);
@@ -88,11 +87,10 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
      * {@inheritDoc}
      */
     public ElementDescriptor.ConstraintFinder lookingAt(Scope scope) {
-        if (scope.equals(Scope.LOCAL_ELEMENT)) {
+        if (scope == Scope.LOCAL_ELEMENT) {
             findInScopes.remove(Scope.HIERARCHY);
             for (Iterator<ConstraintValidation<?>> it = constraintDescriptors.iterator(); it.hasNext();) {
-                ConstraintValidation<?> cv = it.next();
-                if (cv.getOwner() != metaBean.getBeanClass()) {
+                if (!it.next().getOwner().equals(metaBean.getBeanClass())) {
                     it.remove();
                 }
             }
@@ -104,7 +102,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
      * {@inheritDoc}
      */
     public ElementDescriptor.ConstraintFinder declaredOn(ElementType... elementTypes) {
-        Set<ConstraintValidation<?>> matchingDescriptors =
+        final Set<ConstraintValidation<?>> matchingDescriptors =
             new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
         for (ElementType each : elementTypes) {
             for (ConstraintValidation<?> descriptor : constraintDescriptors) {
@@ -122,19 +120,23 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
 
     private boolean isInScope(ConstraintValidation<?> descriptor) {
         if (findInScopes.size() == Scope.values().length)
+         {
             return true; // all scopes
+        }
         if (metaBean != null) {
-            Class<?> owner = descriptor.getOwner();
+            final boolean isOwner = descriptor.getOwner().equals(metaBean.getBeanClass());
             for (Scope scope : findInScopes) {
                 switch (scope) {
-                case LOCAL_ELEMENT:
-                    if (owner.equals(metaBean.getBeanClass()))
-                        return true;
-                    break;
-                case HIERARCHY:
-                    if (!owner.equals(metaBean.getBeanClass()))
-                        return true;
-                    break;
+                    case LOCAL_ELEMENT:
+                        if (isOwner) {
+                            return true;
+                        }
+                        break;
+                    case HIERARCHY:
+                        if (!isOwner) {
+                            return true;
+                        }
+                        break;
                 }
             }
         }
@@ -157,7 +159,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
         if (constraintDescriptors.isEmpty()) {
             return Collections.emptySet();
         }
-        return Collections.<ConstraintDescriptor<?>>unmodifiableSet(constraintDescriptors);
+        return Collections.<ConstraintDescriptor<?>> unmodifiableSet(constraintDescriptors);
     }
 
     /**

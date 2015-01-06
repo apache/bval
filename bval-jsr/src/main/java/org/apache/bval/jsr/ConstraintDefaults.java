@@ -23,15 +23,16 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.validation.ConstraintValidator;
 
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -42,13 +43,12 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 @Privilizing(@CallTo(Reflection.class))
 public class ConstraintDefaults {
     private static final Logger log = Logger.getLogger(ConstraintDefaults.class.getName());
-    private static final String DEFAULT_CONSTRAINTS =
-          "org/apache/bval/jsr/DefaultConstraints.properties";
+    private static final String DEFAULT_CONSTRAINTS = "org/apache/bval/jsr/DefaultConstraints.properties";
     
     /**
      * The default constraint data stored herein.
      */
-    protected Map<String, Class<? extends ConstraintValidator<?, ?>>[]> defaultConstraints;
+    private Map<String, Class<? extends ConstraintValidator<?, ?>>[]> defaultConstraints;
 
     /**
      * Create a new ConstraintDefaults instance.
@@ -78,10 +78,12 @@ public class ConstraintDefaults {
 
     @SuppressWarnings("unchecked")
     private Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadDefaultConstraints(String resource) {
-        Properties constraintProperties = new Properties();
+        final Properties constraintProperties = new Properties();
         final ClassLoader classloader = getClassLoader();
-        InputStream stream = classloader.getResourceAsStream(resource);
-        if (stream != null) {
+        final InputStream stream = classloader.getResourceAsStream(resource);
+        if (stream == null) {
+            log.log(Level.WARNING, String.format("Cannot find %s", resource));
+        } else {
             try {
                 constraintProperties.load(stream);
             } catch (IOException e) {
@@ -93,33 +95,27 @@ public class ConstraintDefaults {
                     // no-op
                 }
             }
-        } else {
-            log.log(Level.WARNING, String.format("Cannot find %s", resource));
         }
 
-        final Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadedConstraints = new HashMap<String, Class<? extends ConstraintValidator<?,?>>[]>();
+        final Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadedConstraints =
+            new HashMap<String, Class<? extends ConstraintValidator<?, ?>>[]>();
+
         for (final Map.Entry<Object, Object> entry : constraintProperties.entrySet()) {
-
-            final StringTokenizer tokens = new StringTokenizer((String) entry.getValue(), ", ");
-            final LinkedList<Class<?>> classes = new LinkedList<Class<?>>();
-            while (tokens.hasMoreTokens()) {
-                final String eachClassName = tokens.nextToken();
-
+            final List<Class<?>> classes = new LinkedList<Class<?>>();
+            for (String className : StringUtils.split((String) entry.getValue(), ',')) {
                 try {
-                    classes.add(Reflection.getClass(classloader, eachClassName));
+                    classes.add(Reflection.getClass(classloader, className.trim()));
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, String.format("Cannot find class %s", eachClassName), e);
+                    log.log(Level.SEVERE, String.format("Cannot find class %s", className), e);
                 }
             }
-
             loadedConstraints.put((String) entry.getKey(), classes.toArray(new Class[classes.size()]));
         }
         return loadedConstraints;
     }
 
     private ClassLoader getClassLoader() {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        if (classloader == null) classloader = getClass().getClassLoader();
-        return classloader;
+        final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        return classloader == null ? getClass().getClassLoader() : classloader;
     }
 }

@@ -26,6 +26,7 @@ import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 
 import javax.validation.ConstraintDefinitionException;
@@ -38,6 +39,7 @@ import javax.validation.ValidationException;
 import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.metadata.ConstraintDescriptor;
+
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -179,7 +181,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         if (!isMemberOf(context.getCurrentGroup().getGroup())) {
             return; // do not validate in the current group
         }
-        if (context.getCurrentOwner() != null && this.owner != context.getCurrentOwner()) {
+        if (context.getCurrentOwner() != null && !this.owner.equals(context.getCurrentOwner())) {
             return;
         }
         if (validator != null && !context.collectValidated(validator))
@@ -191,14 +193,15 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
 
         // process composed constraints
         if (isReportAsSingleViolation()) {
-            ConstraintValidationListener<?> listener = context.getListener();
+            final ConstraintValidationListener<?> listener = context.getListener();
             listener.beginReportAsSingle();
 
             boolean failed = listener.hasViolations();
             try {
                 // stop validating when already failed and
                 // ReportAsSingleInvalidConstraint = true ?
-                for (Iterator<ConstraintValidation<?>> composed = getComposingValidations().iterator(); !failed && composed.hasNext(); ) {
+                for (Iterator<ConstraintValidation<?>> composed = getComposingValidations().iterator(); !failed
+                    && composed.hasNext();) {
                     composed.next().validate(context);
                     failed = listener.hasViolations();
                 }
@@ -210,8 +213,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
 
             if (failed) {
                 // TODO RSt - how should the composed constraint error report look like?
-                ConstraintValidatorContextImpl jsrContext = new ConstraintValidatorContextImpl(context, this);
-                addErrors(context, jsrContext); // add defaultErrorMessage only
+                addErrors(context, new ConstraintValidatorContextImpl(context, this)); // add defaultErrorMessage only
                 return;
             }
         } else {
@@ -224,19 +226,19 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         }
 
         if (validator != null) {
-            ConstraintValidatorContextImpl jsrContext = new ConstraintValidatorContextImpl(context, this);
             @SuppressWarnings("unchecked")
             final ConstraintValidator<T, Object> objectValidator = (ConstraintValidator<T, Object>) validator;
+            final ConstraintValidatorContextImpl jsrContext = new ConstraintValidatorContextImpl(context, this);
             if (!objectValidator.isValid(context.getValidatedValue(), jsrContext)) {
                 addErrors(context, jsrContext);
             }
         }
     }
 
-    private <A extends Annotation, T> ConstraintValidator<A, ? super T> getConstraintValidator(A annotation,
+    private <A extends Annotation> ConstraintValidator<A, ? super T> getConstraintValidator(A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
-        if (constraintClasses != null && constraintClasses.length > 0) {
-            Type type = determineTargetedType(owner, access);
+        if (ArrayUtils.isNotEmpty(constraintClasses)) {
+            final Type type = determineTargetedType(owner, access);
 
             /**
              * spec says in chapter 3.5.3.: The ConstraintValidator chosen to
@@ -254,8 +256,10 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             reduceAssignableTypes(assignableTypes);
             checkOneType(assignableTypes, type, owner, annotation, access);
 
-            if ((type == Object.class || type == Object[].class) && validatorTypes.containsKey(Object.class) && validatorTypes.containsKey(Object[].class)) {
-                throw new ConstraintDefinitionException("Only a validator for Object or Object[] should be provided for cross parameter validators");
+            if ((type.equals(Object.class) || type.equals(Object[].class)) && validatorTypes.containsKey(Object.class)
+                && validatorTypes.containsKey(Object[].class)) {
+                throw new ConstraintDefinitionException(
+                    "Only a validator for Object or Object[] should be provided for cross-parameter validators");
             }
 
             final Collection<Class<? extends ConstraintValidator<A, ?>>> key = validatorTypes.get(assignableTypes.get(0));
@@ -307,7 +311,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     }
 
     private static void checkOneType(List<Type> types, Type targetType, Class<?> owner, Annotation anno,
-                                     AccessStrategy access) {
+        AccessStrategy access) {
 
         if (types.isEmpty()) {
             final String message = "No validator could be found for type " + stringForType(targetType)
@@ -316,48 +320,28 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                 throw new ConstraintDefinitionException(message);
             }
             throw new UnexpectedTypeException(message);
-        } else if (types.size() > 1) {
-            StringBuilder buf = new StringBuilder();
-            buf.append("Ambiguous validators for type ");
-            buf.append(stringForType(targetType));
-            buf.append(". See: @").append(anno.annotationType().getSimpleName()).append(" at ").append(
-                stringForLocation(owner, access));
-            buf.append(". Validators are: ");
-            boolean comma = false;
-            for (Type each : types) {
-                if (comma)
-                    buf.append(", ");
-                comma = true;
-                buf.append(each);
-            }
-            throw new UnexpectedTypeException(buf.toString());
+        }
+        if (types.size() > 1) {
+            throw new UnexpectedTypeException(String.format(
+                "Ambiguous validators for type %s. See: @%s at %s. Validators are: %s", stringForType(targetType), anno
+                    .annotationType().getSimpleName(), stringForLocation(owner, access), StringUtils.join(types, ", ")));
         }
     }
 
     private static String stringForType(Type clazz) {
         if (clazz instanceof Class<?>) {
-            if (((Class<?>) clazz).isArray()) {
-                return ((Class<?>) clazz).getComponentType().getName() + "[]";
-            } else {
-                return ((Class<?>) clazz).getName();
-            }
-        } else {
-            return clazz.toString();
+            return ((Class<?>) clazz).isArray() ? ((Class<?>) clazz).getComponentType().getName() + "[]" : ((Class<?>) clazz).getName();
         }
+        return clazz.toString();
     }
 
     private static String stringForLocation(Class<?> owner, AccessStrategy access) {
-        if (access != null) {
-            return access.toString();
-        } else {
-            return owner.getName();
-        }
+        return access == null ? owner.getName() : access.toString();
     }
 
     private static void fillAssignableTypes(Type type, Set<Type> validatorsTypes, List<Type> suitableTypes) {
         for (final Type validatorType : validatorsTypes) {
-            if (org.apache.commons.lang3.reflect.TypeUtils.isAssignable(type, validatorType)
-                && !suitableTypes.contains(validatorType)) {
+            if (TypeUtils.isAssignable(type, validatorType) && !suitableTypes.contains(validatorType)) {
                 suitableTypes.add(validatorType);
             }
         }
@@ -374,12 +358,11 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         if (assignableTypes.size() <= 1) {
             return; // no need to reduce
         }
-        boolean removed;
+        boolean removed = false;
         do {
-            removed = false;
             final Type type = assignableTypes.get(0);
             for (int i = 1; i < assignableTypes.size(); i++) {
-                Type nextType = assignableTypes.get(i);
+                final Type nextType = assignableTypes.get(i);
                 if (TypeUtils.isAssignable(nextType, type)) {
                     assignableTypes.remove(0);
                     i--;
@@ -390,19 +373,21 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                 }
             }
         } while (removed && assignableTypes.size() > 1);
-
     }
 
     private static <A extends Annotation> Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> getValidatorsTypes(
         Class<? extends ConstraintValidator<A, ?>>[] constraintValidatorClasses) {
-        final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorsTypes = new HashMap<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>>();
+        final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorsTypes =
+            new HashMap<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>>();
         for (Class<? extends ConstraintValidator<A, ?>> validatorType : constraintValidatorClasses) {
-            Type validatedType = TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class).get(ConstraintValidator.class.getTypeParameters()[1]);
+            Type validatedType =
+                TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class).get(
+                    ConstraintValidator.class.getTypeParameters()[1]);
             if (validatedType == null) {
                 throw new ValidationException(String.format("Could not detect validated type for %s", validatorType));
             }
             if (validatedType instanceof GenericArrayType) {
-                Type componentType = TypeUtils.getArrayComponentType(validatedType);
+                final Type componentType = TypeUtils.getArrayComponentType(validatedType);
                 if (componentType instanceof Class<?>) {
                     validatedType = Array.newInstance((Class<?>) componentType, 0).getClass();
                 }
@@ -421,14 +406,14 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     private static Type determineTargetedType(Class<?> owner, AccessStrategy access) {
         // if the constraint declaration is hosted on a class or an interface,
         // the targeted type is the class or the interface.
-        if (access == null)
+        if (access == null) {
             return owner;
-        Type type = access.getJavaType();
-        if (type == null)
+        }
+        final Type type = access.getJavaType();
+        if (type == null) {
             return Object.class;
-        if (type instanceof Class<?>)
-            type = ClassUtils.primitiveToWrapper((Class<?>) type);
-        return type;
+        }
+        return type instanceof Class<?> ? ClassUtils.primitiveToWrapper((Class<?>) type) : type;
     }
 
     /**
@@ -459,12 +444,12 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         }
         try {
             if (!context.getTraversableResolver().isReachable(context.getBean(), node,
-                context.getRootMetaBean().getBeanClass(), beanPath, access.getElementType()))
+                context.getRootMetaBean().getBeanClass(), beanPath, access.getElementType())) {
                 return false;
+            }
         } catch (RuntimeException e) {
             throw new ValidationException("Error in TraversableResolver.isReachable() for " + context.getBean(), e);
         }
-
         return true;
     }
 
@@ -538,9 +523,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      *
      * @return {@link Set} of {@link ConstraintValidation}
      */
-    @SuppressWarnings("unchecked")
     Set<ConstraintValidation<?>> getComposingValidations() {
-        return composedConstraints == null ? Collections.EMPTY_SET : composedConstraints;
+        return composedConstraints == null ? Collections.<ConstraintValidation<?>> emptySet() : composedConstraints;
     }
 
     /**
@@ -565,10 +549,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      * {@inheritDoc}
      */
     public List<Class<? extends ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
-        if (validatorClasses == null) {
-            return Collections.emptyList();
-        }
-        return Arrays.asList(validatorClasses);
+        return validatorClasses == null ? Collections.<Class<? extends ConstraintValidator<T, ?>>> emptyList() : Arrays.asList(validatorClasses);
     }
 
     public void setValidationAppliesTo(final ConstraintTarget validationAppliesTo) {

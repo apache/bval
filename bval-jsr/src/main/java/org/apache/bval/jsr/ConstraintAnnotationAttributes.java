@@ -18,7 +18,6 @@ package org.apache.bval.jsr;
 
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -38,6 +37,7 @@ import java.util.concurrent.ConcurrentMap;
  * 
  * @version $Rev: 1165923 $ $Date: 2011-09-06 18:07:53 -0500 (Tue, 06 Sep 2011) $
  */
+@Privilizing(@CallTo(Reflection.class))
 public enum ConstraintAnnotationAttributes {
     /**
      * "message"
@@ -125,10 +125,10 @@ public enum ConstraintAnnotationAttributes {
     public <V> V get(Map<? super String, ? super V> map) {
         @SuppressWarnings("unchecked")
         final V result = (V) map.get(getAttributeName());
-        if (!TypeUtils.isInstance(result, getType())) {
-            throw new IllegalStateException(String.format("Invalid '%s' value: %s", getAttributeName(), result));
+        if (TypeUtils.isInstance(result, getType())) {
+            return result;
         }
-        return result;
+        throw new IllegalStateException(String.format("Invalid '%s' value: %s", getAttributeName(), result));
     }
 
     public <C extends Annotation> Worker<C> analyze(final Class<C> clazz) {
@@ -192,9 +192,6 @@ public enum ConstraintAnnotationAttributes {
             if (oldMtd != null) {
                 return oldMtd;
             }
-            if (!m.isAccessible()) {
-                m.setAccessible(true);
-            }
             return m;
         }
 
@@ -208,12 +205,16 @@ public enum ConstraintAnnotationAttributes {
             return result;
         }
 
-        @Privileged
         private Object doInvoke(final Annotation constraint) {
+            final boolean unset = Reflection.setAccessible(method, true);
             try {
                 return method.invoke(constraint);
             } catch (Exception e) {
                 throw new RuntimeException(e);
+            } finally {
+                if (unset) {
+                    Reflection.setAccessible(method, false);
+                }
             }
         }
     }

@@ -22,11 +22,6 @@ import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
-import javax.validation.Payload;
-import javax.validation.Valid;
-import javax.validation.ValidationException;
-import javax.validation.groups.ConvertGroup;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -36,6 +31,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.validation.Payload;
+import javax.validation.Valid;
+import javax.validation.ValidationException;
+import javax.validation.groups.ConvertGroup;
 
 /**
  * Description: Holds the information and creates an annotation proxy during xml
@@ -210,6 +209,7 @@ final public class AnnotationProxyBuilder<A extends Annotation> {
     private A doCreateAnnotation(final Class<A> proxyClass, final InvocationHandler handler) {
         try {
             Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
+            Reflection.setAccessible(constructor, true); // java 8
             return constructor.newInstance(handler);
         } catch (Exception e) {
             throw new ValidationException("Unable to create annotation for configured constraint", e);

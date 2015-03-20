@@ -63,10 +63,7 @@ public class BValExtension implements Extension {
         
         @Override
         public boolean accept(AnnotatedType<?> annotatedType) {
-            if (annotatedType.getJavaClass().getName().startsWith("org.apache.bval.")) {
-                return false;
-            }
-            return true;
+            return !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
         }
     };
 
@@ -192,6 +189,8 @@ public class BValExtension implements Extension {
                 }
             } catch (final ValidationException ve) {
                 LOGGER.log(Level.FINEST, ve.getMessage(), ve);
+            } catch (final Exception e) { // just info
+                LOGGER.log(Level.INFO, e.getMessage());
             }
         }
     }

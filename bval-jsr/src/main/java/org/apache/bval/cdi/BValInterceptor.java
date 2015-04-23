@@ -21,7 +21,23 @@ package org.apache.bval.cdi;
 import org.apache.bval.jsr.util.ClassHelper;
 import org.apache.bval.jsr.util.Proxies;
 
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Priority;
+import javax.enterprise.inject.spi.AnnotatedConstructor;
+import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.enterprise.inject.spi.AnnotatedType;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.interceptor.AroundConstruct;
 import javax.interceptor.AroundInvoke;
@@ -37,17 +53,7 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.ConstructorDescriptor;
 import javax.validation.metadata.MethodDescriptor;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import static java.util.Arrays.asList;
 
 /**
  * Interceptor class for the {@link BValBinding} {@link InterceptorBinding}.
@@ -57,10 +63,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Priority(4800)
 // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to
 // generate another one for CDI 1.1 impl
-public class BValInterceptor {
-    private final Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
-    private Set<ExecutableType> classConfiguration;
-    private Boolean constructorValidated;
+public class BValInterceptor implements Serializable {
+    private transient volatile Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
+    private transient volatile Set<ExecutableType> classConfiguration;
+    private transient volatile Boolean constructorValidated;
 
     @Inject
     private Validator validator;
@@ -68,10 +74,9 @@ public class BValInterceptor {
     @Inject
     private BValExtension globalConfiguration;
 
-    private ExecutableValidator executableValidator;
+    private transient volatile ExecutableValidator executableValidator;
 
-    @AroundConstruct
-    // TODO: see previous one
+    @AroundConstruct // TODO: see previous one
     public Object construct(final InvocationContext context) throws Exception {
         @SuppressWarnings("rawtypes")
         final Constructor constructor = context.getConstructor();
@@ -156,9 +161,18 @@ public class BValInterceptor {
         if (constructorValidated == null) {
             synchronized (this) {
                 if (constructorValidated == null) {
-                    final ValidateOnExecution annotation =
-                        targetClass.getConstructor(constructor.getParameterTypes()).getAnnotation(
-                            ValidateOnExecution.class);
+                    final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(constructor.getDeclaringClass());
+                    AnnotatedConstructor<?> annotatedConstructor = null;
+                    for (final AnnotatedConstructor<?> ac : annotatedType.getConstructors()) {
+                        if (!constructor.equals(ac.getJavaMember())) {
+                            continue;
+                        }
+                        annotatedConstructor = ac;
+                        break;
+                    }
+                    final ValidateOnExecution annotation = annotatedConstructor != null ?
+                            annotatedConstructor.getAnnotation(ValidateOnExecution.class) :
+                            targetClass.getConstructor(constructor.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
                     if (annotation == null) {
                         constructorValidated = classConfiguration.contains(ExecutableType.CONSTRUCTORS);
                     } else {
@@ -171,11 +185,19 @@ public class BValInterceptor {
             }
         }
 
-        return constructorValidated.booleanValue();
+        return constructorValidated;
     }
 
     private boolean isMethodValidated(final Class<?> targetClass, final Method method) throws NoSuchMethodException {
         initClassConfig(targetClass);
+
+        if (methodConfiguration == null) {
+            synchronized (this) {
+                if (methodConfiguration == null) {
+                    methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
+                }
+            }
+        }
 
         Boolean methodConfig = methodConfiguration.get(method);
         if (methodConfig == null) {
@@ -183,24 +205,36 @@ public class BValInterceptor {
                 methodConfig = methodConfiguration.get(method);
                 if (methodConfig == null) {
                     final List<Class<?>> classHierarchy =
-                        ClassHelper.fillFullClassHierarchyAsList(new ArrayList<Class<?>>(), targetClass);
-
-                    Class<?> lastClassWithTheMethod = null;
+                            ClassHelper.fillFullClassHierarchyAsList(new LinkedList<Class<?>>(), targetClass);
+                    Collections.reverse(classHierarchy);
 
                     // search on method @ValidateOnExecution
-                    Collections.reverse(classHierarchy);
                     ValidateOnExecution validateOnExecution = null;
+                    ValidateOnExecution validateOnExecutionType = null;
                     for (final Class<?> c : classHierarchy) {
-                        try {
-                            validateOnExecution =
-                                c.getDeclaredMethod(method.getName(), method.getParameterTypes()).getAnnotation(
-                                    ValidateOnExecution.class);
-                            if (lastClassWithTheMethod == null) {
-                                lastClassWithTheMethod = c;
+                        final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(c);
+                        AnnotatedMethod<?> annotatedMethod = null;
+                        for (final AnnotatedMethod<?> m : annotatedType.getMethods()) {
+                            if (!m.getJavaMember().getName().equals(method.getName())
+                                    || !asList(method.getGenericParameterTypes()).equals(asList(m.getJavaMember().getGenericParameterTypes()))) {
+                                continue;
                             }
-                            if (validateOnExecution != null) {
-                                lastClassWithTheMethod = null;
-                                break;
+                            annotatedMethod = m;
+                            break;
+                        }
+                        try {
+                            if (annotatedMethod == null) {
+                                continue;
+                            }
+                            if (validateOnExecutionType == null) {
+                                final ValidateOnExecution vat = annotatedType.getAnnotation(ValidateOnExecution.class);
+                                if (vat != null) {
+                                    validateOnExecutionType = vat;
+                                }
+                            }
+                            final ValidateOnExecution mvat = annotatedMethod.getAnnotation(ValidateOnExecution.class);
+                            if (mvat != null) {
+                                validateOnExecution = mvat;
                             }
                         } catch (final Throwable h) {
                             // no-op
@@ -208,8 +242,10 @@ public class BValInterceptor {
                     }
 
                     // if not found look in the class declaring the method
-                    if (validateOnExecution == null && lastClassWithTheMethod != null) {
-                        validateOnExecution = lastClassWithTheMethod.getAnnotation(ValidateOnExecution.class);
+                    boolean classMeta = false;
+                    if (validateOnExecution == null) {
+                        validateOnExecution = validateOnExecutionType;
+                        classMeta = validateOnExecution != null;
                     }
 
                     if (validateOnExecution == null) {
@@ -227,7 +263,7 @@ public class BValInterceptor {
                             }
                             if (ExecutableType.IMPLICIT == type) { // on method it just means validate, even on getters
                                 config.add(ExecutableType.NON_GETTER_METHODS);
-                                if (lastClassWithTheMethod == null) {
+                                if (!classMeta) {
                                     config.add(ExecutableType.GETTER_METHODS);
                                 } // else the annotation was not on the method so implicit doesn't mean getters
                             } else {
@@ -250,7 +286,8 @@ public class BValInterceptor {
                 if (classConfiguration == null) {
                     classConfiguration = EnumSet.noneOf(ExecutableType.class);
 
-                    final ValidateOnExecution annotation = targetClass.getAnnotation(ValidateOnExecution.class);
+                    final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(targetClass);
+                    final ValidateOnExecution annotation = annotatedType.getAnnotation(ValidateOnExecution.class);
                     if (annotation == null) {
                         classConfiguration.addAll(globalConfiguration.getGlobalExecutableTypes());
                     } else {

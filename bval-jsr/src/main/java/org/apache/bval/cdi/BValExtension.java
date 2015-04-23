@@ -31,6 +31,7 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessBean;
+import javax.enterprise.inject.spi.WithAnnotations;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.Configuration;
 import javax.validation.Validation;
@@ -151,6 +152,7 @@ public class BValExtension implements Extension {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
     }
 
+    // @WithAnnotations(ValidateOnExecution.class) doesn't check interfaces so not enough
     public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat) {
         if (!isExecutableValidationEnabled) {
             return;
@@ -178,9 +180,6 @@ public class BValExtension implements Extension {
                                 || validBusinessMethods && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty()
                                 || validGetterMethods && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())
                             ) {
-                        // TODO: keep track of bValAnnotatedType and remove @BValBinding in
-                        // ProcessBean event if needed cause here we can't really add @ValidateOnExecution
-                        // through an extension
                         final BValAnnotatedType<A> bValAnnotatedType = new BValAnnotatedType<A>(annotatedType);
                         pat.setAnnotatedType(bValAnnotatedType);
                     }

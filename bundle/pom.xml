@@ -70,7 +70,11 @@
                         <Embed-Dependency>*;inline=true</Embed-Dependency>
                         <Private-Package />
                         <Export-Package>org.apache.bval.*</Export-Package>
-                        <Import-Package>javax.persistence.*;resolution:=optional,org.apache.bval.xml.*;resolution:=optional,*</Import-Package>
+                        <Import-Package>
+                            org.apache.commons.lang3.*;resolution:=optional,javax.annotation.*;resolution:=optional,javax.interceptor.*;resolution:=optional,
+                            javax.inject.*;resolution:=optional,javax.enterprise.*;resolution:=optional,javax.persistence.*;resolution:=optional,
+                            org.apache.bval.xml.*;resolution:=optional,javax.validation.*;resolution:=optional,*
+                        </Import-Package>
                         <!-- geronimo spec osgi services support -->
                         <SPI-Provider>true</SPI-Provider>
                     </instructions>

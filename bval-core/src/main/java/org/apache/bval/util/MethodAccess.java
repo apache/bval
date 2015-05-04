@@ -21,12 +21,15 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Description: invoke a zero-argument method (getter)<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class MethodAccess extends AccessStrategy {
     private final Method method;
     private final String propertyName;
@@ -47,14 +50,6 @@ public class MethodAccess extends AccessStrategy {
     public MethodAccess(String propertyName, final Method method) {
         this.method = method;
         this.propertyName = propertyName;
-        if (!method.isAccessible()) {
-            run( new PrivilegedAction<Void>() {
-                public Void run() {
-                    method.setAccessible(true);
-                    return null;
-                }
-            });
-        }
     }
 
     /**
@@ -65,21 +60,14 @@ public class MethodAccess extends AccessStrategy {
      *         the method name id not according to the JavaBeans standard.
      */
     public static String getPropertyName(Method member) {
-        String name = null;
-        String methodName = member.getName();
+        final String methodName = member.getName();
         if (methodName.startsWith("is")) {
-            name = Introspector.decapitalize(methodName.substring(2));
-        } /* else if ( methodName.startsWith("has")) {
-				name = Introspector.decapitalize( methodName.substring( 3 ) );
-			} */
-        // setter annotation is NOT supported in the spec
-        /*  else if (method.getName().startsWith("set") && method.getParameterTypes().length == 1) {
-           propName = Introspector.decapitalize(method.getName().substring(3));
-       } */
-        else if (methodName.startsWith("get")) {
-            name = Introspector.decapitalize(methodName.substring(3));
+            return Introspector.decapitalize(methodName.substring(2));
         }
-        return name;
+        if (methodName.startsWith("get")) {
+            return Introspector.decapitalize(methodName.substring(3));
+        }
+        return null;
     }
 
     /**
@@ -96,12 +84,17 @@ public class MethodAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public Object get(final Object instance) {
+        final boolean mustUnset = Reflection.setAccessible(method, true);
         try {
             return method.invoke(instance);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e);
+        } finally {
+            if (mustUnset) {
+                Reflection.setAccessible(method, false);
+            }
         }
     }
 
@@ -130,8 +123,12 @@ public class MethodAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         MethodAccess that = (MethodAccess) o;
 
@@ -143,13 +140,5 @@ public class MethodAccess extends AccessStrategy {
      */
     public int hashCode() {
         return method.hashCode();
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

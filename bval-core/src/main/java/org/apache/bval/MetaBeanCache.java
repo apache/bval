@@ -16,12 +16,12 @@
  */
 package org.apache.bval;
 
+import org.apache.bval.model.MetaBean;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.apache.bval.model.MetaBean;
 
 /**
  * Description: a cache to hold metabeans by id and by class.<br/>
@@ -92,8 +92,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
      */
     public void cache(MetaBean beanInfo) {
         cacheById.put(beanInfo.getId(), beanInfo);
-        if (beanInfo.getBeanClass() != null &&
-                beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
+        if (beanInfo.getBeanClass() != null && beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
             cacheByClass.putIfAbsent(beanInfo.getBeanClass(), beanInfo);
         }
     }
@@ -104,8 +103,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
      */
     public void removeFromCache(MetaBean beanInfo) {
         cacheById.remove(beanInfo.getId());
-        if (beanInfo.getBeanClass() != null &&
-                beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
+        if (beanInfo.getBeanClass() != null && beanInfo.getId().equals(beanInfo.getBeanClass().getName())) {
             cacheByClass.remove(beanInfo.getBeanClass());
         }
     }

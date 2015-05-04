@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
-    <version>0.6-SNAPSHOT</version>
+    <version>1.1.0-alpha-SNAPSHOT</version>
   </parent>
 
   <artifactId>bval-xstream</artifactId>
@@ -45,6 +45,10 @@
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-weaver-privilizer-api</artifactId>
     </dependency>
     <!-- Test dependencies -->
     <dependency>
@@ -88,6 +92,10 @@
         <configuration>
             <excludeFilterFile>findbugs-exclude-filter.xml</excludeFilterFile>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-weaver-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

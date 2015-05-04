@@ -16,10 +16,6 @@
  */
 package org.apache.bval;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collection;
-
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
@@ -28,6 +24,10 @@ import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
 import org.apache.bval.util.ValidationHelper;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collection;
 
 // TODO: centralize treatMapsLikeBeans
 
@@ -107,8 +107,9 @@ public class BeanValidator<T extends ValidationListener> {
             for (int i = 0; i < parameters.length; i++) {
                 for (Annotation anno : annotations[i]) {
                     if (anno instanceof Validate) {
-                        if (context == null)
+                        if (context == null) {
                             context = createContext();
+                        }
                         if (determineMetaBean((Validate) anno, parameters[i], context)) {
                             ValidationHelper.validateContext(context, new BeanValidatorCallback(context),
                                 treatMapsLikeBeans);
@@ -117,7 +118,7 @@ public class BeanValidator<T extends ValidationListener> {
                     }
                 }
             }
-            return context != null ? context.getListener() : null;
+            return context == null ? null : context.getListener();
         }
         return null;
     }
@@ -133,17 +134,17 @@ public class BeanValidator<T extends ValidationListener> {
      */
     protected <VL extends ValidationListener> boolean determineMetaBean(Validate validate, Object parameter,
         ValidationContext<VL> context) {
-        if (validate.value().length() == 0) {
-            if (parameter == null)
+        if (validate.value().isEmpty()) {
+            if (parameter == null) {
                 return false;
+            }
             Class<?> beanClass;
-            if (parameter instanceof Collection<?>) { // do not validate empty
-                                                      // collection
+            if (parameter instanceof Collection<?>) { // do not validate empty collection
                 Collection<?> coll = ((Collection<?>) parameter);
-                if (coll.isEmpty())
+                if (coll.isEmpty()) {
                     return false;
-                beanClass = coll.iterator().next().getClass(); // get first
-                                                               // object
+                }
+                beanClass = coll.iterator().next().getClass(); // get first object
             } else if (parameter.getClass().isArray()) {
                 beanClass = parameter.getClass().getComponentType();
             } else {
@@ -214,8 +215,7 @@ public class BeanValidator<T extends ValidationListener> {
      */
     protected <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context, MetaProperty prop) {
         AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
-        if (access == null && prop.getMetaBean() != null) { // single property
-                                                            // access strategy
+        if (access == null && prop.getMetaBean() != null) { // single property access strategy
             // save old values from context
             final Object bean = context.getBean();
             final MetaBean mbean = context.getMetaBean();

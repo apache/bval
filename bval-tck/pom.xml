@@ -24,24 +24,57 @@
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>0.6-SNAPSHOT</version>
+        <version>1.1.0-alpha-SNAPSHOT</version>
     </parent>
 
     <artifactId>bval-tck-runner</artifactId>
-    <name>Apache BVal :: bval-tck (TCK Runner)</name>
-    <description>Aggregates dependencies and runs the JSR-303 TCK</description>
+    <name>Apache BVal :: bval-tck-runner (TCK Runner)</name>
+    <description>Aggregates dependencies and runs the JSR-349 TCK</description>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>org.apache.bval.bundle</artifactId>
+            <artifactId>bval-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-jsr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-atinject_1.0_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-jcdi_1.0_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-interceptor_1.1_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-ejb_3.1_spec</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-el-api</artifactId>
         </dependency>
     </dependencies>
 
     <properties>
         <jboss.home>/opt/jboss-5.1.0.GA</jboss.home>
-        <validation.provider>org.apache.bval.jsr303.ApacheValidationProvider</validation.provider>
+        <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
         <remote.debug />
     </properties>
 
@@ -116,15 +149,9 @@
                 </property>
             </activation>
             <dependencies>
-                <!-- Use the geronimo-validation spec instead
-                <dependency>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </dependency>
-                -->
                 <dependency>
                     <groupId>org.apache.geronimo.specs</groupId>
-                    <artifactId>geronimo-validation_1.0_spec</artifactId>
+                    <artifactId>geronimo-validation_1.1_spec</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.testng</groupId>
@@ -144,6 +171,10 @@
                 </dependency>
             </dependencies>
             <repositories>
+                <repository>
+                  <id>nuxeo</id>
+                  <url>https://maven.nuxeo.org/nexus/content/groups/public/</url>
+                </repository>
                 <repository>
                     <!-- override outdated URLs for jboss repo ids -->
                     <id>repository.jboss.org</id>
@@ -214,17 +245,9 @@
                                             <classifier>suite</classifier>
                                             <overWrite>false</overWrite>
                                         </artifactItem>
-                                        <!-- use geronimo-validation spec
-                                        <artifactItem>
-                                            <groupId>javax.validation</groupId>
-                                            <artifactId>validation-api</artifactId>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
-                                        </artifactItem>
-                                        -->
                                         <artifactItem>
                                             <groupId>org.apache.geronimo.specs</groupId>
-                                            <artifactId>geronimo-validation_1.0_spec</artifactId>
+                                            <artifactId>geronimo-validation_1.1_spec</artifactId>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/dependency/lib</outputDirectory>
                                         </artifactItem>

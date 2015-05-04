@@ -60,15 +60,17 @@ public class EMailValidationUtils {
     // TODO it would seem to make sense to move or reduce the visibility of this
     // method as it is more general than email.
     public static boolean isValid(Object value, Pattern aPattern) {
-        if (value == null)
+        if (value == null) {
             return true;
-        if (!(value instanceof CharSequence))
+        }
+        if (!(value instanceof CharSequence)) {
             return false;
+        }
         CharSequence seq = (CharSequence) value;
-        if (seq.length() == 0)
+        if (seq.length() == 0) {
             return true;
-        Matcher m = aPattern.matcher(seq);
-        return m.matches();
+        }
+        return aPattern.matcher(seq).matches();
     }
 
 }

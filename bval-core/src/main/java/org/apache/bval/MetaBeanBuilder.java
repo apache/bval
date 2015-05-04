@@ -20,11 +20,10 @@ import org.apache.bval.model.MetaBean;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Description: internal implementation class to construct metabeans with

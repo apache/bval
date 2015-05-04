@@ -43,7 +43,6 @@ public final class DynamicMetaBean extends MetaBean {
      */
     @Override
     public MetaBean resolveMetaBean(Object bean) {
-        return bean instanceof Class<?> ?
-                finder.findForClass((Class<?>) bean) : finder.findForClass(bean.getClass());
+        return bean instanceof Class<?> ? finder.findForClass((Class<?>) bean) : finder.findForClass(bean.getClass());
     }
 }

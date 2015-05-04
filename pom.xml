@@ -33,12 +33,13 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache BVal :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
-    <version>0.6-SNAPSHOT</version>
+    <version>1.1.0-alpha-SNAPSHOT</version>
 
     <description>Apache BVal parent pom</description>
 
     <properties>
         <site.deploy.url>scp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
+        <commons.weaver.version>1.1</commons.weaver.version>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -46,9 +47,9 @@
     <url>http://bval.apache.org/</url>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/bval/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/bval/trunk</developerConnection>
-        <url>http://svn.apache.org/repos/asf/bval/trunk</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/bval/branches/bval-11/</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/bval/branches/bval-11/</developerConnection>
+        <url>http://svn.apache.org/repos/asf/bval/branches/bval-11/</url>
     </scm>
 
     <mailingLists>
@@ -250,10 +251,10 @@
                 <configuration>
                     <show>package</show>
                     <quiet>true</quiet>
-                    <source>1.5</source>
+                    <source>1.6</source>
                     <links>
-                        <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-                        <link>http://java.sun.com/javaee/6/docs/api</link>
+                        <link>http://docs.oracle.com/javase/6/docs/api</link>
+                        <link>http://docs.oracle.com/javaee/7/api</link>
                     </links>
                 </configuration>
                 <reportSets>
@@ -283,17 +284,16 @@
     -->
     <dependencyManagement>
         <dependencies>
-            <!-- Default of Apache Geronimo version of the Spec API -->
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-validation_1.0_spec</artifactId>
-                <version>1.1</version>
+                <artifactId>geronimo-validation_1.1_spec</artifactId>
+                <version>1.0-alpha-1</version>
             </dependency>
             <!-- Optional profile to use Spec RI API -->
             <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
-                <version>1.0.0.GA</version>
+                <version>1.1.0.Final</version>
             </dependency>
             <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
@@ -314,12 +314,18 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.1</version>
+                <version>3.3.2</version>
             </dependency>
             <dependency>
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils-core</artifactId>
                 <version>1.8.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-weaver-privilizer-api</artifactId>
+                <version>${commons.weaver.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
@@ -348,6 +354,12 @@
                 <artifactId>aopalliance</artifactId>
                 <version>1.0</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-el-api</artifactId>
+                <version>8.0.21</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -372,8 +384,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.5</source>
-                        <target>1.5</target>
+                        <source>1.6</source>
+                        <target>1.6</target>
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
                 </plugin>
@@ -387,9 +399,9 @@
                             </manifest>
                             <manifestEntries>
                                 <Implementation-Build>${buildNumber}</Implementation-Build>
-                                <Specification-Title>JSR-303 Bean Validation</Specification-Title>
+                                <Specification-Title>JSR-349 Bean Validation</Specification-Title>
                                 <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
-                                <Specification-Version>1.0</Specification-Version>
+                                <Specification-Version>1.1</Specification-Version>
                             </manifestEntries>
                         </archive>
                     </configuration>
@@ -405,8 +417,8 @@
                         <verbose>false</verbose>
                         <maxmemory>512m</maxmemory>
                         <links>
-                            <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-                            <link>http://java.sun.com/javaee/6/docs/api</link>
+                            <link>http://docs.oracle.com/javase/6/docs/api</link>
+                            <link>http://docs.oracle.com/javaee/7/api</link>
                         </links>
                     </configuration>
                 </plugin>
@@ -464,7 +476,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.7</version>
+                    <version>0.10</version>
                     <executions>
                         <execution>
                             <phase>verify</phase>
@@ -477,10 +489,14 @@
                         <excludeSubProjects>false</excludeSubProjects>
                         <numUnapprovedLicenses>0</numUnapprovedLicenses>
                         <excludes>
+                            <exclude>**/*/MANIFEST.MF</exclude>
+                            <exclude>.git</exclude>
+                            <exclude>.gitignore</exclude>
                             <!-- General informational files -->
                             <exclude>README.txt</exclude>
                             <exclude>CHANGES.txt</exclude>
                             <!-- generated content -->
+                            <exclude>.idea</exclude>
                             <exclude>release.properties</exclude>
                             <exclude>DEPENDENCIES</exclude>
                             <exclude>**/.*/**</exclude>
@@ -491,6 +507,8 @@
                             <exclude>**/*.iml</exclude>
                             <exclude>**/*.ipr</exclude>
                             <exclude>**/*.iws</exclude>
+                            <exclude>.idea</exclude>
+                            <exclude>**/META-INF/services/*</exclude> <!-- depending service loader it can fail if a comment is added -->
                         </excludes>
                     </configuration>
                 </plugin>
@@ -519,17 +537,18 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>
                         <tagNameFormat>@{project.version}</tagNameFormat>
+                        <tagBase>https://svn.apache.org/repos/asf/bval/tags/</tagBase>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.12</version>
+                    <version>2.17</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>2.12</version>
+                    <version>2.17</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -539,12 +558,37 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>1.0-beta-4</version>
+                    <version>1.2</version>
                 </plugin>
                 <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-source-plugin</artifactId>
-                  <version>2.1.1</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-weaver-maven-plugin</artifactId>
+                    <version>${commons.weaver.version}</version>
+                    <configuration>
+                        <weaverConfig>
+                            <privilizer.policy>DYNAMIC</privilizer.policy>
+                        </weaverConfig>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>prepare</goal>
+                                <goal>weave</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.commons</groupId>
+                            <artifactId>commons-weaver-privilizer</artifactId>
+                            <version>${commons.weaver.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -565,7 +609,7 @@
                                     <version>[2.2.1,)</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>[1.5,)</version>
+                                    <version>[1.6,)</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -579,7 +623,6 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
-                <version>0.7</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -625,12 +668,11 @@
     <modules>
         <module>bval-core</module>
         <module>bval-xstream</module>
-        <module>bval-jsr303</module>
-        <module>bundle</module>
+        <module>bval-jsr</module>
         <module>bval-json</module>
-        <module>bval-guice</module>
-        <module>bval-tck</module>
         <module>bval-extras</module>
-  </modules>
+        <module>bval-tck11</module>
+        <module>bundle</module>
+    </modules>
 
 </project>

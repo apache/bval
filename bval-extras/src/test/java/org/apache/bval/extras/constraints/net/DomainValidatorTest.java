@@ -16,18 +16,14 @@
  */
 package org.apache.bval.extras.constraints.net;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.lang.annotation.Annotation;
-
-import javax.validation.Payload;
-
-import org.apache.bval.extras.constraints.net.Domain;
-import org.apache.bval.extras.constraints.net.DomainValidator;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.validation.Payload;
+import java.lang.annotation.Annotation;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for the DomainValidator.

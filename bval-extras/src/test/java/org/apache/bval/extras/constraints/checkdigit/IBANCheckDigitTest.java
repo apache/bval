@@ -16,14 +16,13 @@
  */
 package org.apache.bval.extras.constraints.checkdigit;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
+import javax.validation.ConstraintValidator;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.ConstraintValidator;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  * IVAN Check Digit Test.

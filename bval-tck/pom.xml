@@ -29,7 +29,6 @@
 
     <artifactId>bval-tck10-runner</artifactId>
     <name>Apache BVal :: bval-tck-runner (TCK Runner)</name>
-    <description>Aggregates dependencies and runs the JSR-349 TCK</description>
 
     <repositories>
         <!--
@@ -92,6 +91,12 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-el-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <classifier>jdk15</classifier>
+            <version>5.8</version>
         </dependency>
     </dependencies>
 
@@ -177,12 +182,6 @@
                     <artifactId>geronimo-validation_1.1_spec</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.testng</groupId>
-                    <artifactId>testng</artifactId>
-                    <classifier>jdk15</classifier>
-                    <version>5.8</version>
-                </dependency>
-                <dependency>
                     <groupId>org.hibernate.jsr303.tck</groupId>
                     <artifactId>jsr303-tck</artifactId>
                     <version>1.0.6.GA</version>
@@ -263,7 +262,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${project.build.directory}/dependency/jsr303-tck-suite.xml</suiteXmlFile>
+                                <suiteXmlFile>${project.basedir}/src/test/resources/custom-jsr303-tck-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                             <argLine>-Xmx512m</argLine>
                             <forkMode>once</forkMode>
@@ -323,7 +322,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${project.build.directory}/dependency/jsr303-tck-suite.xml</suiteXmlFile>
+                                <suiteXmlFile>${project.basedir}/src/test/resources/custom-jsr303-tck-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                             <systemProperties>
                                 <property>

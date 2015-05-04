@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>0.6-SNAPSHOT</version>
+        <version>1.1.0-alpha-SNAPSHOT</version>
     </parent>
 
     <!-- use fully qualified naming for OSGi bundles -->
@@ -35,7 +35,7 @@
     <name>Apache BVal :: org.apache.bval.bundle</name>
     <packaging>bundle</packaging>
 
-    <description>Apache BVal - Aggregate OSGi Bundle (bval-core + bval-jsr303)</description>
+    <description>Apache BVal - Aggregate OSGi Bundle (bval-core + bval-jsr)</description>
 
     <dependencies>
         <!-- JARs to include in aggregate JAR via maven-shade-plugin -->
@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>bval-jsr303</artifactId>
+            <artifactId>bval-jsr</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -70,7 +70,11 @@
                         <Embed-Dependency>*;inline=true</Embed-Dependency>
                         <Private-Package />
                         <Export-Package>org.apache.bval.*</Export-Package>
-                        <Import-Package>javax.persistence.*;resolution:=optional,org.apache.bval.xml.*;resolution:=optional,*</Import-Package>
+                        <Import-Package>
+                            org.apache.commons.lang3.*;resolution:=optional,javax.annotation.*;resolution:=optional,javax.interceptor.*;resolution:=optional,
+                            javax.inject.*;resolution:=optional,javax.enterprise.*;resolution:=optional,javax.persistence.*;resolution:=optional,
+                            org.apache.bval.xml.*;resolution:=optional,javax.validation.*;resolution:=optional,*
+                        </Import-Package>
                         <!-- geronimo spec osgi services support -->
                         <SPI-Provider>true</SPI-Provider>
                     </instructions>

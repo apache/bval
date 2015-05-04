@@ -21,7 +21,12 @@ import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Description: Implements a contains to hold and transport validation results<br/>
@@ -98,7 +103,9 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @see {@link Error#getReason()}
      */
     protected void addToReasonBucket(Error error) {
-        if (error.getReason() == null) return;
+        if (error.getReason() == null) {
+            return;
+        }
 
         List<Error> errors = errorsByReason.get(error.getReason());
         if (errors == null) {
@@ -114,7 +121,9 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @see {@link Error#getOwner()}
      */
     protected void addToOwnerBucket(Error error) {
-        if (error.getOwner() == null) return;
+        if (error.getOwner() == null) {
+            return;
+        }
 
         Map<String, List<Error>> errors = errorsByOwner.get(error.getOwner());
         if (errors == null) {
@@ -135,7 +144,9 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @return map
      */
     public Map<String, List<Error>> getErrorsByReason() {
-        if (errorsByReason == null) return Collections.emptyMap();
+        if (errorsByReason == null) {
+            return Collections.emptyMap();
+        }
         return errorsByReason;
     }
 
@@ -146,7 +157,9 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @return map
      */
     public Map<Object, Map<String, List<Error>>> getErrorsByOwner() {
-        if (errorsByOwner == null) return Collections.emptyMap();
+        if (errorsByOwner == null) {
+            return Collections.emptyMap();
+        }
         return errorsByOwner;
     }
 
@@ -155,14 +168,19 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @return true when there are NO errors in this validation result
      */
     public boolean isEmpty() {
-        if (errorsByReason == null ||
-              (errorsByReason.isEmpty() && errorsByOwner.isEmpty())) return true;
+        if (errorsByReason == null || (errorsByReason.isEmpty() && errorsByOwner.isEmpty())) {
+            return true;
+        }
         for (List<Error> list : errorsByReason.values()) {
-            if (!list.isEmpty()) return false;
+            if (!list.isEmpty()) {
+                return false;
+            }
         }
         for (Map<String, List<Error>> map : errorsByOwner.values()) {
             for (List<Error> list : map.values()) {
-                if (!list.isEmpty()) return false;
+                if (!list.isEmpty()) {
+                    return false;
+                }
             }
         }
         return true;
@@ -175,7 +193,9 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @see {@link Error#getReason()}
      */
     public boolean hasErrorForReason(String reason) {
-        if (errorsByReason == null) return false;
+        if (errorsByReason == null) {
+            return false;
+        }
         List<Error> errors = errorsByReason.get(reason);
         return errors != null && !errors.isEmpty();
     }
@@ -188,18 +208,23 @@ public class ValidationResults implements ValidationListener, Serializable {
      * @return boolean
      */
     public boolean hasError(Object bean, String propertyName) {
-        if (errorsByOwner == null) return false;
+        if (errorsByOwner == null) {
+            return false;
+        }
         Map<String, List<Error>> errors = errorsByOwner.get(bean);
-        if (errors == null) return false;
-        if (propertyName != null) {
-            List<Error> list = errors.get(propertyName);
-            return list != null && !list.isEmpty();
-        } else {
+        if (errors == null) {
+            return false;
+        }
+        if (propertyName == null) {
             for (List<Error> list : errors.values()) {
-                if (!list.isEmpty()) return true;
+                if (!list.isEmpty()) {
+                    return true;
+                }
             }
             return false;
         }
+        List<Error> list = errors.get(propertyName);
+        return list != null && !list.isEmpty();
     }
 
     /**

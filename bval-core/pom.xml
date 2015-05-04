@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>0.6-SNAPSHOT</version>
+        <version>1.1.0-alpha-SNAPSHOT</version>
     </parent>
 
     <artifactId>bval-core</artifactId>
@@ -44,6 +44,10 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-weaver-privilizer-api</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -66,7 +70,7 @@
                         <id>set subversion revision</id>
                         <phase>compile</phase>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <echo>Version: ${project.version}</echo>
                                 <echo>Revision: ${buildNumber}</echo>
                                 <echo>Date: ${timestamp}</echo>
@@ -79,7 +83,7 @@ svn.revision=${buildNumber}
 svn.branch=${scmBranch}
 build.timestamp=${timestamp}
                                 </echo>
-                            </tasks>
+                            </target>
                         </configuration>
                         <goals>
                             <goal>run</goal>
@@ -117,6 +121,10 @@ build.timestamp=${timestamp}
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+            	<groupId>org.apache.commons</groupId>
+            	<artifactId>commons-weaver-maven-plugin</artifactId>
             </plugin>
         </plugins>
         <pluginManagement>

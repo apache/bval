@@ -16,7 +16,11 @@
  */
 package org.apache.bval;
 
-import org.apache.bval.model.*;
+import org.apache.bval.model.FeaturesCapable;
+import org.apache.bval.model.MetaBean;
+import org.apache.bval.model.MetaProperty;
+import org.apache.bval.model.ValidationContext;
+import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.PropertyAccess;
 
@@ -152,19 +156,16 @@ public class BeanValidationContext<T extends ValidationListener>
      */
     public Object getPropertyValue() {
         if (access == null) { // undefined access strategy
-            return getPropertyValue(
-                  new PropertyAccess(bean.getClass(), metaProperty.getName()));
-        } else {
-            return getPropertyValue(access);
+            return getPropertyValue(new PropertyAccess(bean.getClass(), metaProperty.getName()));
         }
+        return getPropertyValue(access);
     }
 
     /**
      * {@inheritDoc}
      * Caches retrieved value.
      */
-    public Object getPropertyValue(AccessStrategy access)
-          throws IllegalArgumentException, IllegalStateException {
+    public Object getPropertyValue(AccessStrategy access) throws IllegalArgumentException, IllegalStateException {
         if (propertyValue == UNKNOWN || (this.access != access && !fixed)) {
             propertyValue = access.get(bean);
             this.access = access;
@@ -289,8 +290,8 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      */
     public String toString() {
-        return "BeanValidationContext{ bean=" + bean + ", metaProperty=" + metaProperty +
-              ", propertyValue=" + propertyValue + '}';
+        return "BeanValidationContext{ bean=" + bean + ", metaProperty=" + metaProperty + ", propertyValue="
+            + propertyValue + '}';
     }
 
     /**
@@ -298,6 +299,10 @@ public class BeanValidationContext<T extends ValidationListener>
      */
     public void moveDown(MetaProperty prop, AccessStrategy access) {
         setBean(getPropertyValue(access), prop.getMetaBean());
+    }
+
+    public void moveDown(String prop) {
+        // no-op: not supported
     }
 
     /**

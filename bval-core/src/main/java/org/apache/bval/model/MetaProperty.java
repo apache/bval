@@ -16,9 +16,9 @@
  */
 package org.apache.bval.model;
 
-import java.lang.reflect.Type;
-
 import org.apache.commons.lang3.reflect.TypeUtils;
+
+import java.lang.reflect.Type;
 
 /**
  * Description: the meta description of a property of a bean. It supports a map
@@ -27,15 +27,13 @@ import org.apache.commons.lang3.reflect.TypeUtils;
  * @see Validation
  * @see MetaBean
  */
-public class MetaProperty extends FeaturesCapable
-      implements Cloneable, Features.Property {
+public class MetaProperty extends Meta implements Cloneable, Features.Property {
     private static final long serialVersionUID = 1L;
 
     private String name;
 
     private Type type;
     private MetaBean metaBean;
-    private MetaBean parentMetaBean;
 
     /**
      * Create a new MetaProperty instance.
@@ -57,14 +55,6 @@ public class MetaProperty extends FeaturesCapable
      */
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
-    }
-
-    /**
-     * Get the metabean that owns this property (set by MetaBean.putProperty())
-     * @return
-     */
-    public MetaBean getParentMetaBean() {
-        return parentMetaBean;
     }
 
     /**
@@ -104,13 +94,11 @@ public class MetaProperty extends FeaturesCapable
      * @return Class, <code>null</code> if cannot be determined
      */
     public Class<?> getTypeClass() {
-        Type targetType = type instanceof DynaType ? ((DynaType) type)
-                .getRawType() : type;
+        Type targetType = type instanceof DynaType ? ((DynaType) type).getRawType() : type;
         if (targetType == null) {
             return null;
         }
-        Type assigningType = getParentMetaBean() == null ? null
-                : getParentMetaBean().getBeanClass();
+        Type assigningType = getParentMetaBean() == null ? null : getParentMetaBean().getBeanClass();
         return TypeUtils.getRawType(targetType, assigningType);
     }
 
@@ -171,5 +159,4 @@ public class MetaProperty extends FeaturesCapable
     public String toString() {
         return "MetaProperty{" + "name='" + name + '\'' + ", type=" + type + '}';
     }
-
 }

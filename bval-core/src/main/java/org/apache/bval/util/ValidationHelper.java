@@ -18,8 +18,6 @@
  */
 package org.apache.bval.util;
 
-import java.util.List;
-import java.util.Map;
 import org.apache.bval.DynamicMetaBean;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
@@ -27,6 +25,8 @@ import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 
+import java.util.List;
+import java.util.Map;
 
 /**
  * Stateless helper methods used by the validators.
@@ -102,16 +102,17 @@ public class ValidationHelper {
         Object[] array = (Object[]) context.getBean();
         MetaBean metaBean = context.getMetaBean();
         context.setCurrentIndex(null);
+
         try {
             for (Object each : array) {
                 context.setCurrentIndex(index++);
                 if (each == null) {
                     continue; // Null values are not validated
                 }
-                if (dyn != null) {
-                    context.setBean(each, dyn.resolveMetaBean(each));
-                } else {
+                if (dyn == null) {
                     context.setBean(each);
+                } else {
+                    context.setBean(each, dyn.resolveMetaBean(each));
                 }
                 s.validate();
             }
@@ -147,10 +148,10 @@ public class ValidationHelper {
                 if (each == null) {
                     continue; // Null values are not validated
                 }
-                if (dyn != null) {
-                    context.setBean(each, dyn.resolveMetaBean(each));
-                } else {
+                if (dyn == null) {
                     context.setBean(each);
+                } else {
+                    context.setBean(each, dyn.resolveMetaBean(each));
                 }
                 s.validate();
             }

@@ -16,6 +16,17 @@
  */
 package org.apache.bval.model;
 
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
+
+import java.beans.Introspector;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -25,13 +36,17 @@ import java.util.TreeMap;
  * 
  * @see MetaProperty
  */
+@Privilizing(@CallTo(Reflection.class))
 public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bean {
     private static final long serialVersionUID = 2L;
 
     private String id;
     private String name;
     private Class<?> beanClass;
-    private Map<String, MetaProperty> properties = new TreeMap<String, MetaProperty>();
+
+    private Map<String, MetaProperty> properties = null;
+    private Map<Method, MetaMethod> methods = null;
+    private Map<Constructor<?>, MetaConstructor> constructors = null;
 
     /**
      * Get the id.
@@ -74,7 +89,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
     /**
      * Get the beanClass.
      * 
-     * @return Class<?>
+     * @return Class
      */
     public Class<?> getBeanClass() {
         return beanClass;
@@ -88,6 +103,25 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      */
     public void setBeanClass(Class<?> beanClass) {
         this.beanClass = beanClass;
+        if (beanClass != null) {
+            // order of fields to ensure correct failling order
+            final Map<String, MetaProperty> oldProperties = properties;
+            final Map<Method, MetaMethod> oldMethods = methods;
+            final Map<Constructor<?>, MetaConstructor> oldConstructors = constructors;
+
+            properties = new TreeMap<String, MetaProperty>(new FieldComparator(beanClass));
+            if (oldProperties != null) {
+                properties.putAll(oldProperties);
+            }
+            methods = new TreeMap<Method, MetaMethod>(new MethodComparator(beanClass));
+            if (oldMethods != null) {
+                methods.putAll(oldMethods);
+            }
+            constructors = new TreeMap<Constructor<?>, MetaConstructor>(new ConstructorComparator(beanClass));
+            if (oldConstructors != null) {
+                constructors.putAll(oldConstructors);
+            }
+        }
     }
 
     /**
@@ -96,7 +130,31 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return MetaProperty[]
      */
     public MetaProperty[] getProperties() {
+        if (properties == null) {
+            return new MetaProperty[0];
+        }
         return properties.values().toArray(new MetaProperty[this.properties.size()]);
+    }
+
+    public MetaMethod[] getMethods() {
+        if (methods == null) {
+            return new MetaMethod[0];
+        }
+        return methods.values().toArray(new MetaMethod[this.methods.size()]);
+    }
+
+    public void addMethod(final Method method, final MetaMethod meta) {
+        if (methods == null) {
+            methods = new HashMap<Method, MetaMethod>();
+        }
+        methods.put(method, meta);
+    }
+
+    public void addConstructor(final Constructor<?> constructor, final MetaConstructor meta) {
+        if (constructors == null) {
+            constructors = new HashMap<Constructor<?>, MetaConstructor>();
+        }
+        constructors.put(constructor, meta);
     }
 
     /**
@@ -106,8 +164,8 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      *            the MetaProperty[] to set
      */
     public void setProperties(MetaProperty[] properties) {
-        this.properties.clear();
-        for (MetaProperty property : properties) {
+        this.properties = new HashMap<String, MetaProperty>();
+        for (final MetaProperty property : properties) {
             this.properties.put(property.getName(), property);
         }
     }
@@ -115,10 +173,13 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
     /**
      * Get the specified {@link MetaProperty}.
      * 
-     * @param name
+     * @param name property name
      * @return MetaProperty found or <code>null</code>
      */
     public MetaProperty getProperty(String name) {
+        if (properties == null) {
+            return null;
+        }
         return this.properties.get(name);
     }
 
@@ -129,6 +190,9 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * @return true when at least one of the properties is a relationship
      */
     public boolean hasRelationships() {
+        if (properties == null) {
+            return false;
+        }
         for (MetaProperty property : this.properties.values()) {
             if (property.isRelationship()) {
                 return true;
@@ -138,22 +202,16 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
     }
 
     /**
-     * Learn whether there are any known properties.
-     * 
-     * @return boolean
-     */
-    public boolean hasProperties() {
-        return this.properties.size() > 0;
-    }
-
-    /**
      * bidirectional - set the relationship between a MetaProperty and its parentMetaBean
      * 
-     * @param name
+     * @param name property name
      * @param property
      *            if <code>null</code>, remove
      */
     public void putProperty(String name, MetaProperty property) {
+        if (properties == null) {
+            properties = new HashMap<String, MetaProperty>();
+        }
         if (property == null) {
             this.properties.remove(name);
         } else {        
@@ -197,11 +255,102 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
      * </ul>
      * </p>
      * 
-     * @param bean
+     * @param bean instance
      * @return <code>this</code> or <code>null</code>
      */
     public MetaBean resolveMetaBean(Object bean) {
         return bean == null || bean == beanClass || beanClass.isInstance(bean) ? this : null;
     }
 
+    public MetaMethod getMethod(final Method method) {
+        return methods == null ? null : methods.get(method);
+    }
+
+    public MetaConstructor getConstructor(final Constructor<?> constructor) {
+        return constructors == null ? null : constructors.get(constructor);
+    }
+
+    protected static class FieldComparator implements Comparator<String> {
+        private final Map<String, Integer> fields = new HashMap<String, Integer>();
+
+        protected FieldComparator(final Class<?> beanClass) {
+            int i = 0;
+            Class<?> clazz = beanClass;
+            while (clazz != null && clazz != Object.class) {
+                for (final Field f : Reflection.getDeclaredFields(clazz)) {
+                    i++;
+                    final String name = f.getName();
+                    if (!fields.containsKey(name)) {
+                        fields.put(name, i);
+                    }
+                }
+                for (final Method m : clazz.getDeclaredMethods()) {
+                    if (m.getName().startsWith("get") && Void.TYPE != m.getReturnType() && m.getParameterTypes().length == 0) {
+                        final String name = Introspector.decapitalize(m.getName().substring("get".length()));
+                        if (!name.isEmpty()) {
+                            i++;
+                            if (!fields.containsKey(name)) {
+                                fields.put(name, i);
+                            }
+                        }
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+        }
+
+        public int compare(final String o1, final String o2) {
+            return fieldIndex(o1) - fieldIndex(o2);
+        }
+
+        private int fieldIndex(final String o2) {
+            final Integer idx = fields.get(o2);
+            if (idx == null) {
+                return Integer.MIN_VALUE; // to avoid collision and false positive in get() due to equals
+            }
+            return idx;
+        }
+    }
+
+    protected static class MethodComparator implements Comparator<Method> {
+        private final Map<Method, Integer> methods = new HashMap<Method, Integer>();
+
+        protected MethodComparator(final Class<?> beanClass) {
+            Class<?> clazz = beanClass;
+            while (clazz != null && clazz != Object.class) {
+                for (final Method m : Reflection.getDeclaredMethods(clazz)) {
+                    methods.put(m, Arrays.hashCode(m.getParameterTypes()));
+                }
+                clazz = clazz.getSuperclass();
+            }
+        }
+
+        public int compare(final Method o1, final Method o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+
+            final int i = o1.getName().compareTo(o2.getName());
+            return i == 0 ? methods.get(o1) - methods.get(o2) : i;
+        }
+    }
+
+    protected static class ConstructorComparator implements Comparator<Constructor<?>> {
+        private final Map<Constructor<?>, Integer> constructors = new HashMap<Constructor<?>, Integer>();
+
+        protected ConstructorComparator(final Class<?> beanClass) {
+            for (final Constructor<?> c : Reflection.getDeclaredConstructors(beanClass)) {
+                constructors.put(c, Arrays.hashCode(c.getParameterTypes()));
+            }
+        }
+
+        public int compare(final Constructor<?> o1, final Constructor<?> o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+
+            final int i = o1.getName().compareTo(o2.getName());
+            return i == 0 ? constructors.get(o1) - constructors.get(o2) : i;
+        }
+    }
 }

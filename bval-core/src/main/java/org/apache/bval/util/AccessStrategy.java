@@ -55,4 +55,5 @@ public abstract class AccessStrategy {
      * @return String
      */
     public abstract String getPropertyName();
+
 }

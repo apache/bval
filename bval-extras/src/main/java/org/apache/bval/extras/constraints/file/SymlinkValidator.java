@@ -18,11 +18,10 @@
  */
 package org.apache.bval.extras.constraints.file;
 
-import java.io.File;
-import java.io.IOException;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import java.io.File;
+import java.io.IOException;
 
 
 /**

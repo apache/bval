@@ -26,8 +26,8 @@ import java.io.Serializable;
 public interface ValidationListener {
     /**
      * Simple API to add an error reason during validation.
-     * Error notification added from a {@link Validation} with context information
-     * taken from the given {@link ValidationContext}.
+     * Error notification added from a {@link org.apache.bval.model.Validation} with context information
+     * taken from the given {@link org.apache.bval.model.ValidationContext}.
      *
      * @param reason  a constant describing the reason. This is normally the key of the
      *                feature that was violated in the object 'owner' for property 'propertyName'

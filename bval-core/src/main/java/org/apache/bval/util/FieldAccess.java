@@ -19,12 +19,15 @@ package org.apache.bval.util;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Description: direct field access strategy.<br/>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class FieldAccess extends AccessStrategy {
 
     private final Field field;
@@ -35,24 +38,21 @@ public class FieldAccess extends AccessStrategy {
      */
     public FieldAccess(final Field field) {
         this.field = field;
-        if (!field.isAccessible()) {
-            run(new PrivilegedAction<Void>() {
-                public Void run() {
-                    field.setAccessible(true);
-                    return null;
-                }
-            });
-        }
     }
 
     /**
      * {@inheritDoc}
      */
     public Object get(final Object instance) {
+        final boolean mustUnset = Reflection.setAccessible(field, true);
         try {
             return field.get(instance);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
+        } finally {
+            if (mustUnset) {
+                Reflection.setAccessible(field, false);
+            }
         }
     }
 
@@ -88,8 +88,12 @@ public class FieldAccess extends AccessStrategy {
      * {@inheritDoc}
      */
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         FieldAccess that = (FieldAccess) o;
 
@@ -101,13 +105,5 @@ public class FieldAccess extends AccessStrategy {
      */
     public int hashCode() {
         return field.hashCode();
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        if (System.getSecurityManager() != null) {
-            return AccessController.doPrivileged(action);
-        } else {
-            return action.run();
-        }
     }
 }

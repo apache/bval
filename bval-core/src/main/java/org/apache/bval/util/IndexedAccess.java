@@ -16,6 +16,9 @@
  */
 package org.apache.bval.util;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
@@ -23,12 +26,10 @@ import java.lang.reflect.TypeVariable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 /**
  * {@link AccessStrategy} to get an indexed member of an {@link Iterable} or
  * array object.
- */
+ */ 
 public class IndexedAccess extends AccessStrategy {
     private static final TypeVariable<?> ITERABLE_TYPE = Iterable.class.getTypeParameters()[0];
 
@@ -45,13 +46,13 @@ public class IndexedAccess extends AccessStrategy {
         }
         if (TypeUtils.isAssignable(containerType, Iterable.class)) {
             Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(containerType, Iterable.class);
-            return typeArguments.containsKey(ITERABLE_TYPE) ? typeArguments.get(ITERABLE_TYPE) : Object.class;
+            return ObjectUtils.defaultIfNull(TypeUtils.unrollVariables(typeArguments, ITERABLE_TYPE), Object.class);
         }
         return null;
     }
 
-    private Type containerType;
-    private Integer index;
+    private final Type containerType;
+    private final Integer index;
 
     /**
      * Create a new IndexedAccessStrategy instance.

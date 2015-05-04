@@ -42,7 +42,7 @@ public class BeanValidationContext<T extends ValidationListener>
     private static final Object UNKNOWN = new Object() {
         public String toString() {
             return "unknown property value";
-        };
+        }
     };
 
     /** metainfo of current object. */

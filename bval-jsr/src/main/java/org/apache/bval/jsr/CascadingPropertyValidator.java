@@ -47,7 +47,7 @@ public interface CascadingPropertyValidator extends Validator {
      * @param groups
      * @return the resulting {@link Set} of {@link ConstraintViolation}s.
      */
-    <T extends Object> Set<javax.validation.ConstraintViolation<T>> validateProperty(T object, String propertyName,
+    <T> Set<javax.validation.ConstraintViolation<T>> validateProperty(T object, String propertyName,
         boolean cascade, Class<?>... groups);
 
     /**
@@ -63,6 +63,6 @@ public interface CascadingPropertyValidator extends Validator {
      * @param groups
      * @return the resulting {@link Set} of {@link ConstraintViolation}s.
      */
-    <T extends Object> Set<javax.validation.ConstraintViolation<T>> validateValue(Class<T> beanType,
+    <T> Set<javax.validation.ConstraintViolation<T>> validateValue(Class<T> beanType,
         String propertyName, Object value, boolean cascade, Class<?>... groups);
 }

@@ -41,7 +41,6 @@ import javax.validation.GroupSequence;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Constructor;

@@ -31,8 +31,9 @@
     </parent>
 
     <!-- use fully qualified naming for OSGi bundles -->
-    <artifactId>org.apache.bval.bundle</artifactId>
-    <name>Apache BVal :: org.apache.bval.bundle</name>
+    <artifactId>bval-bundle</artifactId>
+
+    <name>Apache BVal :: bundle</name>
     <packaging>bundle</packaging>
 
     <description>Apache BVal - Aggregate OSGi Bundle (bval-core + bval-jsr)</description>

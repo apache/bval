@@ -19,7 +19,9 @@ package org.apache.bval.xml;
 import org.apache.bval.MetaBeanManager;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
-import org.apache.bval.util.PrivilegedActions;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import java.util.Map;
 
@@ -35,6 +37,7 @@ import static org.apache.bval.model.Features.Property.REF_BEAN_ID;
  * Date: 17.06.2010<br>
  * Time: 09:47:14<br>
  */
+@Privilizing(@CallTo(Reflection.class))
 public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRegistry, MetaBeanEnricher {
     public XMLMetaBeanManager() {
         this(new XMLMetaBeanBuilder());
@@ -45,7 +48,7 @@ public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRe
     }
 
     public void addResourceLoader(String resource) {
-        addLoader(new XMLMetaBeanURLLoader(PrivilegedActions.getClassLoader(getClass()).getResource(resource)));
+        addLoader(new XMLMetaBeanURLLoader(Reflection.getClassLoader(getClass()).getResource(resource)));
     }
 
     public synchronized void addLoader(XMLMetaBeanLoader loader) {

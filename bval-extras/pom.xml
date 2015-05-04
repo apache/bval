@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>0.6-SNAPSHOT</version>
+        <version>1.1.0-alpha-SNAPSHOT</version>
     </parent>
 
     <artifactId>bval-extras</artifactId>
@@ -39,7 +39,12 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>org.apache.bval.bundle</artifactId>
+            <artifactId>bval-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-jsr</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -64,8 +69,7 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.geronimo.specs</groupId>
-                    <artifactId>geronimo-validation_1.0_spec</artifactId>
-                    <!-- allow users to choose an API provider -->
+                    <artifactId>geronimo-validation_1.1_spec</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

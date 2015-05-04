@@ -16,13 +16,12 @@
  */
 package org.apache.bval.model;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Description: abstract superclass of meta objects that support a map of
@@ -35,9 +34,6 @@ public abstract class FeaturesCapable implements Serializable {
 
     /** key = validation id, value = the validation */
     private Validation[] validations = new Validation[0];
-
-    private volatile boolean locking;
-    private ReentrantLock lock = new ReentrantLock(true);
 
     /**
      * Create a new FeaturesCapable instance.
@@ -53,21 +49,6 @@ public abstract class FeaturesCapable implements Serializable {
      */
     public Map<String, Object> getFeatures() {
         return features;
-    }
-
-    /**
-     * Set whether to optimize read operations by accessing the features map in
-     * an unsynchronized manner.
-     * 
-     * @param fast
-     */
-    public void optimizeRead(boolean fast) {
-        lock.lock();
-        try {
-            this.locking = !fast;
-        } finally {
-            lock.unlock();
-        }
     }
 
     /**
@@ -92,32 +73,27 @@ public abstract class FeaturesCapable implements Serializable {
      */
     @SuppressWarnings("unchecked")
     public <T> T getFeature(String key, T defaultValue) {
-        boolean release = acquireLockIfNeeded();
-        try {
-            return features.containsKey(key) ? (T) features.get(key) : defaultValue;
-        } finally {
-            if (release) {
-                lock.unlock();
-            }
+        final T value = (T) features.get(key);
+        if (value == null) {
+            return defaultValue;
         }
+        return value;
     }
 
     /**
      * Convenience method to set a particular feature value.
-     * 
-     * @param <T>
+     *
      * @param key
      * @param value
      */
-    public <T> void putFeature(String key, T value) {
-        boolean release = acquireLockIfNeeded();
-        try {
-            features.put(key, value);
-        } finally {
-            if (release) {
-                lock.unlock();
-            }
-        }
+    public <T> void putFeature(final String key, final T value) {
+        features.put(key, value);
+    }
+
+    public <T> T initFeature(final String key, final T value) {
+        @SuppressWarnings("unchecked")
+        final T faster = (T) features.putIfAbsent(key, value);
+        return faster == null ? value : faster;
     }
 
     /**
@@ -191,11 +167,13 @@ public abstract class FeaturesCapable implements Serializable {
      * @return true if found
      */
     public boolean hasValidation(Validation aValidation) {
-        if (validations == null)
+        if (validations == null) {
             return false;
+        }
         for (Validation validation : validations) {
-            if (validation.equals(aValidation))
+            if (validation.equals(aValidation)) {
                 return true;
+            }
         }
         return false;
     }
@@ -207,17 +185,4 @@ public abstract class FeaturesCapable implements Serializable {
     protected ConcurrentMap<String, Object> createFeaturesMap() {
         return new ConcurrentHashMap<String, Object>();
     }
-
-    private boolean acquireLockIfNeeded() {
-        if (locking) {
-            lock.lock();
-            // double read
-            if (locking) {
-                return true;
-            }
-            lock.unlock();
-        }
-        return false;
-    }
-
 }

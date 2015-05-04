@@ -20,7 +20,12 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import org.apache.bval.model.MetaProperty;
 import org.apache.commons.lang3.ClassUtils;
 
-import static org.apache.bval.model.Features.Property.*;
+import static org.apache.bval.model.Features.Property.DENIED;
+import static org.apache.bval.model.Features.Property.HIDDEN;
+import static org.apache.bval.model.Features.Property.MANDATORY;
+import static org.apache.bval.model.Features.Property.MAX_LENGTH;
+import static org.apache.bval.model.Features.Property.MIN_LENGTH;
+import static org.apache.bval.model.Features.Property.READONLY;
 
 /**
  * Description: <br/>

@@ -18,12 +18,11 @@
  */
 package org.apache.bval.extras.constraints.net;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import org.apache.bval.extras.constraints.net.InetAddressValidator;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for InetAddressValidator.

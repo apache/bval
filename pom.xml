@@ -671,6 +671,7 @@
         <module>bval-jsr</module>
         <module>bval-json</module>
         <module>bval-extras</module>
+        <module>bval-tck</module>
         <module>bval-tck11</module>
         <module>bundle</module>
     </modules>

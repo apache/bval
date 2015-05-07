@@ -33,7 +33,6 @@
     <repositories>
         <!--
          TODO remove: this only exists because currently there are no org.jboss.test-audit on maven.central _yet_.
-        -->
         <repository>
             <id>jboss</id>
             <name>JBoss Public Maven Repository Group (again)</name>
@@ -50,6 +49,7 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
+        -->
     </repositories>
 
 

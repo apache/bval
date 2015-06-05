@@ -1,0 +1,42 @@
+Apache BVal Release Notes
+=========================
+
+Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
+
+
+== Introduction
+
+Apache BVal is an implementation of the JSR-303 and JSR-346 Bean Validation specifications.
+
+
+== Release Notes
+
+
+=== BVal-1.1.0
+
+Bug
+
+    [BVAL-127] - Build failed java 8
+    [BVAL-128] - Validation of bean that implements Closeable results in an NPE
+    [BVAL-130] - ConstraintDefaults doesn't close InputStream
+
+Improvement
+
+    [BVAL-132] - TCK 1.1: BValInterceptor.isGetter is wrong
+    [BVAL-133] - Updated TCK Test Version for Bean Validation 1.1
+
+New Feature
+
+    [BVAL-122] - Implement Bean Validation 1.1
+
+Task
+
+    [BVAL-120] - Add bval-tck11 tck runner for future work on Bean Validation 1.1
+    [BVAL-131] - Add gitignore
+    [BVAL-136] - fix artifactId of our bundle module
+
+Wish
+
+    [BVAL-112] - ability to hide the log message of ConfigurationImpl
+
+

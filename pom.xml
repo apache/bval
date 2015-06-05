@@ -49,7 +49,7 @@
     <url>http://bval.apache.org/</url>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/bval/branches/bval-11/</connection>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/bval/trunk/</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/bval/trunk/</developerConnection>
         <url>http://svn.apache.org/repos/asf/bval/trunk/</url>
     </scm>

@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>10</version>
+        <version>13</version>
         <relativePath />
     </parent>
 
@@ -534,7 +534,6 @@
                     <version>2.2.1</version>
                     <configuration>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <goals>deploy site site-deploy</goals>
                         <arguments>-Papache-release</arguments>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>

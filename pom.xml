@@ -16,9 +16,11 @@
  KIND, either express or implied.  See the License for the
  specific language governing permissions and limitations
  under the License.
---><!--
+-->
+<!--
     Maven release plugin requires the project tag to be on a single line.
---><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -48,8 +50,8 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/bval/branches/bval-11/</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/bval/branches/bval-11/</developerConnection>
-        <url>http://svn.apache.org/repos/asf/bval/branches/bval-11/</url>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/bval/trunk/</developerConnection>
+        <url>http://svn.apache.org/repos/asf/bval/trunk/</url>
     </scm>
 
     <mailingLists>

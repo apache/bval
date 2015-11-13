@@ -79,8 +79,9 @@ public class ConstraintDefaults {
     @SuppressWarnings("unchecked")
     private Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadDefaultConstraints(String resource) {
         final Properties constraintProperties = new Properties();
-        final ClassLoader classloader = getClassLoader();
-        final InputStream stream = classloader.getResourceAsStream(resource);
+        final InputStream stream;
+        // avoid the TCCL.
+        stream = ConstraintDefaults.class.getClassLoader().getResourceAsStream(resource);
         if (stream == null) {
             log.log(Level.WARNING, String.format("Cannot find %s", resource));
         } else {
@@ -104,7 +105,8 @@ public class ConstraintDefaults {
             final List<Class<?>> classes = new LinkedList<Class<?>>();
             for (String className : StringUtils.split((String) entry.getValue(), ',')) {
                 try {
-                    classes.add(Reflection.getClass(classloader, className.trim()));
+                    // Prone to problems in OSGi.
+                    classes.add(Reflection.getClass(ConstraintDefaults.class.getClassLoader(), className.trim()));
                 } catch (Exception e) {
                     log.log(Level.SEVERE, String.format("Cannot find class %s", className), e);
                 }

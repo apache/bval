@@ -675,6 +675,7 @@
         <module>bval-tck</module>
         <module>bval-tck11</module>
         <module>bundle</module>
+        <module>osgi-itests</module>
     </modules>
 
 </project>

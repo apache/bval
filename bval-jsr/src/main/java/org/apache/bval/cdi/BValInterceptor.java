@@ -77,7 +77,7 @@ public class BValInterceptor implements Serializable {
     private transient volatile ExecutableValidator executableValidator;
 
     @AroundConstruct // TODO: see previous one
-    public Object construct(final InvocationContext context) throws Exception {
+    public Object construct(InvocationContext context) throws Exception {
         @SuppressWarnings("rawtypes")
         final Constructor constructor = context.getConstructor();
         final Class<?> targetClass = constructor.getDeclaringClass();
@@ -117,7 +117,7 @@ public class BValInterceptor implements Serializable {
     }
 
     @AroundInvoke
-    public Object invoke(final InvocationContext context) throws Throwable {
+    public Object invoke(final InvocationContext context) throws Exception {
         final Method method = context.getMethod();
         final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
         if (!isMethodValidated(targetClass, method)) {

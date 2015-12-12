@@ -37,28 +37,6 @@ under the License.
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
 
-    <repositories>
-        <!--
-         TODO remove: this only exists because currently there are no org.jboss.test-audit on maven.central _yet_.
-        <repository>
-            <id>jboss</id>
-            <name>JBoss Public Maven Repository Group (again)</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
-        -->
-    </repositories>
-
     <dependencies>
         <dependency>
           <groupId>org.apache.geronimo.specs</groupId>

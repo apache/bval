@@ -571,6 +571,7 @@
                     <artifactId>commons-weaver-maven-plugin</artifactId>
                     <version>${commons.weaver.version}</version>
                     <configuration>
+                        <verbose>true</verbose>
                         <weaverConfig>
                             <privilizer.policy>DYNAMIC</privilizer.policy>
                         </weaverConfig>

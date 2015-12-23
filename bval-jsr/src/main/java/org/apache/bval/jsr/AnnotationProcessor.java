@@ -34,7 +34,6 @@ import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -50,15 +49,15 @@ import java.util.Set;
 @Privilizing(@CallTo(Reflection.class))
 public final class AnnotationProcessor {
     /** {@link ApacheFactoryContext} used */
-    private final ApacheFactoryContext factoryContext;
+    private final ApacheValidatorFactory factory;
 
     /**
      * Create a new {@link AnnotationProcessor} instance.
      * 
-     * @param factoryContext
+     * @param factory the validator factory.
      */
-    public AnnotationProcessor(ApacheFactoryContext factoryContext) {
-        this.factoryContext = factoryContext;
+    public AnnotationProcessor(ApacheValidatorFactory factory) {
+        this.factory = factory;
     }
 
     /**
@@ -112,7 +111,7 @@ public final class AnnotationProcessor {
      * @throws InvocationTargetException
      */
     public <A extends Annotation> boolean processAnnotation(A annotation, Meta prop, Class<?> owner,
-        AccessStrategy access, AppendValidation appender, boolean reflection) throws IllegalAccessException,
+            AccessStrategy access, AppendValidation appender, boolean reflection) throws IllegalAccessException,
         InvocationTargetException {
         if (annotation instanceof Valid) {
             return addAccessStrategy(prop, access);
@@ -204,12 +203,11 @@ public final class AnnotationProcessor {
         }
         final Class<A> annotationType = (Class<A>) annotation.annotationType();
         Class<? extends ConstraintValidator<A, ?>>[] validatorClasses =
-            factoryContext.getFactory().getConstraintsCache().getConstraintValidators(annotationType);
+            factory.getConstraintsCache().getConstraintValidators(annotationType);
         if (validatorClasses == null) {
             validatorClasses = (Class<? extends ConstraintValidator<A, ?>>[]) vcAnno.validatedBy();
             if (validatorClasses.length == 0) {
-                validatorClasses =
-                    factoryContext.getFactory().getDefaultConstraints().getValidatorClasses(annotationType);
+                validatorClasses = factory.getDefaultConstraints().getValidatorClasses(annotationType);
             }
         }
         return validatorClasses;
@@ -234,7 +232,8 @@ public final class AnnotationProcessor {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private <A extends Annotation> boolean applyConstraint(A annotation,
+    private <A extends Annotation> boolean applyConstraint(
+        A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, Meta prop, Class<?> owner,
         AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
@@ -244,7 +243,8 @@ public final class AnnotationProcessor {
         }
 
         final AnnotationConstraintBuilder<A> builder =
-            new AnnotationConstraintBuilder<A>(factoryContext.getConstraintValidatorFactory(), constraintClasses,
+            new AnnotationConstraintBuilder<A>(
+                constraintClasses,
                 annotation, owner, access, null);
 
         // JSR-303 3.4.4: Add implicit groups

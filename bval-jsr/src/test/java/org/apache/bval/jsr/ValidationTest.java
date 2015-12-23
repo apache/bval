@@ -89,6 +89,10 @@ public class ValidationTest extends TestCase {
         return factory.getValidator();
     }
 
+    public void testCache() {
+        factory.getValidator().getConstraintsForClass(AccessTestBusinessObject.class);
+        factory.getValidator().getConstraintsForClass(AccessTestBusinessObject.class);
+    }
     public void testAccessStrategies_field_method() {
         AccessTestBusinessObject o1 = new AccessTestBusinessObject("1");
         AccessTestBusinessObjectSub o2 = new AccessTestBusinessObjectSub("3");

@@ -638,8 +638,9 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     protected <T> GroupValidationContext<T> createContext(MetaBean metaBean, T object, Class<T> objectClass, Class<?>... groups) {
         final ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object, objectClass);
         final GroupValidationContextImpl<T> context =
-            new GroupValidationContextImpl<T>(listener, this.factoryContext.getMessageInterpolator(),
-                this.factoryContext.getTraversableResolver(), factoryContext.getParameterNameProvider(), metaBean);
+            new GroupValidationContextImpl<T>(listener, factoryContext.getMessageInterpolator(),
+                factoryContext.getTraversableResolver(), factoryContext.getParameterNameProvider(),
+                factoryContext.getConstraintValidatorFactory(), metaBean);
         context.setBean(object, metaBean);
         context.setGroups(groupsComputer.computeGroups(groups));
         return context;
@@ -648,8 +649,9 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     protected <T> GroupValidationContext<T> createInvocableContext(MetaBean metaBean, T object, Class<T> objectClass, Class<?>... groups) {
         final ConstraintValidationListener<T> listener = new ConstraintValidationListener<T>(object, objectClass);
         final GroupValidationContextImpl<T> context =
-                new GroupValidationContextImpl<T>(listener, this.factoryContext.getMessageInterpolator(),
-                        this.factoryContext.getTraversableResolver(), factoryContext.getParameterNameProvider(), metaBean);
+                new GroupValidationContextImpl<T>(listener, factoryContext.getMessageInterpolator(),
+                        factoryContext.getTraversableResolver(), factoryContext.getParameterNameProvider(),
+                        factoryContext.getConstraintValidatorFactory(), metaBean);
         context.setBean(object, metaBean);
         final Groups computedGroup = groupsComputer.computeGroups(groups);
         if (Collections.singletonList(Group.DEFAULT).equals(computedGroup.getGroups()) && metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE) != null) {

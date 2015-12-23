@@ -41,7 +41,7 @@
 
     <properties>
         <site.deploy.url>scp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
-        <commons.weaver.version>1.1</commons.weaver.version>
+        <commons.weaver.version>1.2-SNAPSHOT</commons.weaver.version>
     </properties>
 
     <inceptionYear>2010</inceptionYear>

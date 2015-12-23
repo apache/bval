@@ -297,12 +297,10 @@
                     </includes>
                 </configuration>
             </plugin>
-            <!-- TODO: activate but ATM it just doesnt build with it
             <plugin>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-weaver-maven-plugin</artifactId>
             </plugin>
-            -->
         </plugins>
     </build>
 </project>

@@ -51,7 +51,6 @@ import javax.validation.metadata.MethodType;
 import javax.validation.metadata.ParameterDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.ReturnValueDescriptor;
-
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -329,7 +328,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         private ExecutableMeta(final ApacheFactoryContext factoryContext, final MetaBean metaBean1, final Collection<ConstraintDescriptor<?>> constraintDescriptors) {
             this.metaBean = metaBean1;
             this.factoryContext = factoryContext;
-            this.annotationProcessor = new AnnotationProcessor(factoryContext);
+            this.annotationProcessor = new AnnotationProcessor(factoryContext.getFactory());
 
             buildExecutableDescriptors();
 
@@ -840,7 +839,9 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     }
                 }
             } else {
-                annotationProcessor.processAnnotation(annotation, null, ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()), access, validations, true);
+                annotationProcessor.processAnnotation(
+                        annotation, null, ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()),
+                        access, validations, true);
             }
         }
 

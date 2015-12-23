@@ -63,8 +63,8 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
     // of dubious utility as it's static :/
     protected static final Logger log = Logger.getLogger(JsrMetaBeanFactory.class.getName());
 
-    /** {@link ApacheFactoryContext} used */
-    protected final ApacheFactoryContext factoryContext;
+    /** {@link javax.validation.ValidatorFactory} used */
+    protected final ApacheValidatorFactory factory;
 
     /**
      * {@link AnnotationProcessor} used.
@@ -74,11 +74,11 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
     /**
      * Create a new Jsr303MetaBeanFactory instance.
      * 
-     * @param factoryContext
+     * @param factory the validator factory.
      */
-    public JsrMetaBeanFactory(ApacheFactoryContext factoryContext) {
-        this.factoryContext = factoryContext;
-        this.annotationProcessor = new AnnotationProcessor(factoryContext);
+    public JsrMetaBeanFactory(ApacheValidatorFactory factory) {
+        this.factory = factory;
+        this.annotationProcessor = new AnnotationProcessor(factory);
     }
 
     /**
@@ -123,7 +123,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
         InvocationTargetException {
 
         // if NOT ignore class level annotations
-        if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(beanClass)) {
+        if (!factory.getAnnotationIgnores().isIgnoreAnnotations(beanClass)) {
             annotationProcessor.processAnnotations(null, beanClass, beanClass, null, new AppendValidationToMeta(metabean));
         }
 
@@ -134,7 +134,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
             MetaProperty metaProperty = metabean.getProperty(field.getName());
             // create a property for those fields for which there is not yet a
             // MetaProperty
-            if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(field)) {
+            if (!factory.getAnnotationIgnores().isIgnoreAnnotations(field)) {
                 AccessStrategy access = new FieldAccess(field);
                 boolean create = metaProperty == null;
                 if (create) {
@@ -160,7 +160,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
                 propName = MethodAccess.getPropertyName(method);
             }
             if (propName != null) {
-                if (!factoryContext.getFactory().getAnnotationIgnores().isIgnoreAnnotations(method)) {
+                if (!factory.getAnnotationIgnores().isIgnoreAnnotations(method)) {
                     AccessStrategy access = new MethodAccess(propName, method);
                     MetaProperty metaProperty = metabean.getProperty(propName);
                     boolean create = metaProperty == null;
@@ -198,7 +198,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
      */
     private void addXmlConstraints(Class<?> beanClass, MetaBean metabean) throws IllegalAccessException,
         InvocationTargetException {
-        for (final MetaConstraint<?, ? extends Annotation> metaConstraint : factoryContext.getFactory().getMetaConstraints(beanClass)) {
+        for (final MetaConstraint<?, ? extends Annotation> metaConstraint : factory.getMetaConstraints(beanClass)) {
             Meta meta;
             AccessStrategy access = metaConstraint.getAccessStrategy();
             boolean create = false;
@@ -263,7 +263,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
                 metabean.putProperty(access.getPropertyName(), null);
             }
         }
-        for (final AccessStrategy access : factoryContext.getFactory().getValidAccesses(beanClass)) {
+        for (final AccessStrategy access : factory.getValidAccesses(beanClass)) {
             if (access.getElementType() == ElementType.PARAMETER) {
                 continue;
             }
@@ -289,7 +289,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
         if (groupSeq == null) {
             groupSeq = metabean.initFeature(key, new ArrayList<Group>(annotation == null ? 1 : annotation.value().length));
         }
-        Class<?>[] groupClasses = factoryContext.getFactory().getDefaultSequence(beanClass);
+        Class<?>[] groupClasses = factory.getDefaultSequence(beanClass);
         if (groupClasses == null || groupClasses.length == 0) {
             if (annotation == null) {
                 groupSeq.add(Group.DEFAULT);

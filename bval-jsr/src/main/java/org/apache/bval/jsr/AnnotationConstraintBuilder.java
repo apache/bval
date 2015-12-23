@@ -18,6 +18,23 @@
  */
 package org.apache.bval.jsr;
 
+import org.apache.bval.jsr.groups.GroupsComputer;
+import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
+import org.apache.bval.util.AccessStrategy;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.commons.weaver.privilizer.Privileged;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
+import javax.validation.ConstraintValidator;
+import javax.validation.OverridesAttribute;
+import javax.validation.Payload;
+import javax.validation.ReportAsSingleViolation;
+import javax.validation.constraintvalidation.SupportedValidationTarget;
+import javax.validation.constraintvalidation.ValidationTarget;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -32,25 +49,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintTarget;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.OverridesAttribute;
-import javax.validation.Payload;
-import javax.validation.ReportAsSingleViolation;
-import javax.validation.constraintvalidation.SupportedValidationTarget;
-import javax.validation.constraintvalidation.ValidationTarget;
-
-import org.apache.bval.jsr.groups.GroupsComputer;
-import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
-import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
-import org.apache.commons.weaver.privilizer.Privileged;
-
 /**
  * Description: helper class that builds a {@link ConstraintValidation} or its
  * composite constraint validations by parsing the jsr-annotations and
@@ -64,19 +62,19 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
     /**
      * Create a new AnnotationConstraintBuilder instance.
-     * 
+     *
      * @param validatorClasses
      * @param annotation
      * @param owner
      * @param access
      */
-    public AnnotationConstraintBuilder(ConstraintValidatorFactory factory,
-        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses, A annotation, Class<?> owner,
-        AccessStrategy access, ConstraintTarget target) {
+    public AnnotationConstraintBuilder(
+            Class<? extends ConstraintValidator<A, ?>>[] validatorClasses, A annotation, Class<?> owner,
+            AccessStrategy access, ConstraintTarget target) {
         final boolean reportFromComposite =
             annotation != null && annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
         constraintValidation =
-            new ConstraintValidation<A>(factory, validatorClasses, annotation, owner, access, reportFromComposite,
+            new ConstraintValidation<A>(validatorClasses, annotation, owner, access, reportFromComposite,
                 target);
         buildFromAnnotation();
     }
@@ -259,7 +257,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
     /**
      * Get the configured {@link ConstraintValidation}.
-     * 
+     *
      * @return {@link ConstraintValidation}
      */
     public ConstraintValidation<?> getConstraintValidation() {
@@ -309,7 +307,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
      * Calculates the index of the composite constraint. The index represents
      * the order in which it is added in reference to other constraints of the
      * same type.
-     * 
+     *
      * @param composite
      *            The composite constraint (not yet added).
      * @return An integer index always >= 0

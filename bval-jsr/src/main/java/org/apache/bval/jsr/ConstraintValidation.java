@@ -39,7 +39,6 @@ import javax.validation.ValidationException;
 import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.metadata.ConstraintDescriptor;
-
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -61,7 +60,6 @@ import java.util.Set;
  * this instance is immutable!<br/>
  */
 public class ConstraintValidation<T extends Annotation> implements Validation, ConstraintDescriptor<T> {
-    private final ConstraintValidatorFactory factory;
     private final AccessStrategy access;
     private final boolean reportFromComposite;
     private final Map<String, Object> attributes;
@@ -82,11 +80,9 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     private Class<? extends ConstraintValidator<T, ?>>[] validatorClasses;
     private ConstraintTarget validationAppliesTo = null;
 
-    public ConstraintValidation(ConstraintValidatorFactory factory,
-                                Class<? extends ConstraintValidator<T, ?>>[] validatorClasses,
+    public ConstraintValidation(Class<? extends ConstraintValidator<T, ?>>[] validatorClasses,
                                 T annotation, Class<?> owner, AccessStrategy access,
                                 boolean reportFromComposite, ConstraintTarget target) {
-        this.factory = factory;
         this.attributes = new HashMap<String, Object>();
         this.validatorClasses = ArrayUtils.clone(validatorClasses);
         this.annotation = annotation;
@@ -158,7 +154,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             synchronized (this) {
                 if (validator == null) {
                     try {
-                        validator = getConstraintValidator(annotation, validatorClasses, owner, access);
+                        validator = getConstraintValidator(
+                                context.getConstraintValidatorFactory(), annotation, validatorClasses, owner, access);
                         if (validator != null) {
                             validator.initialize(annotation);
                         }
@@ -235,7 +232,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         }
     }
 
-    private <A extends Annotation> ConstraintValidator<A, ? super T> getConstraintValidator(A annotation,
+    private <A extends Annotation> ConstraintValidator<A, ? super T> getConstraintValidator(
+            ConstraintValidatorFactory factory, A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
         if (ArrayUtils.isNotEmpty(constraintClasses)) {
             final Type type = determineTargetedType(owner, access);

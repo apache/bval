@@ -27,6 +27,7 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.util.AccessStrategy;
 
 import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorFactory;
 import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
 import javax.validation.ParameterNameProvider;
@@ -70,6 +71,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
 
     private ConstraintValidation<?> constraintValidation;
     private final TraversableResolver traversableResolver;
+    private final ConstraintValidatorFactory constraintValidatorFactory;
 
     private Object[] parameters;
     private Object returnValue;
@@ -86,11 +88,14 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
      * @param rootMetaBean
      */
     public GroupValidationContextImpl(ConstraintValidationListener<T> listener, MessageInterpolator aMessageResolver,
-                                      TraversableResolver traversableResolver, ParameterNameProvider parameterNameProvider, MetaBean rootMetaBean) {
+                                      TraversableResolver traversableResolver, ParameterNameProvider parameterNameProvider,
+                                      ConstraintValidatorFactory constraintValidatorFactory,
+                                      MetaBean rootMetaBean) {
         // inherited variable 'validatedObjects' is of type:
         // HashMap<GraphBeanIdentity, Set<PathImpl>> in this class
         super(listener, new HashMap<GraphBeanIdentity, Set<PathImpl>>());
         this.messageResolver = aMessageResolver;
+        this.constraintValidatorFactory = constraintValidatorFactory;
         this.traversableResolver = CachingTraversableResolver.cacheFor(traversableResolver);
         this.parameterNameProvider = parameterNameProvider;
         this.rootMetaBean = rootMetaBean;
@@ -311,6 +316,11 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
      */
     public TraversableResolver getTraversableResolver() {
         return traversableResolver;
+    }
+
+    @Override
+    public ConstraintValidatorFactory getConstraintValidatorFactory() {
+        return constraintValidatorFactory;
     }
 
     /**

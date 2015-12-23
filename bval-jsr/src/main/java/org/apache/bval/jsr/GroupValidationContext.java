@@ -24,6 +24,7 @@ import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.ValidationContext;
 
 import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorFactory;
 import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
 import javax.validation.ParameterNameProvider;
@@ -105,6 +106,12 @@ public interface GroupValidationContext<T>
      * @return {@link TraversableResolver}
      */
     TraversableResolver getTraversableResolver();
+
+    /**
+     * Get the {@link ConstraintValidatorFactory}.
+     * @return {@link ConstraintValidatorFactory}
+     */
+    ConstraintValidatorFactory getConstraintValidatorFactory();
 
     /**
      * Accumulate a validated constraint.

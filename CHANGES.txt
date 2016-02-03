@@ -52,7 +52,7 @@ How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
-Release Notes - BVal - Version 1.1.0-alpha2
+Release Notes - BVal - Version 1.1.1
 ==========================================
 
 Bug
@@ -65,7 +65,7 @@ Bug
     * [BVAL-136] - fix artifactId of our bundle module
 
 
-Release Notes - BVal - Version 1.1.0-alpha
+Release Notes - BVal - Version 1.1.0
 ==========================================
 
 New Feature

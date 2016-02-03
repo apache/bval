@@ -28,15 +28,15 @@ Along with the developer mailing list archive:
 
 System Requirements
 ===================
-You need a platform that supports Java SE 5 or later.
-Most testing has been done with Java SE 6 on Mac OS X, Windows and Linux.
+You need a platform that supports Java SE 6 or later.
+Most testing has been done with Java SE 7 on Mac OS X, Windows and Linux.
 
 
 Building
 ==========================
 To build from source code:
-  - Sources require Java SE 5 or higher. (Tested with JDK 1.6.0_30-b12)
-  - The project is built with Apache Maven (suggested is at least 2.2.1).
+  - Sources require Java SE 6 or higher. 
+  - The project is built with Apache Maven (suggested is at least 3.2.1).
     You need to download and install Maven from: http://maven.apache.org/
   - Invoke maven in the root directory or a module subdirectory:
       mvn install

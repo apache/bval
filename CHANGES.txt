@@ -52,6 +52,19 @@ How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
+Release Notes - BVal - Version 1.1.0-alpha2
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-144] - wrong encoding for ValidationMessages_es.properties
+    * [BVAL-143] - meta cache not shared accross validator instances
+    * [BVAL-141] - Wrong method interceptor signature
+    * [BVAL-138] - OSGi bundle maven dependencies are too big and also too small
+    * [BVAL-136] - fix artifactId of our bundle module
+
+
 Release Notes - BVal - Version 1.1.0-alpha
 ==========================================
 

@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 
 import javax.validation.ConstraintValidator;
 
+import org.apache.bval.util.CompoundClassLoader;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -79,7 +80,7 @@ public class ConstraintDefaults {
     @SuppressWarnings("unchecked")
     private Map<String, Class<? extends ConstraintValidator<?, ?>>[]> loadDefaultConstraints(String resource) {
         final Properties constraintProperties = new Properties();
-        final ClassLoader classloader = getClassLoader();
+        final ClassLoader classloader = new CompoundClassLoader(getClass());
         final InputStream stream = classloader.getResourceAsStream(resource);
         if (stream == null) {
             log.log(Level.WARNING, String.format("Cannot find %s", resource));

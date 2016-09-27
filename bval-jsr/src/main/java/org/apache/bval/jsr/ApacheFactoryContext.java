@@ -83,7 +83,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
         this.messageInterpolator = messageInterpolator;
-        resetMeta();
+        // resetMeta();, see traversableResolver() comment
         return this;
     }
 
@@ -92,7 +92,8 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
-        resetMeta();
+         // meta are not affected by this so don't call resetMeta();
+        // implementor note: this is what does hibernate and loosing our cache cause of resetMeta() call makes it super slow!
         return this;
     }
 
@@ -101,13 +102,13 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ValidatorContext constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
-        resetMeta();
+        // same note as traversableResolver resetMeta();
         return this;
     }
 
     public ValidatorContext parameterNameProvider(ParameterNameProvider parameterNameProvider) {
         this.parameterNameProvider = parameterNameProvider;
-        resetMeta();
+        resetMeta(); // needed since param names are capture during processing
         return this;
     }
 

@@ -168,7 +168,7 @@
             <name>Matt Benson</name>
             <email>mbenson@apache.org</email>
             <roles>
-                <role>PMC Member</role>
+                <role>PMC Chair</role>
             </roles>
         </developer>
         <developer>
@@ -210,6 +210,9 @@
             <id>rmannibucau</id>
             <name>Romain Manni-Bucau</name>
             <email>rmannibucau@apache.org</email>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
         </developer>
     </developers>
 

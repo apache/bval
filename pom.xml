@@ -445,6 +445,11 @@
                     </executions>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>2.4.3</version>
+                </plugin>
+                <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>jdepend-maven-plugin</artifactId>
                     <version>2.0-beta-2</version>
@@ -513,6 +518,7 @@
                             <exclude>**/*.ipr</exclude>
                             <exclude>**/*.iws</exclude>
                             <exclude>**/META-INF/services/*</exclude> <!-- depending service loader it can fail if a comment is added -->
+                            <exclude>**/dependency-reduced-pom.xml</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
@@ -674,7 +680,6 @@
         <module>bval-jsr</module>
         <module>bval-json</module>
         <module>bval-extras</module>
-	<!--<module>bval-tck</module> dependencies are hard to find today and we have tck11 -->
         <module>bval-tck11</module>
         <module>bundle</module>
     </modules>

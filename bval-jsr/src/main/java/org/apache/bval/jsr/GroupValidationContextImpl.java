@@ -91,8 +91,6 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
                                       TraversableResolver traversableResolver, ParameterNameProvider parameterNameProvider,
                                       ConstraintValidatorFactory constraintValidatorFactory,
                                       MetaBean rootMetaBean) {
-        // inherited variable 'validatedObjects' is of type:
-        // HashMap<GraphBeanIdentity, Set<PathImpl>> in this class
         super(listener, new HashMap<GraphBeanIdentity, Set<PathImpl>>());
         this.messageResolver = aMessageResolver;
         this.constraintValidatorFactory = constraintValidatorFactory;

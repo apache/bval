@@ -42,7 +42,7 @@ import javax.validation.groups.ConvertGroup;
  */
 // TODO move this guy up to org.apache.bval.jsr or org.apache.bval.jsr.model
 @Privilizing(@CallTo(Reflection.class))
-final public class AnnotationProxyBuilder<A extends Annotation> {
+public final class AnnotationProxyBuilder<A extends Annotation> {
     private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<Class<?>, Method[]>();
 
     private final Class<A> type;

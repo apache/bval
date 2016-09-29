@@ -288,8 +288,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <!-- 2.12 has http://jira.codehaus.org/browse/SUREFIRE-836 -->
-                <version>2.11</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>

@@ -32,7 +32,7 @@ import javax.validation.ValidatorContext;
 
 /**
  * Description: Represents the context that is used to create
- * <code>ClassValidator</code> instances.<br/>
+ * {@link ClassValidator} instances.
  */
 @Privilizing(@CallTo(Reflection.class))
 public class ApacheFactoryContext implements ValidatorContext {
@@ -74,7 +74,17 @@ public class ApacheFactoryContext implements ValidatorContext {
         return metaBeanFinder;
     }
 
-    private synchronized void resetMeta() { // ensure to ingnore the cache and rebuild constraint with new model
+    /**
+     * Discard cached metadata. Calling this method unnecessarily has the effect of severly
+     * limiting performance, therefore only do so when changes have been made that affect
+     * validation metadata, i.e. particularly NOT in response to:
+     * <ul>
+     *   <li>{@link #messageInterpolator(MessageInterpolator)}</li>
+     *   <li>{@link #traversableResolver(TraversableResolver)}</li>
+     *   <li>{@link #constraintValidatorFactory(ConstraintValidatorFactory)</li>
+     * </ul>
+     */
+    private synchronized void resetMeta() {
         metaBeanFinder = factory.buildMetaBeanFinder();
     }
 
@@ -83,7 +93,6 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
         this.messageInterpolator = messageInterpolator;
-        // resetMeta();, see traversableResolver() comment
         return this;
     }
 
@@ -92,8 +101,6 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
-         // meta are not affected by this so don't call resetMeta();
-        // implementor note: this is what does hibernate and loosing our cache cause of resetMeta() call makes it super slow!
         return this;
     }
 
@@ -102,13 +109,12 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     public ValidatorContext constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
-        // same note as traversableResolver resetMeta();
         return this;
     }
 
     public ValidatorContext parameterNameProvider(ParameterNameProvider parameterNameProvider) {
         this.parameterNameProvider = parameterNameProvider;
-        resetMeta(); // needed since param names are capture during processing
+        resetMeta(); // needed since parameter names are a component of validation metadata
         return this;
     }
 

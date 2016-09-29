@@ -17,21 +17,96 @@
 package org.apache.bval.util;
 
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.ElementType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Description: Undefined dynamic strategy (FIELD or METHOD access) Uses PropertyUtils or tries to determine field to
- * access the value<br/>
+ * Description: Undefined dynamic strategy (FIELD or METHOD access). Uses Apache
+ * Commons BeanUtils (if present) to support its {@code DynaBean} type. Otherwise the
+ * {@code java.beans} APIs are used for Java bean property methods and we fall
+ * back to accessing field values directly.
  */
+@Privilizing(@CallTo(Reflection.class))
 public class PropertyAccess extends AccessStrategy {
+    private static final Logger log =  Logger.getLogger(PropertyAccess.class.getName());
+    private static final String BEANUTILS =
+        "org.apache.commons.beanutils.BeanUtils";
+    private static final String BEANUTILS_PROPERTY_ACCESS =
+        "org.apache.bval.util.BeanUtilsPropertyAccess";
+    private static final Constructor<? extends PropertyAccess> BEANUTILS_PROPERTY_ACCESS_CTOR;
+    private static final ConcurrentMap<Class<?>, Map<String, PropertyDescriptor>> PROPERTY_DESCRIPTORS =
+        new ConcurrentHashMap<Class<?>, Map<String, PropertyDescriptor>>();
+
+    static {
+        final ClassLoader cl = Reflection.getClassLoader(PropertyAccess.class);
+        boolean useBeanUtils;
+        try {
+            Reflection.getClass(cl, BEANUTILS);
+            useBeanUtils = true;
+        } catch (Exception e) {
+            useBeanUtils = false;
+        }
+        Constructor<? extends PropertyAccess> ctor;
+        if (useBeanUtils) {
+            try {
+                final Class<?> beanUtilsPropertyAccess =
+                    Reflection.getClass(cl, BEANUTILS_PROPERTY_ACCESS);
+
+                ctor = Reflection.getDeclaredConstructor(
+                    beanUtilsPropertyAccess.asSubclass(PropertyAccess.class),
+                    Class.class, String.class);
+
+            } catch (Exception e) {
+                ctor = null;
+            }
+        } else {
+            ctor = null;
+        }
+        BEANUTILS_PROPERTY_ACCESS_CTOR = ctor;
+    }
+
+    /**
+     * Obtain a {@link PropertyAccess} instance.
+     * @param clazz
+     * @param propertyName
+     * @return PropertyAccess
+     * @since 1.1.2
+     */
+    public static PropertyAccess getInstance(Class<?> clazz,
+        String propertyName) {
+        if (BEANUTILS_PROPERTY_ACCESS_CTOR != null) {
+            try {
+                return BEANUTILS_PROPERTY_ACCESS_CTOR.newInstance(clazz,
+                    propertyName);
+            } catch (Exception e) {
+                log.log(Level.WARNING,
+                    String.format(
+                        "Exception encountered attempting to instantiate %s(%s, %s)",
+                        BEANUTILS_PROPERTY_ACCESS_CTOR, clazz, propertyName),
+                    e);
+            }
+        }
+        return new PropertyAccess(clazz, propertyName);
+    }
+
     private final Class<?> beanClass;
     private final String propertyName;
     private Field rememberField;
@@ -42,6 +117,8 @@ public class PropertyAccess extends AccessStrategy {
      * @param clazz
      * @param propertyName
      */
+    @Deprecated
+    // keep as protected
     public PropertyAccess(Class<?> clazz, String propertyName) {
         this.beanClass = clazz;
         this.propertyName = propertyName;
@@ -54,12 +131,23 @@ public class PropertyAccess extends AccessStrategy {
         return rememberField != null ? ElementType.FIELD : ElementType.METHOD;
     }
 
-    private static Object getPublicProperty(Object bean, String property) throws InvocationTargetException,
+    protected Object getPublicProperty(Object bean) throws InvocationTargetException,
         NoSuchMethodException, IllegalAccessException {
         if (bean instanceof Map<?, ?>) {
-            return ((Map<?, ?>) bean).get(property);
-        } else { // supports DynaBean and standard Objects
-            return PropertyUtils.getSimpleProperty(bean, property);
+            return ((Map<?, ?>) bean).get(propertyName);
+        }
+        final Method readMethod =
+            getPropertyReadMethod(propertyName, bean.getClass());
+        if (readMethod == null) {
+            throw new NoSuchMethodException(toString());
+        }
+        final boolean unset = Reflection.setAccessible(readMethod, true);
+        try {
+            return readMethod.invoke(bean);
+        } finally {
+            if (unset) {
+                Reflection.setAccessible(readMethod, false);
+            }
         }
     }
 
@@ -73,9 +161,10 @@ public class PropertyAccess extends AccessStrategy {
      * @throws NoSuchMethodException
      * @throws IllegalAccessException
      */
-    public static Object getProperty(Object bean, String propertyName) throws InvocationTargetException,
-        NoSuchMethodException, IllegalAccessException {
-        return new PropertyAccess(bean.getClass(), propertyName).get(bean);
+    public static Object getProperty(Object bean, String propertyName)
+        throws InvocationTargetException, NoSuchMethodException,
+        IllegalAccessException {
+        return getInstance(bean.getClass(), propertyName).get(bean);
     }
 
     /**
@@ -123,11 +212,12 @@ public class PropertyAccess extends AccessStrategy {
         return null;
     }
 
-    private static Method getPropertyReadMethod(String propertyName, Class<?> beanClass) {
-        for (PropertyDescriptor each : PropertyUtils.getPropertyDescriptors(beanClass)) {
-            if (each.getName().equals(propertyName)) {
-                return each.getReadMethod();
-            }
+    private static Method getPropertyReadMethod(String propertyName,
+        Class<?> beanClass) {
+        final Map<String, PropertyDescriptor> propertyDescriptors =
+            getPropertyDescriptors(beanClass);
+        if (propertyDescriptors.containsKey(propertyName)) {
+            return propertyDescriptors.get(propertyName).getReadMethod();
         }
         return null;
     }
@@ -177,7 +267,7 @@ public class PropertyAccess extends AccessStrategy {
                 return readField(rememberField, bean);
             }
             try { // try public method
-                return getPublicProperty(bean, propertyName);
+                return getPublicProperty(bean);
             } catch (NoSuchMethodException ex) {
                 return getFieldValue(bean);
             }
@@ -225,5 +315,28 @@ public class PropertyAccess extends AccessStrategy {
         result = beanClass.hashCode();
         result = 31 * result + propertyName.hashCode();
         return result;
+    }
+    
+    private static Map<String, PropertyDescriptor> getPropertyDescriptors(Class<?> type) {
+        if (PROPERTY_DESCRIPTORS.containsKey(type)) {
+            return PROPERTY_DESCRIPTORS.get(type);
+        }
+        Map<String, PropertyDescriptor> m;
+        try {
+            final PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(type).getPropertyDescriptors();
+            if (propertyDescriptors == null) {
+                m = Collections.emptyMap();
+            } else {
+                m = new HashMap<String, PropertyDescriptor>();
+                for (PropertyDescriptor pd : propertyDescriptors) {
+                    m.put(pd.getName(), pd);
+                }
+            }
+        } catch (IntrospectionException e) {
+            log.log(Level.SEVERE, String.format("Cannot locate %s for ", BeanInfo.class.getSimpleName(), type), e);
+            m = Collections.emptyMap();
+        }
+        final Map<String, PropertyDescriptor> faster = PROPERTY_DESCRIPTORS.putIfAbsent(type, m);
+        return faster == null ? m : faster;
     }
 }

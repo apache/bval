@@ -220,7 +220,7 @@ public class BeanValidator<T extends ValidationListener> {
             final Object bean = context.getBean();
             final MetaBean mbean = context.getMetaBean();
             // modify context state for relationship-target bean
-            context.moveDown(prop, new PropertyAccess(bean.getClass(), prop.getName()));
+            context.moveDown(prop, PropertyAccess.getInstance(bean.getClass(), prop.getName()));
             ValidationHelper.validateContext(context, new BeanValidatorCallback(context), treatMapsLikeBeans);
             // restore old values in context
             context.moveUp(bean, mbean);

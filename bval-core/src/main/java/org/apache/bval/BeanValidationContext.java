@@ -156,7 +156,7 @@ public class BeanValidationContext<T extends ValidationListener>
      */
     public Object getPropertyValue() {
         if (access == null) { // undefined access strategy
-            return getPropertyValue(new PropertyAccess(bean.getClass(), metaProperty.getName()));
+            return getPropertyValue(PropertyAccess.getInstance(bean.getClass(), metaProperty.getName()));
         }
         return getPropertyValue(access);
     }

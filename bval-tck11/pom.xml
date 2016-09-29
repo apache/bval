@@ -41,10 +41,8 @@ under the License.
         <dependency>
           <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-validation_1.1_spec</artifactId>
-            <version>1.0-alpha-1</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-atinject_1.0_spec</artifactId>
@@ -79,7 +77,6 @@ under the License.
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-el-api</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-core</artifactId>
@@ -90,7 +87,6 @@ under the License.
             <artifactId>bval-jsr</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.jboss.arquillian.container</groupId>
             <artifactId>arquillian-container-test-spi</artifactId>
@@ -108,14 +104,12 @@ under the License.
             <version>${owb.version}</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jasper-el</artifactId>
             <version>7.0.42</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.hibernate.beanvalidation.tck</groupId>
             <artifactId>beanvalidation-tck-tests</artifactId>

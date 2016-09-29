@@ -23,9 +23,8 @@ import org.apache.commons.beanutils.Converter;
 /**
  * A {@code org.apache.commons.beanutils.Converter} implementation to handle
  * Enumeration type.
- *
- * $Id: EnumerationConverter.java 1226560 2012-01-02 22:18:19Z mbenson $
  */
+@Deprecated
 public final class EnumerationConverter implements Converter {
 
     /**

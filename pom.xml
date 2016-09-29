@@ -190,6 +190,14 @@
             </roles>
         </developer>
         <developer>
+            <id>rmannibucau</id>
+            <name>Romain Manni-Bucau</name>
+            <email>rmannibucau@apache.org</email>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
             <id>romanstumm</id>
             <name>Roman Stumm</name>
             <email>romanstumm@apache.org</email>
@@ -202,14 +210,6 @@
             <id>simonetripodi</id>
             <name>Simone Tripodi</name>
             <email>simonetripodi@apache.org</email>
-            <roles>
-                <role>PMC Member</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>rmannibucau</id>
-            <name>Romain Manni-Bucau</name>
-            <email>rmannibucau@apache.org</email>
             <roles>
                 <role>PMC Member</role>
             </roles>

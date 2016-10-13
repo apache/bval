@@ -34,7 +34,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory, Closeable {
     private final Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
-    private Boolean useCdi = null; // store it to avoid NoClassDefFoundError when cdi is not present (it is slow) + lazily (to wait cdi is started)
+    private volatile Boolean useCdi = null; // store it to avoid NoClassDefFoundError when cdi is not present (it is slow) + lazily (to wait cdi is started)
 
     /**
      * Instantiate a Constraint.
@@ -47,7 +47,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
             synchronized (this) {
                 if (useCdi == null) {
                     try {
-                        useCdi = Boolean.valueOf(BValExtension.getBeanManager() != null);
+                        useCdi = BValExtension.getBeanManager() != null;
                     } catch (final NoClassDefFoundError error) {
                         useCdi = Boolean.FALSE;
                     } catch (final Exception e) {
@@ -60,7 +60,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
         // 2011-03-27 jw: Do not use PrivilegedAction.
         // Otherwise any user code would be executed with the privileges of this class.
         try {
-            if (useCdi.booleanValue()) {
+            if (useCdi) {
                 try {
                     final BValExtension.Releasable<T> instance = BValExtension.inject(constraintClass);
                     if (instance != null) {

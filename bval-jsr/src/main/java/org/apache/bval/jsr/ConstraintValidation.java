@@ -64,7 +64,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     private final boolean reportFromComposite;
     private final Map<String, Object> attributes;
     private T annotation; // for metadata request API
-    private ConstraintValidator<T, ?> validator;
+    private volatile ConstraintValidator<T, ?> validator;
 
     private Set<ConstraintValidation<?>> composedConstraints;
 

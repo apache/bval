@@ -75,22 +75,22 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * Configured {@link MessageInterpolator}
      */
     protected MessageInterpolator defaultMessageInterpolator = new DefaultMessageInterpolator();
-    protected MessageInterpolator messageInterpolator = defaultMessageInterpolator;
+    protected volatile MessageInterpolator messageInterpolator = defaultMessageInterpolator;
     protected Class<? extends MessageInterpolator> messageInterpolatorClass = null;
 
     /**
      * Configured {@link ConstraintValidatorFactory}
      */
     protected ConstraintValidatorFactory defaultConstraintValidatorFactory = new DefaultConstraintValidatorFactory();
-    protected ConstraintValidatorFactory constraintValidatorFactory = defaultConstraintValidatorFactory;
+    protected volatile ConstraintValidatorFactory constraintValidatorFactory = defaultConstraintValidatorFactory;
     protected Class<? extends ConstraintValidatorFactory> constraintValidatorFactoryClass = null;
 
     protected TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
-    protected TraversableResolver traversableResolver = defaultTraversableResolver;
+    protected volatile TraversableResolver traversableResolver = defaultTraversableResolver;
     protected Class<? extends TraversableResolver> traversableResolverClass = null;
 
     protected ParameterNameProvider defaultParameterNameProvider = new DefaultParameterNameProvider();
-    protected ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
+    protected volatile ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
     protected Class<? extends ParameterNameProvider> parameterNameProviderClass = null;
 
     protected BootstrapConfiguration  bootstrapConfiguration;

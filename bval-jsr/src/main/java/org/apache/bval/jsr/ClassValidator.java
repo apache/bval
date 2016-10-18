@@ -989,7 +989,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             for (final Group current : eachSeq) {
                 for (final ConstraintDescriptor<?> d : returnedValueConstraints) {
                     final ConstraintValidation<?> validation = ConstraintValidation.class.cast(d);
-                    // context.setCurrentGroup(returnedValueDescriptor.mapGroup(current)); // mapping is only relevant for cascaded validations
                     context.setCurrentGroup(current);
                     validation.validateGroupContext(context);
                 }

@@ -41,7 +41,8 @@
 
     <properties>
         <site.deploy.url>scp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
-        <commons.weaver.version>1.2</commons.weaver.version>
+        <commons.weaver.version>1.3</commons.weaver.version>
+        <privilizer.policy>DYNAMIC</privilizer.policy>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -580,13 +581,19 @@
                     <configuration>
                         <verbose>true</verbose>
                         <weaverConfig>
-                            <privilizer.policy>DYNAMIC</privilizer.policy>
+                            <privilizer.policy>${privilizer.policy}</privilizer.policy>
                         </weaverConfig>
                     </configuration>
                     <executions>
                         <execution>
+                        	<id>weaver-prepare</id>
                             <goals>
                                 <goal>prepare</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                        	<id>weaver-weave</id>
+                            <goals>
                                 <goal>weave</goal>
                             </goals>
                         </execution>

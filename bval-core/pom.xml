@@ -135,7 +135,9 @@ build.timestamp=${timestamp}
                     <filters>
                         <filter>
                             <artifact>org.apache.commons:commons-lang3</artifact>
-                            <excludes>META-INF/maven/**</excludes>
+                            <excludes>
+                                <exclude>META-INF/maven/**</exclude>
+                            </excludes>
                         </filter>
                     </filters>
                     <relocations>

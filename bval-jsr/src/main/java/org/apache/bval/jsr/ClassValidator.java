@@ -127,7 +127,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @throws ValidationException      if a non recoverable error happens during the validation
      *                                  process
      */
-    // @Override - not allowed in 1.5 for Interface methods
+    @Override
     @SuppressWarnings("unchecked")
     public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groups) {
         notNull("validated object", object);
@@ -188,7 +188,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @throws ValidationException      if a non recoverable error happens during the validation
      *                                  process
      */
-    // @Override - not allowed in 1.5 for Interface methods
+    @Override
     public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName, Class<?>... groups) {
         return validateProperty(object, propertyName, false, groups);
     }
@@ -225,7 +225,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @throws ValidationException      if a non recoverable error happens during the validation
      *                                  process
      */
-    // @Override - not allowed in 1.5 for Interface methods
+    @Override
     public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
         Class<?>... groups) {
         return validateValue(beanType, propertyName, value, false, groups);
@@ -249,7 +249,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @throws ValidationException      if a non recoverable error happens during the metadata
      *                                  discovery or if some constraints are invalid.
      */
-    // @Override - not allowed in 1.5 for Interface methods
+    @Override
     public BeanDescriptor getConstraintsForClass(final Class<?> clazz) {
         notNull("class", clazz);
         try {
@@ -277,7 +277,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @return an instance of the specified class
      * @throws ValidationException if the provider does not support the call.
      */
-    // @Override - not allowed in 1.5 for Interface methods
+    @Override
     public <T> T unwrap(Class<T> type) {
         // FIXME 2011-03-27 jw:
         // This code is unsecure.

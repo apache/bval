@@ -57,7 +57,7 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
     public void testValidationExceptionWhenFactoryReturnsNullValidator() {
 
         ConstraintValidatorFactory customFactory = new ConstraintValidatorFactory() {
-            // @Override - not allowed in 1.5 for Interface methods
+            @Override
             public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
                 return null; // always return null
             }
@@ -94,11 +94,11 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
         Class<? extends Payload>[] payload() default {};
 
         public static class GoodPersonValidator implements ConstraintValidator<GoodPerson, Person> {
-            // @Override - not allowed in 1.5 for Interface methods
+            @Override
             public void initialize(GoodPerson constraintAnnotation) {
             }
 
-            // @Override - not allowed in 1.5 for Interface methods
+            @Override
             public boolean isValid(Person value, ConstraintValidatorContext context) {
                 return true;
             }

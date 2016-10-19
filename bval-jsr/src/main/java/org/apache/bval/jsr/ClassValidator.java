@@ -1057,19 +1057,25 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     private <T> void initMetaBean(final GroupValidationContext<T> context, final MetaBeanFinder metaBeanFinder, final Class<?> directValueClass) {
-        final boolean collection = Collection.class.isAssignableFrom(directValueClass);
-        final boolean map = Map.class.isAssignableFrom(directValueClass);
-        if (!directValueClass.isArray()
-                && (!collection || Collection.class.cast(context.getValidatedValue()).isEmpty())
-                && (!map || Map.class.cast(context.getValidatedValue()).isEmpty())) {
-            context.setMetaBean(metaBeanFinder.findForClass(directValueClass));
-        } else if (collection) {
-            context.setMetaBean(metaBeanFinder.findForClass(Collection.class.cast(context.getValidatedValue()).iterator().next().getClass()));
-        } else if (map) {
-            context.setMetaBean(metaBeanFinder.findForClass(Map.class.cast(context.getValidatedValue()).values().iterator().next().getClass()));
-        } else {
+        if (directValueClass.isArray()) {
             context.setMetaBean(metaBeanFinder.findForClass(directValueClass.getComponentType()));
+            return;
         }
+        if (Collection.class.isAssignableFrom(directValueClass)) {
+            final Collection<?> coll = Collection.class.cast(context.getValidatedValue());
+            if (!coll.isEmpty()) {
+                context.setMetaBean(metaBeanFinder.findForClass(coll.iterator().next().getClass()));
+                return;
+            }
+        }
+        if (Map.class.isAssignableFrom(directValueClass)) {
+            final Map<?, ?> m = Map.class.cast(context.getValidatedValue());
+            if (!m.isEmpty()) {
+                context.setMetaBean(metaBeanFinder.findForClass(m.values().iterator().next().getClass()));
+                return;
+            }
+        }
+        context.setMetaBean(metaBeanFinder.findForClass(directValueClass));
     }
 
     /**

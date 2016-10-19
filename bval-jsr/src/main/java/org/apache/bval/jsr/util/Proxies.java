@@ -18,7 +18,19 @@
  */
 package org.apache.bval.jsr.util;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public final class Proxies {
+    private static final Set<String> KNOWN_PROXY_CLASSNAMES;
+
+    static {
+        final Set<String> s = new HashSet<String>();
+        s.add("org.jboss.weld.bean.proxy.ProxyObject");
+        KNOWN_PROXY_CLASSNAMES = Collections.unmodifiableSet(s); 
+    }
+
     // get rid of proxies which probably contains wrong annotation metamodel
     public static <T> Class<?> classFor(final Class<?> clazz) { // TODO: do we want a SPI with impl for guice, owb, openejb, ...?
         if (isProxyClass(clazz)) {
@@ -31,7 +43,11 @@ public final class Proxies {
     }
 
     private static boolean isProxyClass(Class<?> clazz) {
-        return clazz.getSimpleName().contains("$$");// a lot of proxies use this convention to avoid conflicts with inner/anonymous classes
+        final String simpleName = clazz.getSimpleName();
+        if (KNOWN_PROXY_CLASSNAMES.contains(simpleName)) {
+            return true;
+        }
+        return simpleName.contains("$$");// a lot of proxies use this convention to avoid conflicts with inner/anonymous classes
     }
 
     private Proxies() {

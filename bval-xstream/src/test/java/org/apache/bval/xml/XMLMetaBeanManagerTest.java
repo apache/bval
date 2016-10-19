@@ -19,6 +19,7 @@ package org.apache.bval.xml;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.Map;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.example.BusinessObject;
 import org.apache.bval.model.MetaBean;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -36,10 +37,10 @@ import org.junit.Test;
  * Time: 10:28:48<br>
  */
 public class XMLMetaBeanManagerTest {
-    XMLMetaBeanManager mbm = new XMLMetaBeanManager();
+    private static XMLMetaBeanManager mbm = new XMLMetaBeanManager();
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws Exception {
         mbm.addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
     }
 
@@ -59,8 +60,8 @@ public class XMLMetaBeanManagerTest {
     public void testCopy() {
         MetaBean mb = mbm.findForClass(BusinessObject.class);
         MetaBean mb2 = mb.copy();
-        assertTrue(mb2 != mb);
-        assertTrue(mb2.getProperty("dateBirth") != mb.getProperty("dateBirth"));
+        assertNotSame(mb, mb2);
+        assertNotSame(mb.getProperty("dateBirth"), mb2.getProperty("dateBirth"));
     }
 
     @SuppressWarnings("deprecation")
@@ -69,8 +70,8 @@ public class XMLMetaBeanManagerTest {
         MetaBeanFinder finder = mbm;
         MetaBean info = finder.findForClass(BusinessObject.class);
         assertNotNull(info);
-        assertTrue(info == info.getProperty("address").getMetaBean().getProperty("owner").getMetaBean());
-        assertTrue(info == info.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
+        assertSame(info, info.getProperty("address").getMetaBean().getProperty("owner").getMetaBean());
+        assertSame(info, info.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
         assertTrue(info.getProperty("email").getJavaScriptValidations().length > 0);
     }
 
@@ -80,11 +81,14 @@ public class XMLMetaBeanManagerTest {
         assertNotNull(all);
         Map<String, MetaBean> all2 = mbm.findAll();
         assertEquals(all.size(), all2.size());
-        assertTrue(all.get(BusinessObject.class.getName()) == all2.get(BusinessObject.class.getName()));
-        assertTrue(all.get(BusinessObject.class.getName()) != null);
+        assertSame(all.get(BusinessObject.class.getName()), all2.get(BusinessObject.class.getName()));
+        assertNotNull(all.get(BusinessObject.class.getName()));
         MetaBean bean = all.get(BusinessObject.class.getName());
-        assertTrue(bean == bean.getProperty("address").getMetaBean().getProperty("owner").getMetaBean());
-        assertTrue(bean == bean.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
+        assertSame(bean, bean.getProperty("address").getMetaBean().getProperty("owner").getMetaBean());
+        assertSame(bean, bean.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
     }
 
+    static void assertNotSame(Object o1, Object o2) {
+        assertFalse(o1 == o2);
+    }
 }

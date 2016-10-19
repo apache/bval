@@ -16,10 +16,6 @@
  */
 package org.apache.bval.model;
 
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.weaver.privilizer.Privilizing;
-import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
-
 import java.beans.Introspector;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -29,6 +25,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Description: the meta description of a bean or class. the class/bean itself can have a map of features and an array
@@ -279,20 +280,16 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             Class<?> clazz = beanClass;
             while (clazz != null && clazz != Object.class) {
                 for (final Field f : Reflection.getDeclaredFields(clazz)) {
-                    i++;
                     final String name = f.getName();
                     if (!fields.containsKey(name)) {
-                        fields.put(name, i);
+                        fields.put(name, Integer.valueOf(++i));
                     }
                 }
                 for (final Method m : clazz.getDeclaredMethods()) {
-                    if (m.getName().startsWith("get") && Void.TYPE != m.getReturnType() && m.getParameterTypes().length == 0) {
-                        final String name = Introspector.decapitalize(m.getName().substring("get".length()));
-                        if (!name.isEmpty()) {
-                            i++;
-                            if (!fields.containsKey(name)) {
-                                fields.put(name, i);
-                            }
+                    final String name = getPropertyName(m);
+                    if (StringUtils.isNotEmpty(name)) {
+                        if (!fields.containsKey(name)) {
+                            fields.put(name, Integer.valueOf(++i));
                         }
                     }
                 }
@@ -300,18 +297,39 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             }
         }
 
-        @Override
-        public int compare(final String o1, final String o2) {
-            return fieldIndex(o1) - fieldIndex(o2);
+        private String getPropertyName(Method potentialAccessor) {
+            if (potentialAccessor.getParameterTypes().length == 0) {
+                final String name = potentialAccessor.getName();
+                if (Boolean.TYPE.equals(potentialAccessor.getReturnType())
+                    && potentialAccessor.getName().startsWith("is")) {
+                    return Introspector.decapitalize(name.substring(2));
+                }
+                if (!Void.TYPE.equals(potentialAccessor.getReturnType())
+                    && potentialAccessor.getName().startsWith("get")) {
+                    return Introspector.decapitalize(name.substring(3));
+                }
+            }
+            return null;
         }
 
-        private int fieldIndex(final String o2) {
-            final Integer idx = fields.get(o2);
-            if (idx == null) {
-                return Integer.MIN_VALUE; // to avoid collision and false positive in get() due to equals
+        @Override
+        public int compare(final String o1, final String o2) {
+            final Integer i1 = fields.get(o1);
+            final Integer i2 = fields.get(o2);
+            if (i1 == null) {
+                if (i2 == null) {
+                    // java.util.TreeMap requires that the comparator be consistent with #equals(),
+                    // therefore we must not incorrectly report 0 comparison for different property names
+                    return StringUtils.compare(o1, o2);
+                }
+                return -1;
             }
-            return idx;
+            if (i2 == null) {
+                return 1;
+            }
+            return i1.intValue() - i2.intValue();
         }
+
     }
 
     protected static class MethodComparator implements Comparator<Method> {

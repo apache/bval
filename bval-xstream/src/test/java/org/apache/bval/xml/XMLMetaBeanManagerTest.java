@@ -16,14 +16,18 @@
  */
 package org.apache.bval.xml;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Map;
+
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.example.BusinessObject;
 import org.apache.bval.model.MetaBean;
-
-import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Description: <br>
@@ -31,24 +35,15 @@ import java.util.Map;
  * Date: 17.06.2010<br>
  * Time: 10:28:48<br>
  */
-public class XMLMetaBeanManagerTest extends TestCase {
+public class XMLMetaBeanManagerTest {
     XMLMetaBeanManager mbm = new XMLMetaBeanManager();
 
-    public XMLMetaBeanManagerTest(String name) {
-        super(name);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         mbm.addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testEnrichCopies() throws Exception {
         Map<String, MetaBean> copies =
             mbm.enrichCopies(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos-custom.xml"))
@@ -60,6 +55,7 @@ public class XMLMetaBeanManagerTest extends TestCase {
         assertTrue(mb2.getProperty("lastName").isMandatory());
     }
 
+    @Test
     public void testCopy() {
         MetaBean mb = mbm.findForClass(BusinessObject.class);
         MetaBean mb2 = mb.copy();
@@ -68,6 +64,7 @@ public class XMLMetaBeanManagerTest extends TestCase {
     }
 
     @SuppressWarnings("deprecation")
+    @Test
     public void testFindForClass() throws Exception {
         MetaBeanFinder finder = mbm;
         MetaBean info = finder.findForClass(BusinessObject.class);
@@ -77,6 +74,7 @@ public class XMLMetaBeanManagerTest extends TestCase {
         assertTrue(info.getProperty("email").getJavaScriptValidations().length > 0);
     }
 
+    @Test
     public void testFindAll() {
         Map<String, MetaBean> all = mbm.findAll();
         assertNotNull(all);
@@ -89,7 +87,4 @@ public class XMLMetaBeanManagerTest extends TestCase {
         assertTrue(bean == bean.getProperty("addresses").getMetaBean().getProperty("owner").getMetaBean());
     }
 
-    public static Test suite() {
-        return new TestSuite(XMLMetaBeanManagerTest.class);
-    }
 }

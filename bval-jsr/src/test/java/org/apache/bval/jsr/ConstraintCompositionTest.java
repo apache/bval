@@ -19,32 +19,30 @@
 
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.Set;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintViolation;
 import javax.validation.OverridesAttribute;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.junit.Test;
 
 /**
  * Checks that groups are correctly inherited from the root constraint to its
@@ -52,71 +50,45 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 
  * @author Carlos Vara
  */
-public class ConstraintCompositionTest extends TestCase {
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
+public class ConstraintCompositionTest extends ValidationTestBase {
 
     /**
      * Check correct group inheritance on constraint composition on a 1 level
      * hierarchy.
      */
+    @Test
     public void test1LevelInheritance() {
         Set<ConstraintViolation<Person>> violations = validator.validate(new Person());
 
-        Assert.assertEquals("Wrong number of violations detected", 1, violations.size());
+        assertEquals("Wrong number of violations detected", 1, violations.size());
         String msg = violations.iterator().next().getMessage();
-        Assert.assertEquals("Incorrect violation message", "A person needs a non null name", msg);
+        assertEquals("Incorrect violation message", "A person needs a non null name", msg);
 
         violations = validator.validate(new Person(), Group1.class);
-        Assert.assertEquals("Wrong number of violations detected", 0, violations.size());
+        assertEquals("Wrong number of violations detected", 0, violations.size());
     }
 
     /**
      * Check correct group inheritance on constraint composition on a 2 level
      * hierarchy.
      */
+    @Test
     public void test2LevelInheritance() {
         Set<ConstraintViolation<Man>> violations = validator.validate(new Man());
 
-        Assert.assertEquals("Wrong number of violations detected", 0, violations.size());
+        assertEquals("Wrong number of violations detected", 0, violations.size());
 
         violations = validator.validate(new Man(), Group1.class);
-        Assert.assertEquals("Wrong number of violations detected", 1, violations.size());
+        assertEquals("Wrong number of violations detected", 1, violations.size());
         String msg = violations.iterator().next().getMessage();
-        Assert.assertEquals("Incorrect violation message", "A person needs a non null name", msg);
+        assertEquals("Incorrect violation message", "A person needs a non null name", msg);
     }
 
     /**
      * Checks that the groups() value of the constraint annotations are
      * correctly set to the inherited ones.
      */
+    @Test
     public void testAnnotationGroupsAreInherited() {
         // Check that the groups() value is right when querying the metadata
         ConstraintDescriptor<?> manNameDesc =
@@ -124,25 +96,26 @@ public class ConstraintCompositionTest extends TestCase {
                 .iterator().next();
         ConstraintDescriptor<?> personNameDesc = manNameDesc.getComposingConstraints().iterator().next();
         ConstraintDescriptor<?> notNullDesc = personNameDesc.getComposingConstraints().iterator().next();
-        Assert.assertEquals("There should only be 1 group", 1, manNameDesc.getGroups().size());
-        Assert.assertTrue("Group1 should be present", manNameDesc.getGroups().contains(Group1.class));
-        Assert.assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
-        Assert.assertTrue("Group1 should be present", personNameDesc.getGroups().contains(Group1.class));
-        Assert.assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
-        Assert.assertTrue("Group1 should be present", notNullDesc.getGroups().contains(Group1.class));
+        assertEquals("There should only be 1 group", 1, manNameDesc.getGroups().size());
+        assertTrue("Group1 should be present", manNameDesc.getGroups().contains(Group1.class));
+        assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
+        assertTrue("Group1 should be present", personNameDesc.getGroups().contains(Group1.class));
+        assertEquals("There should only be 1 group", 1, personNameDesc.getGroups().size());
+        assertTrue("Group1 should be present", notNullDesc.getGroups().contains(Group1.class));
 
         // Check that the groups() value is right when accessing it from an
         // error
         Set<ConstraintViolation<Man>> violations = validator.validate(new Man(), Group1.class);
         Set<Class<?>> notNullGroups = violations.iterator().next().getConstraintDescriptor().getGroups();
-        Assert.assertEquals("There should only be 1 group", 1, notNullGroups.size());
-        Assert.assertTrue("Group1 should be the only group", notNullGroups.contains(Group1.class));
+        assertEquals("There should only be 1 group", 1, notNullGroups.size());
+        assertTrue("Group1 should be the only group", notNullGroups.contains(Group1.class));
     }
 
     /**
      * Checks that the payload() value of the constraint annotations are
      * correctly set to the inherited ones.
      */
+    @Test
     public void testAnnotationPayloadsAreInherited() {
         // Check that the payload() value is right when querying the metadata
         ConstraintDescriptor<?> manNameDesc =
@@ -150,26 +123,27 @@ public class ConstraintCompositionTest extends TestCase {
                 .iterator().next();
         ConstraintDescriptor<?> personNameDesc = manNameDesc.getComposingConstraints().iterator().next();
         ConstraintDescriptor<?> notNullDesc = personNameDesc.getComposingConstraints().iterator().next();
-        Assert.assertEquals("There should only be 1 payload class", 1, manNameDesc.getPayload().size());
-        Assert.assertTrue("Payload1 should be present", manNameDesc.getPayload().contains(Payload1.class));
-        Assert.assertEquals("There should only be 1 payload class", 1, personNameDesc.getPayload().size());
-        Assert.assertTrue("Payload1 should be present", personNameDesc.getPayload().contains(Payload1.class));
-        Assert.assertEquals("There should only be 1 payload class", 1, personNameDesc.getPayload().size());
-        Assert.assertTrue("Payload1 should be present", notNullDesc.getPayload().contains(Payload1.class));
+        assertEquals("There should only be 1 payload class", 1, manNameDesc.getPayload().size());
+        assertTrue("Payload1 should be present", manNameDesc.getPayload().contains(Payload1.class));
+        assertEquals("There should only be 1 payload class", 1, personNameDesc.getPayload().size());
+        assertTrue("Payload1 should be present", personNameDesc.getPayload().contains(Payload1.class));
+        assertEquals("There should only be 1 payload class", 1, personNameDesc.getPayload().size());
+        assertTrue("Payload1 should be present", notNullDesc.getPayload().contains(Payload1.class));
 
         // Check that the payload() value is right when accessing it from an
         // error
         Set<ConstraintViolation<Man>> violations = validator.validate(new Man(), Group1.class);
         Set<Class<? extends Payload>> notNullPayload =
             violations.iterator().next().getConstraintDescriptor().getPayload();
-        Assert.assertEquals("There should only be 1 payload class", 1, notNullPayload.size());
-        Assert.assertTrue("Payload1 should be the only payload", notNullPayload.contains(Payload1.class));
+        assertEquals("There should only be 1 payload class", 1, notNullPayload.size());
+        assertTrue("Payload1 should be the only payload", notNullPayload.contains(Payload1.class));
     }
 
     /**
      * Checks that {@link OverridesAttribute#constraintIndex()} parsing and
      * applying works.
      */
+    @Test
     public void testIndexedOverridesAttributes() {
         Person p = new Person();
         p.name = "valid";
@@ -177,38 +151,39 @@ public class ConstraintCompositionTest extends TestCase {
         // With a valid id, no errors expected
         p.id = "1234";
         Set<ConstraintViolation<Person>> constraintViolations = validator.validate(p);
-        Assert.assertTrue("No violations should be reported on valid id", constraintViolations.isEmpty());
+        assertTrue("No violations should be reported on valid id", constraintViolations.isEmpty());
 
         // With a short id, only 1 error expected
         p.id = "1";
         constraintViolations = validator.validate(p);
-        Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
+        assertEquals("Only 1 violation expected", 1, constraintViolations.size());
         ConstraintViolation<Person> violation = constraintViolations.iterator().next();
-        Assert.assertEquals("Wrong violation", "Id is too short", violation.getMessage());
+        assertEquals("Wrong violation", "Id is too short", violation.getMessage());
 
         // With a long id, only 1 error expected
         p.id = "loooooong id";
         constraintViolations = validator.validate(p);
-        Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
+        assertEquals("Only 1 violation expected", 1, constraintViolations.size());
         violation = constraintViolations.iterator().next();
-        Assert.assertEquals("Wrong violation", "Id is too long", violation.getMessage());
+        assertEquals("Wrong violation", "Id is too long", violation.getMessage());
     }
 
     /**
      * Checks that errors are reported correctly when using
      * {@link ReportAsSingleViolation}.
      */
+    @Test
     public void testReportAsAsingleViolation() {
         Code c = new Code();
         c.code = "very invalid code";
         Set<ConstraintViolation<Code>> constraintViolations = validator.validate(c);
 
         // Only 1 error expected
-        Assert.assertEquals("Only 1 violation expected", 1, constraintViolations.size());
+        assertEquals("Only 1 violation expected", 1, constraintViolations.size());
         ConstraintViolation<Code> violation = constraintViolations.iterator().next();
-        Assert.assertEquals("Wrong violation message", "Invalid code", violation.getMessage());
-        Assert.assertEquals("Wrong violation type", ElevenDigitsCode.class, ((Annotation) violation
-            .getConstraintDescriptor().getAnnotation()).annotationType());
+        assertEquals("Wrong violation message", "Invalid code", violation.getMessage());
+        assertEquals("Wrong violation type", ElevenDigitsCode.class,
+            ((Annotation) violation.getConstraintDescriptor().getAnnotation()).annotationType());
     }
 
     public static class Person {

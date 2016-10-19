@@ -39,7 +39,6 @@ public class Book {
     @NotNull(groups = First.class)
     private Author author;
 
-    @SuppressWarnings("unused")
     @NotNull
     private int uselessField;
 

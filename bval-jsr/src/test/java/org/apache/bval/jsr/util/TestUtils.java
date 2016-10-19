@@ -18,14 +18,17 @@
  */
 package org.apache.bval.jsr.util;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Set;
 
 /**
  * Description: <br/>
@@ -40,8 +43,9 @@ public class TestUtils {
      */
     public static <T> ConstraintViolation<T> getViolation(Set<ConstraintViolation<T>> violations, String propertyPath) {
         for (ConstraintViolation<T> each : violations) {
-            if (each.getPropertyPath().toString().equals(propertyPath))
+            if (each.getPropertyPath().toString().equals(propertyPath)) {
                 return each;
+            }
         }
         return null;
     }
@@ -70,8 +74,9 @@ public class TestUtils {
     public static <T> ConstraintViolation<T> getViolationWithMessage(Set<ConstraintViolation<T>> violations,
         String message) {
         for (ConstraintViolation<T> each : violations) {
-            if (each.getMessage().equals(message))
+            if (each.getMessage().equals(message)) {
                 return each;
+            }
         }
         return null;
     }
@@ -86,12 +91,11 @@ public class TestUtils {
     public static void failOnModifiable(Collection<?> collection, String description) {
         int size = collection.size();
         try {
-            Assert
-                .assertFalse(String.format("should not permit modification to %s", description), collection.add(null));
+            assertFalse(String.format("should not permit modification to %s", description), collection.add(null));
         } catch (Exception e) {
             // okay
         }
-        Assert.assertEquals("constraint descriptor set size changed", size, collection.size());
+        assertEquals("constraint descriptor set size changed", size, collection.size());
     }
 
     /**
@@ -106,7 +110,7 @@ public class TestUtils {
                     continue outer;
                 }
             }
-            Assert.fail(String.format("Missing expected constraint descriptor of type %s", type));
+            fail(String.format("Missing expected constraint descriptor of type %s", type));
         }
     }
 }

@@ -46,7 +46,7 @@ public class ZipCodeCityCoherenceValidator
         }
         if ("error".equals(adr.getCity())) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("city not OK").addNode("city").addConstraintViolation();
+            context.buildConstraintViolationWithTemplate("city not OK").addPropertyNode("city").addConstraintViolation();
             r = false;
         }
         return r;

@@ -18,26 +18,23 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.TestCase;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Locale;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.junit.Test;
 
 
 /**
@@ -45,48 +42,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 
  * @author Carlos Vara
  */
-public class ValidatorResolutionTest extends TestCase {
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
+public class ValidatorResolutionTest extends ValidationTestBase {
 
     /**
      * Check that a {@link ConstraintDefinitionException} is thrown when the
      * only available validator is associated with a different annotation type.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testInvalidValidator() {
-        try {
-            validator.validate(new Person());
-            fail("No exception thrown, but no valid validator available.");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new Person());
     }
 
     public static class Person {

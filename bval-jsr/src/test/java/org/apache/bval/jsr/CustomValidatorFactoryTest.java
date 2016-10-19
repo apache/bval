@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.TestCase;
+import static org.hamcrest.CoreMatchers.isA;
 
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
@@ -31,13 +31,15 @@ import javax.validation.ValidatorContext;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 /**
  * Test the ability to force a particular {@link ValidatorFactory}
  * implementation class.
- * 
- * @version $Rev$ $Date$
  */
-public class CustomValidatorFactoryTest extends TestCase {
+public class CustomValidatorFactoryTest {
 
     public static class CustomValidatorFactory extends ApacheValidatorFactory {
 
@@ -100,43 +102,49 @@ public class CustomValidatorFactoryTest extends TestCase {
         }
     }
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
     public void testDefaultValidatorFactory() {
         Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().unwrap(
             ApacheValidatorFactory.class);
     }
 
+    @Test
     public void testNoSuchType() {
-        try {
-            Validation.byProvider(ApacheValidationProvider.class).configure().addProperty(
-                ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME, "no.such.type")
-                .buildValidatorFactory();
-            fail();
-        } catch (ValidationException ex) {
-            assertTrue(ex.getCause() instanceof ClassNotFoundException);
-        }
+        thrown.expect(ValidationException.class);
+        thrown.expectCause(isA(ClassNotFoundException.class));
+
+        Validation.byProvider(ApacheValidationProvider.class).configure()
+            .addProperty(ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME, "no.such.type")
+            .buildValidatorFactory();
     }
 
+    @Test
     public void testCustomValidatorFactory() {
         doTest(CustomValidatorFactory.class, null);
     }
 
+    @Test
     public void testInvalidType() {
+        doTest(NotAValidatorFactory.class, ClassCastException.class);
         doTest(NotAValidatorFactory.class, ClassCastException.class);
     }
 
+    @Test
     public void testUnsupportedValidatorFactoryType() {
         doTest(IncompatibleValidatorFactory.class, NoSuchMethodException.class);
     }
 
     private void doTest(Class<?> validatorFactoryType, Class<? extends Exception> expectedFailureCause) {
-        try {
-            Validation.byProvider(ApacheValidationProvider.class).configure().addProperty(
-                ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME, validatorFactoryType.getName())
-                .buildValidatorFactory().unwrap(validatorFactoryType);
-            assertNull(expectedFailureCause);
-        } catch (ValidationException ex) {
-            assertNotNull(expectedFailureCause);
-            assertTrue(expectedFailureCause.isInstance(ex.getCause()));
+        if (expectedFailureCause != null) {
+            thrown.expect(ValidationException.class);
+            thrown.expectCause(isA(expectedFailureCause));
         }
+        Validation.byProvider(ApacheValidationProvider.class).configure()
+            .addProperty(ApacheValidatorConfiguration.Properties.VALIDATOR_FACTORY_CLASSNAME,
+                validatorFactoryType.getName())
+            .buildValidatorFactory().unwrap(validatorFactoryType);
     }
 }

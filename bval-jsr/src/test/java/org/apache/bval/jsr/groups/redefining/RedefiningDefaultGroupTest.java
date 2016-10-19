@@ -18,30 +18,29 @@
  */
 package org.apache.bval.jsr.groups.redefining;
 
-import junit.framework.TestCase;
-import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.util.TestUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.GroupDefinitionException;
-import javax.validation.Validator;
-import java.util.Set;
+
+import org.apache.bval.jsr.ValidationTestBase;
+import org.apache.bval.jsr.util.TestUtils;
+import org.junit.Test;
 
 /**
  * Description: test Redefining the Default group for a class (spec. chapter 3.4.3)<br/>
  */
-public class RedefiningDefaultGroupTest extends TestCase {
-    private Validator validator;
-
-    @Override
-    protected void setUp() {
-        validator = ApacheValidatorFactory.getDefault().getValidator();
-    }
+public class RedefiningDefaultGroupTest extends ValidationTestBase {
 
     /**
      * when an address object is validated for the group Default,
      * all constraints belonging to the group Default and hosted on Address are evaluated
      */
+    @Test
     public void testValidateDefaultGroup() {
         Address address = new Address();
         Set<ConstraintViolation<Address>> violations = validator.validate(address);
@@ -57,7 +56,7 @@ public class RedefiningDefaultGroupTest extends TestCase {
         assertTrue(violations.isEmpty());
 
         violations = validator.validate(address, Address.HighLevelCoherence.class);
-        assertEquals(0, violations.size());
+        assertTrue(violations.isEmpty());
 
         address.setCity("error");
         violations = validator.validate(address, Address.HighLevelCoherence.class);
@@ -75,6 +74,7 @@ public class RedefiningDefaultGroupTest extends TestCase {
               1, violations.size());
     }
 
+    @Test
     public void testValidateProperty() {
         Address address = new Address();
         address.setStreet1("");
@@ -84,21 +84,16 @@ public class RedefiningDefaultGroupTest extends TestCase {
         assertNotNull(TestUtils.getViolation(violations, "street1"));
     }
 
+    @Test
     public void testValidateValue() {
         Set<ConstraintViolation<Address>> violations = validator.validateValue(Address.class, "street1", "");
         //prove that ExtraCareful group was validated:
         assertEquals(1, violations.size());
         assertNotNull(TestUtils.getViolation(violations, "street1"));
     }
-    
-    public void testRaiseGroupDefinitionException() {
-        InvalidRedefinedDefaultGroupAddress address =
-              new InvalidRedefinedDefaultGroupAddress();
-        try {
-            validator.validate(address);
-            fail();
-        } catch (GroupDefinitionException ex) {
 
-        }
+    @Test(expected = GroupDefinitionException.class)
+    public void testRaiseGroupDefinitionException() {
+        validator.validate(new InvalidRedefinedDefaultGroupAddress());
     }
 }

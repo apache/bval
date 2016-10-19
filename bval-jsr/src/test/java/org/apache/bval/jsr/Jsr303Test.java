@@ -18,8 +18,26 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.UnexpectedTypeException;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
+
 import org.apache.bval.constraints.SizeValidatorForCharSequence;
 import org.apache.bval.jsr.example.Address;
 import org.apache.bval.jsr.example.Book;
@@ -30,141 +48,72 @@ import org.apache.bval.jsr.example.NoValidatorTestEntity;
 import org.apache.bval.jsr.example.Second;
 import org.apache.bval.jsr.example.SizeTestEntity;
 import org.apache.bval.jsr.util.TestUtils;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.UnexpectedTypeException;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Description: <br/>
  */
-public class Jsr303Test extends TestCase {
-    /*
-     * static { ApacheValidatorFactory.getDefault().getMetaBeanManager()
-     * .addResourceLoader("org/apache/bval/example/test-beanInfos.xml"); }
-     */
+public class Jsr303Test extends ValidationTestBase {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
-    /*
-     * public void testUseCoreXmlMetaData() { Validator validator =
-     * getValidator();
-     * 
-     * BusinessObject object = new BusinessObject();
-     * object.setTitle("1234567834567 too long title ");
-     * Set<ConstraintViolation<BusinessObject>> violations =
-     * validator.validate(object); Assert.assertNotNull(violations);
-     * Assert.assertTrue(!violations.isEmpty());
-     * 
-     * Assert.assertTrue(!validator.validateProperty(object,
-     * "title").isEmpty()); }
-     */
-
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
-
+    @Test
     public void testPropertyDescriptorHasConstraints() {
         BeanDescriptor cons = validator.getConstraintsForClass(Book.class);
         assertTrue(cons.getConstraintsForProperty("author").hasConstraints());
         assertTrue(cons.getConstraintsForProperty("title").hasConstraints());
         assertTrue(cons.getConstraintsForProperty("uselessField").hasConstraints());
-        // cons.getConstraintsForProperty("unconstraintField") == null without
-        // Introspector
-        // cons.getConstraintsForProperty("unconstraintField") != null with
-        // Introspector
+        // cons.getConstraintsForProperty("unconstraintField") == null without Introspector
+        // cons.getConstraintsForProperty("unconstraintField") != null with Introspector
         assertTrue(cons.getConstraintsForProperty("unconstraintField") == null
             || !cons.getConstraintsForProperty("unconstraintField").hasConstraints());
         assertNull(cons.getConstraintsForProperty("unknownField"));
     }
 
+    @Test
     public void testValidateValue() {
         assertTrue(validator.validateValue(Book.class, "subtitle", "123456789098765432").isEmpty());
         assertFalse(validator.validateValue(Book.class, "subtitle",
             "123456789098765432123412345678909876543212341234564567890987654321234", Second.class).isEmpty());
         // tests for issue 22: validation of a field without any constraints
-        assertEquals(0, validator.validateValue(Book.class, "unconstraintField", 4).size());
-        // tests for issue 22: validation of unknown field cause
-        // ValidationException
-        try {
-            validator.validateValue(Book.class, "unknownProperty", 4);
-            fail("unknownProperty not detected");
-        } catch (IllegalArgumentException ex) {
-            // OK
-            assertEquals("unknown property 'unknownProperty' in org.apache.bval.jsr.example.Book", ex.getMessage());
-        }
+        assertTrue(validator.validateValue(Book.class, "unconstraintField", 4).isEmpty());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testUnknownProperty() {
+        // tests for issue 22: validation of unknown field cause ValidationException
+        validator.validateValue(Book.class, "unknownProperty", 4);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateNonCascadedRealNestedProperty() {
-        try {
-            validator.validateValue(IllustratedBook.class, "illustrator.firstName", "Edgar");
-            fail("unknownProperty not detected");
-        } catch (IllegalArgumentException ex) {
-            // OK
-            assertEquals("Property org.apache.bval.jsr.example.IllustratedBook.illustrator is not cascaded", ex.getMessage());
-        }
+        validator.validateValue(IllustratedBook.class, "illustrator.firstName", "Edgar");
     }
 
+    @Test
     public void testMetadataAPI_Book() {
-        Assert.assertNotNull(validator.getConstraintsForClass(Book.class));
-        // not necessary for implementation correctness, but we'll test
-        // nevertheless:
-        Assert.assertSame(validator.getConstraintsForClass(Book.class), validator.getConstraintsForClass(Book.class));
+        assertNotNull(validator.getConstraintsForClass(Book.class));
+        // not necessary for implementation correctness, but we'll test nevertheless:
+        assertSame(validator.getConstraintsForClass(Book.class), validator.getConstraintsForClass(Book.class));
         BeanDescriptor bc = validator.getConstraintsForClass(Book.class);
-        // assertEquals(ElementType.TYPE, bc.getElementType());
-        Assert.assertEquals(Book.class, bc.getElementClass());
-        // assertEquals(false, bc.isCascaded());
-        // assertEquals("", bc.getPropertyPath());
-        Assert.assertTrue(bc.getConstraintDescriptors() != null);
+        assertEquals(Book.class, bc.getElementClass());
+        assertNotNull(bc.getConstraintDescriptors());
         TestUtils.failOnModifiable(bc.getConstraintDescriptors(), "beanDescriptor constraintDescriptors");
     }
 
+    @Test
     public void testMetadataAPI_Engine() {
         ElementDescriptor desc =
             validator.getConstraintsForClass(Engine.class).getConstraintsForProperty("serialNumber");
         assertNotNull(desc);
-        // assertEquals(ElementType.FIELD, desc.getElementType());
-        Assert.assertEquals(String.class, desc.getElementClass());
+        assertEquals(String.class, desc.getElementClass());
     }
 
+    @Test
     public void testMetadataAPI_Address() {
-        Assert.assertFalse(validator.getConstraintsForClass(Address.class).getConstraintDescriptors().isEmpty());
+        assertFalse(validator.getConstraintsForClass(Address.class).getConstraintDescriptors().isEmpty());
 
         Set<PropertyDescriptor> props = validator.getConstraintsForClass(Address.class).getConstrainedProperties();
         TestUtils.failOnModifiable(props, "beanDescriptor constrainedProperties");
@@ -173,30 +122,30 @@ public class Jsr303Test extends TestCase {
             TestUtils.failOnModifiable(each.getConstraintDescriptors(), "propertyDescriptor constraintDescriptors");
             propNames.add(each.getPropertyName());
         }
-        Assert.assertTrue(propNames.contains("addressline1")); // annotated at
+        assertTrue(propNames.contains("addressline1")); // annotated at
         // field level
-        Assert.assertTrue(propNames.contains("addressline2"));
-        Assert.assertTrue(propNames.contains("zipCode"));
-        Assert.assertTrue(propNames.contains("country"));
-        Assert.assertTrue(propNames.contains("city")); // annotated at method
+        assertTrue(propNames.contains("addressline2"));
+        assertTrue(propNames.contains("zipCode"));
+        assertTrue(propNames.contains("country"));
+        assertTrue(propNames.contains("city")); // annotated at method
         // level
-        Assert.assertEquals(5, props.size());
+        assertEquals(5, props.size());
 
         ElementDescriptor desc =
             validator.getConstraintsForClass(Address.class).getConstraintsForProperty("addressline1");
-        Assert.assertNotNull(desc);
+        assertNotNull(desc);
         boolean found = false;
         for (ConstraintDescriptor<?> each : desc.getConstraintDescriptors()) {
-            if (each.getConstraintValidatorClasses().get(0).equals(SizeValidatorForCharSequence.class)) {
-                Assert.assertTrue(each.getAttributes().containsKey("max"));
+            if (SizeValidatorForCharSequence.class.equals(each.getConstraintValidatorClasses().get(0))) {
+                assertTrue(each.getAttributes().containsKey("max"));
                 assertEquals(30, each.getAttributes().get("max"));
                 found = true;
             }
         }
-        Assert.assertTrue(found);
-
+        assertTrue(found);
     }
 
+    @Test
     public void testValidateMultiValuedConstraints() {
         Engine engine = new Engine();
         engine.serialNumber = "abcd-defg-0123";
@@ -207,11 +156,12 @@ public class Jsr303Test extends TestCase {
         engine.serialNumber = "!)/(/()";
         violations = validator.validate(engine);
         assertEquals(2, violations.size());
-        for (String msg : new String[] { "must contain alphabetical characters only", "must match ....-....-...." }) {
+        for (String msg : Arrays.asList("must contain alphabetical characters only", "must match ....-....-....")) {
             assertNotNull(TestUtils.getViolationWithMessage(violations, msg));
         }
     }
 
+    @Test
     public void testConstraintValidatorResolutionAlgorithm() {
         MaxTestEntity entity = new MaxTestEntity();
         entity.setText("101");
@@ -220,19 +170,20 @@ public class Jsr303Test extends TestCase {
         entity.setDecimalValue(new BigDecimal(401));
         Set<ConstraintViolation<MaxTestEntity>> violations = validator.validate(entity);
         assertEquals(4, violations.size());
+    }
+    
+    @Test
+    public void testConstraintValidatorResolutionAlgorithm2() {
+        thrown.expect(UnexpectedTypeException.class);
+        thrown.expectMessage("No validator could be found for type java.lang.Object. "
+                + "See: @Max at private java.lang.Object org.apache.bval.jsr.example."
+                + "NoValidatorTestEntity.anything");
 
         NoValidatorTestEntity entity2 = new NoValidatorTestEntity();
-        try {
-            validator.validate(entity2);
-            fail("UnexpectedTypeException expected but not thrown");
-        } catch (UnexpectedTypeException ex) {
-            // we expected this
-            assertEquals("No validator could be found for type java.lang.Object. "
-                + "See: @Max at private java.lang.Object " + "org.apache.bval.jsr.example."
-                + "NoValidatorTestEntity.anything", ex.getMessage());
-        }
+        validator.validate(entity2);
     }
 
+    @Test
     public void testSizeValidation() {
         SizeTestEntity en = new SizeTestEntity();
         en.ba = new byte[3];
@@ -258,14 +209,9 @@ public class Jsr303Test extends TestCase {
     /**
      * JSR-303 Section 5.1.c, IllegalArgumentException should be thrown
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testGetConstraintsForNullClass() {
-        try {
-            validator.getConstraintsForClass(null);
-            Assert.fail("No exception thrown on Validator.getConstraintsForClass(null)");
-        } catch (IllegalArgumentException e) {
-            // Correct
-            return;
-        }
+        validator.getConstraintsForClass(null);
     }
 
 }

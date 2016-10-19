@@ -18,17 +18,13 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.metadata.BeanDescriptor;
-import java.util.Locale;
+
+import org.junit.Test;
 
 /**
  * Several checks to validate that the implementations of {@link Validator} and
@@ -36,103 +32,60 @@ import java.util.Locale;
  * 
  * @author Carlos Vara
  */
-public class ExceptionsContractTest extends TestCase {
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
+public class ExceptionsContractTest extends ValidationTestBase {
 
     /**
      * Checks that the correct exception is thrown when validating a bean whose
      * getter throws an exception.
      */
+    @Test(expected = ValidationException.class)
     public void testExceptionThrowingBean() {
-        try {
-            validator.validate(new ExceptionThrowingBean());
-            Assert.fail("No exception thrown when validating a bean whose getter throws a RTE");
-        } catch (ValidationException e) {
-            // Correct
-        }
+        validator.validate(new ExceptionThrowingBean());
     }
 
     /**
      * Checks that an {@link IllegalArgumentException} is thrown when passing
      * <code>null</code> as group array.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateNullGroup() {
-        try {
-            Class<?>[] groups = null;
-            validator.validate(new String(), groups);
-            Assert.fail("No exception thrown when passing null as group array");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validate(new String(), (Class<?>[]) null);
+    }
+
+    /**
+     * Checks that an {@link IllegalArgumentException} is thrown when passing a
+     * {@code null} property name.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateNullPropertyName() {
+        validator.validateProperty(new Person(), null);
+    }
+
+    /**
+     * Checks that an {@link IllegalArgumentException} is thrown when passing an
+     * empty property name.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateEmptyPropertyName() {
+        validator.validateProperty(new Person(), "");
     }
 
     /**
      * Checks that an {@link IllegalArgumentException} is thrown when passing an
      * invalid property name.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateInvalidPropertyName() {
-
-        // Null propertyName
-        try {
-            validator.validateProperty(new Person(), null);
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-
-        // Empty propertyName
-        try {
-            validator.validateProperty(new Person(), "");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-
-        // Invalid propertyName
-        try {
-            validator.validateProperty(new Person(), "surname");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-
+        validator.validateProperty(new Person(), "surname");
     }
 
     /**
      * Checks that an {@link IllegalArgumentException} is thrown when trying to
      * validate a property on a null object.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidatePropertyOnNullBean() {
-        try {
-            validator.validateProperty(null, "class");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validateProperty(null, "class");
     }
 
     /**
@@ -140,14 +93,9 @@ public class ExceptionsContractTest extends TestCase {
      * <code>null</code> as group array in a
      * {@link Validator#validateProperty(Object, String, Class...)} call.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidatePropertyNullGroup() {
-        try {
-            Class<?>[] groups = null;
-            validator.validateProperty(new Person(), "name", groups);
-            Assert.fail("No exception thrown when passing null as group array");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validateProperty(new Person(), "name", (Class<?>[]) null);
     }
 
     /**
@@ -155,13 +103,29 @@ public class ExceptionsContractTest extends TestCase {
      * {@link Validator#validateValue(Class, String, Object, Class...)} with a
      * <code>null</code> class.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateValueOnNullClass() {
-        try {
-            validator.validateValue(null, "class", Object.class);
-            Assert.fail("No exception thrown when passing null as group array");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validateValue(null, "class", Object.class);
+    }
+
+    /**
+     * Checks that an {@link IllegalArgumentException} is thrown when passing a
+     * {@code null} property name to
+     * {@link Validator#validateValue(Class, String, Object, Class...)}.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateValueNullPropertyName() {
+        validator.validateValue(Person.class, null, "John");
+    }
+
+    /**
+     * Checks that an {@link IllegalArgumentException} is thrown when passing an
+     * empty property name to
+     * {@link Validator#validateValue(Class, String, Object, Class...)}.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateValueEmptyPropertyName() {
+        validator.validateValue(Person.class, "", "John");
     }
 
     /**
@@ -169,27 +133,9 @@ public class ExceptionsContractTest extends TestCase {
      * invalid property name to
      * {@link Validator#validateValue(Class, String, Object, Class...)}.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateValueInvalidPropertyName() {
-        // Null propertyName
-        try {
-            validator.validateValue(Person.class, null, "John");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-
-        // Empty propertyName
-        try {
-            validator.validateValue(Person.class, "", "John");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-
-        // Invalid propertyName
-        try {
-            validator.validateValue(Person.class, "unexistant", "John");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validateValue(Person.class, "unexistant", "John");
     }
 
     /**
@@ -197,33 +143,27 @@ public class ExceptionsContractTest extends TestCase {
      * {@link Validator#validateValue(Class, String, Object, Class...)} with a
      * <code>null</code> group array.
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateValueNullGroup() {
-        try {
-            Class<?>[] groups = null;
-            validator.validateValue(Person.class, "name", "John", groups);
-            Assert.fail("No exception thrown when passing null as group array");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validateValue(Person.class, "name", "John", (Class<?>[]) null);
     }
 
     /**
      * Enforces the "not a valid object property" part of the {@link IllegalArgumentException}
      * declaration on {@link Validator#validateValue(Class, String, Object, Class...)}
      */
+    @Test(expected = IllegalArgumentException.class)
     public void testValidateIncompatibleValue() {
-        try {
-            validator.validateValue(Person.class, "name", 666);
-            Assert.fail("No exception thrown when passing Integer for string value");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-        try {
-            validator.validateValue(Person.class, "age", null);
-            Assert.fail("No exception thrown when passing null for primitive value");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+        validator.validateValue(Person.class, "name", 666);
+    }
+
+    /**
+     * Enforces the "not a valid object property" part of the {@link IllegalArgumentException}
+     * declaration on {@link Validator#validateValue(Class, String, Object, Class...)}
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateIncompatiblePrimitiveValue() {
+        validator.validateValue(Person.class, "age", null);
     }
 
     /**
@@ -231,22 +171,21 @@ public class ExceptionsContractTest extends TestCase {
      * {@link BeanDescriptor#getConstraintsForProperty(String)} with an invalid
      * property name.
      */
-    public void testGetConstraintsForInvalidProperty() {
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetConstraintsForNullProperty() {
         BeanDescriptor personDescriptor = validator.getConstraintsForClass(Person.class);
+        personDescriptor.getConstraintsForProperty(null);
+    }
 
-        try {
-            personDescriptor.getConstraintsForProperty(null);
-            fail("No exception thrown when calling getConstraintsForProperty with null property");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
-
-        try {
-            personDescriptor.getConstraintsForProperty("");
-            fail("No exception thrown when calling getConstraintsForProperty with empty property");
-        } catch (IllegalArgumentException e) {
-            // Correct
-        }
+    /**
+     * Checks that an {@link IllegalArgumentException} is thrown when calling
+     * {@link BeanDescriptor#getConstraintsForProperty(String)} with an invalid
+     * property name.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetConstraintsForEmptyProperty() {
+        BeanDescriptor personDescriptor = validator.getConstraintsForClass(Person.class);
+        personDescriptor.getConstraintsForProperty("");
     }
 
     public static class ExceptionThrowingBean {

@@ -18,53 +18,25 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.TestCase;
-import org.apache.bval.jsr.util.TestUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Payload;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
-import java.util.Locale;
-import java.util.Set;
+
+import org.apache.bval.jsr.util.TestUtils;
+import org.junit.Test;
 
 /**
  * Description: test that payload information can be retrieved
  * from error reports via the ConstraintDescriptor either accessed
  * through the ConstraintViolation objects<br/>
  */
-public class PayloadTest extends TestCase {
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
+public class PayloadTest extends ValidationTestBase {
 
     static class Severity {
         static class Info implements Payload {
@@ -94,22 +66,20 @@ public class PayloadTest extends TestCase {
         }
     }
 
+    @Test
     public void testPayload() {
-        Set<ConstraintViolation<Address>> violations;
         Address address = new Address(null, null);
-        violations = validator.validate(address);
+        final Set<ConstraintViolation<Address>> violations = validator.validate(address);
         assertEquals(2, violations.size());
-        ConstraintViolation<?> vio;
-        vio = TestUtils.getViolation(violations, "zipCode");
-        assertNotNull(vio);
-        assertEquals(1, vio.getConstraintDescriptor().getPayload().size());
-        assertTrue(
-              vio.getConstraintDescriptor().getPayload().contains(Severity.Info.class));
 
-        vio = TestUtils.getViolation(violations, "city");
-        assertNotNull(vio);
-        assertEquals(1, vio.getConstraintDescriptor().getPayload().size());
-        assertTrue(
-              vio.getConstraintDescriptor().getPayload().contains(Severity.Error.class));
+        final ConstraintViolation<?> zipViolation = TestUtils.getViolation(violations, "zipCode");
+        assertNotNull(zipViolation);
+        assertEquals(1, zipViolation.getConstraintDescriptor().getPayload().size());
+        assertTrue(zipViolation.getConstraintDescriptor().getPayload().contains(Severity.Info.class));
+
+        final ConstraintViolation<?> cityViolation = TestUtils.getViolation(violations, "city");
+        assertNotNull(cityViolation);
+        assertEquals(1, cityViolation.getConstraintDescriptor().getPayload().size());
+        assertTrue(cityViolation.getConstraintDescriptor().getPayload().contains(Severity.Error.class));
     }
 }

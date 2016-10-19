@@ -18,33 +18,26 @@
  */
 package org.apache.bval.jsr.util;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+
 import org.apache.commons.beanutils.Converter;
+import org.junit.Test;
 
 /**
  * EnumerationConverter tester.
  *
- * $Id: EnumerationConverterTestCase.java 1161648 2011-08-25 17:14:15Z romanstumm $
+ * $Id: EnumerationConverterTestCase.java 1161648 2011-08-25 17:14:15Z
+ * romanstumm $
  */
-public final class EnumerationConverterTestCase extends TestCase {
+public final class EnumerationConverterTestCase {
 
-    public EnumerationConverterTestCase(String name) {
-        super(name);
-    }
-
+    @Test
     public void testEnum() {
         Converter converter = EnumerationConverter.getInstance();
 
         Thread.State expected = Thread.State.TERMINATED;
-        Thread.State actual = (Thread.State) converter.convert(Thread.State.class,
-                Thread.State.TERMINATED.name());
+        Thread.State actual = (Thread.State) converter.convert(Thread.State.class, Thread.State.TERMINATED.name());
         assertEquals(expected, actual);
-    }
-
-    public static Test suite() {
-        return new TestSuite(EnumerationConverterTestCase.class);
     }
 
 }

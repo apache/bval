@@ -18,19 +18,23 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.jsr.util.PathImpl;
-import org.apache.bval.model.ValidationListener;
-import org.apache.bval.model.ValidationListener.Error;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
+
+import org.apache.bval.jsr.util.PathImpl;
+import org.apache.bval.model.ValidationListener;
+import org.apache.bval.model.ValidationListener.Error;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 /**
  * Checks to validate the correct implementation of
@@ -38,7 +42,8 @@ import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
  * 
  * @author Carlos Vara
  */
-public class ConstraintValidatorContextTest extends TestCase {
+@RunWith(MockitoJUnitRunner.class)
+public class ConstraintValidatorContextTest {
 
     private ConstraintValidatorContextImpl cvc;
     private ConstraintViolationBuilder cvb;
@@ -49,10 +54,8 @@ public class ConstraintValidatorContextTest extends TestCase {
     /**
      * {@inheritDoc}
      */
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
-        MockitoAnnotations.initMocks(this);
         Mockito.when(groupValidationContext.getPropertyPath()).thenAnswer(new Answer<PathImpl>() {
 
             @Override
@@ -60,54 +63,53 @@ public class ConstraintValidatorContextTest extends TestCase {
                 return PathImpl.createPathFromString("");
             }
         });
-        this.cvc = new ConstraintValidatorContextImpl(groupValidationContext,
-                null);
+        this.cvc = new ConstraintValidatorContextImpl(groupValidationContext, null);
         this.cvc.disableDefaultConstraintViolation();
         this.cvb = cvc.buildConstraintViolationWithTemplate("dummy.msg.tpl");
     }
 
+    @Test
     public void testPerson1() {
         cvb.addNode("person").addNode(null).inIterable().atIndex(1).addConstraintViolation();
         final Error error = cvc.getErrorMessages().iterator().next();
         final PathImpl errorPath = (PathImpl) error.getOwner();
-        Assert.assertEquals("Incorrect path created", "person[1]", errorPath.toString());
+        assertEquals("Incorrect path created", "person[1]", errorPath.toString());
     }
 
+    @Test
     public void testPersonLawyerName() {
         cvb.addNode("person").addNode("name").inIterable().atKey("john")
                 .addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
-        Assert.assertEquals("Incorrect path created", "person[john].name",
-                errorPath.toString());
+        assertEquals("Incorrect path created", "person[john].name", errorPath.toString());
     }
 
+    @Test
     public void test0Name() {
         cvb.addNode(null).addNode("name").inIterable().atIndex(0).addNode(null)
                 .inIterable().addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
-        Assert.assertEquals("Incorrect path created", "[0].name[]", errorPath
-                .toString());
+        assertEquals("Incorrect path created", "[0].name[]", errorPath.toString());
     }
 
+    @Test
     public void testEmptyIndex() {
         cvb.addNode(null).addNode(null).inIterable().addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
-        Assert.assertEquals("Incorrect path created", "[]", errorPath
-                .toString());
+        assertEquals("Incorrect path created", "[]", errorPath.toString());
     }
 
+    @Test
     public void testRootPath() {
         // Adding only nulls should still give a root path
         cvb.addNode(null).addNode(null).addNode(null).addNode(null)
                 .addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
-        Assert.assertTrue("Created path must be a root path", errorPath
-                .isRootPath());
-
+        assertTrue("Created path must be a root path", errorPath.isRootPath());
     }
 
 }

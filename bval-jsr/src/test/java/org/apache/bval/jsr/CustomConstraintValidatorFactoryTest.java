@@ -38,8 +38,7 @@ import javax.validation.ValidationException;
 import javax.validation.Validator;
 
 import org.apache.bval.jsr.CustomConstraintValidatorFactoryTest.GoodPerson.GoodPersonValidator;
-
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * Checks that overriding the default {@link ConstraintValidatorFactory} works
@@ -47,13 +46,14 @@ import junit.framework.TestCase;
  *
  * @author Carlos Vara
  */
-public class CustomConstraintValidatorFactoryTest extends TestCase {
+public class CustomConstraintValidatorFactoryTest {
 
     /**
      * If the custom ConstraintValidatorFactory returns <code>null</code> for a
      * valid {@link ConstraintValidatorFactory#getInstance(Class)} call, a
      * validation exception should be thrown.
      */
+    @Test(expected = ValidationException.class)
     public void testValidationExceptionWhenFactoryReturnsNullValidator() {
 
         ConstraintValidatorFactory customFactory = new ConstraintValidatorFactory() {
@@ -69,15 +69,11 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
         };
 
         // Create a validator with this factory
-        ApacheValidatorConfiguration customConfig = Validation.byProvider(ApacheValidationProvider.class).configure().constraintValidatorFactory(customFactory);
+        ApacheValidatorConfiguration customConfig =
+            Validation.byProvider(ApacheValidationProvider.class).configure().constraintValidatorFactory(customFactory);
         Validator validator = customConfig.buildValidatorFactory().getValidator();
 
-        try {
-            validator.validate(new Person());
-            fail("ValidationException must be thrown when factory returns a null constraint validator.");
-        } catch (ValidationException e) {
-            // correct
-        }
+        validator.validate(new Person());
     }
 
     @GoodPerson

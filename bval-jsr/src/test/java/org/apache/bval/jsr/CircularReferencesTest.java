@@ -19,17 +19,15 @@
 
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Size;
-import java.util.Locale;
-import java.util.Set;
+
+import org.junit.Test;
 
 /**
  * Checks that circular references in the bean graph are correctly detected when
@@ -37,41 +35,13 @@ import java.util.Set;
  * 
  * @author Carlos Vara
  */
-public class CircularReferencesTest extends TestCase {
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
+public class CircularReferencesTest extends ValidationTestBase {
 
     /**
      * Checks that validation correctly stops when finding a circular
      * dependency.
      */
+    @Test
     public void testAutoreferringBean() {
         Person p1 = new Person();
         p1.name = "too-long-name";
@@ -79,15 +49,16 @@ public class CircularReferencesTest extends TestCase {
 
         Set<ConstraintViolation<Person>> violations = validator.validate(p1);
 
-        Assert.assertEquals("Only 1 violation should be reported", 1, violations.size());
+        assertEquals("Only 1 violation should be reported", 1, violations.size());
         ConstraintViolation<Person> violation = violations.iterator().next();
-        Assert.assertEquals("Incorrect violation path", "name", violation.getPropertyPath().toString());
+        assertEquals("Incorrect violation path", "name", violation.getPropertyPath().toString());
     }
 
     /**
      * Checks that a bean is always validated when appearing in non-circular
      * paths inside the bean graph.
      */
+    @Test
     public void testNonCircularArrayOfSameBean() {
         Boss boss = new Boss();
         Person p1 = new Person();
@@ -97,7 +68,7 @@ public class CircularReferencesTest extends TestCase {
 
         Set<ConstraintViolation<Boss>> violations = validator.validate(boss);
 
-        Assert.assertEquals("A total of 4 violations should be reported", 4, violations.size());
+        assertEquals("A total of 4 violations should be reported", 4, violations.size());
     }
 
     public static class Person {

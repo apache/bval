@@ -18,29 +18,28 @@
  */
 package org.apache.bval.jsr.groups;
 
-import junit.framework.TestCase;
-import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.util.TestUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 import java.util.Set;
 
-/**
- * Description: test features from spec chapter 3.4 group and group sequence<br/>
- */
-public class GroupValidationTest extends TestCase {
-    private Validator validator;
+import javax.validation.ConstraintViolation;
 
-    @Override
-    protected void setUp() {
-        validator = ApacheValidatorFactory.getDefault().getValidator();
-    }
+import org.apache.bval.jsr.ValidationTestBase;
+import org.apache.bval.jsr.util.TestUtils;
+import org.junit.Test;
+
+/**
+ * Description: test features from spec chapter 3.4 group and group sequence
+ * <br/>
+ */
+public class GroupValidationTest extends ValidationTestBase {
 
     /**
-     * test spec: @NotNull on firstname and on lastname are validated when
-     * the Default group is validated.
+     * test spec: @NotNull on firstname and on lastname are validated when the
+     * Default group is validated.
      */
+    @Test
     public void testValidateFirstNameLastNameWithDefaultGroup() {
         BillableUser user = new BillableUser();
 
@@ -58,27 +57,27 @@ public class GroupValidationTest extends TestCase {
      * test spec: @NotNull is checked on defaultCreditCard when either the
      * Billable or BuyInOneClick group is validated.
      */
-  public void testValidateDefaultCreditCardInBillableGroup() {
+    @Test
+    public void testValidateDefaultCreditCardInBillableGroup() {
         BillableUser user = new BillableUser();
 
-        Set<ConstraintViolation<BillableUser>> violations = validator.validate(user,
-              Billable.class);
+        Set<ConstraintViolation<BillableUser>> violations = validator.validate(user, Billable.class);
         assertEquals(1, violations.size());
         ConstraintViolation<?> violation = TestUtils.getViolation(violations, "defaultCreditCard");
         assertNotNull(violation);
         assertEquals(user, violation.getRootBean());
     }
 
-  public void testValidateDefaultCreditCardInBillableAndByInOneClickGroup() {
+    @Test
+    public void testValidateDefaultCreditCardInBillableAndByInOneClickGroup() {
         BillableUser user = new BillableUser();
 
-        Set<ConstraintViolation<BillableUser>> violations = validator.validate(user,
-              BuyInOneClick.class, Billable.class);
+        Set<ConstraintViolation<BillableUser>> violations =
+            validator.validate(user, BuyInOneClick.class, Billable.class);
         assertEquals(1, violations.size());
         ConstraintViolation<?> violation = TestUtils.getViolation(violations, "defaultCreditCard");
         assertNotNull(violation);
         assertEquals(user, violation.getRootBean());
     }
-
 
 }

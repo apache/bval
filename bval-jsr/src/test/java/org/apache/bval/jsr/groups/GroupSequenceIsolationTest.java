@@ -18,19 +18,21 @@
  */
 package org.apache.bval.jsr.groups;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.jsr.DefaultMessageInterpolator;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.GroupSequence;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import java.util.Locale;
-import java.util.Set;
+
+import org.apache.bval.jsr.ValidationTestBase;
+import org.junit.Test;
 
 /**
  * Additional tests to check the correct processing of {@link GroupSequence}s
@@ -38,19 +40,7 @@ import java.util.Set;
  * 
  * @author Carlos Vara
  */
-public class GroupSequenceIsolationTest extends TestCase {
-    
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator)factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    private Validator getValidator() {
-        return factory.getValidator();
-    }
-
+public class GroupSequenceIsolationTest extends ValidationTestBase {
     
     /**
      * When validating the {@link Default} group in a bean whose class doesn't
@@ -58,83 +48,55 @@ public class GroupSequenceIsolationTest extends TestCase {
      * checked for group sequence definitions and they must be evaluated in
      * order for the constraints defined on those classes.
      */
+    @Test
     public void testGroupSequencesInHierarchyClasses() {
-        Validator validator = getValidator();
-        
         HolderWithNoGS h = new HolderWithNoGS();
-        Set<ConstraintViolation<HolderWithNoGS>> violations;
-        
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 2, violations.size());
-        for ( ConstraintViolation<HolderWithNoGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("a1");
-            good |= violation.getPropertyPath().toString().equals("b2");
-            Assert.assertTrue("Wrong constraint", good);
-        }
+
+        assertEquals(set("a1", "b2"), violationPaths(validator.validate(h)));
 
         h.a1 = "good";
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 2, violations.size());
-        for ( ConstraintViolation<HolderWithNoGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("a2");
-            good |= violation.getPropertyPath().toString().equals("b2");
-            Assert.assertTrue("Wrong constraint", good);
-        }
+        assertEquals(set("a2", "b2"), violationPaths(validator.validate(h)));
         
         h.b2 = "good";
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 2, violations.size());
-        for ( ConstraintViolation<HolderWithNoGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("a2");
-            good |= violation.getPropertyPath().toString().equals("b1");
-            Assert.assertTrue("Wrong constraint", good);
-        }
-        
+        assertEquals(set("a2", "b1"), violationPaths(validator.validate(h)));
+
         h.b1 = "good";
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 1, violations.size());
-        for ( ConstraintViolation<HolderWithNoGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("a2");
-            Assert.assertTrue("Wrong constraint", good);
-        }
+        assertEquals(set("a2"), violationPaths(validator.validate(h)));
     }
-    
+
     /**
      * When validating the {@link Default} group in a bean whose class defines
      * a group sequence, that group sequence is used for all the constraints.
      */
+    @Test
     public void testGroupSequenceOfBeanClass() {
-        Validator validator = getValidator();
-        
         HolderWithGS h = new HolderWithGS();
-        Set<ConstraintViolation<HolderWithGS>> violations;
-        
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 1, violations.size());
-        for ( ConstraintViolation<HolderWithGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("a1");
-            Assert.assertTrue("Wrong constraint", good);
-        }
-        
+
+        assertEquals(Collections.singleton("a1"), violationPaths(validator.validate(h)));
+
         h.a1 = "good";
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 2, violations.size());
-        for ( ConstraintViolation<HolderWithGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("a2");
-            good |= violation.getPropertyPath().toString().equals("b2");
-            Assert.assertTrue("Wrong constraint", good);
-        }
-        
+        assertEquals(set("a2", "b2"), violationPaths(validator.validate(h)));
+
         h.a2 = "good";
         h.b2 = "good";
-        violations = validator.validate(h);
-        Assert.assertEquals("Unexpected number of violations", 1, violations.size());
-        for ( ConstraintViolation<HolderWithGS> violation : violations ) {
-            boolean good = violation.getPropertyPath().toString().equals("b1");
-            Assert.assertTrue("Wrong constraint", good);
-        }
+        assertEquals(Collections.singleton("b1"), violationPaths(validator.validate(h)));
     }
-    
+
+    private static <T> Set<T> set(T... elements) {
+        return new HashSet<T>(Arrays.asList(elements));
+    }
+
+    private static Set<String> violationPaths(Set<? extends ConstraintViolation<?>> violations) {
+        if (violations == null || violations.isEmpty()) {
+            return Collections.emptySet();
+        }
+        final Set<String> result = new LinkedHashSet<String>(violations.size());
+        for (ConstraintViolation<?> constraintViolation : violations) {
+            result.add(constraintViolation.getPropertyPath().toString());
+        }
+        return result;
+    }
+
     @GroupSequence({GroupA1.class, A.class})
     public static class A {
         @NotNull(groups={GroupA1.class})
@@ -142,10 +104,10 @@ public class GroupSequenceIsolationTest extends TestCase {
         @NotNull
         public String a2;
     }
-    
-    public static interface GroupA1 {
+
+    public interface GroupA1 {
     }
-    
+
     @GroupSequence({B.class, GroupB1.class})
     public static class B extends A {
         @NotNull(groups={GroupB1.class})
@@ -153,18 +115,15 @@ public class GroupSequenceIsolationTest extends TestCase {
         @NotNull
         public String b2;
     }
-    
-    public static interface GroupB1 {
-        
+
+    public interface GroupB1 {
     }
-    
+
     // No group sequence definition
     public static class HolderWithNoGS extends B {
-        
     }
-    
+
     @GroupSequence({GroupA1.class, HolderWithGS.class, GroupB1.class})
     public static class HolderWithGS extends B {
-        
     }
 }

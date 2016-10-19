@@ -43,11 +43,10 @@ public final class Proxies {
     }
 
     private static boolean isProxyClass(Class<?> clazz) {
-        final String simpleName = clazz.getSimpleName();
-        if (KNOWN_PROXY_CLASSNAMES.contains(simpleName)) {
+        if (KNOWN_PROXY_CLASSNAMES.contains(clazz.getName())) {
             return true;
         }
-        return simpleName.contains("$$");// a lot of proxies use this convention to avoid conflicts with inner/anonymous classes
+        return clazz.getSimpleName().contains("$$");// a lot of proxies use this convention to avoid conflicts with inner/anonymous classes
     }
 
     private Proxies() {

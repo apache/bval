@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
@@ -711,6 +712,27 @@ public class ValidationTest extends ValidationTestBase {
     public void testValidateClassImplementingCloneable() {
     	Set<ConstraintViolation<TestCloneableClass>> errors = validator.validate(new TestCloneableClass());
     	assertTrue(errors.isEmpty());
+    }
+
+    @Test
+    public void testValidatePrimitiveBooleanPropertyNameIssue149() {
+        Set<ConstraintViolation<Issue149Subject>> violations = validator.validate(new Issue149Subject());
+        assertEquals(1, violations.size());
+        ConstraintViolation<Issue149Subject> violation = violations.iterator().next();
+        assertEquals("false", violation.getMessage());
+        assertEquals("booleanFalse", violation.getPropertyPath().toString());
+    }
+
+    public static class Issue149Subject {
+        @AssertTrue(message = "true")
+        public boolean isBooleanTrue() {
+            return true;
+        }
+
+        @AssertTrue(message = "false")
+        public boolean isBooleanFalse() {
+            return false;
+        }
     }
 
     private static class TestCloneableClass implements Cloneable {

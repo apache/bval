@@ -130,9 +130,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     // @Override - not allowed in 1.5 for Interface methods
     @SuppressWarnings("unchecked")
     public <T> Set<ConstraintViolation<T>> validate(T object, Class<?>... groups) {
-        if (object == null) {
-            throw new IllegalArgumentException("cannot validate null");
-        }
+        notNull("validated object", object);
         checkGroups(groups);
 
         try {
@@ -200,10 +198,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      */
     public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName, boolean cascade,
         Class<?>... groups) {
-
-        if (object == null) {
-            throw new IllegalArgumentException("cannot validate null");
-        }
+        notNull("validated object", object);
 
         @SuppressWarnings("unchecked")
         final Set<ConstraintViolation<T>> result =
@@ -241,7 +236,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      */
     public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
         boolean cascade, Class<?>... groups) {
-        return validateValueImpl(checkBeanType(beanType), null, propertyName, value, cascade, groups);
+        return validateValueImpl(notNull("bean type", beanType), null, propertyName, value, cascade, groups);
     }
 
     /**
@@ -256,9 +251,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      */
     // @Override - not allowed in 1.5 for Interface methods
     public BeanDescriptor getConstraintsForClass(final Class<?> clazz) {
-        if (clazz == null) {
-            throw new IllegalArgumentException("Class cannot be null");
-        }
+        notNull("class", clazz);
         try {
             final MetaBean metaBean = metaBeanFinder.findForClass(clazz); // don't throw an exception because of a missing validator here
             BeanDescriptorImpl edesc = metaBean.getFeature(JsrFeatures.Bean.BEAN_DESCRIPTOR);
@@ -677,19 +670,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     /**
-     * Checks that beanType is valid according to spec Section 4.1.1 i. Throws an {@link IllegalArgumentException} if it
-     * is not.
-     *
-     * @param beanType Bean type to check.
-     */
-    private <T> Class<T> checkBeanType(Class<T> beanType) {
-        if (beanType == null) {
-            throw new IllegalArgumentException("Bean type cannot be null.");
-        }
-        return beanType;
-    }
-
-    /**
      * Checks that the property name is valid according to spec Section 4.1.1 i. Throws an
      * {@link IllegalArgumentException} if it is not.
      *
@@ -708,13 +688,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
      * @param groups The groups to check.
      */
     private void checkGroups(Class<?>[] groups) {
-        if (groups == null) {
-            throw new IllegalArgumentException("Groups cannot be null.");
-        }
-        for (final Class<?> c : groups) {
-            if (c == null) {
-                throw new IllegalArgumentException("Group cannot be null.");
-            }
+        for (final Class<?> c : notNull("groups", groups)) {
+            notNull("group", c);
         }
     }
 
@@ -928,10 +903,8 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     public <T> Set<ConstraintViolation<T>> validateConstructorReturnValue(final Constructor<? extends T> constructor, final T createdObject, final Class<?>... gps) {
-        {
-            notNull("Constructor", constructor);
-            notNull("Returned value", createdObject);
-        }
+        notNull("Constructor", constructor);
+        notNull("Returned value", createdObject);
 
         final Class<? extends T> declaringClass = constructor.getDeclaringClass();
         final ConstructorDescriptorImpl methodDescriptor = ConstructorDescriptorImpl.class.cast(getConstraintsForClass(declaringClass).getConstraintsForConstructor(constructor.getParameterTypes()));
@@ -939,10 +912,10 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             throw new ValidationException("Constructor " + constructor + " doesn't belong to class " + declaringClass);
         }
 
-        return validaReturnedValue(new NodeImpl.ConstructorNodeImpl(declaringClass.getSimpleName(), Arrays.asList(constructor.getParameterTypes())), createdObject, declaringClass, methodDescriptor, gps, null);
+        return validateReturnedValue(new NodeImpl.ConstructorNodeImpl(declaringClass.getSimpleName(), Arrays.asList(constructor.getParameterTypes())), createdObject, declaringClass, methodDescriptor, gps, null);
     }
 
-    private <T> Set<ConstraintViolation<T>> validaReturnedValue(final NodeImpl rootNode, final T createdObject, final Class<?> clazz,
+    private <T> Set<ConstraintViolation<T>> validateReturnedValue(final NodeImpl rootNode, final T createdObject, final Class<?> clazz,
                                                                 final InvocableElementDescriptor methodDescriptor, final Class<?>[] gps,
                                                                 final Object rootBean) {
         final ElementDescriptorImpl returnedValueDescriptor = ElementDescriptorImpl.class.cast(methodDescriptor.getReturnValueDescriptor());
@@ -964,7 +937,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                 context.setCurrentGroup(returnedValueDescriptor.mapGroup(current));
                 validation.validateGroupContext(context);
             }
-
             if (gps.length == 0 && !context.getListener().getConstraintViolations().isEmpty()) {
                 break;
             }
@@ -992,7 +964,6 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                     context.setCurrentGroup(current);
                     validation.validateGroupContext(context);
                 }
-
                 if (!context.getListener().getConstraintViolations().isEmpty()) {
                     break;
                 }
@@ -1018,14 +989,12 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     }
 
     public <T> Set<ConstraintViolation<T>> validateParameters(T object, Method method, Object[] parameterValues, Class<?>... groups) {
-        {
-            notNull("Object", object);
-            notNull("Parameters", parameterValues);
-            notNull("Method", method);
-            notNull("Groups", groups);
-            for (final Class<?> g : groups) {
-                notNull("Each group", g);
-            }
+        notNull("Object", object);
+        notNull("Parameters", parameterValues);
+        notNull("Method", method);
+        notNull("Groups", groups);
+        for (final Class<?> g : groups) {
+            notNull("Each group", g);
         }
 
         final MethodDescriptorImpl methodDescriptor = findMethodDescriptor(object, method);
@@ -1034,24 +1003,26 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         }
 
         if (!methodDescriptor.isValidated(method)) {
-            if (method.getParameterTypes().length > 0 && method.getReturnType() != Void.TYPE) {
-                checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()), ConstraintTarget.IMPLICIT);
-                checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
-            } else if (method.getParameterTypes().length == 0) {
-                checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()), ConstraintTarget.PARAMETERS);
+            if (method.getParameterTypes().length == 0) {
+                checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()),
+                    ConstraintTarget.PARAMETERS);
                 checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.PARAMETERS);
+            } else if (!Void.TYPE.equals(method.getReturnType())) {
+                checkValidationAppliesTo(Collections.singleton(methodDescriptor.getCrossParameterDescriptor()),
+                    ConstraintTarget.IMPLICIT);
+                checkValidationAppliesTo(methodDescriptor.getParameterDescriptors(), ConstraintTarget.IMPLICIT);
             }
             methodDescriptor.setValidated(method);
         }
-
         return validateInvocationParameters(method, parameterValues, methodDescriptor, groups,
             new NodeImpl.MethodNodeImpl(method.getName(), Arrays.asList(method.getParameterTypes())), object);
     }
 
-    private static void notNull(final String entity, final Object shouldntBeNull) {
+    private static <T> T notNull(final String entity, final T shouldntBeNull) {
         if (shouldntBeNull == null) {
-            throw new IllegalArgumentException(entity + " shouldn't be null");
+            throw new IllegalArgumentException(entity + " cannot be null");
         }
+        return shouldntBeNull;
     }
 
     /**
@@ -1073,7 +1044,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
 
         @SuppressWarnings("unchecked")
         final Set<ConstraintViolation<T>> result =
-            Set.class.cast(validaReturnedValue(
+            Set.class.cast(validateReturnedValue(
                 new NodeImpl.MethodNodeImpl(method.getName(), Arrays.asList(method.getParameterTypes())), returnValue,
                 object.getClass(), methodDescriptor, groups, object));
         return result;

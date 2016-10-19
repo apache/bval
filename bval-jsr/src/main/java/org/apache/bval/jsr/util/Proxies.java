@@ -21,10 +21,17 @@ package org.apache.bval.jsr.util;
 public final class Proxies {
     // get rid of proxies which probably contains wrong annotation metamodel
     public static <T> Class<?> classFor(final Class<?> clazz) { // TODO: do we want a SPI with impl for guice, owb, openejb, ...?
-        if (!clazz.getSimpleName().contains("$$")) { // a lot of proxies use this convention to avoid conflicts with inner/anonymous classes
-            return clazz;
+        if (isProxyClass(clazz)) {
+            final Class<?> parent = clazz.getSuperclass();
+            if (parent != null) {
+                return classFor(clazz.getSuperclass());
+            }
         }
-        return classFor(clazz.getSuperclass());
+        return clazz;
+    }
+
+    private static boolean isProxyClass(Class<?> clazz) {
+        return clazz.getSimpleName().contains("$$");// a lot of proxies use this convention to avoid conflicts with inner/anonymous classes
     }
 
     private Proxies() {

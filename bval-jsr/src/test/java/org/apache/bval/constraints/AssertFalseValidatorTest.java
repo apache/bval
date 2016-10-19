@@ -18,10 +18,10 @@
  */
 package org.apache.bval.constraints;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 
 /**
  * Checks correct behaviour of {@link AssertFalseValidator}.
@@ -38,19 +38,12 @@ import junit.framework.TestSuite;
  * 
  * @author Carlos Vara
  */
-public class AssertFalseValidatorTest extends TestCase {
+public class AssertFalseValidatorTest {
 	
-    public static Test suite() {
-        return new TestSuite(AssertFalseValidatorTest.class);
-    }
-    
-    public AssertFalseValidatorTest(String name) {
-    	super(name);
-    }
-    
     /**
      * Test {@link AssertFalseValidator} with <code>null</code> context.
      */
+    @Test
     public void testAssertFalseValidator() {
     	AssertFalseValidator afv = new AssertFalseValidator();
     	assertFalse("True value validation must fail", afv.isValid(true, null));

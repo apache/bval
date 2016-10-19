@@ -18,79 +18,48 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.constraints.NotNullValidator;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.Payload;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.Min;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
-
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.Set;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.Payload;
+import javax.validation.constraints.Min;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+
+import org.apache.bval.constraints.NotNullValidator;
+import org.junit.Test;
 
 /**
  * Checks the correct parsing of constraint definitions.
  * 
  * @author Carlos Vara
  */
-public class ConstraintDefinitionsTest extends TestCase {
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
+public class ConstraintDefinitionsTest extends ValidationTestBase {
 
     /**
      * Checks the correct parsing of a constraint with an array of constraints
      * as attributes.
      */
+    @Test
     public void testCustomAttributes() {
         BeanDescriptor constraints = validator.getConstraintsForClass(Person.class);
         Set<ConstraintDescriptor<?>> ageConstraints =
             constraints.getConstraintsForProperty("age").getConstraintDescriptors();
 
-        Assert.assertEquals("There should be 2 constraints in 'age'", ageConstraints.size(), 2);
+        assertEquals("There should be 2 constraints in 'age'", ageConstraints.size(), 2);
         for (ConstraintDescriptor<?> cd : ageConstraints) {
-            Assert.assertEquals("Annotation should be @Min", cd.getAnnotation().annotationType().getName(), Min.class
-                .getName());
+            assertEquals("Annotation should be @Min", cd.getAnnotation().annotationType().getName(),
+                Min.class.getName());
         }
     }
 
@@ -98,13 +67,9 @@ public class ConstraintDefinitionsTest extends TestCase {
      * Checks that a {@link ConstraintDefinitionException} is thrown when
      * parsing a constraint definition with no <code>groups()</code> method.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testNoGroupsConstraint() {
-        try {
-            validator.validate(new NoGroups());
-            fail("No exception thrown when parsing a constraint definition with no groups() method");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new NoGroups());
     }
 
     /**
@@ -112,26 +77,18 @@ public class ConstraintDefinitionsTest extends TestCase {
      * parsing a constraint definition with an invalid <code>groups()</code>
      * method.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testInvalidDefaultGroupsConstraint() {
-        try {
-            validator.validate(new InvalidGroups());
-            fail("No exception thrown when parsing a constraint definition with a groups() method does not return Class[]");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new InvalidGroups());
     }
 
     /**
      * Checks that a {@link ConstraintDefinitionException} is thrown when
      * parsing a constraint definition with no <code>payload()</code> method.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testNoPayloadConstraint() {
-        try {
-            validator.validate(new NoPayload());
-            fail("No exception thrown when parsing a constraint definition with no payload() method");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new NoPayload());
     }
 
     /**
@@ -139,26 +96,18 @@ public class ConstraintDefinitionsTest extends TestCase {
      * parsing a constraint definition with an invalid <code>payload()</code>
      * method.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testInvalidDefaultPayloadConstraint() {
-        try {
-            validator.validate(new InvalidPayload());
-            fail("No exception thrown when parsing a constraint definition with a payload() method does not return an empty array");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new InvalidPayload());
     }
 
     /**
      * Checks that a {@link ConstraintDefinitionException} is thrown when
      * parsing a constraint definition with no <code>message()</code> method.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testNoMessageConstraint() {
-        try {
-            validator.validate(new NoMessage());
-            fail("No exception thrown when parsing a constraint definition with no payload() method");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new NoMessage());
     }
 
     /**
@@ -166,26 +115,18 @@ public class ConstraintDefinitionsTest extends TestCase {
      * parsing a constraint definition with an invalid <code>message()</code>
      * method.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testInvalidDefaultMessageConstraint() {
-        try {
-            validator.validate(new InvalidMessage());
-            fail("No exception thrown when parsing a constraint definition with a message() method does not return a String");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new InvalidMessage());
     }
 
     /**
      * Checks that a {@link ConstraintDefinitionException} is thrown when
      * parsing a constraint definition with a method starting with 'valid'.
      */
+    @Test(expected = ConstraintDefinitionException.class)
     public void testInvalidAttributeConstraint() {
-        try {
-            validator.validate(new InvalidAttribute());
-            fail("No exception thrown when parsing a constraint definition with a method starting with 'valid'");
-        } catch (ConstraintDefinitionException e) {
-            // correct
-        }
+        validator.validate(new InvalidAttribute());
     }
 
     public static class Person {

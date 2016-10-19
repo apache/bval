@@ -18,71 +18,43 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.jsr.example.CompanyAddress;
-import org.apache.bval.jsr.example.FrenchAddress;
-import org.apache.bval.jsr.util.TestUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
-import java.util.Locale;
-import java.util.Set;
+
+import org.apache.bval.jsr.example.CompanyAddress;
+import org.apache.bval.jsr.example.FrenchAddress;
+import org.apache.bval.jsr.util.TestUtils;
+import org.junit.Test;
 
 /**
  * Description: <br/>
  */
-public class ComposedConstraintsTest extends TestCase {
-    static ValidatorFactory factory;
+public class ComposedConstraintsTest extends ValidationTestBase {
 
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
-
+    @Test
     public void testMetaDataAPI_ComposedConstraints() {
         ElementDescriptor ed =
               validator.getConstraintsForClass(FrenchAddress.class)
                     .getConstraintsForProperty("zipCode");
-        Assert.assertEquals(1, ed.getConstraintDescriptors().size());
+        assertEquals(1, ed.getConstraintDescriptors().size());
         for (ConstraintDescriptor<?> cd : ed.getConstraintDescriptors()) {
-            Assert.assertTrue(cd.isReportAsSingleViolation());
-            Assert.assertEquals(3, cd.getComposingConstraints().size());
-            Assert.assertTrue("no composing constraints found!!",
+            assertTrue(cd.isReportAsSingleViolation());
+            assertEquals(3, cd.getComposingConstraints().size());
+            assertTrue("no composing constraints found!!",
                   !cd.getComposingConstraints().isEmpty());
             processConstraintDescriptor(cd); //check all constraints on zip code
         }
     }
 
-    public void processConstraintDescriptor(ConstraintDescriptor<?> cd) {
+    private void processConstraintDescriptor(ConstraintDescriptor<?> cd) {
         //Size.class is understood by the tool
         if (cd.getAnnotation().annotationType().equals(Size.class)) {
             @SuppressWarnings("unused")
@@ -94,23 +66,25 @@ public class ComposedConstraintsTest extends TestCase {
         }
     }
 
+    @Test
     public void testValidateComposed() {
         FrenchAddress adr = new FrenchAddress();
         Set<ConstraintViolation<FrenchAddress>> findings = validator.validate(adr);
-        Assert.assertEquals(1, findings.size()); // with @ReportAsSingleConstraintViolation
+        assertEquals(1, findings.size()); // with @ReportAsSingleConstraintViolation
 
         ConstraintViolation<FrenchAddress> finding = findings.iterator().next();
-        Assert.assertEquals("Wrong zipcode", finding.getMessage());
+        assertEquals("Wrong zipcode", finding.getMessage());
 
         adr.setZipCode("1234567");
         findings = validator.validate(adr);
-        Assert.assertEquals(0, findings.size());
+        assertEquals(0, findings.size());
 
         adr.setZipCode("1234567234567");
         findings = validator.validate(adr);
-        Assert.assertTrue(findings.size() > 0); // too long
+        assertTrue(findings.size() > 0); // too long
     }
 
+    @Test
     public void testOverridesAttributeConstraintIndex() {
         CompanyAddress adr = new CompanyAddress("invalid-string");
         Set<ConstraintViolation<CompanyAddress>> findings = validator.validate(adr);
@@ -125,7 +99,7 @@ public class ComposedConstraintsTest extends TestCase {
 
         adr =  new CompanyAddress("JOHN_DO@COMPANY.DE");
         findings = validator.validate(adr);
-        Assert.assertTrue(findings.isEmpty());
+        assertTrue(findings.isEmpty());
     }
 
 }

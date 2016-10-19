@@ -24,7 +24,6 @@ import javax.validation.constraints.Max;
  * Description: <br/>
  */
 public class NoValidatorTestEntity {
-    @SuppressWarnings("unused")
     @Max(20)
     private Object anything;
     

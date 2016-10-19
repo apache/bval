@@ -19,16 +19,15 @@
 
 package org.apache.bval.jsr;
 
-import junit.framework.TestCase;
-import org.apache.bval.util.PropertyAccess;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Pattern;
-import java.util.Locale;
-import java.util.Set;
+
+import org.apache.bval.util.PropertyAccess;
+import org.junit.Test;
 
 /**
  * Description: <br>
@@ -36,60 +35,28 @@ import java.util.Set;
  * Date: 21.04.2010<br>
  * Time: 14:21:45<br>
  */
-public class TckReproducerTest extends TestCase {
-    static ValidatorFactory factory;
+public class TckReproducerTest extends ValidationTestBase {
 
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    /**
-     * Validator instance to test
-     */
-    protected Validator validator;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        validator = createValidator();
-    }
-
-    /**
-     * Create the validator instance.
-     * 
-     * @return Validator
-     */
-    protected Validator createValidator() {
-        return factory.getValidator();
-    }
-
-    public static <T> void assertCorrectNumberOfViolations(Set<ConstraintViolation<T>> violations,
+    private static <T> void assertCorrectNumberOfViolations(Set<ConstraintViolation<T>> violations,
         int expectedViolations) {
         assertEquals("Wrong number of constraint violations. Expected: " + expectedViolations + " Actual: "
             + violations.size(), expectedViolations, violations.size());
     }
 
+    @Test
     public void testPropertyAccessOnNonPublicClass() throws Exception {
         Car car = new Car("USd-298");
         assertEquals(car.getLicensePlateNumber(), PropertyAccess.getProperty(car, "licensePlateNumber"));
 
-        Set<ConstraintViolation<Car>> violations =
-            validator.validateProperty(car, "licensePlateNumber", First.class,
-                org.apache.bval.jsr.example.Second.class);
-        assertCorrectNumberOfViolations(violations, 1);
+        assertCorrectNumberOfViolations(validator.validateProperty(car, "licensePlateNumber", First.class,
+            org.apache.bval.jsr.example.Second.class), 1);
 
         car.setLicensePlateNumber("USD-298");
-        violations =
-            validator.validateProperty(car, "licensePlateNumber", First.class,
-                org.apache.bval.jsr.example.Second.class);
-        assertCorrectNumberOfViolations(violations, 0);
+        assertCorrectNumberOfViolations(validator.validateProperty(car, "licensePlateNumber", First.class,
+            org.apache.bval.jsr.example.Second.class), 0);
     }
 
-    class Car {
+    static class Car {
         @Pattern(regexp = "[A-Z][A-Z][A-Z]-[0-9][0-9][0-9]", groups = { First.class, Second.class })
         private String licensePlateNumber;
 

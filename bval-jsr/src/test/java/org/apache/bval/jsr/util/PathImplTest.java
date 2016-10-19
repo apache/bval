@@ -18,13 +18,17 @@
  */
 package org.apache.bval.jsr.util;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Iterator;
 
 import javax.validation.Path;
 import javax.validation.ValidationException;
-import java.util.Iterator;
+
+import org.junit.Test;
 
 /**
  * PathImpl Tester.
@@ -32,11 +36,8 @@ import java.util.Iterator;
  * @version 1.0
  * @since <pre>10/01/2009</pre>
  */
-public class PathImplTest extends TestCase {
-    public PathImplTest(String name) {
-        super(name);
-    }
-
+public class PathImplTest {
+    @Test
     public void testParsing() {
         String property = "order[3].deliveryAddress.addressline[1]";
         Path path = PathImpl.createPathFromString(property);
@@ -70,6 +71,7 @@ public class PathImplTest extends TestCase {
         assertFalse(propIter.hasNext());
     }
 
+    @Test
     public void testParseMapBasedProperty() {
         String property = "order[foo].deliveryAddress";
         Path path = PathImpl.createPathFromString(property);
@@ -90,6 +92,7 @@ public class PathImplTest extends TestCase {
     }
 
     //some of the examples from the 1.0 bean validation spec, section 4.2
+    @Test
     public void testSpecExamples() {
         String fourthAuthor = "authors[3]";
         Path path = PathImpl.createPathFromString(fourthAuthor);
@@ -124,6 +127,7 @@ public class PathImplTest extends TestCase {
         assertFalse(propIter.hasNext());
     }
 
+    @Test
     public void testNull() {
         assertEquals(PathImpl.createPathFromString(null), PathImpl.create());
 
@@ -133,43 +137,33 @@ public class PathImplTest extends TestCase {
         assertEquals(null, node.getName());
     }
 
+    @Test(expected = ValidationException.class)
     public void testUnbalancedBraces() {
-        try {
-            PathImpl.createPathFromString("foo[.bar");
-            fail();
-        } catch (ValidationException ex) {
-        }
+        PathImpl.createPathFromString("foo[.bar");
     }
 
+    @Test(expected = ValidationException.class)
     public void testIndexInMiddleOfProperty() {
-        try {
-            PathImpl.createPathFromString("f[1]oo.bar");
-            fail();
-        } catch (ValidationException ex) {
-        }
+        PathImpl.createPathFromString("f[1]oo.bar");
     }
 
+    @Test(expected = ValidationException.class)
     public void testTrailingPathSeparator() {
-        try {
-            PathImpl.createPathFromString("foo.bar.");
-            fail();
-        } catch (ValidationException ex) {
-        }
+        PathImpl.createPathFromString("foo.bar.");
     }
 
+    @Test(expected = ValidationException.class)
     public void testLeadingPathSeparator() {
-        try {
-            PathImpl.createPathFromString(".foo.bar");
-            fail();
-        } catch (ValidationException ex) {
-        }
+        PathImpl.createPathFromString(".foo.bar");
     }
 
+    @Test
     public void testEmptyString() {
         Path path = PathImpl.createPathFromString("");
         assertEquals(null, path.iterator().next().getName());
     }
 
+    @Test
     public void testToString() {
         PathImpl path = PathImpl.create();
         path.addNode(new NodeImpl("firstName"));
@@ -182,6 +176,7 @@ public class PathImplTest extends TestCase {
         assertEquals("[2].firstName", path.toString());
     }
 
+    @Test
     public void testAddRemoveNodes() {
         PathImpl path = PathImpl.createPathFromString("");
         assertTrue(path.isRootPath());
@@ -203,7 +198,4 @@ public class PathImplTest extends TestCase {
         return result;
     }
 
-    public static Test suite() {
-        return new TestSuite(PathImplTest.class);
-    }
 }

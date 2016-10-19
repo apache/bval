@@ -16,46 +16,40 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.bval.jsr.example.Author;
-import org.apache.bval.jsr.example.PreferredGuest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.util.Locale;
 
 import javax.validation.MessageInterpolator;
 import javax.validation.Validator;
 import javax.validation.constraints.Pattern;
 import javax.validation.metadata.ConstraintDescriptor;
-import java.util.Locale;
+
+import org.apache.bval.jsr.example.Author;
+import org.apache.bval.jsr.example.PreferredGuest;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * MessageResolverImpl Tester.
  */
-public class DefaultMessageInterpolatorTest extends TestCase {
+public class DefaultMessageInterpolatorTest {
 
     private DefaultMessageInterpolator interpolator;
 
-    public DefaultMessageInterpolatorTest(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return new TestSuite(DefaultMessageInterpolatorTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp(); // call super!
+    @Before
+    public void setUp() throws Exception {
         interpolator = new DefaultMessageInterpolator();
         interpolator.setLocale(Locale.ENGLISH);
     }
 
+    @Test
     public void testCreateResolver() {
 
         final Validator gvalidator = getValidator();
 
-        assertTrue(!gvalidator.getConstraintsForClass(PreferredGuest.class).getConstraintsForProperty(
+        assertFalse(gvalidator.getConstraintsForClass(PreferredGuest.class).getConstraintsForProperty(
             "guestCreditCardNumber").getConstraintDescriptors().isEmpty());
 
         MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
@@ -77,7 +71,7 @@ public class DefaultMessageInterpolatorTest extends TestCase {
             }
         };
         String msg = interpolator.interpolate("{validator.creditcard}", ctx);
-        Assert.assertEquals("credit card is not valid", msg);
+        assertEquals("credit card is not valid", msg);
 
         ctx = new MessageInterpolator.Context() {
             @Override
@@ -98,13 +92,14 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         };
 
         msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
-        Assert.assertEquals("may not be empty", msg);
+        assertEquals("may not be empty", msg);
     }
 
     /**
      * Checks that strings containing special characters are correctly
      * substituted when interpolating.
      */
+    @Test
     public void testReplacementWithSpecialChars() {
 
         final Validator validator = getValidator();
@@ -131,8 +126,8 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         };
 
         String result = this.interpolator.interpolate("Id number should match {regexp}", ctx);
-        Assert.assertEquals("Incorrect message interpolation when $ is in an attribute",
-            "Id number should match ....$", result);
+        assertEquals("Incorrect message interpolation when $ is in an attribute", "Id number should match ....$",
+            result);
 
         // Try to interpolate an annotation attribute containing \
         ctx = new MessageInterpolator.Context() {
@@ -155,9 +150,8 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         };
 
         result = this.interpolator.interpolate("Other id should match {regexp}", ctx);
-        Assert.assertEquals("Incorrect message interpolation when \\ is in an attribute value",
-            "Other id should match .\\n", result);
-
+        assertEquals("Incorrect message interpolation when \\ is in an attribute value", "Other id should match .\\n",
+            result);
     }
 
     public static class Person {

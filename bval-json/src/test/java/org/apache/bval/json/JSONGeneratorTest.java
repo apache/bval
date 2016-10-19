@@ -16,7 +16,12 @@
  */
 package org.apache.bval.json;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.bval.example.BusinessEnum;
 import org.apache.bval.example.BusinessObject;
 import org.apache.bval.example.BusinessObjectAddress;
@@ -25,28 +30,23 @@ import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.xml.XMLMetaBeanManager;
 import org.apache.bval.xml.XMLMetaBeanURLLoader;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Description: <br>
  * Author: roman.stumm<br>
  */
-public class JSONGeneratorTest extends TestCase {
+public class JSONGeneratorTest {
     private XMLMetaBeanManager mbm;
 
-    public JSONGeneratorTest(String name) {
-        super(name);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         mbm = new XMLMetaBeanManager();
         mbm.addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
     }
 
+    @Test
     public void testBeanInfosCustomPatchGenerated() throws Exception {
         MetaBean mbean = mbm.findForClass(BusinessObject.class);
         MetaProperty mprop = mbean.getProperty("lastName");
@@ -66,9 +66,9 @@ public class JSONGeneratorTest extends TestCase {
         metaBeans.add(mbean2);
         String json = converter.toJSON(metaBeans);
         assertNotNull(json);
-        // System.out.println(json);
     }
 
+    @Test
     public void testJSON() throws Exception {
         MetaBean info = mbm.findForClass(BusinessObject.class);
         MetaBean info2 = info.getProperty("address").getMetaBean();
@@ -83,9 +83,9 @@ public class JSONGeneratorTest extends TestCase {
         metaBeans.add(info3);
         String json = converter.toJSON(metaBeans);
         assertNotNull(json);
-        // System.out.println(json);
     }
 
+    @Test
     public void testJSON_dynaTypeEnum() throws Exception {
         MetaBean info = mbm.findForClass(BusinessObject.class);
         MetaProperty choice = info.getProperty("choice");
@@ -97,7 +97,6 @@ public class JSONGeneratorTest extends TestCase {
         metaBeans.add(info);
         String json = converter.toJSON(metaBeans);
         assertNotNull(json);
-        // System.out.println(json);
         assertTrue(json.indexOf("CUSTOM_1") > 0);
         assertTrue(json.indexOf("CUSTOM_2") > 0);
         assertTrue(json.indexOf("VALUE1") < 0);

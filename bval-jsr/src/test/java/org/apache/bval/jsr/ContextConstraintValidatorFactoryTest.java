@@ -18,7 +18,14 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Set;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -26,15 +33,10 @@ import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.ConstraintViolation;
 import javax.validation.Payload;
-import javax.validation.Validation;
+import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.Locale;
-import java.util.Set;
+
+import org.junit.Test;
 
 /**
  * <a href="https://issues.apache.org/jira/browse/BVAL-111">https://issues.apache.org/jira/browse/BVAL-111</a>
@@ -42,13 +44,7 @@ import java.util.Set;
  * rather using the instance available from the {@link ValidatorFactory}.  Thus any solutions to e.g. inject
  * collaborators into {@link ConstraintValidator} implementations would fail. 
  */
-public class ContextConstraintValidatorFactoryTest extends TestCase {
-	static ValidatorFactory factory;
-
-	static {
-		factory = Validation.buildDefaultValidatorFactory();
-		((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-	}
+public class ContextConstraintValidatorFactoryTest extends ValidationTestBase {
 
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
@@ -90,28 +86,33 @@ public class ContextConstraintValidatorFactoryTest extends TestCase {
 	public static class Example {
 	}
 
-	public void testContextBoundConstraintValidatorFactory() {
-		final ConstraintValidatorFactory constraintValidatorFactory = new ConstraintValidatorFactory() {
+    @Override
+    protected Validator createValidator() {
+        final ConstraintValidatorFactory constraintValidatorFactory = new ConstraintValidatorFactory() {
 
-			@Override
+            @Override
             public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
-				if (key.equals(Contrived.Validator.class)) {
-					final Contrived.Validator result = new Contrived.Validator();
-					result.setRequiredCollaborator(new Object());
-					@SuppressWarnings("unchecked")
-					final T t = (T) result;
-					return t;
-				}
-				return null;
-			}
+                if (key.equals(Contrived.Validator.class)) {
+                    final Contrived.Validator result = new Contrived.Validator();
+                    result.setRequiredCollaborator(new Object());
+                    @SuppressWarnings("unchecked")
+                    final T t = (T) result;
+                    return t;
+                }
+                return null;
+            }
 
             @Override
             public void releaseInstance(ConstraintValidator<?, ?> instance) {
                 // no-op
             }
         };
-		final Set<ConstraintViolation<Example>> violations = factory.usingContext().constraintValidatorFactory(constraintValidatorFactory)
-				.getValidator().validate(new Example());
+        return factory.usingContext().constraintValidatorFactory(constraintValidatorFactory).getValidator();
+    }
+
+	@Test
+	public void testContextBoundConstraintValidatorFactory() {
+		final Set<ConstraintViolation<Example>> violations = validator.validate(new Example());
 		assertTrue(violations.isEmpty());
 	}
 }

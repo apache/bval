@@ -18,17 +18,16 @@
  */
 package org.apache.bval.jsr.xml;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
-import org.apache.bval.jsr.ApacheValidationProvider;
-import org.apache.bval.jsr.ApacheValidatorConfiguration;
-import org.apache.bval.jsr.ConfigurationImpl;
-import org.apache.bval.jsr.example.XmlEntitySampleBean;
-import org.apache.bval.jsr.resolver.SimpleTraversableResolver;
-import org.apache.bval.util.reflection.Reflection;
-import org.junit.Assume;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -36,10 +35,15 @@ import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.Set;
+import org.apache.bval.jsr.ApacheValidationProvider;
+import org.apache.bval.jsr.ApacheValidatorConfiguration;
+import org.apache.bval.jsr.ConfigurationImpl;
+import org.apache.bval.jsr.example.XmlEntitySampleBean;
+import org.apache.bval.jsr.resolver.SimpleTraversableResolver;
+import org.apache.bval.util.reflection.Reflection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * ValidationParser Tester.
@@ -48,43 +52,43 @@ import java.util.Set;
  * @version 1.0
  * @since <pre>11/25/2009</pre>
  */
-public class ValidationParserTest extends TestCase
-      implements ApacheValidatorConfiguration.Properties {
-    public ValidationParserTest(String name) {
-        super(name);
-    }
+public class ValidationParserTest implements ApacheValidatorConfiguration.Properties {
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
     public void testGetInputStream() throws IOException {
         assertNotNull(ValidationParser.getInputStream("sample-validation.xml"));
 
         // make sure there are duplicate resources on the classpath before the next checks:
         final Enumeration<URL> resources = Reflection.getClassLoader(ValidationParser.class).getResources("META-INF/MANIFEST.MF");
-        
-        Assume.assumeTrue(resources.hasMoreElements());
-        resources.nextElement();
-        Assume.assumeTrue(resources.hasMoreElements());
 
-        try {
-            ValidationParser.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
-            fail("exception not thrown");
-        } catch(ValidationException vex) {
-            assertTrue(vex.getMessage().startsWith("More than "));
-        }
+        assumeTrue(resources.hasMoreElements());
+        resources.nextElement();
+        assumeTrue(resources.hasMoreElements());
     }
 
+    @Test
+    public void testGetNonUniqueInputStream() throws IOException {
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("More than ");
+        ValidationParser.getInputStream("META-INF/MANIFEST.MF"); // this is available in multiple jars hopefully
+    }
+
+    @Test
     public void testParse() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
         ValidationParser.processValidationConfig("sample-validation.xml", config, false);
     }
 
+    @Test
     public void testConfigureFromXml() {
         ValidatorFactory factory = getFactory();
-        assertTrue(factory.getMessageInterpolator() instanceof TestMessageInterpolator);
-        assertTrue(factory
-              .getConstraintValidatorFactory() instanceof TestConstraintValidatorFactory);
-        assertTrue(factory.getTraversableResolver() instanceof SimpleTraversableResolver);
-        Validator validator = factory.getValidator();
-        assertNotNull(validator);
+        assertThat(factory.getMessageInterpolator(), instanceOf(TestMessageInterpolator.class));
+        assertThat(factory.getConstraintValidatorFactory(), instanceOf(TestConstraintValidatorFactory.class));
+        assertThat(factory.getTraversableResolver(), instanceOf(SimpleTraversableResolver.class));
+        assertNotNull(factory.getValidator());
     }
 
     private ValidatorFactory getFactory() {
@@ -94,6 +98,7 @@ public class ValidationParserTest extends TestCase
         return config.buildValidatorFactory();
     }
 
+    @Test
     public void testXmlEntitySample() {
         XmlEntitySampleBean bean = new XmlEntitySampleBean();
         bean.setFirstName("tooooooooooooooooooooooooooo long");
@@ -110,7 +115,4 @@ public class ValidationParserTest extends TestCase
         assertTrue(results.isEmpty());
     }
 
-    public static Test suite() {
-        return new TestSuite(ValidationParserTest.class);
-    }
 }

@@ -16,32 +16,25 @@
  */
 package org.apache.bval;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.bval.model.MetaProperty;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * ValidationResults Tester.
  */
-public class ValidationResultsTest extends TestCase {
+public class ValidationResultsTest {
     private ValidationResults results;
 
-    public ValidationResultsTest(String name) {
-        super(name);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         results = new ValidationResults();
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testValidationResults() throws Exception {
         assertTrue(results.isEmpty());
         BeanValidationContext<ValidationResults> ctx = new BeanValidationContext<ValidationResults>(results);
@@ -56,7 +49,4 @@ public class ValidationResultsTest extends TestCase {
         assertFalse(results.hasError(this, "prop2"));
     }
 
-    public static Test suite() {
-        return new TestSuite(ValidationResultsTest.class);
-    }
 }

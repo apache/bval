@@ -18,46 +18,46 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.TestCase;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+import org.junit.Before;
+import org.junit.Test;
+
 /**
  * Description: <br/>
  */
-public class FooTest extends TestCase {
+public class FooTest extends ValidationTestBase {
 
     @Valid
     private Collection<Foo> foos = new ArrayList<Foo>();
 
-    public FooTest() {
+    @Before
+    public void setup() {
         foos.add(new Foo("foo1"));
         foos.add(null);
         foos.add(new Foo("foo3"));
     }
 
-
-    public class Foo {
+    public static class Foo {
         @NotNull
         public String bar;
 
         public Foo(String bar) {
             this.bar = bar;
         }
-
     }
 
+    @Test
     public void testValidation() {
         FooTest t = new FooTest();
 
-        Validator v = ApacheValidatorFactory.getDefault().getValidator();
-        Set<ConstraintViolation<FooTest>> errors = v.validate(t);
+        Set<ConstraintViolation<FooTest>> errors = validator.validate(t);
         System.out.println("got errors:");
         for (ConstraintViolation<?> error : errors) {
             System.out.println(error.getPropertyPath());

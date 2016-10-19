@@ -18,14 +18,15 @@
  */
 package org.apache.bval.constraints;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.example.Customer;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import javax.validation.Validator;
+
+import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.example.Customer;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * EmailValidator Tester.
@@ -34,7 +35,7 @@ import javax.validation.Validator;
  * @version 1.0
  * @since <pre>10/14/2008</pre>
  */
-public class EmailValidatorTest extends TestCase {
+public class EmailValidatorTest {
     public static class EmailAddressBuilder {
         @Email
         private StringBuilder buffer = new StringBuilder();
@@ -51,16 +52,12 @@ public class EmailValidatorTest extends TestCase {
 
     private Validator validator;
 
-    public EmailValidatorTest(String name) {
-        super(name);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
+    @Test
     public void testEmail() {
         Customer customer = new Customer();
         customer.setCustomerId("id-1");
@@ -68,31 +65,29 @@ public class EmailValidatorTest extends TestCase {
         customer.setLastName("Do");
         customer.setPassword("12345");
 
-        Assert.assertEquals(0, validator.validate(customer).size());
+        assertTrue(validator.validate(customer).isEmpty());
 
         customer.setEmailAddress("some@invalid@address");
-        Assert.assertEquals(1, validator.validate(customer).size());
+        assertEquals(1, validator.validate(customer).size());
 
         customer.setEmailAddress("some.valid-012345@address_at-test.org");
-        Assert.assertEquals(0, validator.validate(customer).size());
+        assertTrue(validator.validate(customer).isEmpty());
     }
 
+    @Test
     public void testEmailCharSequence() {
         EmailAddressBuilder emailAddressBuilder = new EmailAddressBuilder();
-        Assert.assertEquals(0, validator.validate(emailAddressBuilder).size());
+        assertTrue(validator.validate(emailAddressBuilder).isEmpty());
         emailAddressBuilder.getBuffer().append("foo");
-        Assert.assertEquals(1, validator.validate(emailAddressBuilder).size());
+        assertEquals(1, validator.validate(emailAddressBuilder).size());
         emailAddressBuilder.getBuffer().append('@');
-        Assert.assertEquals(1, validator.validate(emailAddressBuilder).size());
+        assertEquals(1, validator.validate(emailAddressBuilder).size());
         emailAddressBuilder.getBuffer().append("bar");
-        Assert.assertEquals(0, validator.validate(emailAddressBuilder).size());
+        assertTrue(validator.validate(emailAddressBuilder).isEmpty());
         emailAddressBuilder.getBuffer().append('.');
-        Assert.assertEquals(1, validator.validate(emailAddressBuilder).size());
+        assertEquals(1, validator.validate(emailAddressBuilder).size());
         emailAddressBuilder.getBuffer().append("baz");
-        Assert.assertEquals(0, validator.validate(emailAddressBuilder).size());
+        assertTrue(validator.validate(emailAddressBuilder).isEmpty());
     }
 
-    public static Test suite() {
-        return new TestSuite(EmailValidatorTest.class);
-    }
 }

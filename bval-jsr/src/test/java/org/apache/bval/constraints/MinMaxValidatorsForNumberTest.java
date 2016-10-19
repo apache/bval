@@ -18,14 +18,17 @@
  */
 package org.apache.bval.constraints;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertFalse;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import java.util.Set;
+
+import org.junit.Test;
 
 /**
  * Check correct behaviour of {@link MinValidatorForNumber} and
@@ -36,7 +39,7 @@ import java.util.Set;
  * 
  * @author Carlos Vara
  */
-public class MinMaxValidatorsForNumberTest extends TestCase {
+public class MinMaxValidatorsForNumberTest {
 
     @Min(value = 9223372036854775807l)
     public long min;
@@ -44,6 +47,7 @@ public class MinMaxValidatorsForNumberTest extends TestCase {
     @Max(value = 9223372036854775806l)
     public long max;
 
+    @Test
     public void testMinBoundaryValue() {
         Validator v = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -55,6 +59,7 @@ public class MinMaxValidatorsForNumberTest extends TestCase {
         assertFalse("Min validation failed", res.isEmpty());
     }
 
+    @Test
     public void testMaxBoundaryValue() {
         Validator v = Validation.buildDefaultValidatorFactory().getValidator();
 

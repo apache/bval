@@ -16,9 +16,13 @@
  */
 package org.apache.bval.xml;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.apache.bval.BeanValidator;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.ValidationResults;
@@ -27,29 +31,14 @@ import org.apache.bval.example.BusinessObjectAddress;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.Features.Property;
 import org.apache.bval.model.MetaBean;
-import org.apache.bval.routines.Reasons;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+import org.junit.Test;
 
 /**
  * BeanValidator Tester.
  */
-public class BeanValidatorTest extends TestCase {
-    public BeanValidatorTest(String name) {
-        super(name);
-    }
+public class BeanValidatorTest {
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testValidateMapAsBean() {
         XMLMetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
               BusinessObject.class.getResource("test-beanInfos.xml")));
@@ -77,6 +66,7 @@ public class BeanValidatorTest extends TestCase {
         assertTrue(results.isEmpty());
     }
 
+    @Test
     public void testValidate() {
         MetaBeanFinder finder = XMLMetaBeanManagerFactory.getFinder();
         XMLMetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
@@ -118,7 +108,4 @@ public class BeanValidatorTest extends TestCase {
               validator.validate(object, info).isEmpty()); // cardinality error found
     }
 
-    public static Test suite() {
-        return new TestSuite(BeanValidatorTest.class);
-    }
 }

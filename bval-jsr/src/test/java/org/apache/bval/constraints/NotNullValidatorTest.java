@@ -18,10 +18,10 @@
  */
 package org.apache.bval.constraints;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 
 /**
  * Checks correct behaviour of {@link NotNullValidator}.
@@ -37,19 +37,12 @@ import junit.framework.TestSuite;
  * 
  * @author Carlos Vara
  */
-public class NotNullValidatorTest extends TestCase {
+public class NotNullValidatorTest {
 
-    public static Test suite() {
-        return new TestSuite(NotNullValidatorTest.class);
-    }
-    
-    public NotNullValidatorTest(String name) {
-    	super(name);
-    }
-    
     /**
      * Test {@link NotNullValidator} with null context.
      */
+    @Test
     public void testNotNullValidator() {
     	NotNullValidator nnv = new NotNullValidator();
     	assertTrue("Non null value validation must succeed", nnv.isValid("hello", null));

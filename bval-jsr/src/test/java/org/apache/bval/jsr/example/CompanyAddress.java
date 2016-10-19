@@ -24,7 +24,6 @@ import org.apache.bval.constraints.CompanyEmail;
  * Description: <br/>
  */
 public class CompanyAddress {
-    @SuppressWarnings("unused")
     @CompanyEmail
     private String email;
 

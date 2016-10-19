@@ -16,9 +16,13 @@
  */
 package org.apache.bval.routines;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertTrue;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.bval.BeanValidationContext;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.Features.Property;
@@ -26,16 +30,13 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 import org.apache.bval.xml.XMLMetaValue;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * StandardValidation Tester.
  */
-public class StandardValidationTest extends TestCase implements ValidationListener {
+public class StandardValidationTest implements ValidationListener {
     private StandardValidation validation;
     private BeanValidationContext<StandardValidationTest> context;
     private List<String> reasons = new ArrayList<String>();
@@ -44,13 +45,8 @@ public class StandardValidationTest extends TestCase implements ValidationListen
     private Date dateValue;
     private int intValue;
 
-    public StandardValidationTest(String name) {
-        super(name);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         validation = new StandardValidation();
         context = new BeanValidationContext<StandardValidationTest>(this);
         metaProperty = new MetaProperty();
@@ -58,15 +54,11 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.setMetaProperty(metaProperty);
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     public String getStringValue() {
         return stringValue;
     }
 
+    @Test
     public void testValidateMandatory() {
         metaProperty.setName("stringValue");
 
@@ -102,6 +94,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         assertTrue(reasons.contains(Property.MAX_LENGTH));
     }
 
+    @Test
     public void testValidateMinLength() {
         metaProperty.setName("stringValue");
         metaProperty.putFeature(Features.Property.MIN_LENGTH, 5);
@@ -114,6 +107,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         assertTrue(reasons.contains(Property.MIN_LENGTH));
     }
 
+    @Test
     public void testValidateMaxValue() {
         metaProperty.setName("stringValue");
         metaProperty.putFeature(Features.Property.MAX_VALUE, "9999");
@@ -126,6 +120,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         assertTrue(reasons.contains(Property.MAX_VALUE));
     }
 
+    @Test
     public void testValidateMinValue() {
         metaProperty.setName("stringValue");
         metaProperty.putFeature(Features.Property.MIN_VALUE, "5555");
@@ -142,6 +137,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         return intValue;
     }
 
+    @Test
     public void testValidateMinValue_MixedNumber() {
         metaProperty.setName("intValue");
         metaProperty.putFeature(Features.Property.MIN_VALUE, new Long(0));
@@ -154,6 +150,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         assertTrue(reasons.contains(Property.MIN_VALUE));
     }
 
+    @Test
     public void testValidateMinValue_Date_Timestamp() {
         metaProperty.setName("dateValue");
         Date dt = new Date();
@@ -167,6 +164,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         assertTrue(reasons.contains(Property.MIN_VALUE));
     }
 
+    @Test
     public void testValidateMaxValue_AlphabeticString() {
         metaProperty.setName("stringValue");
         metaProperty.putFeature(Features.Property.MAX_VALUE, "BBBB");
@@ -179,6 +177,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         assertTrue(reasons.contains(Property.MAX_VALUE));
     }
 
+    @Test
     public void testValidateRegExp() {
         // regexp for Zip
         String regexp = "[a-zA-Z\\- \\d]*";
@@ -197,6 +196,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         return dateValue;
     }
 
+    @Test
     public void testValidateTimeLag() {
         metaProperty.setName("dateValue");
         metaProperty.putFeature(Features.Property.TIME_LAG, XMLMetaValue.TIMELAG_Past);
@@ -209,10 +209,6 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         validation.validateTimeLag(context);
         assertTrue(reasons.contains(Property.TIME_LAG));
 
-    }
-
-    public static Test suite() {
-        return new TestSuite(StandardValidationTest.class);
     }
 
     @Override

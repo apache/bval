@@ -16,9 +16,9 @@
  */
 package org.apache.bval.model;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 /**
  * MetaProperty Tester.
@@ -27,12 +27,9 @@ import junit.framework.TestSuite;
  * @since <pre>02/12/2009</pre>
  * @version 1.0
  */
-public class MetaPropertyTest extends TestCase {
-    public MetaPropertyTest(String name) {
-        super(name);
-    }
+public class MetaPropertyTest {
 
-
+    @Test
     public void testGetTypeClass() throws Exception {
         MetaProperty prop = new MetaProperty();
         prop.setType(String.class);
@@ -44,8 +41,4 @@ public class MetaPropertyTest extends TestCase {
         assertEquals(2, ((DynaTypeEnum)prop.getType()).getEnumConstants().length);
     }
 
-
-    public static Test suite() {
-        return new TestSuite(MetaPropertyTest.class);
-    }
 }

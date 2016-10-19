@@ -18,14 +18,17 @@
  */
 package org.apache.bval.constraints;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertFalse;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
-import java.util.Set;
+
+import org.junit.Test;
 
 /**
  * Description: <br>
@@ -33,13 +36,14 @@ import java.util.Set;
  * Date: 06.04.2010<br>
  * Time: 13:45:09<br>
  */
-public class DecimalMinMaxValidatorsTest extends TestCase {
+public class DecimalMinMaxValidatorsTest {
 
     @DecimalMin("922392239223.06")
     public double dmin;
     @DecimalMax("922392239223.09")
     public double dmax;
 
+    @Test
     public void testDecimalMinValue() {
         Validator v = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -50,6 +54,7 @@ public class DecimalMinMaxValidatorsTest extends TestCase {
         assertFalse("Min validation failed", res.isEmpty());
     }
 
+    @Test
     public void testDecimalMaxValue() {
         Validator v = Validation.buildDefaultValidatorFactory().getValidator();
 

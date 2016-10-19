@@ -18,10 +18,15 @@
  */
 package org.apache.bval.jsr;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.bval.constraints.NotNullValidator;
-import org.apache.bval.jsr.example.Customer;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import javax.validation.Configuration;
 import javax.validation.ConstraintValidator;
@@ -35,35 +40,42 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.bootstrap.ProviderSpecificBootstrap;
 import javax.validation.spi.ValidationProvider;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+
+import org.apache.bval.constraints.NotNullValidator;
+import org.apache.bval.jsr.example.Customer;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Description: <br/>
  */
-public class BootstrapTest extends TestCase {
+public class BootstrapTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
     public void testDirectBootstrap() {
         Validator validator = ApacheValidatorFactory.getDefault().getValidator();
-        Assert.assertNotNull(validator);
-        Assert.assertTrue(ApacheValidatorFactory.getDefault() == ApacheValidatorFactory.getDefault());
+        assertNotNull(validator);
+        assertTrue(ApacheValidatorFactory.getDefault() == ApacheValidatorFactory.getDefault());
     }
 
+    @Test
     public void testEverydayBootstrap() {
         ApacheValidatorFactory factory = (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
-        Assert.assertNotNull(validator);
+        assertNotNull(validator);
 
         // each call to Validation.getValidationBuilder() returns a new builder
         // with new state
         ApacheValidatorFactory factory2 = (ApacheValidatorFactory) Validation.buildDefaultValidatorFactory();
-        Assert.assertTrue(factory2 != factory);
-        Assert.assertTrue(factory2.getMessageInterpolator() != factory.getMessageInterpolator());
+        assertTrue(factory2 != factory);
+        assertTrue(factory2.getMessageInterpolator() != factory.getMessageInterpolator());
 
     }
 
+    @Test
     public void testLocalizedMessageInterpolatorFactory() {
         Configuration<?> builder = Validation.byDefaultProvider().configure();
         // changing the builder allows to create different factories
@@ -82,7 +94,7 @@ public class BootstrapTest extends TestCase {
      * some tests based on RI tested behaviors to ensure our implementation
      * works as the reference implementation
      */
-
+    @Test
     public void testCustomConstraintFactory() {
 
         Configuration<?> builder = Validation.byDefaultProvider().configure();
@@ -95,7 +107,7 @@ public class BootstrapTest extends TestCase {
         customer.setFirstName("John");
 
         Set<ConstraintViolation<Customer>> ConstraintViolations = validator.validate(customer);
-        Assert.assertFalse(ConstraintViolations.isEmpty());
+        assertFalse(ConstraintViolations.isEmpty());
 
         builder = Validation.byDefaultProvider().configure();
         builder.constraintValidatorFactory(new ConstraintValidatorFactory() {
@@ -117,9 +129,10 @@ public class BootstrapTest extends TestCase {
         factory = builder.buildValidatorFactory();
         validator = factory.getValidator();
         Set<ConstraintViolation<Customer>> ConstraintViolations2 = validator.validate(customer);
-        Assert.assertTrue("Wrong number of constraints", ConstraintViolations.size() > ConstraintViolations2.size());
+        assertTrue("Wrong number of constraints", ConstraintViolations.size() > ConstraintViolations2.size());
     }
 
+    @Test
     public void testCustomResolverAndType() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
@@ -136,6 +149,7 @@ public class BootstrapTest extends TestCase {
         assertDefaultBuilderAndFactory(builder);
     }
 
+    @Test
     public void testCustomResolver() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
@@ -150,14 +164,15 @@ public class BootstrapTest extends TestCase {
     }
 
     private void assertDefaultBuilderAndFactory(Configuration<?> builder) {
-        Assert.assertNotNull(builder);
-        Assert.assertTrue(builder instanceof ConfigurationImpl);
+        assertNotNull(builder);
+        assertTrue(builder instanceof ConfigurationImpl);
 
         ValidatorFactory factory = builder.buildValidatorFactory();
-        Assert.assertNotNull(factory);
-        Assert.assertTrue(factory instanceof ApacheValidatorFactory);
+        assertNotNull(factory);
+        assertTrue(factory instanceof ApacheValidatorFactory);
     }
 
+    @Test
     public void testFailingCustomResolver() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
@@ -172,14 +187,12 @@ public class BootstrapTest extends TestCase {
 
         final ProviderSpecificBootstrap<ApacheValidatorConfiguration> specializedBuilderFactory =
             type.providerResolver(resolver);
+        
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("provider");
+        thrown.expectMessage(ApacheValidationProvider.class.getName());
 
-        try {
-            specializedBuilderFactory.configure();
-            Assert.fail();
-        } catch (ValidationException e) {
-            Assert.assertTrue("Wrong error message", e.getMessage().contains("provider")
-                && e.getMessage().contains("org.apache.bval.jsr.ApacheValidationProvider"));
-        }
+        specializedBuilderFactory.configure();
     }
 
     class BadlyBehavedNotNullValidator extends NotNullValidator {

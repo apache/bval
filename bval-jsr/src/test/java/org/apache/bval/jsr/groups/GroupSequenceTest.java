@@ -18,11 +18,19 @@
  */
 package org.apache.bval.jsr.groups;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.GroupSequence;
+import javax.validation.constraints.NotNull;
+
 import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.DefaultMessageInterpolator;
 import org.apache.bval.jsr.JsrFeatures;
+import org.apache.bval.jsr.ValidationTestBase;
 import org.apache.bval.jsr.example.Author;
 import org.apache.bval.jsr.example.Book;
 import org.apache.bval.jsr.example.First;
@@ -30,79 +38,61 @@ import org.apache.bval.jsr.example.Last;
 import org.apache.bval.jsr.example.Second;
 import org.apache.bval.jsr.util.TestUtils;
 import org.apache.bval.model.MetaBean;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.GroupSequence;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import org.junit.Test;
 
 /**
  * Description: test of group sequence behavior<br/>
  */
-public class GroupSequenceTest extends TestCase {
+public class GroupSequenceTest extends ValidationTestBase {
 
-    static ValidatorFactory factory;
-
-    static {
-        factory = Validation.buildDefaultValidatorFactory();
-        ((DefaultMessageInterpolator)factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
-    }
-
-    private Validator getValidator() {
-        return factory.getValidator();
-    }
-
-
+    @Test
     public void testGroupSequence1() {
         MetaBean metaBean =
               ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GInterface1.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
-        Assert.assertNotNull(gseq);
-        Assert.assertEquals(1, gseq.size());
-        Assert.assertEquals(Group.DEFAULT, gseq.get(0));
+        assertNotNull(gseq);
+        assertEquals(1, gseq.size());
+        assertEquals(Group.DEFAULT, gseq.get(0));
     }
 
+    @Test
     public void testGroupSequence2() {
         MetaBean metaBean =
               ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GClass1.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
-        Assert.assertNotNull(gseq);
-        Assert.assertEquals(1, gseq.size());
-        Assert.assertEquals(Group.DEFAULT, gseq.get(0));
+        assertNotNull(gseq);
+        assertEquals(1, gseq.size());
+        assertEquals(Group.DEFAULT, gseq.get(0));
     }
 
+    @Test
     public void testGroupSequence3() {
         MetaBean metaBean =
               ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GClass2.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
-        Assert.assertNotNull(gseq);
-        Assert.assertEquals(2, gseq.size());
-        Assert.assertEquals(new Group(GClass1.class), gseq.get(0));
-        Assert.assertEquals(Group.DEFAULT, gseq.get(1));
+        assertNotNull(gseq);
+        assertEquals(2, gseq.size());
+        assertEquals(new Group(GClass1.class), gseq.get(0));
+        assertEquals(Group.DEFAULT, gseq.get(1));
     }
 
+    @Test
     public void testGroupSequence4() {
         MetaBean metaBean =
               ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
                     .findForClass(GClass3.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
-        Assert.assertNotNull(gseq);
-        Assert.assertEquals(2, gseq.size());
-        Assert.assertEquals(Group.DEFAULT, gseq.get(0));
-        Assert.assertEquals(new Group(GClass1.class), gseq.get(1));
+        assertNotNull(gseq);
+        assertEquals(2, gseq.size());
+        assertEquals(Group.DEFAULT, gseq.get(0));
+        assertEquals(new Group(GClass1.class), gseq.get(1));
     }
 
+    @Test
     public void testGroups() {
-        Validator validator = getValidator();
-
         Author author = new Author();
         author.setLastName("");
         author.setFirstName("");
@@ -156,9 +146,8 @@ public class GroupSequenceTest extends TestCase {
         assertEquals(0, constraintViolations.size());
     }
 
+    @Test
     public void testGroupSequence() {
-        Validator validator = getValidator();
-
         Author author = new Author();
         author.setLastName("");
         author.setFirstName("");
@@ -187,33 +176,31 @@ public class GroupSequenceTest extends TestCase {
         assertEquals(1, constraintViolations.size());
     }
 
-    
     /**
      * Check that when there is one constraint failure in one of the groups in
      * a sequence, validation stops.
      * JSR-303: 3.4.3
      */
+    @Test
     public void testValidationStopsWhenFailuresOnGroup() {
-        Validator validator = getValidator();
-        
         // Validate Dummy with its redefined Default group
         Set<ConstraintViolation<Dummy>> violations = validator.validate(new Dummy());
         assertEquals("Only 1 violation expected", 1, violations.size());
         ConstraintViolation<Dummy> violation = violations.iterator().next();
         assertEquals("Group1 should be evaluated first", "field1", violation.getPropertyPath().toString());
     }
-    
+
     @GroupSequence({Dummy.Group1.class, Dummy.class})
     public static class Dummy {
-        
+
         @NotNull(groups=Group1.class)
         public String field1;
-        
+
         @NotNull
         public String field2;
-        
+
         interface Group1 {
         }
     }
-    
+
 }

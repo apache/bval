@@ -16,36 +16,23 @@
  */
 package org.apache.bval.xml;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.bval.example.BusinessObject;
-import org.apache.bval.example.BusinessObjectAddress;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.bval.example.BusinessObject;
+import org.apache.bval.example.BusinessObjectAddress;
+import org.junit.Test;
+
 /**
  * XMLMetaBean Tester.
  */
-public class XMLMetaBeanInfosTest extends TestCase {
+public class XMLMetaBeanInfosTest {
 
-    public XMLMetaBeanInfosTest(String name) {
-        super(name);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testBeanInfosToXML() {
         XMLMetaBeanInfos infos = new XMLMetaBeanInfos();
         infos.setBeans(new ArrayList<XMLMetaBean>());
@@ -133,19 +120,17 @@ public class XMLMetaBeanInfosTest extends TestCase {
         relation.setName("address");
         relation.setBeanId("Address");
         relation.setMandatory(XMLMetaValue.OPTIONAL);
-//        relation.setDisplayName("UserAddress");
         bean.putBeanRef(relation);
 
         infos.getBeans().add(bean2);
 
         String xml = XMLMapper.getInstance().getXStream().toXML(infos);
-//        System.out.println(xml);
         XMLMetaBeanInfos infos2 =
               (XMLMetaBeanInfos) XMLMapper.getInstance().getXStream().fromXML(xml);
         assertEquals(2, infos2.getBeans().size());
     }
 
-
+    @Test
     public void testMaxValueParsing() {
         String xml = "\n" +
               "<beanInfos>  <bean id=\"org.apache.bval.test.model.Profile\">\n" +
@@ -154,14 +139,11 @@ public class XMLMetaBeanInfosTest extends TestCase {
               "  </bean></beanInfos>";
         XMLMetaBeanInfos beanInfos = (XMLMetaBeanInfos) XMLMapper.getInstance()
               .getXStream().fromXML(xml);
-        Assert.assertNotNull(beanInfos);
+        assertNotNull(beanInfos);
         assertEquals(Integer.valueOf(31),
               beanInfos.getBeans().get(0).getProperty("activationDay").getMaxValue());
         assertEquals(Integer.valueOf(1),
               beanInfos.getBeans().get(0).getProperty("activationDay").getMinValue());
     }
 
-    public static Test suite() {
-        return new TestSuite(XMLMetaBeanInfosTest.class);
-    }
 }

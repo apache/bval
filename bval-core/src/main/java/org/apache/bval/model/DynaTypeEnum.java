@@ -66,6 +66,7 @@ public class DynaTypeEnum implements DynaType {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Class<?> getRawType() {
         return enumClass;
     }

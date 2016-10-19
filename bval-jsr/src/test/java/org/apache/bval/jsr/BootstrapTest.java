@@ -99,6 +99,7 @@ public class BootstrapTest extends TestCase {
 
         builder = Validation.byDefaultProvider().configure();
         builder.constraintValidatorFactory(new ConstraintValidatorFactory() {
+            @Override
             public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
                 if (key == NotNullValidator.class) {
                     @SuppressWarnings("unchecked")
@@ -108,6 +109,7 @@ public class BootstrapTest extends TestCase {
                 return new DefaultConstraintValidatorFactory().getInstance(key);
             }
 
+            @Override
             public void releaseInstance(ConstraintValidator<?, ?> instance) {
                 // no-op
             }
@@ -121,6 +123,7 @@ public class BootstrapTest extends TestCase {
     public void testCustomResolverAndType() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
+            @Override
             public List<ValidationProvider<?>> getValidationProviders() {
                 List<ValidationProvider<?>> list = new ArrayList<ValidationProvider<?>>(1);
                 list.add(new ApacheValidationProvider());
@@ -136,6 +139,7 @@ public class BootstrapTest extends TestCase {
     public void testCustomResolver() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
+            @Override
             public List<ValidationProvider<?>> getValidationProviders() {
                 return Collections.<ValidationProvider<?>> singletonList(new ApacheValidationProvider());
             }
@@ -157,6 +161,7 @@ public class BootstrapTest extends TestCase {
     public void testFailingCustomResolver() {
         ValidationProviderResolver resolver = new ValidationProviderResolver() {
 
+            @Override
             public List<ValidationProvider<?>> getValidationProviders() {
                 return Collections.emptyList();
             }

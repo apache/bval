@@ -149,6 +149,7 @@ public class MetaProperty extends Meta implements Cloneable, Features.Property {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaProperty clone() throws CloneNotSupportedException {
         return (MetaProperty) super.clone();
     }
@@ -156,6 +157,7 @@ public class MetaProperty extends Meta implements Cloneable, Features.Property {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "MetaProperty{" + "name='" + name + '\'' + ", type=" + type + '}';
     }

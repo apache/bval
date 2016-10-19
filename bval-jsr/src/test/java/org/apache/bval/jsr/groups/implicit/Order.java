@@ -32,18 +32,22 @@ public class Order implements Auditable {
 
     private String orderNumber;
 
+    @Override
     public String getCreationDate() {
         return this.creationDate;
     }
 
+    @Override
     public String getLastUpdate() {
         return this.lastUpdate;
     }
 
+    @Override
     public String getLastModifier() {
         return this.lastModifier;
     }
 
+    @Override
     public String getLastReader() {
         return this.lastReader;
     }

@@ -27,10 +27,12 @@ import javax.validation.constraints.Null;
  */
 public class NullValidator implements ConstraintValidator<Null, Object> {
 
+    @Override
     public void initialize(Null annotation) {
         // do nothing
     }
 
+    @Override
     public boolean isValid(Object object, ConstraintValidatorContext context) {
         return object == null;
     }

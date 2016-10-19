@@ -58,6 +58,7 @@ public interface ApacheValidatorConfiguration extends Configuration<ApacheValida
          * we keep it as long as we support both: jsr and xstream-xml meta data at
          * the same time (and potentially for the same domain classes)
          */
+        @Deprecated
         String ENABLE_METABEANS_XML = "apache.bval.enable-metabeans-xml";
 
         /**

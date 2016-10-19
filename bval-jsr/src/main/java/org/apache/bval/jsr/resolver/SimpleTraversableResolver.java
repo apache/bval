@@ -30,6 +30,7 @@ public class SimpleTraversableResolver implements TraversableResolver, CachingRe
      * {@inheritDoc}
      *  @return <code>true</code>
      */
+    @Override
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                java.lang.annotation.ElementType elementType) {
@@ -40,6 +41,7 @@ public class SimpleTraversableResolver implements TraversableResolver, CachingRe
      * {@inheritDoc}
      * @return <code>true</code>
      */
+    @Override
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
@@ -50,6 +52,7 @@ public class SimpleTraversableResolver implements TraversableResolver, CachingRe
      * {@inheritDoc}
      * @return <code>false</code>
      */
+    @Override
     public boolean needsCaching() {
         return false;  // no
     }

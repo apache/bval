@@ -63,6 +63,7 @@ public final class VerhoeffValidator
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(String code, ConstraintValidatorContext context) {
         if (code.length() == 0) {
             return false;
@@ -83,6 +84,7 @@ public final class VerhoeffValidator
     /**
      * {@inheritDoc}
      */
+    @Override
     public void initialize(Verhoeff iban) {
         // not needed
     }

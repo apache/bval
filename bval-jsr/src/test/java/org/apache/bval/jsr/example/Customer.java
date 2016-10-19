@@ -44,6 +44,7 @@ public class Customer implements Person {
         this.emailAddress = emailAddress;
     }
 
+    @Override
     public String getFirstName() {
         return firstName;
     }
@@ -52,6 +53,7 @@ public class Customer implements Person {
         this.firstName = firstName;
     }
 
+    @Override
     public String getMiddleName() {
         return middleName;
     }
@@ -60,6 +62,7 @@ public class Customer implements Person {
         this.middleName = middleName;
     }
 
+    @Override
     public String getLastName() {
         return lastName;
     }

@@ -31,6 +31,7 @@ public class DirectoryValidator implements ConstraintValidator<Directory, File> 
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(File value, ConstraintValidatorContext context) {
         return value.exists() && value.isDirectory();
     }
@@ -38,6 +39,7 @@ public class DirectoryValidator implements ConstraintValidator<Directory, File> 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void initialize(Directory parameters) {
         // do nothing (as long as Directory has no properties)
     }

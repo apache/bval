@@ -52,6 +52,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
     /**
      * {@inheritDoc}
      */
+    @Override
     public ApacheValidatorConfiguration createSpecializedConfiguration(BootstrapState state) {
         return new ConfigurationImpl(state, this);
     }
@@ -59,6 +60,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
     /**
      * {@inheritDoc}
      */
+    @Override
     public Configuration<?> createGenericConfiguration(BootstrapState state) {
         return new ConfigurationImpl(state, null);
     }
@@ -69,6 +71,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
      * @throws javax.validation.ValidationException
      *             if the ValidatorFactory cannot be built
      */
+    @Override
     public ValidatorFactory buildValidatorFactory(final ConfigurationState configuration) {
         final Class<? extends ValidatorFactory> validatorFactoryClass;
         try {

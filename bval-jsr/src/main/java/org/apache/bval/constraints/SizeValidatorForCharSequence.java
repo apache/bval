@@ -32,6 +32,7 @@ public class SizeValidatorForCharSequence extends SizeValidator implements Const
      * @return Returns <code>true</code> if the string is <code>null</code> or the length of <code>s</code> between the specified
      *         <code>min</code> and <code>max</code> values (inclusive), <code>false</code> otherwise.
      */
+    @Override
     public boolean isValid(CharSequence s, ConstraintValidatorContext context) {
         if (s == null) {
             return true;

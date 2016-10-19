@@ -32,9 +32,11 @@ import javax.validation.ConstraintValidatorContext;
  */
 public class ZipCodeCityCoherenceValidator
       implements ConstraintValidator<ZipCodeCityCoherence, ZipCodeCityCarrier> {
+    @Override
     public void initialize(ZipCodeCityCoherence constraintAnnotation) {
     }
 
+    @Override
     public boolean isValid(ZipCodeCityCarrier adr, ConstraintValidatorContext context) {
         boolean r = true;
         if ("error".equals(adr.getZipCode())) {

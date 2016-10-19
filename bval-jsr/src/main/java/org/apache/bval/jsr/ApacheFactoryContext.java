@@ -91,6 +91,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
         this.messageInterpolator = messageInterpolator;
         return this;
@@ -99,6 +100,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
         return this;
@@ -107,11 +109,13 @@ public class ApacheFactoryContext implements ValidatorContext {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ValidatorContext constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
         return this;
     }
 
+    @Override
     public ValidatorContext parameterNameProvider(ParameterNameProvider parameterNameProvider) {
         this.parameterNameProvider = parameterNameProvider;
         resetMeta(); // needed since parameter names are a component of validation metadata
@@ -131,6 +135,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Validator getValidator() {
         return new ClassValidator(this);
     }

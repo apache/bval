@@ -34,6 +34,7 @@ public class SizeValidatorForMap extends SizeValidator implements ConstraintVali
      *         is between the specified <code>min</code> and <code>max</code> values (inclusive),
      *         <code>false</code> otherwise.
      */
+    @Override
     public boolean isValid(Map<?, ?> map, ConstraintValidatorContext context) {
         if (map == null) {
             return true;

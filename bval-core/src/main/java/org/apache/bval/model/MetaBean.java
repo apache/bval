@@ -223,6 +223,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "MetaBean{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", beanClass=" + beanClass + '}';
     }
@@ -299,6 +300,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             }
         }
 
+        @Override
         public int compare(final String o1, final String o2) {
             return fieldIndex(o1) - fieldIndex(o2);
         }
@@ -325,6 +327,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             }
         }
 
+        @Override
         public int compare(final Method o1, final Method o2) {
             if (o1 == o2) {
                 return 0;
@@ -344,6 +347,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
             }
         }
 
+        @Override
         public int compare(final Constructor<?> o1, final Constructor<?> o2) {
             if (o1 == o2) {
                 return 0;

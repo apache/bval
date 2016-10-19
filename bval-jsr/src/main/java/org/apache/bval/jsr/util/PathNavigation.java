@@ -68,6 +68,7 @@ public class PathNavigation {
         /**
          * {@inheritDoc}
          */
+        @Override
         public final Object result() {
             complete();
             return null;
@@ -273,6 +274,7 @@ public class PathNavigation {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void handleProperty(String name) {
             delegate.handleProperty(name);
         }
@@ -280,6 +282,7 @@ public class PathNavigation {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void handleIndexOrKey(String value) {
             delegate.handleIndexOrKey(value);
         }
@@ -287,6 +290,7 @@ public class PathNavigation {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void handleGenericInIterable() {
             delegate.handleGenericInIterable();
         }
@@ -294,6 +298,7 @@ public class PathNavigation {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Object result() {
             return null;
         }

@@ -27,6 +27,7 @@ public class ReturnValueDescriptorImpl extends ElementDescriptorImpl implements 
         setCascaded(cascaded);
     }
 
+    @Override
     public boolean hasConstraints() {
         return false;
     }

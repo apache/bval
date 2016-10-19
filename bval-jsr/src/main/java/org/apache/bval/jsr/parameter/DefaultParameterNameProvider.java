@@ -27,10 +27,12 @@ import java.util.List;
 public class DefaultParameterNameProvider implements ParameterNameProvider {
     private static final String ARG = "arg";
 
+    @Override
     public List<String> getParameterNames(Constructor<?> constructor) {
         return names(constructor.getParameterTypes().length);
     }
 
+    @Override
     public List<String> getParameterNames(Method method) {
         return names(method.getParameterTypes().length);
     }

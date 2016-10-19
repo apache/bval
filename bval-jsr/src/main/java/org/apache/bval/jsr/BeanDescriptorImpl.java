@@ -24,6 +24,7 @@ import org.apache.bval.jsr.groups.GroupConversionDescriptorImpl;
 import org.apache.bval.jsr.util.ClassHelper;
 import org.apache.bval.jsr.xml.AnnotationIgnores;
 import org.apache.bval.model.Features;
+import org.apache.bval.model.Features.Bean;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaConstructor;
 import org.apache.bval.model.MetaMethod;
@@ -92,7 +93,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     protected BeanDescriptorImpl(final ApacheFactoryContext factoryContext, final MetaBean metaBean) {
         super(metaBean, metaBean.getBeanClass(), metaBean.getValidations());
 
-        Set<PropertyDescriptor> procedureDescriptors = metaBean.getFeature(JsrFeatures.Bean.PROPERTIES);
+        Set<PropertyDescriptor> procedureDescriptors = metaBean.getFeature(Bean.PROPERTIES);
         if (procedureDescriptors == null) {
             procedureDescriptors = new HashSet<PropertyDescriptor>();
             for (final MetaProperty prop : metaBean.getProperties()) {
@@ -101,13 +102,13 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     procedureDescriptors.add(getPropertyDescriptor(prop));
                 }
             }
-            procedureDescriptors = metaBean.initFeature(JsrFeatures.Bean.PROPERTIES, procedureDescriptors);
+            procedureDescriptors = metaBean.initFeature(Bean.PROPERTIES, procedureDescriptors);
         }
 
-        ExecutableMeta executables = metaBean.getFeature(JsrFeatures.Bean.EXECUTABLES);
+        ExecutableMeta executables = metaBean.getFeature(Bean.EXECUTABLES);
         if (executables == null) { // caching the result of it is important to avoid to compute it for each Validator
             executables = new ExecutableMeta(factoryContext, metaBean, getConstraintDescriptors());
-            executables = metaBean.initFeature(JsrFeatures.Bean.EXECUTABLES, executables);
+            executables = metaBean.initFeature(Bean.EXECUTABLES, executables);
         }
 
         validatedProperties = Collections.unmodifiableSet(procedureDescriptors);
@@ -189,6 +190,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      *
      * @return true if the bean involves validation
      */
+    @Override
     public boolean isBeanConstrained() {
         return isBeanConstrained;
     }
@@ -201,6 +203,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      *
      * @param propertyName property evaluated
      */
+    @Override
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
         if (propertyName == null || propertyName.trim().length() == 0) {
             throw new IllegalArgumentException("propertyName cannot be null or empty");
@@ -231,6 +234,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
      *
      * @return the property descriptors having at least a constraint defined
      */
+    @Override
     public Set<PropertyDescriptor> getConstrainedProperties() {
         return Collections.unmodifiableSet(validatedProperties);
     }
@@ -242,6 +246,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return meta.methodConstraints.get(methodName + Arrays.toString(parameterTypes));
     }
 
+    @Override
     public MethodDescriptor getConstraintsForMethod(final String methodName, final Class<?>... parameterTypes) {
         if (methodName == null) {
             throw new IllegalArgumentException("Method name can't be null");
@@ -253,6 +258,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return null;
     }
 
+    @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
         final Set<MethodDescriptor> desc = new HashSet<MethodDescriptor>();
         desc.addAll(filter(containedMethods, methodType));
@@ -288,6 +294,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return list;
     }
 
+    @Override
     public ConstructorDescriptor getConstraintsForConstructor(final Class<?>... parameterTypes) {
         final ConstructorDescriptor descriptor = meta.contructorConstraints.get(Arrays.toString(parameterTypes));
         if (descriptor != null && (descriptor.hasConstrainedParameters() || descriptor.hasConstrainedReturnValue())) {
@@ -296,6 +303,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
         return null;
     }
 
+    @Override
     public Set<ConstructorDescriptor> getConstrainedConstructors() {
         return constrainedConstructors;
     }
@@ -303,6 +311,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "BeanDescriptorImpl{" + "returnType=" + elementClass + '}';
     }

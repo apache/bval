@@ -29,10 +29,12 @@ import javax.validation.ConstraintValidatorContext;
 public class HasStringValidator implements ConstraintValidator<HasValue, String> {
     private String[] values;
 
+    @Override
     public void initialize(HasValue stringValues) {
         values = stringValues.value();
     }
 
+    @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
         return s == null || ArrayUtils.contains(values, s);
     }

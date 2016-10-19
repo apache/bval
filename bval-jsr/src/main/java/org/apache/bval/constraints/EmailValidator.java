@@ -29,10 +29,12 @@ import javax.validation.ConstraintValidatorContext;
  */
 public class EmailValidator implements ConstraintValidator<Email, CharSequence> {
 
+    @Override
     public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
         return EMailValidationUtils.isValid(value);
     }
 
+    @Override
     public void initialize(Email parameters) {
         // do nothing (as long as Email has no properties)
     }

@@ -28,9 +28,11 @@ import java.util.Calendar;
  */
 public class PastValidatorForCalendar implements ConstraintValidator<Past, Calendar> {
 
+    @Override
     public void initialize(Past annotation) {
     }
 
+    @Override
     public boolean isValid(Calendar cal, ConstraintValidatorContext context) {
         return cal == null || cal.before(now());
     }

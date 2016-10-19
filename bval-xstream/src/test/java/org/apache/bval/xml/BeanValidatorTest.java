@@ -25,6 +25,7 @@ import org.apache.bval.ValidationResults;
 import org.apache.bval.example.BusinessObject;
 import org.apache.bval.example.BusinessObjectAddress;
 import org.apache.bval.model.Features;
+import org.apache.bval.model.Features.Property;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.routines.Reasons;
 
@@ -39,10 +40,12 @@ public class BeanValidatorTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -84,7 +87,7 @@ public class BeanValidatorTest extends TestCase {
         object.getAddress().setOwner(object);
         BeanValidator<ValidationResults> validator = new BeanValidator<ValidationResults>();
         ValidationResults results = validator.validate(object, info);
-        assertTrue(results.hasErrorForReason(Reasons.MANDATORY));
+        assertTrue(results.hasErrorForReason(Property.MANDATORY));
         assertTrue(results.hasError(object, null));
         assertTrue(results.hasError(object.getAddress(), null));
 

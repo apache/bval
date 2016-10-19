@@ -53,6 +53,7 @@ final class NodeContextBuilderImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(
           Object key) {
         node.setKey(key);
@@ -63,6 +64,7 @@ final class NodeContextBuilderImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(
           Integer index) {
         node.setIndex(index);
@@ -73,17 +75,20 @@ final class NodeContextBuilderImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
           String name) {
         propertyPath.addNode(node);
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
         propertyPath.addProperty(name);
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, node.getName());
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
         return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
     }
@@ -91,6 +96,7 @@ final class NodeContextBuilderImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext addConstraintViolation() {
         propertyPath.addNode(node);
         parent.addError(messageTemplate, propertyPath);

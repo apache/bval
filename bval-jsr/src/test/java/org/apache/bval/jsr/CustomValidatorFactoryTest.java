@@ -53,34 +53,42 @@ public class CustomValidatorFactoryTest extends TestCase {
 
     public static class IncompatibleValidatorFactory implements ValidatorFactory {
 
+        @Override
         public ConstraintValidatorFactory getConstraintValidatorFactory() {
             return null;
         }
 
+        @Override
         public ParameterNameProvider getParameterNameProvider() {
             return null;
         }
 
+        @Override
         public MessageInterpolator getMessageInterpolator() {
             return null;
         }
 
+        @Override
         public TraversableResolver getTraversableResolver() {
             return null;
         }
 
+        @Override
         public Validator getValidator() {
             return null;
         }
 
+        @Override
         public <T> T unwrap(Class<T> type) {
             return null;
         }
 
+        @Override
         public void close() {
 
         }
 
+        @Override
         public ValidatorContext usingContext() {
             return null;
         }

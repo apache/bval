@@ -67,6 +67,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaBean findForId(String beanInfoId) {
         return cacheById.get(beanInfoId);
     }
@@ -74,6 +75,7 @@ public class MetaBeanCache implements MetaBeanFinder, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaBean findForClass(Class<?> clazz) {
         return cacheByClass.get(clazz);
     }

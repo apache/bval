@@ -76,6 +76,7 @@ public class MethodAccess extends AccessStrategy {
      * method: getName() -> propertyName: name<br>
      * method: isValid() -> propertyName: valid<br>
      */
+    @Override
     public String getPropertyName() {
         return propertyName;
     }
@@ -83,6 +84,7 @@ public class MethodAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object get(final Object instance) {
         final boolean mustUnset = Reflection.setAccessible(method, true);
         try {
@@ -101,6 +103,7 @@ public class MethodAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ElementType getElementType() {
         return ElementType.METHOD;
     }
@@ -108,6 +111,7 @@ public class MethodAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Type getJavaType() {
         return method.getGenericReturnType();
     }
@@ -115,6 +119,7 @@ public class MethodAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return method.toString();
     }
@@ -122,6 +127,7 @@ public class MethodAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -138,6 +144,7 @@ public class MethodAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode() {
         return method.hashCode();
     }

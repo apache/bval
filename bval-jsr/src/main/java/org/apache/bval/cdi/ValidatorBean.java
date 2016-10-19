@@ -55,42 +55,52 @@ public class ValidatorBean implements Bean<Validator> , PassivationCapable {
         qualifiers = Collections.unmodifiableSet(q);
     }
 
+    @Override
     public Set<Type> getTypes() {
         return types;
     }
 
+    @Override
     public Set<Annotation> getQualifiers() {
         return qualifiers;
     }
 
+    @Override
     public Class<? extends Annotation> getScope() {
         return ApplicationScoped.class;
     }
 
+    @Override
     public String getName() {
         return null;
     }
 
+    @Override
     public boolean isNullable() {
         return false;
     }
 
+    @Override
     public Set<InjectionPoint> getInjectionPoints() {
         return Collections.emptySet();
     }
 
+    @Override
     public Class<?> getBeanClass() {
         return Validator.class;
     }
 
+    @Override
     public Set<Class<? extends Annotation>> getStereotypes() {
         return Collections.emptySet();
     }
 
+    @Override
     public boolean isAlternative() {
         return false;
     }
 
+    @Override
     public Validator create(final CreationalContext<Validator> context) {
         if (instance == null) {
             synchronized (this) {
@@ -102,10 +112,12 @@ public class ValidatorBean implements Bean<Validator> , PassivationCapable {
         return instance;
     }
 
+    @Override
     public void destroy(final Validator instance, final CreationalContext<Validator> context) {
         // no-op
     }
 
+    @Override
     public String getId() {
         return "BValValidator-" + hashCode();
     }

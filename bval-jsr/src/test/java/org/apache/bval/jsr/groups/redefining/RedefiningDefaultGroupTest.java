@@ -33,6 +33,7 @@ import java.util.Set;
 public class RedefiningDefaultGroupTest extends TestCase {
     private Validator validator;
 
+    @Override
     protected void setUp() {
         validator = ApacheValidatorFactory.getDefault().getValidator();
     }

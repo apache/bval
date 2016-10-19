@@ -39,6 +39,7 @@ public class AccessTestBusinessObjectSub extends AccessTestBusinessObject {
     }
 
     // getVar1() is called on subclass, although annotated on superclass    
+    @Override
     public String getVar1() {
         return var1;
     }

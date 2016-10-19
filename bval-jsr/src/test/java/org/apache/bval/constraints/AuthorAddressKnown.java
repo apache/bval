@@ -52,12 +52,14 @@ public @interface AuthorAddressKnown {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void initialize(AuthorAddressKnown constraintAnnotation) {
         }
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean isValid(Author value, ConstraintValidatorContext context) {
             if (value.getAddresses() == null) {
                 return false;

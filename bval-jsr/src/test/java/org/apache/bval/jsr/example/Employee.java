@@ -29,14 +29,17 @@ public class Employee implements Person {
         this.lastName = lastN;
     }
 
+    @Override
     public String getFirstName() {
         return firstName;
     }
 
+    @Override
     public String getMiddleName() {
         return null;  // not supported
     }
 
+    @Override
     public String getLastName() {
         return lastName;
     }

@@ -34,6 +34,7 @@ public abstract class BaseAppendValidation implements AppendValidation {
      * Append operation divided in 3 stages: pre & post processing and the
      * "real" append process.
      */
+    @Override
     public final <T extends Annotation> void append(final ConstraintValidation<T> validation) {
         preProcessValidation(validation);
         performAppend(validation);

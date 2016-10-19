@@ -50,6 +50,7 @@ public final class IBANValidator
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(String code, ConstraintValidatorContext context) {
         if (code.length() < 5) {
             return false;
@@ -74,6 +75,7 @@ public final class IBANValidator
     /**
      * {@inheritDoc}
      */
+    @Override
     public void initialize( IBAN iban ) {
         // not needed
     }

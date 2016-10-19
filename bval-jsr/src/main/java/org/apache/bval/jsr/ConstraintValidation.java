@@ -121,6 +121,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isReportAsSingleViolation() {
         return reportFromComposite;
     }
@@ -140,6 +141,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public <L extends ValidationListener> void validate(ValidationContext<L> context) {
         validateGroupContext((GroupValidationContext<?>) context);
     }
@@ -460,6 +462,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "ConstraintValidation{" + validator + '}';
     }
@@ -469,6 +472,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      *
      * @return String
      */
+    @Override
     public String getMessageTemplate() {
         return ConstraintAnnotationAttributes.MESSAGE.get(attributes);
     }
@@ -485,6 +489,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         return owner;
     }
 
+    @Override
     public T getAnnotation() {
         return annotation;
     }
@@ -502,6 +507,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, Object> getAttributes() {
         return attributes;
     }
@@ -509,6 +515,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<ConstraintDescriptor<?>> getComposingConstraints() {
         return composedConstraints == null ? Collections.EMPTY_SET : composedConstraints;
@@ -528,6 +535,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Class<?>> getGroups() {
         return groups;
     }
@@ -535,10 +543,12 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Class<? extends Payload>> getPayload() {
         return payload;
     }
 
+    @Override
     public ConstraintTarget getValidationAppliesTo() {
         return validationAppliesTo;
     }
@@ -546,6 +556,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<Class<? extends ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
         return validatorClasses == null ? Collections.<Class<? extends ConstraintValidator<T, ?>>> emptyList() : Arrays.asList(validatorClasses);
     }

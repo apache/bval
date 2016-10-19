@@ -53,6 +53,7 @@ final class NodeBuilderCustomizableContextImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder inIterable() {
         // Modifies the "previous" node in the path
         node.setInIterable(true);
@@ -62,12 +63,14 @@ final class NodeBuilderCustomizableContextImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         propertyPath.addNode(node);
         node = new NodeImpl(name);
         return this; // Re-use this instance
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
         propertyPath.addNode(node);
         node = new NodeImpl.PropertyNodeImpl(name);
@@ -75,6 +78,7 @@ final class NodeBuilderCustomizableContextImpl
         return null;
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
         propertyPath.addNode(node);
         node = new NodeImpl((String) null);
@@ -85,6 +89,7 @@ final class NodeBuilderCustomizableContextImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext addConstraintViolation() {
         propertyPath.addNode(node);
         node = null;

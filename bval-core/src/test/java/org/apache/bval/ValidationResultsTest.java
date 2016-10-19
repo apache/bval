@@ -31,11 +31,13 @@ public class ValidationResultsTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         results = new ValidationResults();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

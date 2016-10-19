@@ -84,6 +84,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * former name getInterpolatedMessage()
      * @return The interpolated error message for this constraint violation.
      */
+    @Override
     public String getMessage() {
         return message;
     }
@@ -91,6 +92,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getMessageTemplate() {
         return messageTemplate;
     }
@@ -99,6 +101,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * {@inheritDoc}
      * @return Root bean being validated
      */
+    @Override
     public T getRootBean() {
         return rootBean;
     }
@@ -106,6 +109,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     /**
      * {@inheritDoc}
      */
+    @Override
     public Class<T> getRootBeanClass() {
         return rootBeanClass;
     }
@@ -113,14 +117,17 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getLeafBean() {
         return leafBean;
     }
 
+    @Override
     public Object[] getExecutableParameters() {
         return parameters;
     }
 
+    @Override
     public Object getExecutableReturnValue() {
         return returnValue;
     }
@@ -129,6 +136,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * {@inheritDoc}
      * @return The value failing to pass the constraint
      */
+    @Override
     public Object getInvalidValue() {
         return value;
     }
@@ -138,6 +146,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * @return the property path to the value from <code>rootBean</code>
      *         Null if the value is the rootBean itself
      */
+    @Override
     public Path getPropertyPath() {
         return propertyPath;
     }
@@ -145,10 +154,12 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintDescriptor<?> getConstraintDescriptor() {
         return constraintDescriptor;
     }
 
+    @Override
     public <U> U unwrap(Class<U> type) {
         if (type.isInstance(this)) {
             return type.cast(this);

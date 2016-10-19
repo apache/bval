@@ -34,6 +34,7 @@ public class SizeValidatorForArrayOfInt extends SizeValidator implements Constra
      *         <code>array</code> is between the specified <code>min</code> and <code>max</code> values (inclusive),
      *         <code>false</code> otherwise.
      */
+    @Override
     public boolean isValid(int[] array, ConstraintValidatorContext context) {
         if (array == null) {
             return true;

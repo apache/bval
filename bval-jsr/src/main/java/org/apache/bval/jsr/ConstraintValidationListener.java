@@ -57,6 +57,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     /**
      * {@inheritDoc}
      */
+    @Override
     public <VL extends ValidationListener> void addError(String reason, ValidationContext<VL> context) {
         addError(reason, null, context);
     }
@@ -64,6 +65,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     /**
      * {@inheritDoc}
      */
+    @Override
     public <VL extends ValidationListener> void addError(Error error, ValidationContext<VL> context) {
         if (error.getOwner() instanceof Path) {
             addError(error.getReason(), (Path) error.getOwner(), context);

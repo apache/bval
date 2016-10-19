@@ -127,6 +127,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ElementType getElementType() {
         return rememberField != null ? ElementType.FIELD : ElementType.METHOD;
     }
@@ -170,6 +171,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "Property{" + beanClass.getName() + '.' + propertyName + '}';
     }
@@ -177,6 +179,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Type getJavaType() {
         Type result = getTypeInner();
         return result == null ? Object.class : result;
@@ -254,6 +257,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return propertyName;
     }
@@ -261,6 +265,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object get(Object bean) {
         try {
             if (rememberField != null) { // cache field of previous access
@@ -294,6 +299,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -310,6 +316,7 @@ public class PropertyAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode() {
         int result;
         result = beanClass.hashCode();

@@ -30,6 +30,7 @@ public class AppendValidationToList extends BaseAppendValidation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         validations.add(validation);
     }

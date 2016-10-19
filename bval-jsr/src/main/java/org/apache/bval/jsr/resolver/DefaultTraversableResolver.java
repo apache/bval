@@ -55,6 +55,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                ElementType elementType) {
@@ -65,6 +66,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
@@ -102,6 +104,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean needsCaching() {
         return jpaTR != null && CachingTraversableResolver.needsCaching(jpaTR);
     }

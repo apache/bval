@@ -31,6 +31,7 @@ public class XMLMetaBeanURLLoader implements XMLMetaBeanLoader {
         this.url = url;
     }
 
+    @Override
     public XMLMetaBeanInfos load() throws IOException {
         InputStream stream = url.openStream();
         try {

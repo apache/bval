@@ -28,9 +28,11 @@ import java.util.Date;
  */
 public class FutureValidatorForDate implements ConstraintValidator<Future, Date> {
 
+    @Override
     public void initialize(Future annotation) {
     }
 
+    @Override
     public boolean isValid(Date date, ConstraintValidatorContext context) {
         return date == null || date.after(now());
     }

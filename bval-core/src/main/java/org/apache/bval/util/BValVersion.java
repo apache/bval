@@ -160,6 +160,7 @@ public class BValVersion {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder(80 * 40);
         appendBanner(buf);

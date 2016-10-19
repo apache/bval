@@ -40,6 +40,7 @@ public class BeanValidationContext<T extends ValidationListener>
       implements ValidationContext<T> {
     /** represent an unknown propertyValue. */
     private static final Object UNKNOWN = new Object() {
+        @Override
         public String toString() {
             return "unknown property value";
         }
@@ -98,6 +99,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public T getListener() {
         return listener;
     }
@@ -114,6 +116,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      * Here, state equates to a given bean reference.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public boolean collectValidated() {
         return validatedObjects.put(getBean(), Boolean.TRUE) == null;
@@ -139,6 +142,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setBean(Object aBean, MetaBean aMetaBean) {
         bean = aBean;
         metaBean = aMetaBean;
@@ -154,6 +158,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * @throws IllegalArgumentException - error accessing attribute (config error, reflection problem)
      * @throws IllegalStateException    - when no property is currently set in the context (application logic bug)
      */
+    @Override
     public Object getPropertyValue() {
         if (access == null) { // undefined access strategy
             return getPropertyValue(PropertyAccess.getInstance(bean.getClass(), metaProperty.getName()));
@@ -165,6 +170,7 @@ public class BeanValidationContext<T extends ValidationListener>
      * {@inheritDoc}
      * Caches retrieved value.
      */
+    @Override
     public Object getPropertyValue(AccessStrategy access) throws IllegalArgumentException, IllegalStateException {
         if (propertyValue == UNKNOWN || (this.access != access && !fixed)) {
             propertyValue = access.get(bean);
@@ -178,6 +184,7 @@ public class BeanValidationContext<T extends ValidationListener>
      *
      * @return null or the name of the current property
      */
+    @Override
     public String getPropertyName() {
         return metaProperty == null ? null : metaProperty.getName();
     }
@@ -245,6 +252,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaBean getMetaBean() {
         return metaBean;
     }
@@ -252,6 +260,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getBean() {
         return bean;
     }
@@ -259,6 +268,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaProperty getMetaProperty() {
         return metaProperty;
     }
@@ -266,6 +276,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setMetaBean(MetaBean metaBean) {
         this.metaBean = metaBean;
     }
@@ -273,6 +284,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setBean(Object bean) {
         this.bean = bean;
         unknownValue();
@@ -281,6 +293,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setMetaProperty(MetaProperty metaProperty) {
         this.metaProperty = metaProperty;
         unknownValue();
@@ -289,6 +302,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "BeanValidationContext{ bean=" + bean + ", metaProperty=" + metaProperty + ", propertyValue="
             + propertyValue + '}';
@@ -297,10 +311,12 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void moveDown(MetaProperty prop, AccessStrategy access) {
         setBean(getPropertyValue(access), prop.getMetaBean());
     }
 
+    @Override
     public void moveDown(String prop) {
         // no-op: not supported
     }
@@ -308,6 +324,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void moveUp(Object bean, MetaBean aMetaBean) {
         setBean(bean, aMetaBean); // reset context state
     }
@@ -315,6 +332,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setCurrentIndex(Integer index) {
         // do nothing
     }
@@ -322,6 +340,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setCurrentKey(Object key) {
         // do nothing
     }
@@ -329,6 +348,7 @@ public class BeanValidationContext<T extends ValidationListener>
     /**
      * {@inheritDoc}
      */
+    @Override
     public AccessStrategy getAccess() {
         return this.access;
     }

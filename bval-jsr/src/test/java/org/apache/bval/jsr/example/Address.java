@@ -57,6 +57,7 @@ public class Address implements ZipCodeCityCarrier {
         this.addressline2 = addressline2;
     }
 
+    @Override
     public String getZipCode() {
         return zipCode;
     }
@@ -65,6 +66,7 @@ public class Address implements ZipCodeCityCarrier {
         this.zipCode = zipCode;
     }
 
+    @Override
     @Size(max = 30)
     @NotNull
     public String getCity() {

@@ -42,6 +42,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
      * @return Returns a new Constraint instance
      *         The ConstraintFactory is <b>not</b> responsible for calling Constraint#initialize
      */
+    @Override
     public <T extends ConstraintValidator<?, ?>> T getInstance(final Class<T> constraintClass) {
         if (useCdi == null) {
             synchronized (this) {
@@ -80,10 +81,12 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
         }
     }
 
+    @Override
     public void releaseInstance(final ConstraintValidator<?, ?> instance) {
         // no-op
     }
 
+    @Override
     public void close() throws IOException {
         for (final BValExtension.Releasable<?> releasable : releasables) {
             // ensure to call this callback

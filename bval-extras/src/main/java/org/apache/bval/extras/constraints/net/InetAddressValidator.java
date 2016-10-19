@@ -37,6 +37,7 @@ public class InetAddressValidator implements ConstraintValidator<InetAddress, St
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (!IPV4_PATTERN.matcher(value).matches()) {
             return false;
@@ -48,6 +49,7 @@ public class InetAddressValidator implements ConstraintValidator<InetAddress, St
     /**
      * {@inheritDoc}
      */
+    @Override
     public void initialize(InetAddress parameters) {
         // do nothing (as long as InetAddress has no properties)
     }

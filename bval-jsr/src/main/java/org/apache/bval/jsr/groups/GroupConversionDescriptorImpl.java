@@ -33,10 +33,12 @@ public class GroupConversionDescriptorImpl implements GroupConversionDescriptor 
         this.to = to.getGroup();
     }
 
+    @Override
     public Class<?> getFrom() {
         return from;
     }
 
+    @Override
     public Class<?> getTo() {
         return to;
     }

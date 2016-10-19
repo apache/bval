@@ -52,50 +52,62 @@ public class ValidatorFactoryBean implements Bean<ValidatorFactory> , Passivatio
         qualifiers = Collections.unmodifiableSet(q);
     }
 
+    @Override
     public Set<Type> getTypes() {
         return types;
     }
 
+    @Override
     public Set<Annotation> getQualifiers() {
         return qualifiers;
     }
 
+    @Override
     public Class<? extends Annotation> getScope() {
         return ApplicationScoped.class;
     }
 
+    @Override
     public String getName() {
         return null;
     }
 
+    @Override
     public boolean isNullable() {
         return false;
     }
 
+    @Override
     public Set<InjectionPoint> getInjectionPoints() {
         return Collections.emptySet();
     }
 
+    @Override
     public Class<?> getBeanClass() {
         return ValidatorFactory.class;
     }
 
+    @Override
     public Set<Class<? extends Annotation>> getStereotypes() {
         return Collections.emptySet();
     }
 
+    @Override
     public boolean isAlternative() {
         return false;
     }
 
+    @Override
     public ValidatorFactory create(final CreationalContext<ValidatorFactory> context) {
         return instance;
     }
 
+    @Override
     public void destroy(final ValidatorFactory instance, final CreationalContext<ValidatorFactory> context) {
         instance.close();
     }
 
+    @Override
     public String getId() {
         return "BValValidatorFactory-" + hashCode();
     }

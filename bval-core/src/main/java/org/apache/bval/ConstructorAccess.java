@@ -35,10 +35,12 @@ public class ConstructorAccess extends AccessStrategy {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public ElementType getElementType() {
         return ElementType.CONSTRUCTOR;
     }
 
+    @Override
     public Type getJavaType() {
         return constructor.getDeclaringClass();
     }
@@ -46,6 +48,7 @@ public class ConstructorAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return constructor.getDeclaringClass().getSimpleName();
     }
@@ -53,10 +56,12 @@ public class ConstructorAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return constructor.toString();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -69,6 +74,7 @@ public class ConstructorAccess extends AccessStrategy {
         return constructor.equals(that.constructor);
     }
 
+    @Override
     public int hashCode() {
         return constructor.hashCode();
     }

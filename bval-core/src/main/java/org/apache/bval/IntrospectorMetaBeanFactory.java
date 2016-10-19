@@ -41,6 +41,7 @@ public class IntrospectorMetaBeanFactory implements MetaBeanFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void buildMetaBean(MetaBean meta) throws Exception {
         if (meta.getBeanClass() == null) {
             return; // handle only, when local class exists

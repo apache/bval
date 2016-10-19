@@ -33,6 +33,7 @@ public class LeafNodeBuilderDefinedContextImpl implements ConstraintValidatorCon
         this.path = path;
     }
 
+    @Override
     public ConstraintValidatorContext addConstraintViolation() {
         context.addError(template, path);
         return context;

@@ -86,6 +86,7 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 @Privilizing(@CallTo(Reflection.class))
 public class ClassValidator implements CascadingPropertyValidator, ExecutableValidator {
     private static final Object VALIDATE_PROPERTY = new Object() {
+        @Override
         public String toString() {
             return "VALIDATE_PROPERTY";
         }
@@ -196,6 +197,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T> Set<ConstraintViolation<T>> validateProperty(T object, String propertyName, boolean cascade,
         Class<?>... groups) {
         notNull("validated object", object);
@@ -234,6 +236,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T> Set<ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
         boolean cascade, Class<?>... groups) {
         return validateValueImpl(notNull("bean type", beanType), null, propertyName, value, cascade, groups);
@@ -304,6 +307,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         throw new ValidationException("Type " + type + " not supported");
     }
 
+    @Override
     public ExecutableValidator forExecutables() {
         return this;
     }
@@ -494,6 +498,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                         ValidationHelper.validateContext(context, new JsrValidationCallback(context), factoryContext.isTreatMapsLikeBeans());
                     } else {
                         ValidationHelper.validateContext(context, new ValidationHelper.ValidateCallback() {
+                            @Override
                             public void validate() {
                                 validateBeanWithGroups(context, groups);
                             }
@@ -592,6 +597,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         if (context.getMetaProperty() == null) {
             helper = new Runnable() {
 
+                @Override
                 public void run() {
                     ValidationHelper.validateBean(context);
                 }
@@ -599,6 +605,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         } else {
             helper = new Runnable() {
 
+                @Override
                 public void run() {
                     ValidationHelper.validateProperty(context);
                 }
@@ -693,6 +700,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         }
     }
 
+    @Override
     public <T> Set<ConstraintViolation<T>> validateConstructorParameters(Constructor<? extends T> constructor, Object[] parameterValues, Class<?>... gps) {
         notNull("Constructor", constructor);
         notNull("Groups", gps);
@@ -902,6 +910,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         }
     }
 
+    @Override
     public <T> Set<ConstraintViolation<T>> validateConstructorReturnValue(final Constructor<? extends T> constructor, final T createdObject, final Class<?>... gps) {
         notNull("Constructor", constructor);
         notNull("Returned value", createdObject);
@@ -988,6 +997,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         return context.getListener().getConstraintViolations();
     }
 
+    @Override
     public <T> Set<ConstraintViolation<T>> validateParameters(T object, Method method, Object[] parameterValues, Class<?>... groups) {
         notNull("Object", object);
         notNull("Parameters", parameterValues);
@@ -1028,6 +1038,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T> Set<ConstraintViolation<T>> validateReturnValue(T object, Method method, Object returnValue, Class<?>... groups) {
         notNull("object", object);
         notNull("method", method);
@@ -1090,6 +1101,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             this.context = context;
         }
 
+        @Override
         public void validate() {
             validateBeanNet(context);
         }

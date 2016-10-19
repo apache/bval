@@ -112,6 +112,7 @@ public class NodeImpl implements Path.Node, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -126,6 +127,7 @@ public class NodeImpl implements Path.Node, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isInIterable() {
         return inIterable;
     }
@@ -141,6 +143,7 @@ public class NodeImpl implements Path.Node, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Integer getIndex() {
         return index;
     }
@@ -162,6 +165,7 @@ public class NodeImpl implements Path.Node, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getKey() {
         return key;
     }
@@ -176,6 +180,7 @@ public class NodeImpl implements Path.Node, Serializable {
         this.index = null;
     }
 
+    @Override
     public ElementKind getKind() {
         return kind;
     }
@@ -184,6 +189,7 @@ public class NodeImpl implements Path.Node, Serializable {
         this.kind = kind;
     }
 
+    @Override
     public <T extends Node> T as(final Class<T> nodeType) {
         if (nodeType.isInstance(this)) {
             return nodeType.cast(this);
@@ -270,6 +276,7 @@ public class NodeImpl implements Path.Node, Serializable {
             setParameterIndex(idx);
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.PARAMETER;
         }
@@ -288,6 +295,7 @@ public class NodeImpl implements Path.Node, Serializable {
             setParameterTypes(paramTypes);
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.CONSTRUCTOR;
         }
@@ -302,6 +310,7 @@ public class NodeImpl implements Path.Node, Serializable {
             super(cast);
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.CROSS_PARAMETER;
         }
@@ -320,6 +329,7 @@ public class NodeImpl implements Path.Node, Serializable {
             setParameterTypes(classes);
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.METHOD;
         }
@@ -334,6 +344,7 @@ public class NodeImpl implements Path.Node, Serializable {
             super("<return value>");
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.RETURN_VALUE;
         }
@@ -348,6 +359,7 @@ public class NodeImpl implements Path.Node, Serializable {
             super(cast);
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.PROPERTY;
         }
@@ -362,6 +374,7 @@ public class NodeImpl implements Path.Node, Serializable {
             super(cast);
         }
 
+        @Override
         public ElementKind getKind() {
             return ElementKind.BEAN;
         }

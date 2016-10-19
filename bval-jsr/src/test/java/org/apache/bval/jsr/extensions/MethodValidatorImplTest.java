@@ -62,8 +62,7 @@ public class MethodValidatorImplTest extends TestCase {
     public void testValidateMethodParameters() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-        Method method =
-              service.getClass().getMethod("concat", new Class[]{String.class, String.class});
+        Method method = service.getClass().getMethod("concat", new Class[] { String.class, String.class });
         String[] params = new String[2];
         params[0] = "Hello ";
         params[1] = "world";
@@ -78,46 +77,45 @@ public class MethodValidatorImplTest extends TestCase {
         results = mv.validateParameters(service, method, params);
         assertEquals(2, results.size());
     }
-    
+
     public void testValidateMoreMethodParameters() throws NoSuchMethodException {
-    	
-    	ExampleMethodService service = new ExampleMethodService();
+
+        ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-    	Method saveMethod = service.getClass().getMethod("save", new Class[]{String.class});
-    	
-    	String[] saveParams = new String[1];
-    	saveParams[0] = "abcd";
-    	
-    	Set results = mv.validateParameters(service, saveMethod, saveParams);
-    	assertTrue(results.isEmpty());
-    	
-    	saveParams[0] = "zzzz";
-    	results = mv.validateParameters(service, saveMethod, saveParams);
-    	assertEquals(1, results.size());
-    	
-    	Method echoMethod = service.getClass().getMethod("echo", new Class[]{String.class});
-    	
-    	String[] echoParams = new String[1];
-    	echoParams[0] = "hello";
-    	
-    	results = mv.validateParameters(service, echoMethod, echoParams);
-    	assertTrue(results.isEmpty());
-    	
-    	echoParams[0] = "h";
-    	results = mv.validateParameters(service, echoMethod, echoParams);
-    	assertEquals(1, results.size());
-    	
-    	echoParams[0] = null;
-    	results = mv.validateParameters(service, echoMethod, echoParams);
-    	assertEquals(1, results.size());
-    	
+        Method saveMethod = service.getClass().getMethod("save", new Class[] { String.class });
+
+        String[] saveParams = new String[1];
+        saveParams[0] = "abcd";
+
+        Set results = mv.validateParameters(service, saveMethod, saveParams);
+        assertTrue(results.isEmpty());
+
+        saveParams[0] = "zzzz";
+        results = mv.validateParameters(service, saveMethod, saveParams);
+        assertEquals(1, results.size());
+
+        Method echoMethod = service.getClass().getMethod("echo", new Class[] { String.class });
+
+        String[] echoParams = new String[1];
+        echoParams[0] = "hello";
+
+        results = mv.validateParameters(service, echoMethod, echoParams);
+        assertTrue(results.isEmpty());
+
+        echoParams[0] = "h";
+        results = mv.validateParameters(service, echoMethod, echoParams);
+        assertEquals(1, results.size());
+
+        echoParams[0] = null;
+        results = mv.validateParameters(service, echoMethod, echoParams);
+        assertEquals(1, results.size());
+
     }
 
     public void testValidateConstructorParameters() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-        Constructor constructor =
-              service.getClass().getConstructor(String.class, String.class);
+        Constructor constructor = service.getClass().getConstructor(String.class, String.class);
         String[] params = new String[2];
         params[0] = "Hello ";
         params[1] = "world";
@@ -136,7 +134,7 @@ public class MethodValidatorImplTest extends TestCase {
     public void testValidateReturnValue() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-        Method method = service.getClass().getMethod("concat", new Class[]{String.class, String.class});
+        Method method = service.getClass().getMethod("concat", new Class[] { String.class, String.class });
 
         Set results;
 
@@ -146,111 +144,112 @@ public class MethodValidatorImplTest extends TestCase {
         results = mv.validateReturnValue(service, method, "");
         assertEquals(1, results.size());
     }
-    
-    public void testValidateMoreReturnValue() throws NoSuchMethodException {
-    	ExampleMethodService service = new ExampleMethodService();
-        ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-    	Method echoMethod = service.getClass().getMethod("echo", new Class[]{String.class});
-    	
-    	String returnedValue = "a too long string";
-    	Set results = mv.validateReturnValue(service, echoMethod, returnedValue);
-    	assertEquals(1, results.size());
 
-    	returnedValue = null;
+    public void testValidateMoreReturnValue() throws NoSuchMethodException {
+        ExampleMethodService service = new ExampleMethodService();
+        ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
+        Method echoMethod = service.getClass().getMethod("echo", new Class[] { String.class });
+
+        String returnedValue = "a too long string";
+        Set results = mv.validateReturnValue(service, echoMethod, returnedValue);
+        assertEquals(1, results.size());
+
+        returnedValue = null;
         results = mv.validateReturnValue(service, echoMethod, returnedValue);
         assertEquals(1, results.size());
-    	
-    	returnedValue = "valid";
+
+        returnedValue = "valid";
         results = mv.validateReturnValue(service, echoMethod, returnedValue);
-    	assertTrue(results.isEmpty());
+        assertTrue(results.isEmpty());
     }
-    
+
     public void testValidateValidParam() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-        
-        Method personOp1 = service.getClass().getMethod("personOp1", new Class[]{Person.class});
-        
+
+        Method personOp1 = service.getClass().getMethod("personOp1", new Class[] { Person.class });
+
         // Validate with invalid person
         Person p = new ExampleMethodService.Person();
-        Set<?> results = mv.validateParameters(service, personOp1, new Object[]{p});
+        Set<?> results = mv.validateParameters(service, personOp1, new Object[] { p });
         assertEquals("Expected 1 violation", 1, results.size());
-        
+
         // validate with valid person
         p.name = "valid name";
-        results = mv.validateParameters(service, personOp1, new Object[]{p});
+        results = mv.validateParameters(service, personOp1, new Object[] { p });
         assertTrue("No violations expected", results.isEmpty());
-        
+
         // validate with null person
-        results = mv.validateParameters(service, personOp1, new Object[]{null});
+        results = mv.validateParameters(service, personOp1, new Object[] { null });
         assertTrue("No violations expected", results.isEmpty());
     }
-    
+
     public void testValidateNotNullValidParam() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-        
-        Method personOp2 = service.getClass().getMethod("personOp2", new Class[]{Person.class});
-        
+
+        Method personOp2 = service.getClass().getMethod("personOp2", new Class[] { Person.class });
+
         // Validate with null person
-        Set<?> results = mv.validateParameters(service, personOp2, new Object[]{null});
+        Set<?> results = mv.validateParameters(service, personOp2, new Object[] { null });
         assertEquals("Expected 1 violation", 1, results.size());
-        
+
         // Validate with invalid person
         Person p = new ExampleMethodService.Person();
-        results = mv.validateParameters(service, personOp2, new Object[]{p});
+        results = mv.validateParameters(service, personOp2, new Object[] { p });
         assertEquals("Expected 1 violation", 1, results.size());
-        
+
         // validate with valid person
         p.name = "valid name";
-        results = mv.validateParameters(service, personOp2, new Object[]{p});
+        results = mv.validateParameters(service, personOp2, new Object[] { p });
         assertTrue("No violations expected", results.isEmpty());
     }
-    
-    
+
     /**
-     * Validate a method defined in an interface using the following combinations:
+     * Validate a method defined in an interface using the following
+     * combinations:
      * <ul>
-     *  <li>impl.class + impl.method</li>
-     *  <li>interface.class + interface.method</li>
-     *  <li>impl.class + interface.method</li>
-     *  <li>interface.class + impl.method</li>
+     * <li>impl.class + impl.method</li>
+     * <li>interface.class + interface.method</li>
+     * <li>impl.class + interface.method</li>
+     * <li>interface.class + impl.method</li>
      * </ul>
      */
     @Ignore("violates Liskov principle, forbidden by the spec - 4.5.5")
     public void validateImplementedMethod() throws NoSuchMethodException {
         UserMethodsImpl um = new UserMethodsImpl();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
-        
-        Method classMethod = um.getClass().getMethod("findUser", new Class[]{String.class, String.class, Integer.class});
-        Method ifaceMethod = UserMethods.class.getMethod("findUser", new Class[]{String.class, String.class, Integer.class});
-        
+
+        Method classMethod =
+            um.getClass().getMethod("findUser", new Class[] { String.class, String.class, Integer.class });
+        Method ifaceMethod =
+            UserMethods.class.getMethod("findUser", new Class[] { String.class, String.class, Integer.class });
+
         Set<?> results;
-        
+
         // Validate from class (should create violations)
-        results = mv.validateParameters(um, classMethod, new Object[]{"", "valid", null });
+        results = mv.validateParameters(um, classMethod, new Object[] { "", "valid", null });
         assertEquals("Invalid number of violations", 2, results.size());
     }
-    
+
     public static interface UserMethods {
         void findUser(String param1, String param2, Integer param3);
     }
-    
+
     public static class UserMethodsImpl implements UserMethods {
         // @Override - not allowed in 1.5 for Interface methods
-        public void findUser( @Size( min=1 ) String param1, @NotNull String param2, @NotNull Integer param3) {
+        public void findUser(@Size(min = 1) String param1, @NotNull String param2, @NotNull Integer param3) {
             return;
-        }        
+        }
     }
-    
 
     private Validator getValidator() {
-        return Validation
-            .byProvider(ApacheValidationProvider.class)
-            .configure()
-                /*
-            .addProperty(ApacheValidatorConfiguration.Properties.METABEAN_FACTORY_CLASSNAMES,
-                MethodValidatorMetaBeanFactory.class.getName())*/
-                .buildValidatorFactory().getValidator();
+        return Validation.byProvider(ApacheValidationProvider.class).configure()
+            /*
+             * .addProperty(ApacheValidatorConfiguration.Properties.
+             * METABEAN_FACTORY_CLASSNAMES,
+             * MethodValidatorMetaBeanFactory.class.getName())
+             */
+            .buildValidatorFactory().getValidator();
     }
 }

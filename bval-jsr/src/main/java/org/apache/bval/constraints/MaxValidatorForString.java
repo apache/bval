@@ -31,10 +31,12 @@ public class MaxValidatorForString implements ConstraintValidator<Max, String> {
 
     private long max;
 
+    @Override
     public void initialize(Max annotation) {
         this.max = annotation.value();
     }
 
+    @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;

@@ -45,6 +45,7 @@ public class ValidationResults implements ValidationListener, Serializable {
      *                       or custom reason of validation error
      * @param context        - context information (bean, propertyName, value, ...)
      */
+    @Override
     public <T extends ValidationListener> void addError(String reason, ValidationContext<T> context) {
         Error error = createError(reason, context.getBean(), context.getPropertyName());
         addError(error, context);
@@ -58,6 +59,7 @@ public class ValidationResults implements ValidationListener, Serializable {
       *                     the validation error
      * @param context     - null or the context to provide additional information
      */
+    @Override
     public <T extends ValidationListener> void addError(Error error, ValidationContext<T> context) {
         if (errorsByReason == null) {
             initialize();
@@ -230,6 +232,7 @@ public class ValidationResults implements ValidationListener, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "ValidationResults{" + errorsByOwner + "}";
     }

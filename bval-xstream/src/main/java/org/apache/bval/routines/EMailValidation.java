@@ -30,6 +30,7 @@ public class EMailValidation implements Validation {
 
     private java.util.regex.Pattern pattern = EMailValidationUtils.DEFAULT_EMAIL_PATTERN;
 
+    @Override
     public <T extends ValidationListener> void validate(ValidationContext<T> context) {
         if (context.getPropertyValue() == null) return;
         if (!EMailValidationUtils.isValid(context.getPropertyValue(), getPattern())) {

@@ -28,6 +28,7 @@ public class JPATraversableResolver implements TraversableResolver, CachingRelev
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                ElementType elementType) {
@@ -38,6 +39,7 @@ public class JPATraversableResolver implements TraversableResolver, CachingRelev
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
@@ -47,6 +49,7 @@ public class JPATraversableResolver implements TraversableResolver, CachingRelev
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean needsCaching() {
         return true; // yes
     }

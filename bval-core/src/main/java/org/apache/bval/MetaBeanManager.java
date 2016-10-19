@@ -75,6 +75,7 @@ public class MetaBeanManager implements MetaBeanFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaBean findForId(final String beanInfoId) {
         MetaBean beanInfo = cache.findForId(beanInfoId);
         if (beanInfo != null) {
@@ -96,6 +97,7 @@ public class MetaBeanManager implements MetaBeanFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaBean findForClass(final Class<?> clazz) {
         if (clazz == null) {
             return null;

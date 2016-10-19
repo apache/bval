@@ -48,11 +48,13 @@ public class GroupsComputerTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         groupsComputer = new GroupsComputer();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

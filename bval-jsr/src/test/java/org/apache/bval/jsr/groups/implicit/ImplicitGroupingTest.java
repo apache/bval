@@ -32,6 +32,7 @@ import java.util.Set;
 public class ImplicitGroupingTest extends TestCase {
     private Validator validator;
 
+    @Override
     protected void setUp() {
         validator = ApacheValidatorFactory.getDefault().getValidator();
     }

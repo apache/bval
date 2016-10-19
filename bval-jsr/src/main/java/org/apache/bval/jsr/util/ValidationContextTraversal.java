@@ -101,6 +101,7 @@ public class ValidationContextTraversal extends CallbackProcedure {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void handleIndexOrKey(String token) {
         moveDownIfNecessary();
 
@@ -130,6 +131,7 @@ public class ValidationContextTraversal extends CallbackProcedure {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void handleProperty(String token) {
         moveDownIfNecessary();
 
@@ -186,6 +188,7 @@ public class ValidationContextTraversal extends CallbackProcedure {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void handleGenericInIterable() {
         throw new UnsupportedOperationException("Cannot navigate a ValidationContext to []");
     }

@@ -34,6 +34,7 @@ public class SizeValidatorForArrayOfBoolean extends SizeValidator implements Con
      *         <code>array</code> is between the specified <code>min</code> and <code>max</code> values (inclusive),
      *         <code>false</code> otherwise.
      */
+    @Override
     public boolean isValid(boolean[] array, ConstraintValidatorContext context) {
         if (array == null) {
             return true;

@@ -221,6 +221,7 @@ public class BeanDescriptorTest extends TestCase {
 
         private String name;
 
+        @Override
         public String getName() {
             return this.name;
         }

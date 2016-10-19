@@ -138,6 +138,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * {@inheritDoc}
      */
+    @Override
     public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
         if (resolver == null) {
             return this;
@@ -156,6 +157,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      *
      * @return this
      */
+    @Override
     public ApacheValidatorConfiguration ignoreXmlConfiguration() {
         ignoreXmlConfiguration = true;
         return this;
@@ -164,6 +166,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConfigurationImpl messageInterpolator(MessageInterpolator resolver) {
         if (resolver == null) {
             return this;
@@ -178,6 +181,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConfigurationImpl constraintValidatorFactory(
           ConstraintValidatorFactory constraintFactory) {
         if (constraintFactory == null) {
@@ -190,6 +194,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return this;
     }
 
+    @Override
     public ApacheValidatorConfiguration parameterNameProvider(ParameterNameProvider parameterNameProvider) {
         if (parameterNameProvider == null) {
             return this;
@@ -206,6 +211,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      *
      * @return this
      */
+    @Override
     public ApacheValidatorConfiguration addMapping(InputStream stream) {
         if (stream == null) {
             return this;
@@ -222,6 +228,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      *
      * @return this
      */
+    @Override
     public ApacheValidatorConfiguration addProperty(String name, String value) {
         if ("bval.before.cdi".equals(name)) {
             beforeCdi = Boolean.parseBoolean(value);
@@ -231,18 +238,22 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return this;
     }
 
+    @Override
     public MessageInterpolator getDefaultMessageInterpolator() {
         return defaultMessageInterpolator;
     }
 
+    @Override
     public TraversableResolver getDefaultTraversableResolver() {
         return defaultTraversableResolver;
     }
 
+    @Override
     public ConstraintValidatorFactory getDefaultConstraintValidatorFactory() {
         return defaultConstraintValidatorFactory;
     }
 
+    @Override
     public ParameterNameProvider getDefaultParameterNameProvider() {
         return defaultParameterNameProvider;
     }
@@ -253,6 +264,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      *
      * @return null
      */
+    @Override
     public Map<String, String> getProperties() {
         return properties;
     }
@@ -264,6 +276,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      *
      * @return true
      */
+    @Override
     public boolean isIgnoreXmlConfiguration() {
         return ignoreXmlConfiguration;
     }
@@ -271,6 +284,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<InputStream> getMappingStreams() {
         return mappingStreams;
     }
@@ -278,6 +292,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * {@inheritDoc}
      */
+    @Override
     public MessageInterpolator getMessageInterpolator() {
         if (beforeCdi) {
             return defaultMessageInterpolator;
@@ -293,6 +308,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return messageInterpolator;
     }
 
+    @Override
     public BootstrapConfiguration getBootstrapConfiguration() {
         return createBootstrapConfiguration();
     }
@@ -303,6 +319,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      *
      * @throws ValidationException if the ValidatorFactory cannot be built
      */
+    @Override
     public ValidatorFactory buildValidatorFactory() {
             return doBuildValidatorFactory();
     }
@@ -344,6 +361,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * {@inheritDoc}
      * @return the constraint validator factory of this configuration.
      */
+    @Override
     public ConstraintValidatorFactory getConstraintValidatorFactory() {
         if (beforeCdi) {
             return constraintValidatorFactory;
@@ -362,6 +380,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     /**
      * {@inheritDoc}
      */
+    @Override
     public TraversableResolver getTraversableResolver() {
         if (beforeCdi) {
             return defaultTraversableResolver;
@@ -377,6 +396,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return traversableResolver;
     }
 
+    @Override
     public ParameterNameProvider getParameterNameProvider() {
         if (beforeCdi) {
             return defaultParameterNameProvider;
@@ -430,6 +450,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     public Closeable getClosable() {
         return new Closeable() {
+            @Override
             public void close() throws IOException {
                 for (final BValExtension.Releasable<?> releasable : releasables) {
                     releasable.release();

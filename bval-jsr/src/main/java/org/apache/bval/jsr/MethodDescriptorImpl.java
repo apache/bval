@@ -41,14 +41,17 @@ public class MethodDescriptorImpl extends InvocableElementDescriptor implements 
         this.name = metaMethod.getMethod().getName();
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public boolean hasConstrainedParameters() {
         return super.hasConstrainedParameters();
     }
 
+    @Override
     public boolean hasConstrainedReturnValue() {
         return super.hasConstrainedReturnValue();
     }

@@ -48,6 +48,7 @@ public class DigitsValidatorForNumber implements ConstraintValidator<Digits, Num
         this.fractional = fractional;
     }
 
+    @Override
     public void initialize(Digits annotation) {
         this.integral = annotation.integer();
         this.fractional = annotation.fraction();
@@ -59,6 +60,7 @@ public class DigitsValidatorForNumber implements ConstraintValidator<Digits, Num
         }
     }
 
+    @Override
     public boolean isValid(Number num, ConstraintValidatorContext context) {
         if (num == null) {
             return true;

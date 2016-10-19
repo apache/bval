@@ -51,6 +51,7 @@ public final class EnumerationConverter implements Converter {
     /**
      * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Object convert(Class type, Object value) {
         if (!type.isEnum()) {
@@ -67,7 +68,7 @@ public final class EnumerationConverter implements Converter {
 
         String stringValue = (String) value;
 
-        final Class<Enum> enumClass = (Class<Enum>) type;
+        final Class<Enum> enumClass = type;
         return Enum.valueOf(enumClass, stringValue);
     }
 

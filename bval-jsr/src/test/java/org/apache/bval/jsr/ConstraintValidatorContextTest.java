@@ -55,6 +55,7 @@ public class ConstraintValidatorContextTest extends TestCase {
         MockitoAnnotations.initMocks(this);
         Mockito.when(groupValidationContext.getPropertyPath()).thenAnswer(new Answer<PathImpl>() {
 
+            @Override
             public PathImpl answer(InvocationOnMock invocation) throws Throwable {
                 return PathImpl.createPathFromString("");
             }

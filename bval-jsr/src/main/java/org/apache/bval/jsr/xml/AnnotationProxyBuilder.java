@@ -219,6 +219,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
     public static final class ValidAnnotation implements Valid {
         public static final ValidAnnotation INSTANCE = new ValidAnnotation();
 
+        @Override
         public Class<? extends Annotation> annotationType() {
             return Valid.class;
         }
@@ -233,14 +234,17 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
             this.to = to;
         }
 
+        @Override
         public Class<? extends Annotation> annotationType() {
             return ConvertGroup.class;
         }
 
+        @Override
         public Class<?> from() {
             return from;
         }
 
+        @Override
         public Class<?> to() {
             return to;
         }

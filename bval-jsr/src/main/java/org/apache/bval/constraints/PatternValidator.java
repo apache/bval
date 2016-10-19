@@ -30,6 +30,7 @@ import java.util.regex.PatternSyntaxException;
 public class PatternValidator implements ConstraintValidator<Pattern, String> {
     protected java.util.regex.Pattern pattern;
 
+    @Override
     public void initialize(Pattern annotation) {
         final Pattern.Flag flags[] = annotation.flags();
         int intFlag = 0;
@@ -45,6 +46,7 @@ public class PatternValidator implements ConstraintValidator<Pattern, String> {
     }
 
 
+    @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         return value == null || pattern.matcher(value).matches();
     }

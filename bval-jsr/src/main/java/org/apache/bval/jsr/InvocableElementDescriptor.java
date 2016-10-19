@@ -48,6 +48,7 @@ public class InvocableElementDescriptor extends ElementDescriptorImpl implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<ParameterDescriptor> getParameterDescriptors() {
         // index aligned
         return parameterDescriptors;

@@ -62,6 +62,7 @@ public class CustomConstraintValidatorFactoryTest extends TestCase {
                 return null; // always return null
             }
 
+            @Override
             public void releaseInstance(ConstraintValidator<?, ?> instance) {
                 // no-op
             }

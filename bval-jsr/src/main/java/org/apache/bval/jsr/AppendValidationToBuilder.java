@@ -39,6 +39,7 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T extends Annotation> void preProcessValidation(ConstraintValidation<T> validation) {
         // JSR-303 2.3:
         // Groups from the main constraint annotation are inherited by the composing annotations.
@@ -66,6 +67,7 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         builder.addComposed(validation);
     }

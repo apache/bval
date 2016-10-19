@@ -94,6 +94,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String interpolate(String message, Context context) {
         // probably no need for caching, but it could be done by parameters since the map
         // is immutable and uniquely built per Validation definition, the comparison has to be based on == and not equals though
@@ -101,6 +102,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String interpolate(String message, Context context, Locale locale) {
         return interpolateMessage(message,
                 context.getConstraintDescriptor().getAttributes(), locale, context.getValidatedValue());

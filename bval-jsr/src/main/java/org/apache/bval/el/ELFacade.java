@@ -47,6 +47,7 @@ public final class ELFacade implements MessageEvaluator {
     }
     private static final ELResolver RESOLVER = initResolver();
 
+    @Override
     public String interpolate(final String message, final Map<String, Object> annotationParameters, final Object validatedValue) {
         try {
             if (EXPRESSION_FACTORY != null) {

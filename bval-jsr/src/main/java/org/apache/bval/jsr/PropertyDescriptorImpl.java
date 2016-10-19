@@ -54,6 +54,7 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return propertyPath;
     }
@@ -61,6 +62,7 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return "PropertyDescriptorImpl{" + "returnType=" + elementClass + ", propertyPath='" + propertyPath + '\''
             + '}';

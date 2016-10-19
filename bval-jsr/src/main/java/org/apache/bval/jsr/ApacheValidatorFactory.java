@@ -211,6 +211,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @return the new validator instance
      */
+    @Override
     public Validator getValidator() {
         return usingContext().getValidator();
     }
@@ -220,6 +221,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @return the validator factory's context
      */
+    @Override
     public ApacheFactoryContext usingContext() {
         return new ApacheFactoryContext(this, defaultMetaBeanFinder);
     }
@@ -250,6 +252,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MessageInterpolator getMessageInterpolator() {
         return messageResolver;
     }
@@ -275,6 +278,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public TraversableResolver getTraversableResolver() {
         return traversableResolver;
     }
@@ -297,14 +301,17 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorFactory getConstraintValidatorFactory() {
         return constraintValidatorFactory;
     }
 
+    @Override
     public ParameterNameProvider getParameterNameProvider() {
         return parameterNameProvider;
     }
 
+    @Override
     public void close() {
         try {
             for (final Closeable c : toClose) {
@@ -325,6 +332,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return an instance of the specified class
      * @throws ValidationException if the provider does not support the call.
      */
+    @Override
     public <T> T unwrap(final Class<T> type) {
         if (type.isInstance(this)) {
             @SuppressWarnings("unchecked")

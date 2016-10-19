@@ -31,10 +31,12 @@ public class MinValidatorForString implements ConstraintValidator<Min, String> {
 
     private long minValue;
 
+    @Override
     public void initialize(Min annotation) {
         this.minValue = annotation.value();
     }
 
+    @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;

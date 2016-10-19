@@ -37,6 +37,7 @@ public class AppendValidationToMeta extends BaseAppendValidation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public <T extends Annotation> void performAppend(ConstraintValidation<T> validation) {
         feature.addValidation(validation);
     }

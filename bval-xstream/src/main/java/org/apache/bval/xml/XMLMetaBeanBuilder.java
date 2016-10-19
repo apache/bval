@@ -42,6 +42,7 @@ public class XMLMetaBeanBuilder extends MetaBeanBuilder {
         setFactories(new MetaBeanFactory[] { new IntrospectorMetaBeanFactory(), new XMLMetaBeanFactory() });
     }
 
+    @Override
     public void setFactories(MetaBeanFactory[] factories) {
         super.setFactories(factories);
         updateXmlFactory();
@@ -52,16 +53,19 @@ public class XMLMetaBeanBuilder extends MetaBeanBuilder {
         xmlFactory.addLoader(loader);
     }
 
+    @Override
     public MetaBean buildForId(String beanInfoId) throws Exception {
         final XMLMetaBeanFactory.Visitor v;
         assertXmlFactory();
         xmlFactory.visitXMLBeanMeta(beanInfoId, v = new XMLMetaBeanFactory.Visitor() {
             private MetaBean meta;
 
+            @Override
             public MetaBean getMetaBean() {
                 return meta;
             }
 
+            @Override
             public void visit(XMLMetaBean xmlMeta, XMLMetaBeanInfos xmlInfos) throws Exception {
                 if (meta == null) {
                     meta = createMetaBean(xmlMeta);
@@ -76,10 +80,12 @@ public class XMLMetaBeanBuilder extends MetaBeanBuilder {
         return v.getMetaBean();
     }
 
+    @Override
     public Map<String, MetaBean> buildAll() throws Exception {
         final Map<String, MetaBean> all = super.buildAll();
         if (xmlFactory != null) {
             xmlFactory.visitXMLBeanMeta(null, new XMLMetaBeanFactory.Visitor() {
+                @Override
                 public void visit(XMLMetaBean empty, XMLMetaBeanInfos xmlInfos) throws Exception {
                     if (xmlInfos.getBeans() == null)
                         return; // empty file, ignore
@@ -96,6 +102,7 @@ public class XMLMetaBeanBuilder extends MetaBeanBuilder {
                     }
                 }
 
+                @Override
                 public MetaBean getMetaBean() {
                     return null; // do nothing
                 }

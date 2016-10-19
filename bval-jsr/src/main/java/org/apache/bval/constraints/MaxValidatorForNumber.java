@@ -32,10 +32,12 @@ public class MaxValidatorForNumber implements ConstraintValidator<Max, Number> {
 
     private long max;
 
+    @Override
     public void initialize(Max annotation) {
         this.max = annotation.value();
     }
 
+    @Override
     public boolean isValid(Number value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;

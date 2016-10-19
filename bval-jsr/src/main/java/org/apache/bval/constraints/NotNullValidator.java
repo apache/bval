@@ -24,10 +24,12 @@ import javax.validation.constraints.NotNull;
 
 /** valid when object is NOT null */
 public class NotNullValidator implements ConstraintValidator<NotNull, Object> {
+    @Override
     public void initialize(NotNull constraintAnnotation) {
         // do nothing
     }
 
+    @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
         return value != null;
     }

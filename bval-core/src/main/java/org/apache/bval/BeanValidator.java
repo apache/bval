@@ -271,6 +271,7 @@ public class BeanValidator<T extends ValidationListener> {
             this.context = context;
         }
 
+        @Override
         public void validate() {
             validateBeanNet(context);
         }

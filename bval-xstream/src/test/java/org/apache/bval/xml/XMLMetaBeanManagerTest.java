@@ -38,11 +38,13 @@ public class XMLMetaBeanManagerTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         mbm.addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

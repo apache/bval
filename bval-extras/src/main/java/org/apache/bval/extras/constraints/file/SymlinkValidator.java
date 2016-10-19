@@ -37,6 +37,7 @@ public class SymlinkValidator implements ConstraintValidator<Symlink, File> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(File value, ConstraintValidatorContext context) {
         if (!value.exists()) {
             return false;
@@ -67,6 +68,7 @@ public class SymlinkValidator implements ConstraintValidator<Symlink, File> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void initialize(Symlink parameters) {
         // do nothing (as long as Symlink has no properties)
     }

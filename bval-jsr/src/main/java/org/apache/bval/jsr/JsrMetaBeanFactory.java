@@ -22,6 +22,7 @@ import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.util.ClassHelper;
 import org.apache.bval.jsr.xml.MetaConstraint;
+import org.apache.bval.model.Features.Property;
 import org.apache.bval.model.Meta;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaConstructor;
@@ -84,6 +85,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
     /**
      * {@inheritDoc} Add the validation features to the metabean that come from JSR303 annotations in the beanClass.
      */
+    @Override
     public void buildMetaBean(MetaBean metabean) {
         try {
             final Class<?> beanClass = metabean.getBeanClass();
@@ -181,7 +183,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
 
         for (final String name : missingValid) {
             final MetaProperty metaProperty = metabean.getProperty(name);
-            if (metaProperty != null && metaProperty.getFeature(JsrFeatures.Property.REF_CASCADE) == null) {
+            if (metaProperty != null && metaProperty.getFeature(Property.REF_CASCADE) == null) {
                 throw new ConstraintDeclarationException("@ConvertGroup needs @Valid");
             }
         }

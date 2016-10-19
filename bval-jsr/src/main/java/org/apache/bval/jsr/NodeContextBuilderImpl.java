@@ -37,24 +37,29 @@ public class NodeContextBuilderImpl implements ConstraintValidatorContext.Constr
         this.path = path;
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(Object key) {
         path.getLeafNode().setKey(key);
         return new NodeBuilderDefinedContextImpl(context, template, path);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(Integer index) {
         path.getLeafNode().setIndex(index);
         return new NodeBuilderDefinedContextImpl(context, template, path);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         return new NodeBuilderCustomizableContextImpl(context, template, path).addNode(name);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
         return new NodeBuilderCustomizableContextImpl(context, template, path).addPropertyNode(name);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
         final NodeImpl node = new NodeImpl.BeanNodeImpl();
         node.setKind(ElementKind.BEAN);
@@ -62,6 +67,7 @@ public class NodeContextBuilderImpl implements ConstraintValidatorContext.Constr
         return new LeafNodeBuilderCustomizableContextImpl(context, template, path);
     }
 
+    @Override
     public ConstraintValidatorContext addConstraintViolation() {
         context.addError(template, path);
         return context;

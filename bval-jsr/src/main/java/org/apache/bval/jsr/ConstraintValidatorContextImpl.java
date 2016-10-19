@@ -62,6 +62,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
     /**
      * {@inheritDoc}
      */
+    @Override
     public void disableDefaultConstraintViolation() {
         defaultDisabled = true;
     }
@@ -69,6 +70,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getDefaultConstraintMessageTemplate() {
         return constraintDescriptor.getMessageTemplate();
     }
@@ -76,11 +78,13 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintViolationBuilder buildConstraintViolationWithTemplate(
           String messageTemplate) {
         return new ConstraintViolationBuilderImpl(this, messageTemplate, validationContext.getPropertyPath());
     }
 
+    @Override
     public <T> T unwrap(Class<T> type) {
         if (type.isInstance(this)) {
             return type.cast(this);
@@ -110,6 +114,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
         /**
          * {@inheritDoc}
          */
+        @Override
         public NodeBuilderDefinedContext addNode(String name) {
             PathImpl path;
             if (propertyPath.isRootPath()) {
@@ -122,6 +127,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             return new NodeBuilderDefinedContextImpl(parent, messageTemplate, path);
         }
 
+        @Override
         public NodeBuilderCustomizableContext addPropertyNode(String name) {
             final NodeImpl node;
             if (!propertyPath.isRootPath()) {
@@ -140,6 +146,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
         }
 
+        @Override
         public LeafNodeBuilderCustomizableContext addBeanNode() {
             final NodeImpl node = new NodeImpl.BeanNodeImpl();
             node.setKind(ElementKind.BEAN);
@@ -147,6 +154,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
         }
 
+        @Override
         public NodeBuilderDefinedContext addParameterNode(int index) {
             final Method method = parent.validationContext.getMethod();
             final List<String> parameters = parent.validationContext.getParameterNameProvider().getParameterNames(method);
@@ -163,6 +171,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
         /**
          * {@inheritDoc}
          */
+        @Override
         public ConstraintValidatorContext addConstraintViolation() {
             parent.addError(messageTemplate, propertyPath);
             return parent;

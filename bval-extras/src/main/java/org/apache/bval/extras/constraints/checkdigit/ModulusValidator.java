@@ -50,6 +50,7 @@ abstract class ModulusValidator<A extends Annotation>
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void initialize(A annotation) {
         // not needed ATM
     }
@@ -57,6 +58,7 @@ abstract class ModulusValidator<A extends Annotation>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(String code, ConstraintValidatorContext context) {
         if (code.length() == 0) {
             return false;

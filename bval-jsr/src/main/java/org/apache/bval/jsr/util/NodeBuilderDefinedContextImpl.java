@@ -49,15 +49,18 @@ public final class NodeBuilderDefinedContextImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         // Node not yet added, wait until more information is provided
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
+    @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
         final NodeImpl node = new NodeImpl((String) null);
         node.setKind(ElementKind.BEAN);
@@ -68,6 +71,7 @@ public final class NodeBuilderDefinedContextImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidatorContext addConstraintViolation() {
         parent.addError(messageTemplate, propertyPath);
         return parent;

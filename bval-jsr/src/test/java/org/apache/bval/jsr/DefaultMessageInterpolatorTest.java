@@ -60,15 +60,18 @@ public class DefaultMessageInterpolatorTest extends TestCase {
 
         MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
 
+            @Override
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor<?>) gvalidator.getConstraintsForClass(PreferredGuest.class)
+                return gvalidator.getConstraintsForClass(PreferredGuest.class)
                     .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().iterator().next();
             }
 
+            @Override
             public Object getValidatedValue() {
                 return "12345678";
             }
 
+            @Override
             public <T> T unwrap(Class<T> type) {
                 return null;
             }
@@ -77,15 +80,18 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         Assert.assertEquals("credit card is not valid", msg);
 
         ctx = new MessageInterpolator.Context() {
+            @Override
             public ConstraintDescriptor<?> getConstraintDescriptor() {
                 return gvalidator.getConstraintsForClass(Author.class).getConstraintsForProperty("lastName")
                     .getConstraintDescriptors().iterator().next();
             }
 
+            @Override
             public Object getValidatedValue() {
                 return "";
             }
 
+            @Override
             public <T> T unwrap(Class<T> type) {
                 return null;
             }
@@ -107,15 +113,18 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         // Try to interpolate an annotation attribute containing $
         ctx = new MessageInterpolator.Context() {
 
+            @Override
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor<?>) validator.getConstraintsForClass(Person.class)
+                return validator.getConstraintsForClass(Person.class)
                     .getConstraintsForProperty("idNumber").getConstraintDescriptors().iterator().next();
             }
 
+            @Override
             public Object getValidatedValue() {
                 return "12345678";
             }
 
+            @Override
             public <T> T unwrap(Class<T> type) {
                 return null;
             }
@@ -128,15 +137,18 @@ public class DefaultMessageInterpolatorTest extends TestCase {
         // Try to interpolate an annotation attribute containing \
         ctx = new MessageInterpolator.Context() {
 
+            @Override
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return (ConstraintDescriptor<?>) validator.getConstraintsForClass(Person.class)
+                return validator.getConstraintsForClass(Person.class)
                     .getConstraintsForProperty("otherId").getConstraintDescriptors().iterator().next();
             }
 
+            @Override
             public Object getValidatedValue() {
                 return "12345678";
             }
 
+            @Override
             public <T> T unwrap(Class<T> type) {
                 return null;
             }

@@ -70,14 +70,17 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
         }
     }
 
+    @Override
     public void buildMetaBean(final MetaBean metaBean) throws Exception {
         if(metaBean.getId() == null) return;
          visitXMLBeanMeta(metaBean.getId(), new Visitor() {
+            @Override
             public void visit(XMLMetaBean xmlMeta, XMLMetaBeanInfos xmlInfos)
                   throws Exception {
                 enrichMetaBean(metaBean, new XMLResult(xmlMeta, xmlInfos));
             }
 
+            @Override
             public MetaBean getMetaBean() {
                 return metaBean;
             }

@@ -55,38 +55,47 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
         this.defaultProviderClassName = defaultProviderClassName;
     }
 
+    @Override
     public String getDefaultProviderClassName() {
         return defaultProviderClassName;
     }
 
+    @Override
     public String getConstraintValidatorFactoryClassName() {
         return constraintValidatorFactoryClassName;
     }
 
+    @Override
     public String getMessageInterpolatorClassName() {
         return messageInterpolatorClassName;
     }
 
+    @Override
     public String getTraversableResolverClassName() {
         return traversableResolverClassName;
     }
 
+    @Override
     public String getParameterNameProviderClassName() {
         return parameterNameProviderClassName;
     }
 
+    @Override
     public Set<String> getConstraintMappingResourcePaths() {
         return constraintMappingResourcePaths;
     }
 
+    @Override
     public boolean isExecutableValidationEnabled() {
         return executableValidationEnabled;
     }
 
+    @Override
     public Set<ExecutableType> getDefaultValidatedExecutableTypes() {
         return defaultValidatedExecutableTypes;
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return properties;
     }

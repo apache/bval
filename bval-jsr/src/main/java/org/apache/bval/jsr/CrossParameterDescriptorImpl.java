@@ -28,6 +28,7 @@ public class CrossParameterDescriptorImpl extends ElementDescriptorImpl implemen
         super(bean, Object[].class, list.toArray(new ConstraintValidation<?>[list.size()]));
     }
 
+    @Override
     public boolean hasConstraints() {
         return !getConstraintDescriptors().isEmpty();
     }

@@ -95,10 +95,12 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public T getAnnotation() {
         return annotation;
     }
 
+    @Override
     public String getMessageTemplate() {
         return template;
     }
@@ -106,6 +108,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Class<?>> getGroups() {
         return groups;
     }
@@ -113,10 +116,12 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Class<? extends Payload>> getPayload() {
         return payload;
     }
 
+    @Override
     public ConstraintTarget getValidationAppliesTo() {
         return validationAppliesTo;
     }
@@ -124,6 +129,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<java.lang.Class<? extends javax.validation.ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
         return constraintValidatorClasses;
     }
@@ -131,6 +137,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, Object> getAttributes() {
         return attributes;
     }
@@ -138,6 +145,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<ConstraintDescriptor<?>> getComposingConstraints() {
         return composingConstraints;
     }
@@ -145,6 +153,7 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isReportAsSingleViolation() {
         return reportAsSingleViolation;
     }

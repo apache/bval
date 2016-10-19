@@ -40,6 +40,7 @@ public class JSONGeneratorTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         mbm = new XMLMetaBeanManager();

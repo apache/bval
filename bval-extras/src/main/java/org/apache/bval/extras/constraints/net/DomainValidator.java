@@ -77,6 +77,7 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isValid(String domain, ConstraintValidatorContext context) {
         Matcher matcher = DOMAIN_NAME_REGEX.matcher(domain);
         if (matcher.matches()) {
@@ -455,6 +456,7 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void initialize(Domain domain) {
         allowLocal = domain.allowLocal();
     }

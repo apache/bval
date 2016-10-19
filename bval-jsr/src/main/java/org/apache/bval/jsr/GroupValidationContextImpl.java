@@ -126,6 +126,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
         }
     }
 
+    @Override
     public void setKind(final ElementKind type) {
         path.getLeafNode().setKind(type);
     }
@@ -144,6 +145,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
         path.addProperty(prop);
     }
 
+    @Override
     public void moveDown(final Path.Node node) {
         path.addNode(node);
     }
@@ -194,6 +196,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean collectValidated(ConstraintValidator<?, ?> constraint) {
         ConstraintValidatorIdentity cvi = new ConstraintValidatorIdentity(getBean(), getPropertyPath(), constraint);
         return this.validatedConstraints.add(cvi);
@@ -214,6 +217,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
      * 
      * @return the path in dot notation
      */
+    @Override
     public PathImpl getPropertyPath() {
         PathImpl currentPath = PathImpl.copy(path);
         if (getMetaProperty() != null) {
@@ -225,6 +229,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public MetaBean getRootMetaBean() {
         return rootMetaBean;
     }
@@ -241,10 +246,12 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public Groups getGroups() {
         return groups;
     }
 
+    @Override
     public void setCurrentGroups(final Groups g) {
         groups = g;
     }
@@ -252,6 +259,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public Group getCurrentGroup() {
         return currentGroup;
     }
@@ -259,6 +267,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setCurrentGroup(Group currentGroup) {
         this.currentGroup = currentGroup;
     }
@@ -266,6 +275,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setConstraintValidation(ConstraintValidation<?> constraint) {
         constraintValidation = constraint;
     }
@@ -273,6 +283,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintValidation<?> getConstraintValidation() {
         return constraintValidation;
     }
@@ -280,6 +291,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConstraintDescriptor<?> getConstraintDescriptor() {
         return constraintValidation;
     }
@@ -287,6 +299,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getValidatedValue() {
         if (getMetaProperty() != null) {
             return getPropertyValue(constraintValidation.getAccess());
@@ -295,6 +308,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
         }
     }
 
+    @Override
     public <T> T unwrap(Class<T> type) {
         if (type.isInstance(this)) {
             return type.cast(this);
@@ -305,6 +319,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public MessageInterpolator getMessageResolver() {
         return messageResolver;
     }
@@ -312,6 +327,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public TraversableResolver getTraversableResolver() {
         return traversableResolver;
     }
@@ -324,6 +340,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public Class<?> getCurrentOwner() {
         return this.currentOwner;
     }
@@ -331,46 +348,57 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setCurrentOwner(Class<?> currentOwner) {
         this.currentOwner = currentOwner;
     }
 
+    @Override
     public ElementKind getElementKind() {
         return path.getLeafNode().getKind();
     }
 
+    @Override
     public Object getReturnValue() {
         return returnValue;
     }
 
+    @Override
     public Object[] getParameters() {
         return parameters;
     }
 
+    @Override
     public void setParameters(final Object[] parameters) {
         this.parameters = parameters;
     }
 
+    @Override
     public void setReturnValue(final Object returnValue) {
         this.returnValue = returnValue;
     }
 
+    @Override
     public ParameterNameProvider getParameterNameProvider() {
         return parameterNameProvider;
     }
 
+    @Override
     public void setMethod(final Method method) {
         this.method = method;
     }
 
+    @Override
     public Method getMethod() {
         return method;
     }
 
+    @Override
     public Constructor<?> getConstructor() {
         return constructor;
     }
 
+    @Override
     public void setConstructor(final Constructor<?> constructor) {
         this.constructor = constructor;
     }

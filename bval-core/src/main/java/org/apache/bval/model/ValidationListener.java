@@ -93,6 +93,7 @@ public interface ValidationListener {
         /**
          * {@inheritDoc}
          */
+        @Override
         public String toString() {
             return "Error{" + "reason='" + reason + '\'' + ", propertyName='" +
                   propertyName + '\'' + '}';

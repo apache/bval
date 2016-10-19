@@ -55,6 +55,7 @@ public class ParameterDescriptorImpl extends ElementDescriptorImpl implements Pa
         this.name = name;
     }
 
+    @Override
     public Set<GroupConversionDescriptor> getGroupConversions() {
         return groupConversions;
     }
@@ -62,10 +63,12 @@ public class ParameterDescriptorImpl extends ElementDescriptorImpl implements Pa
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getIndex() {
         return index;
     }
 
+    @Override
     public String getName() {
         return name;
     }

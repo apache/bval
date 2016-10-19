@@ -74,6 +74,7 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (values.containsKey(method.getName())) {
             return values.get(method.getName());
@@ -84,6 +85,7 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Class<? extends Annotation> annotationType() {
         return annotationType;
     }
@@ -91,6 +93,7 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
         result.append('@').append(annotationType().getName()).append('(');

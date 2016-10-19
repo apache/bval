@@ -42,6 +42,7 @@ public class ConstructorDescriptorImpl extends InvocableElementDescriptor
         setCascaded(false);
     }
 
+    @Override
     public String getName() {
         return elementClass.getSimpleName();
     }
@@ -51,10 +52,12 @@ public class ConstructorDescriptorImpl extends InvocableElementDescriptor
         return false;
     }
 
+    @Override
     public boolean hasConstrainedParameters() {
         return super.hasConstrainedParameters();
     }
 
+    @Override
     public boolean hasConstrainedReturnValue() {
         return super.hasConstrainedReturnValue();
     }

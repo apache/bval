@@ -43,6 +43,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object get(final Object instance) {
         final boolean mustUnset = Reflection.setAccessible(field, true);
         try {
@@ -59,6 +60,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ElementType getElementType() {
         return ElementType.FIELD;
     }
@@ -66,6 +68,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Type getJavaType() {
         return field.getGenericType();
     }
@@ -73,6 +76,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPropertyName() {
         return field.getName();
     }
@@ -80,6 +84,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return field.toString();
     }
@@ -87,6 +92,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -103,6 +109,7 @@ public class FieldAccess extends AccessStrategy {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode() {
         return field.hashCode();
     }

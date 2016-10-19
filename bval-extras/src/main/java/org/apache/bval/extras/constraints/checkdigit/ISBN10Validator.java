@@ -71,6 +71,7 @@ public final class ISBN10Validator
      *
      * {@inheritDoc}
      */
+    @Override
     protected int toInt(char character, int leftPos, int rightPos) {
         if (rightPos == 1 && character == 'X') {
             return 10;

@@ -72,6 +72,7 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
                                Class<?> rootBeanType, Path pathToTraversableObject,
                                ElementType elementType) {
@@ -93,6 +94,7 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
                                 Class<?> rootBeanType, Path pathToTraversableObject,
                                 ElementType elementType) {
@@ -114,6 +116,7 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean needsCaching() {
         return false;  // I am the cache. Do not need cache for cache
     }

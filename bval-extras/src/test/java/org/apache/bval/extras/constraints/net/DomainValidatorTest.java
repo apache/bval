@@ -99,26 +99,31 @@ public class DomainValidatorTest {
        allowLocal.initialize( new Domain()
        {
 
+            @Override
             public Class<? extends Annotation> annotationType() {
                 // not needed
                 return null;
             }
 
+            @Override
             public Class<? extends Payload>[] payload() {
                 // not needed
                 return null;
             }
 
+            @Override
             public String message() {
                 // not needed
                 return null;
             }
 
+            @Override
             public Class<?>[] groups() {
                 // not needed
                 return null;
             }
 
+            @Override
             public boolean allowLocal() {
                 // enable the local
                 return true;

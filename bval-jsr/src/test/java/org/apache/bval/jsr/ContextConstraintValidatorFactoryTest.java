@@ -72,10 +72,12 @@ public class ContextConstraintValidatorFactoryTest extends TestCase {
 				this.requiredCollaborator = requiredCollaborator;
 			}
 
-			public void initialize(Contrived constraintAnnotation) {
+			@Override
+            public void initialize(Contrived constraintAnnotation) {
 			}
 
-			public boolean isValid(Object value, ConstraintValidatorContext context) {
+			@Override
+            public boolean isValid(Object value, ConstraintValidatorContext context) {
 				getRequiredCollaborator().toString();
 				return true;
 			}
@@ -91,7 +93,8 @@ public class ContextConstraintValidatorFactoryTest extends TestCase {
 	public void testContextBoundConstraintValidatorFactory() {
 		final ConstraintValidatorFactory constraintValidatorFactory = new ConstraintValidatorFactory() {
 
-			public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
+			@Override
+            public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
 				if (key.equals(Contrived.Validator.class)) {
 					final Contrived.Validator result = new Contrived.Validator();
 					result.setRequiredCollaborator(new Object());
@@ -102,6 +105,7 @@ public class ContextConstraintValidatorFactoryTest extends TestCase {
 				return null;
 			}
 
+            @Override
             public void releaseInstance(ConstraintValidator<?, ?> instance) {
                 // no-op
             }

@@ -47,10 +47,12 @@ public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRe
         super(builder);
     }
 
+    @Override
     public void addResourceLoader(String resource) {
         addLoader(new XMLMetaBeanURLLoader(Reflection.getClassLoader(getClass()).getResource(resource)));
     }
 
+    @Override
     public synchronized void addLoader(XMLMetaBeanLoader loader) {
         ((XMLMetaBeanBuilder) builder).addLoader(loader);
         cache.clear(); // clear because new loaders can affect ALL MetaBeans
@@ -67,6 +69,7 @@ public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRe
      *         returned by other loaders. The beans with patches for references
      *         to patched beans will be copied.
      */
+    @Override
     public Map<String, MetaBean> enrichCopies(XMLMetaBeanInfos... infos) {
         Map<String, MetaBean> cached = findAll();
         try {
@@ -124,6 +127,7 @@ public class XMLMetaBeanManager extends MetaBeanManager implements XMLMetaBeanRe
         }
     }
 
+    @Override
     protected void computeRelatedMetaBean(MetaProperty prop, String beanRef) {
         if (beanRef != null) {
             prop.setMetaBean(findForId(beanRef));

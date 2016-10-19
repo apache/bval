@@ -25,6 +25,7 @@ import org.apache.bval.model.ValidationListener;
  */
 public class NOPValidation implements Validation {
 
+    @Override
     public <T extends ValidationListener> void validate(ValidationContext<T> context) {
         // do nothing
     }

@@ -59,42 +59,52 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
                 .getInjectionPoints().iterator().next())));
     }
 
+    @Override
     public Set<Type> getTypes() {
         return types;
     }
 
+    @Override
     public Set<Annotation> getQualifiers() {
         return qualifiers;
     }
 
+    @Override
     public Class<? extends Annotation> getScope() {
         return Dependent.class;
     }
 
+    @Override
     public String getName() {
         return null;
     }
 
+    @Override
     public boolean isNullable() {
         return false;
     }
 
+    @Override
     public Set<InjectionPoint> getInjectionPoints() {
         return injectionPoints;
     }
 
+    @Override
     public Class<?> getBeanClass() {
         return BValInterceptor.class;
     }
 
+    @Override
     public Set<Class<? extends Annotation>> getStereotypes() {
         return Collections.emptySet();
     }
 
+    @Override
     public boolean isAlternative() {
         return false;
     }
 
+    @Override
     public BValInterceptor create(final CreationalContext<BValInterceptor> context) {
         final BValInterceptor produced = injectionTarget.produce(context);
         injectionTarget.inject(produced, context);
@@ -102,12 +112,14 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
         return produced;
     }
 
+    @Override
     public void destroy(final BValInterceptor instance, final CreationalContext<BValInterceptor> context) {
         injectionTarget.preDestroy(instance);
         injectionTarget.dispose(instance);
         context.release();
     }
 
+    @Override
     public String getId() {
         return "BValInterceptor-" + hashCode();
     }
@@ -121,30 +133,37 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
             delegate = next;
         }
 
+        @Override
         public Type getType() {
             return delegate.getType();
         }
 
+        @Override
         public Set<Annotation> getQualifiers() {
             return delegate.getQualifiers();
         }
 
+        @Override
         public Bean<?> getBean() {
             return bean;
         }
 
+        @Override
         public Member getMember() {
             return delegate.getMember();
         }
 
+        @Override
         public Annotated getAnnotated() {
             return delegate.getAnnotated();
         }
 
+        @Override
         public boolean isDelegate() {
             return delegate.isDelegate();
         }
 
+        @Override
         public boolean isTransient() {
             return delegate.isTransient();
         }

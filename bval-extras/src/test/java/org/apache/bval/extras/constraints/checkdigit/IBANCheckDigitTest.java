@@ -128,6 +128,7 @@ public class IBANCheckDigitTest extends AbstractCheckDigitTest {
      * @param code The code
      * @return The code without the check digit
      */
+    @Override
     protected String removeCheckDigit(String code) {
         return code.substring(0, 2) + "00" + code.substring(4);
     }
@@ -138,6 +139,7 @@ public class IBANCheckDigitTest extends AbstractCheckDigitTest {
      * @param code The code
      * @return The check digit
      */
+    @Override
     protected String checkDigit(String code) {
         if (code == null || code.length() <= getCheckDigitLth()) {
             return "";

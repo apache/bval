@@ -43,6 +43,7 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<ValidationProvider<?>> getValidationProviders() {
         List<ValidationProvider<?>> providers = new ArrayList<ValidationProvider<?>>();
         try {

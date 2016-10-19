@@ -58,6 +58,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ElementDescriptor.ConstraintFinder unorderedAndMatchingGroups(Class<?>... groups) {
         final Set<ConstraintValidation<?>> matchingDescriptors =
             new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
@@ -86,6 +87,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ElementDescriptor.ConstraintFinder lookingAt(Scope scope) {
         if (scope == Scope.LOCAL_ELEMENT) {
             findInScopes.remove(Scope.HIERARCHY);
@@ -101,6 +103,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ElementDescriptor.ConstraintFinder declaredOn(ElementType... elementTypes) {
         final Set<ConstraintValidation<?>> matchingDescriptors =
             new HashSet<ConstraintValidation<?>>(constraintDescriptors.size());
@@ -155,6 +158,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
         if (constraintDescriptors.isEmpty()) {
             return Collections.emptySet();
@@ -165,6 +169,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean hasConstraints() {
         return !constraintDescriptors.isEmpty();
     }

@@ -35,6 +35,7 @@ public class SizeValidatorForCollection extends SizeValidator implements Constra
      *         <code>collection</code> is between the specified <code>min</code> and <code>max</code> values (inclusive),
      *         <code>false</code> otherwise.
      */
+    @Override
     public boolean isValid(Collection<?> collection, ConstraintValidatorContext context) {
         if (collection == null) {
             return true;

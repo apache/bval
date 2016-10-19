@@ -47,6 +47,7 @@ public class PathImpl implements Path, Serializable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void handleProperty(String name) {
             result.addProperty(name);
         }
@@ -54,6 +55,7 @@ public class PathImpl implements Path, Serializable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void handleIndexOrKey(String value) {
             // with no context to guide us, we can only parse ints and fall back to String keys:
             NodeImpl node;
@@ -68,6 +70,7 @@ public class PathImpl implements Path, Serializable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public PathImpl result() {
             if (result.nodeList.isEmpty()) {
                 throw new IllegalStateException();
@@ -78,6 +81,7 @@ public class PathImpl implements Path, Serializable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void handleGenericInIterable() {
             result.addNode(NodeImpl.atIndex(null));
         }
@@ -277,6 +281,7 @@ public class PathImpl implements Path, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<Path.Node> iterator() {
         return nodeList.iterator();
     }

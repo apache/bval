@@ -95,6 +95,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      * 
      * @return Statically defined returned type.
      */
+    @Override
     public Class<?> getElementClass() {
         return elementClass;
     }
@@ -102,14 +103,16 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
     /**
      * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ElementDescriptor.ConstraintFinder findConstraints() {
-        return new ConstraintFinderImpl(metaBean, new HashSet((Set) constraintDescriptors));
+        return new ConstraintFinderImpl(metaBean, new HashSet(constraintDescriptors));
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
         return constraintDescriptors.isEmpty() ? Collections.<ConstraintDescriptor<?>> emptySet() : Collections
             .unmodifiableSet(constraintDescriptors);
@@ -128,6 +131,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      * {@inheritDoc} return true if at least one constraint declaration is
      * present on the element.
      */
+    @Override
     public boolean hasConstraints() {
         return !getConstraintDescriptors().isEmpty();
     }

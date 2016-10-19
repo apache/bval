@@ -25,10 +25,12 @@ import javax.validation.ConstraintValidatorContext;
  * Description: <br/>
  */
 public class NotEmptyValidatorForString implements ConstraintValidator<NotEmpty, String> {
+    @Override
     public void initialize(NotEmpty constraintAnnotation) {
         // do nothing
     }
 
+    @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         return value == null || !value.isEmpty();
     }

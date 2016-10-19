@@ -29,6 +29,7 @@ public class DecimalMaxValidatorForNumber implements ConstraintValidator<Decimal
 
     private BigDecimal maxValue;
 
+    @Override
     public void initialize(DecimalMax annotation) {
         try {
             this.maxValue = new BigDecimal(annotation.value());
@@ -37,6 +38,7 @@ public class DecimalMaxValidatorForNumber implements ConstraintValidator<Decimal
         }
     }
 
+    @Override
     public boolean isValid(Number value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;

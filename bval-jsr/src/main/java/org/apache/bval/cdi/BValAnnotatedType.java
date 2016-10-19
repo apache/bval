@@ -41,30 +41,37 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
         annotations.add(BValBindingLiteral.INSTANCE);
     }
 
+    @Override
     public Class<A> getJavaClass() {
         return delegate.getJavaClass();
     }
 
+    @Override
     public Set<AnnotatedConstructor<A>> getConstructors() {
         return delegate.getConstructors();
     }
 
+    @Override
     public Set<AnnotatedMethod<? super A>> getMethods() {
         return delegate.getMethods();
     }
 
+    @Override
     public Set<AnnotatedField<? super A>> getFields() {
         return delegate.getFields();
     }
 
+    @Override
     public Type getBaseType() {
         return delegate.getBaseType();
     }
 
+    @Override
     public Set<Type> getTypeClosure() {
         return delegate.getTypeClosure();
     }
 
+    @Override
     public <T extends Annotation> T getAnnotation(final Class<T> annotationType) {
         for (final Annotation ann : annotations) {
             if (ann.annotationType().equals(annotationType)) {
@@ -76,10 +83,12 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
         return null;
     }
 
+    @Override
     public Set<Annotation> getAnnotations() {
         return annotations;
     }
 
+    @Override
     public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
         for (final Annotation ann : annotations) {
             if (ann.annotationType().equals(annotationType)) {
@@ -94,6 +103,7 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
 
         public static final Annotation INSTANCE = new BValBindingLiteral();
 
+        @Override
         public Class<? extends Annotation> annotationType() {
             return BValBinding.class;
         }

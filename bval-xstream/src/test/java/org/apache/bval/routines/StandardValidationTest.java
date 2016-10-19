@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.bval.BeanValidationContext;
 import org.apache.bval.model.Features;
+import org.apache.bval.model.Features.Property;
 import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
@@ -47,6 +48,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         validation = new StandardValidation();
@@ -56,6 +58,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.setMetaProperty(metaProperty);
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -77,7 +80,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = null;
         validation.validateMandatory(context);
-        assertTrue(reasons.contains(Reasons.MANDATORY));
+        assertTrue(reasons.contains(Property.MANDATORY));
 
         // test null value that is NOT mandatory
         context.unknownValue();
@@ -96,7 +99,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = "much too long";
         validation.validateMaxLength(context);
-        assertTrue(reasons.contains(Reasons.MAX_LENGTH));
+        assertTrue(reasons.contains(Property.MAX_LENGTH));
     }
 
     public void testValidateMinLength() {
@@ -108,7 +111,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = "123";
         validation.validateMinLength(context);
-        assertTrue(reasons.contains(Reasons.MIN_LENGTH));
+        assertTrue(reasons.contains(Property.MIN_LENGTH));
     }
 
     public void testValidateMaxValue() {
@@ -120,7 +123,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = "99999";
         validation.validateMaxValue(context);
-        assertTrue(reasons.contains(Reasons.MAX_VALUE));
+        assertTrue(reasons.contains(Property.MAX_VALUE));
     }
 
     public void testValidateMinValue() {
@@ -132,7 +135,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = "3333";
         validation.validateMinValue(context);
-        assertTrue(reasons.contains(Reasons.MIN_VALUE));
+        assertTrue(reasons.contains(Property.MIN_VALUE));
     }
 
     public int getIntValue() {
@@ -148,7 +151,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         intValue = -1;
         validation.validateMinValue(context);
-        assertTrue(reasons.contains(Reasons.MIN_VALUE));
+        assertTrue(reasons.contains(Property.MIN_VALUE));
     }
 
     public void testValidateMinValue_Date_Timestamp() {
@@ -161,7 +164,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         dateValue = new Timestamp(dt.getTime()-1000);
         validation.validateMinValue(context);
-        assertTrue(reasons.contains(Reasons.MIN_VALUE));
+        assertTrue(reasons.contains(Property.MIN_VALUE));
     }
 
     public void testValidateMaxValue_AlphabeticString() {
@@ -173,7 +176,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = "BBBC";
         validation.validateMaxValue(context);
-        assertTrue(reasons.contains(Reasons.MAX_VALUE));
+        assertTrue(reasons.contains(Property.MAX_VALUE));
     }
 
     public void testValidateRegExp() {
@@ -187,7 +190,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         context.unknownValue();
         stringValue = "5355/7"; // invalid zip value
         validation.validateRegExp(context);
-        assertTrue(reasons.contains(Reasons.REG_EXP));
+        assertTrue(reasons.contains(Property.REG_EXP));
     }
 
     public Date getDateValue() {
@@ -204,7 +207,7 @@ public class StandardValidationTest extends TestCase implements ValidationListen
 
         metaProperty.putFeature(Features.Property.TIME_LAG, XMLMetaValue.TIMELAG_Future);
         validation.validateTimeLag(context);
-        assertTrue(reasons.contains(Reasons.TIME_LAG));
+        assertTrue(reasons.contains(Property.TIME_LAG));
 
     }
 
@@ -212,10 +215,12 @@ public class StandardValidationTest extends TestCase implements ValidationListen
         return new TestSuite(StandardValidationTest.class);
     }
 
+    @Override
     public <T extends ValidationListener> void addError(String reason, ValidationContext<T> context) {
         reasons.add(reason);
     }
 
+    @Override
     public <T extends ValidationListener> void addError(ValidationListener.Error error, ValidationContext<T> context) {
         reasons.add(error.getReason());
     }

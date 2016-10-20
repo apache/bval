@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * Time: 10:40:59<br>
  */
 public class EMailValidationUtils {
-    private static String ATOM = "[^\\x00-\\x1F^\\(^\\)^\\<^\\>^\\@^\\,^\\;^\\:^\\\\^\\\"^\\.^\\[^\\]^\\s]";
+    private static String ATOM = "[^\\x00-\\x1F\\(\\)\\<\\>\\@\\,\\;\\:\\\\\\\"\\.\\[\\]\\s]";
     private static String DOMAIN = "(" + ATOM + "+(\\." + ATOM + "+)*";
     private static String IP_DOMAIN = "\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\]";
     public static final java.util.regex.Pattern DEFAULT_EMAIL_PATTERN;

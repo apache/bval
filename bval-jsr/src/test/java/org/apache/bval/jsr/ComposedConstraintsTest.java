@@ -67,36 +67,36 @@ public class ComposedConstraintsTest extends ValidationTestBase {
     @Test
     public void testValidateComposed() {
         FrenchAddress adr = new FrenchAddress();
-        Set<ConstraintViolation<FrenchAddress>> findings = validator.validate(adr);
-        assertEquals(1, findings.size()); // with @ReportAsSingleConstraintViolation
 
-        ConstraintViolation<FrenchAddress> finding = findings.iterator().next();
-        assertEquals("Wrong zipcode", finding.getMessage());
+        {
+            Set<ConstraintViolation<FrenchAddress>> findings = validator.validate(adr);
+            assertEquals(1, findings.size()); // with @ReportAsSingleConstraintViolation
+            ConstraintViolation<FrenchAddress> finding = findings.iterator().next();
+            assertEquals("Wrong zipcode", finding.getMessage());
+        }
 
         adr.setZipCode("1234567");
-        findings = validator.validate(adr);
-        assertEquals(0, findings.size());
+        assertTrue(validator.validate(adr).isEmpty());
 
         adr.setZipCode("1234567234567");
-        findings = validator.validate(adr);
-        assertTrue(findings.size() > 0); // too long
+        assertEquals(1, validator.validate(adr).size());
+
+        adr.setZipCode2(null);
+        assertEquals(2, validator.validate(adr).size());
     }
 
     @Test
     public void testOverridesAttributeConstraintIndex() {
-        CompanyAddress adr = new CompanyAddress("invalid-string");
-        Set<ConstraintViolation<CompanyAddress>> findings = validator.validate(adr);
+        Set<ConstraintViolation<CompanyAddress>> findings = validator.validate(new CompanyAddress("invalid-string"));
         assertEquals(2, findings.size()); // without @ReportAsSingleConstraintViolation
         assertNotNull(TestUtils.getViolationWithMessage(findings, "Not COMPANY"));
         assertNotNull(TestUtils.getViolationWithMessage(findings, "Not an email"));
 
-        adr =  new CompanyAddress("JOHN_DO@WEB.DE");
-        findings = validator.validate(adr);
+        findings = validator.validate(new CompanyAddress("JOHN_DO@WEB.DE"));
         assertEquals(1, findings.size());
         assertNotNull(TestUtils.getViolationWithMessage(findings, "Not COMPANY"));
 
-        adr =  new CompanyAddress("JOHN_DO@COMPANY.DE");
-        findings = validator.validate(adr);
+        findings = validator.validate(new CompanyAddress("JOHN_DO@COMPANY.DE"));
         assertTrue(findings.isEmpty());
     }
 

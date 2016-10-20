@@ -27,13 +27,16 @@ public class FrenchAddress {
     @FrenchZipCode(size = 7)
     String zipCode;
 
+    @FrenchZipCode
+    String zipCode2 = "123456";
+
     public FrenchAddress() {
     }
 
     public FrenchAddress(String zipCode) {
         this.zipCode = zipCode;
     }
-    
+
     public String getZipCode() {
         return zipCode;
     }
@@ -42,7 +45,12 @@ public class FrenchAddress {
         this.zipCode = zipCode;
     }
 
-    @FrenchZipCode
-    String zipCode2 = "123456";
+    public String getZipCode2() {
+        return zipCode2;
+    }
+
+    public void setZipCode2(String zipCode2) {
+        this.zipCode2 = zipCode2;
+    }
 
 }

@@ -72,6 +72,9 @@ public class EmailValidatorTest {
 
         customer.setEmailAddress("some.valid-012345@address_at-test.org");
         assertTrue(validator.validate(customer).isEmpty());
+
+        customer.setEmailAddress("permit^circumflex^aka^caret@address_at-test.org");
+        assertTrue(validator.validate(customer).isEmpty());
     }
 
     @Test

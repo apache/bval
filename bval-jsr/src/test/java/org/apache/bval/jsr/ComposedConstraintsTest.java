@@ -48,17 +48,15 @@ public class ComposedConstraintsTest extends ValidationTestBase {
         for (ConstraintDescriptor<?> cd : ed.getConstraintDescriptors()) {
             assertTrue(cd.isReportAsSingleViolation());
             assertEquals(3, cd.getComposingConstraints().size());
-            assertTrue("no composing constraints found!!",
-                  !cd.getComposingConstraints().isEmpty());
-            processConstraintDescriptor(cd); //check all constraints on zip code
+            assertTrue("no composing constraints found!!", !cd.getComposingConstraints().isEmpty());
+            processConstraintDescriptor(cd); // check all constraints on zip code
         }
     }
 
     private void processConstraintDescriptor(ConstraintDescriptor<?> cd) {
         //Size.class is understood by the tool
-        if (cd.getAnnotation().annotationType().equals(Size.class)) {
-            @SuppressWarnings("unused")
-            Size m = (Size) cd.getAnnotation();//what for?
+        if (Size.class.equals(cd.getAnnotation().annotationType())) {
+            Size.class.cast(cd.getAnnotation());
         }
         for (ConstraintDescriptor<?> composingCd : cd.getComposingConstraints()) {
             //check composing constraints recursively

@@ -35,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Description: example for composed constraint.
- * not implemented! simple dummy implemenation for tests only! <br/>
+ * not implemented! simple dummy implementation for tests only! <br/>
  */
 @NotEmpty
 @NotNull

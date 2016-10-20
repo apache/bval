@@ -21,7 +21,7 @@
 grant
 {
   // let everyone read target dir
-  permission java.io.FilePermission "${project.build.directory}${/}-", "read";
+  permission java.io.FilePermission "${preserve.project.build.directory}${/}-", "read";
 };
 
 // we don't care about the permissions of the testing infrastructure,
@@ -94,7 +94,6 @@ grant codeBase "file://${project.build.outputDirectory}/-"
 {
   permission java.lang.RuntimePermission "accessClassInPackage.com.sun.xml.internal.bind.*";
   permission java.lang.RuntimePermission "accessDeclaredMembers";
-  permission java.lang.RuntimePermission "getClassLoader";
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
   permission java.io.FilePermission "${user.home}/.m2/repository/-", "read";
   permission java.util.PropertyPermission "*", "read";

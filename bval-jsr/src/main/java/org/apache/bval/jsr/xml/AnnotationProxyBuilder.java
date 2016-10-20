@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import javax.enterprise.util.AnnotationLiteral;
 import javax.validation.Payload;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
@@ -40,7 +42,6 @@ import javax.validation.groups.ConvertGroup;
  * Description: Holds the information and creates an annotation proxy during xml
  * parsing of validation mapping constraints. <br/>
  */
-// TODO move this guy up to org.apache.bval.jsr or org.apache.bval.jsr.model
 @Privilizing(@CallTo(Reflection.class))
 public final class AnnotationProxyBuilder<A extends Annotation> {
     private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<Class<?>, Method[]>();
@@ -216,27 +217,21 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
         }
     }
 
-    public static final class ValidAnnotation implements Valid {
-        public static final ValidAnnotation INSTANCE = new ValidAnnotation();
+    public static final class ValidAnnotation extends AnnotationLiteral<Valid> implements Valid {
+        private static final long serialVersionUID = 1L;
 
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return Valid.class;
-        }
+        public static final ValidAnnotation INSTANCE = new ValidAnnotation();
     }
 
-    public static final class ConvertGroupAnnotation implements ConvertGroup {
+    public static final class ConvertGroupAnnotation extends AnnotationLiteral<ConvertGroup> implements ConvertGroup {
+        private static final long serialVersionUID = 1L;
+
         private final Class<?> from;
         private final Class<?> to;
 
         public ConvertGroupAnnotation(final Class<?> from, final Class<?> to) {
             this.from = from;
             this.to = to;
-        }
-
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return ConvertGroup.class;
         }
 
         @Override

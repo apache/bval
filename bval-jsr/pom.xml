@@ -119,13 +119,6 @@
                                                 <!-- append extra slash on windows only -->
                                                 <replacestring from="file://" to="file://${slash}" />
                                                 <replacestring from="${file.separator}" to="/" />
-                                                <!-- preserve system-specific file separator -->
-                                                <expandproperties>
-                                                    <propertyset>
-                                                        <propertyref prefix="project." />
-                                                        <globmapper from="*" to="preserve.*" />
-                                                    </propertyset>
-                                                </expandproperties>
                                             </filterchain>
                                         </copy>
                                     </target>

@@ -21,7 +21,7 @@
 grant
 {
   // let everyone read target dir
-  permission java.io.FilePermission "${preserve.project.build.directory}${/}-", "read";
+  permission java.io.FilePermission "${project.build.directory}${/}-", "read";
 };
 
 // we don't care about the permissions of the testing infrastructure,

@@ -98,14 +98,15 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
         return false;
     }
 
-    public static class BValBindingLiteral extends AnnotationLiteral<BValBinding> implements BValBinding {
+    public static class BValBindingLiteral extends EmptyAnnotationLiteral<BValBinding> implements BValBinding {
         private static final long serialVersionUID = 1L;
 
         public static final Annotation INSTANCE = new BValBindingLiteral();
 
         @Override
-        public Class<? extends Annotation> annotationType() {
-            return BValBinding.class;
+        public String toString() {
+            return "@org.apache.bval.cdi.BValBinding()";
         }
+
     }
 }

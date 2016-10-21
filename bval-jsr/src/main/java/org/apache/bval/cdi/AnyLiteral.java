@@ -21,7 +21,7 @@ package org.apache.bval.cdi;
 import javax.enterprise.inject.Any;
 import javax.enterprise.util.AnnotationLiteral;
 
-public class AnyLiteral extends AnnotationLiteral<Any> implements Any {
+public class AnyLiteral extends EmptyAnnotationLiteral<Any> implements Any {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -33,4 +33,5 @@ public class AnyLiteral extends AnnotationLiteral<Any> implements Any {
     public String toString() {
         return "@javax.enterprise.inject.Any()";
     }
+
 }

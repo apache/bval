@@ -16,6 +16,7 @@
  */
 package org.apache.bval.jsr.xml;
 
+import org.apache.bval.cdi.EmptyAnnotationLiteral;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privileged;
@@ -217,7 +218,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
         }
     }
 
-    public static final class ValidAnnotation extends AnnotationLiteral<Valid> implements Valid {
+    public static final class ValidAnnotation extends EmptyAnnotationLiteral<Valid> implements Valid {
         private static final long serialVersionUID = 1L;
 
         public static final ValidAnnotation INSTANCE = new ValidAnnotation();

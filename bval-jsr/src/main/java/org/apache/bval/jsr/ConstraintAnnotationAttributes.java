@@ -17,7 +17,7 @@
 package org.apache.bval.jsr;
 
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.bval.util.reflection.TypeUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 

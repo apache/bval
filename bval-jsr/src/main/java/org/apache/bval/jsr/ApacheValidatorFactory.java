@@ -27,14 +27,12 @@ import org.apache.bval.jsr.xml.AnnotationIgnores;
 import org.apache.bval.jsr.xml.MetaConstraint;
 import org.apache.bval.jsr.xml.ValidationMappingParser;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.xml.XMLMetaBeanBuilder;
 import org.apache.bval.xml.XMLMetaBeanFactory;
 import org.apache.bval.xml.XMLMetaBeanManager;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -68,6 +66,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 @Privilizing(@CallTo(Reflection.class))
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
+
     private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
     private static final ConstraintDefaults DEFAULT_CONSTRAINTS = new ConstraintDefaults();
 
@@ -350,7 +349,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             return newInstance(type);
         }
         try {
-            final Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+            final Class<?> cls = Reflection.toClass(type.getName() + "Impl");
             if (type.isAssignableFrom(cls)) {
                 @SuppressWarnings("unchecked")
                 T result = (T) newInstance(cls);
@@ -490,7 +489,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     private static Class<?>[] safeArray(Class<?>... array) {
-        return ArrayUtils.isEmpty(array) ? ArrayUtils.EMPTY_CLASS_ARRAY : ArrayUtils.clone(array);
+        return array == null || array.length == 0 ? ObjectUtils. EMPTY_CLASS_ARRAY : array.clone();
     }
 
     /**
@@ -513,11 +512,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     @Privileged
     private <F extends MetaBeanFactory> F createMetaBeanFactory(final Class<F> cls) {
         try {
-            Constructor<F> c = ConstructorUtils.getMatchingAccessibleConstructor(cls, ApacheValidatorFactory.this.getClass());
+            Constructor<F> c = Reflection.getDeclaredConstructor(cls, ApacheValidatorFactory.this.getClass());
             if (c != null) {
                 return c.newInstance(this);
             }
-            c = ConstructorUtils.getMatchingAccessibleConstructor(cls, getClass());
+            c = Reflection.getDeclaredConstructor(cls, getClass());
             if (c != null) {
                 return c.newInstance(this);
             }

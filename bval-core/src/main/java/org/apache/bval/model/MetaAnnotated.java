@@ -17,20 +17,28 @@
 package org.apache.bval.model;
 
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.bval.util.ObjectUtils;
+
 
 public abstract class MetaAnnotated extends Meta {
     private static final long serialVersionUID = 1L;
 
-    private Annotation[] annotations = new Annotation[0];
+    private Set<Annotation> annotations = new HashSet<Annotation>();
+    private Annotation[] annArray = null;
 
     public Annotation[] getAnnotations() {
-        return annotations;
+        if (annArray == null) {
+            annArray = annotations.isEmpty() ? ObjectUtils.EMPTY_ANNOTATION_ARRAY : annotations.toArray(new Annotation[annotations.size()]);
+        }
+        return annArray;
     }
 
     public void addAnnotation(final Annotation annotation) {
-        this.annotations = ArrayUtils.add(annotations, annotation);
+        this.annotations.add(annotation);
+        annArray = null;
     }
 
 }

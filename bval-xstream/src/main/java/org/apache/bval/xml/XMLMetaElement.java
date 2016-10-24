@@ -18,7 +18,7 @@ package org.apache.bval.xml;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import org.apache.bval.model.MetaProperty;
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.bval.util.reflection.Reflection;
 
 import static org.apache.bval.model.Features.Property.DENIED;
 import static org.apache.bval.model.Features.Property.HIDDEN;
@@ -124,7 +124,7 @@ public class XMLMetaElement extends XMLFeaturesCapable {
     public void mergeInto(MetaProperty prop) throws ClassNotFoundException {
         mergeFeaturesInto(prop);
         if (getType() != null && getType().length() > 0) {
-            prop.setType(ClassUtils.getClass(getType())); // enhancement: or use getGenericType() ?
+            prop.setType(Reflection.toClass(getType())); // enhancement: or use getGenericType() ?
         }
         if (getHidden() != null) {
             prop.putFeature(HIDDEN, getHidden().booleanValue());

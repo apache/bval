@@ -18,12 +18,12 @@ package org.apache.bval.jsr;
 
 import org.apache.bval.el.MessageEvaluator;
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 import javax.validation.MessageInterpolator;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -231,7 +231,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             Object variable = annotationParameters.get(removeCurlyBrace(parameter));
             if (variable != null) {
                 if (variable.getClass().isArray()) {
-                    resolvedParameterValue = ArrayUtils.toString(variable);
+                    resolvedParameterValue = Arrays.toString((Object[]) variable);
                 } else {
                     resolvedParameterValue = variable.toString();
                 }

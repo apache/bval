@@ -25,7 +25,7 @@ import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.bval.util.reflection.Reflection;
 
 /**
  * Description: Implementation of {@link ValidationProvider} for jsr
@@ -81,8 +81,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
             if (validatorFactoryClassname == null) {
                 validatorFactoryClass = ApacheValidatorFactory.class;
             } else {
-                validatorFactoryClass =
-                    ClassUtils.getClass(validatorFactoryClassname).asSubclass(ValidatorFactory.class);
+                validatorFactoryClass = Reflection.toClass(validatorFactoryClassname).asSubclass(ValidatorFactory.class);
             }
         } catch (ValidationException ex) {
             throw ex;

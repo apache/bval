@@ -63,11 +63,9 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.ValidationHelper;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.bval.util.reflection.TypeUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -296,7 +294,7 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
             return newInstance(type);
         }
         try {
-            final Class<?> cls = ClassUtils.getClass(type.getName() + "Impl");
+            final Class<?> cls = Reflection.toClass(type.getName() + "Impl");
             if (type.isAssignableFrom(cls)) {
                 @SuppressWarnings("unchecked")
                 final Class<? extends T> implClass = (Class<? extends T>) cls;
@@ -1155,7 +1153,9 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
                 if (!cascade) {
                     //TCK doesn't care what type a property is if there are no constraints to validate:
                     FeaturesCapable meta = prop == null ? context.getMetaBean() : prop;
-                    if (ArrayUtils.isEmpty(meta.getValidations())) {
+
+                    Validation[] validations = meta.getValidations();
+                    if (validations == null || validations.length == 0) {
                         return Collections.<ConstraintViolation<T>> emptySet();
                     }
                 }

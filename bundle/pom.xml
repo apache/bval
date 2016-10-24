@@ -74,7 +74,7 @@
                         <Private-Package />
                         <Export-Package>org.apache.bval.*</Export-Package>
                         <Import-Package>
-                            org.apache.commons.lang3.*;resolution:=optional,javax.annotation.*;resolution:=optional,javax.interceptor.*;resolution:=optional,
+                            javax.annotation.*;resolution:=optional,javax.interceptor.*;resolution:=optional,
                             javax.inject.*;resolution:=optional,javax.enterprise.*;resolution:=optional,javax.persistence.*;resolution:=optional,
                             org.apache.bval.xml.*;resolution:=optional,javax.validation.*;resolution:=optional,
                             !org.apache.commons.weaver.*,

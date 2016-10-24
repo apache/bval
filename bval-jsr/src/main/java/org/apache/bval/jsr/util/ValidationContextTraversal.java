@@ -27,8 +27,8 @@ import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.IndexedAccess;
 import org.apache.bval.util.KeyedAccess;
 import org.apache.bval.util.PropertyAccess;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.reflection.TypeUtils;
 
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Type;
@@ -160,8 +160,6 @@ public class ValidationContextTraversal extends CallbackProcedure {
     /**
      * If we currently have a property, navigate the context such that the property becomes the bean, in preparation for
      * another property.
-     * 
-     * @param validationContext
      */
     public void moveDownIfNecessary() {
         MetaProperty mp = validationContext.getMetaProperty();

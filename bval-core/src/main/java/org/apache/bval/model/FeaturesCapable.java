@@ -16,8 +16,6 @@
  */
 package org.apache.bval.model;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,7 +120,7 @@ public abstract class FeaturesCapable implements Serializable {
     protected void copyInto(FeaturesCapable target) {
         target.features = target.createFeaturesMap();
         target.features.putAll(features);
-        target.validations = ArrayUtils.clone(validations);
+        target.validations = validations != null ? validations.clone() : null;
     }
 
     /**
@@ -131,7 +129,7 @@ public abstract class FeaturesCapable implements Serializable {
      * @return Validation array
      */
     public Validation[] getValidations() {
-        return ArrayUtils.clone(validations);
+        return validations != null ? validations.clone() : null;
     }
 
     /**
@@ -140,7 +138,7 @@ public abstract class FeaturesCapable implements Serializable {
      * @param validations
      */
     public void setValidations(Validation[] validations) {
-        this.validations = ArrayUtils.clone(validations);
+        this.validations = validations != null ? validations.clone() : null;
     }
 
     /**

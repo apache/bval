@@ -18,9 +18,9 @@
  */
 package org.apache.bval.jsr.groups;
 
-import org.apache.commons.lang3.ObjectUtils;
 
 import javax.validation.groups.Default;
+
 
 /**
  * Immutable object that wraps an interface representing a single group.
@@ -61,16 +61,21 @@ public final class Group {
      * Learn whether the group represented is the default group.
      * @return boolean
      */
-	public boolean isDefault() {
-		return Default.class.equals(group);
-	}
+    public boolean isDefault() {
+        return Default.class.equals(group);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean equals(final Object o) {
-        return this == o || o instanceof Group && ObjectUtils.equals(group, ((Group) o).group);
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+
+        Group group1 = (Group) o;
+
+        return group != null ? group.equals(group1.group) : group1.group == null;
     }
 
     /**

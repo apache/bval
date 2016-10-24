@@ -33,7 +33,6 @@ import org.apache.bval.model.MetaProperty;
 import org.apache.bval.model.Validation;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -849,7 +848,7 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                 }
             } else {
                 annotationProcessor.processAnnotation(
-                        annotation, null, ClassUtils.primitiveToWrapper((Class<?>) access.getJavaType()),
+                        annotation, null, Reflection.primitiveToWrapper((Class<?>) access.getJavaType()),
                         access, validations, true);
             }
         }

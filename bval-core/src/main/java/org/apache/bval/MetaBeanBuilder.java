@@ -17,8 +17,7 @@
 package org.apache.bval;
 
 import org.apache.bval.model.MetaBean;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.bval.util.reflection.Reflection;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,7 +60,7 @@ public class MetaBeanBuilder {
      * @return {@link MetaBeanFactory} array
      */
     public MetaBeanFactory[] getFactories() {
-        return ArrayUtils.clone(factories);
+        return factories != null ? factories.clone() : null;
     }
 
     /**
@@ -71,7 +70,7 @@ public class MetaBeanBuilder {
      * @param factories
      */
     public void setFactories(MetaBeanFactory[] factories) {
-        this.factories = ArrayUtils.clone(factories);
+        this.factories = factories != null ? factories.clone() : null;
     }
 
     /**
@@ -105,9 +104,9 @@ public class MetaBeanBuilder {
     protected Class<?> findLocalClass(String className) {
         if (className != null) {
             try {
-                return ClassUtils.getClass(className);
+                return Reflection.toClass(className);
             } catch (ClassNotFoundException e) {
-            	log.log(Level.FINE, String.format("Class not found: %s", className), e);
+                log.log(Level.FINE, String.format("Class not found: %s", className), e);
             }
         }
         return null;

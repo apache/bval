@@ -16,8 +16,6 @@
  */
 package org.apache.bval.util;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Array;
@@ -25,6 +23,8 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.bval.util.reflection.TypeUtils;
 
 /**
  * {@link AccessStrategy} to get an indexed member of an {@link Iterable} or
@@ -46,7 +46,8 @@ public class IndexedAccess extends AccessStrategy {
         }
         if (TypeUtils.isAssignable(containerType, Iterable.class)) {
             Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(containerType, Iterable.class);
-            return ObjectUtils.defaultIfNull(TypeUtils.unrollVariables(typeArguments, ITERABLE_TYPE), Object.class);
+            Type type = TypeUtils.unrollVariables(typeArguments, ITERABLE_TYPE);
+            return type != null ? type : Object.class;
         }
         return null;
     }

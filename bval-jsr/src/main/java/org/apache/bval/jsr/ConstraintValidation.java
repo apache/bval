@@ -24,10 +24,10 @@ import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.StringUtils;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.util.reflection.TypeUtils;
 
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintTarget;
@@ -84,7 +84,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                                 T annotation, Class<?> owner, AccessStrategy access,
                                 boolean reportFromComposite, ConstraintTarget target) {
         this.attributes = new HashMap<String, Object>();
-        this.validatorClasses = ArrayUtils.clone(validatorClasses);
+        this.validatorClasses = validatorClasses != null ? validatorClasses.clone() : null;
         this.annotation = annotation;
         this.owner = owner;
         this.access = access;
@@ -237,7 +237,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     private <A extends Annotation> ConstraintValidator<A, ? super T> getConstraintValidator(
             ConstraintValidatorFactory factory, A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
-        if (ArrayUtils.isNotEmpty(constraintClasses)) {
+        if (ObjectUtils.isNotEmpty(constraintClasses)) {
             final Type type = determineTargetedType(owner, access);
 
             /**
@@ -413,7 +413,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         if (type == null) {
             return Object.class;
         }
-        return type instanceof Class<?> ? ClassUtils.primitiveToWrapper((Class<?>) type) : type;
+        return type instanceof Class<?> ? Reflection.primitiveToWrapper((Class<?>) type) : type;
     }
 
     /**

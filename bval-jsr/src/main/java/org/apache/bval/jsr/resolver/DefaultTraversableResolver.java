@@ -17,7 +17,6 @@
 package org.apache.bval.jsr.resolver;
 
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -79,7 +78,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private void initJpa() {
         final ClassLoader classLoader = Reflection.getClassLoader(DefaultTraversableResolver.class);
         try {
-            Reflection.getClass(classLoader, PERSISTENCE_UTIL_CLASSNAME);
+            Reflection.toClass(PERSISTENCE_UTIL_CLASSNAME, classLoader);
             if (LOG_FINEST) {
                 log.log(Level.FINEST, String.format("Found %s on classpath.", PERSISTENCE_UTIL_CLASSNAME));
             }
@@ -90,14 +89,13 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
 
         try {
             Class<? extends TraversableResolver> jpaAwareResolverClass =
-              (Class<? extends TraversableResolver>)
-                ClassUtils.getClass(classLoader, JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, true);
+              (Class<? extends TraversableResolver>) Reflection.toClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, classLoader);
             jpaTR = jpaAwareResolverClass.newInstance();
             if (LOG_FINEST) {
                 log.log(Level.FINEST, String.format("Instantiated an instance of %s.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME));
             }
         } catch (final Exception e) {
-			log.log(Level.WARNING, String.format("Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME), e);
+            log.log(Level.WARNING, String.format("Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME), e);
         }
     }
 

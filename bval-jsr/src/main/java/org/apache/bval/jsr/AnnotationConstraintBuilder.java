@@ -21,8 +21,7 @@ package org.apache.bval.jsr;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.AccessStrategy;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.bval.util.reflection.TypeUtils;
 import org.apache.commons.weaver.privilizer.Privileged;
 
 import javax.validation.Constraint;
@@ -226,7 +225,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             garr = null;
         }
 
-        if (ArrayUtils.isEmpty(garr)) {
+        if (garr == null || garr.length == 0) {
             garr = GroupsComputer.DEFAULT_GROUP;
         }
         constraintValidation.setGroups(garr);

@@ -59,7 +59,7 @@ public class PropertyAccess extends AccessStrategy {
         final ClassLoader cl = Reflection.getClassLoader(PropertyAccess.class);
         boolean useBeanUtils;
         try {
-            Reflection.getClass(cl, BEANUTILS);
+            Reflection.toClass(BEANUTILS, cl);
             useBeanUtils = true;
         } catch (Exception e) {
             useBeanUtils = false;
@@ -68,7 +68,7 @@ public class PropertyAccess extends AccessStrategy {
         if (useBeanUtils) {
             try {
                 final Class<?> beanUtilsPropertyAccess =
-                    Reflection.getClass(cl, BEANUTILS_PROPERTY_ACCESS);
+                    Reflection.toClass(BEANUTILS_PROPERTY_ACCESS, cl);
 
                 ctor = Reflection.getDeclaredConstructor(
                     beanUtilsPropertyAccess.asSubclass(PropertyAccess.class),

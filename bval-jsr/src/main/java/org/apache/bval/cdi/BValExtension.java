@@ -42,7 +42,6 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.MethodType;
 
-import org.apache.commons.lang3.Validate;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -52,6 +51,8 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.bval.util.Validate;
 
 /**
  * CDI {@link Extension} for Apache BVal setup.

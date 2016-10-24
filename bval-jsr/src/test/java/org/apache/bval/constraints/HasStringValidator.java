@@ -18,10 +18,10 @@
  */
 package org.apache.bval.constraints;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
+import org.apache.bval.util.ObjectUtils;
 
 /**
  * Description: <br/>
@@ -36,6 +36,6 @@ public class HasStringValidator implements ConstraintValidator<HasValue, String>
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return s == null || ArrayUtils.contains(values, s);
+        return s == null || ObjectUtils.arrayContains(values, s);
     }
 }

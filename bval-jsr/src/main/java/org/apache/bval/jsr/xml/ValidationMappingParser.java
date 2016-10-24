@@ -50,9 +50,9 @@ import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.util.IOs;
 import org.apache.bval.util.FieldAccess;
 import org.apache.bval.util.MethodAccess;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -268,7 +268,7 @@ public class ValidationMappingParser {
         if (returnType.equals(Class.class)) {
             ClassLoader cl = Reflection.getClassLoader(ValidationMappingParser.class);
             try {
-                return Reflection.getClass(cl, toQualifiedClassName(value, defaultPackage));
+                return Reflection.toClass(toQualifiedClassName(value, defaultPackage), cl);
             } catch (Exception e) {
                 throw new ValidationException(e);
             }
@@ -327,7 +327,7 @@ public class ValidationMappingParser {
 
     private Class<?>[] getGroups(GroupsType groupsType, String defaultPackage) {
         if (groupsType == null) {
-            return ArrayUtils.EMPTY_CLASS_ARRAY;
+            return ObjectUtils.EMPTY_CLASS_ARRAY;
         }
 
         List<Class<?>> groupList = new ArrayList<Class<?>>();

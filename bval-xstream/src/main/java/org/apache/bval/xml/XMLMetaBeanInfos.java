@@ -21,7 +21,7 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import org.apache.bval.model.Validation;
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.bval.util.reflection.Reflection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -107,7 +107,7 @@ public class XMLMetaBeanInfos {
         for (XMLMetaValidator xv : validators) {
             if (xv.getJava() != null) {
                 Validation validation =
-                        (Validation) ClassUtils.getClass(xv.getJava()).newInstance();
+                        (Validation) Reflection.toClass(xv.getJava()).newInstance();
                 xv.setValidation(validation);
                 map.put(xv.getId(), xv);
             }

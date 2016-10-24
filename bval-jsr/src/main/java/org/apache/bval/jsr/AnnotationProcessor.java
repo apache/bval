@@ -22,8 +22,8 @@ import org.apache.bval.model.Features;
 import org.apache.bval.model.Meta;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.util.AccessStrategy;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -175,13 +175,13 @@ public final class AnnotationProcessor {
             return false;
         }
         AccessStrategy[] strategies = prop.getFeature(Features.Property.REF_CASCADE);
-        if (ArrayUtils.contains(strategies, access)) {
+        if (ObjectUtils.arrayContains(strategies, access)) {
             return false;
         }
         if (strategies == null) {
             strategies = new AccessStrategy[] { access };
         } else {
-            strategies = ArrayUtils.add(strategies, access);
+            strategies = ObjectUtils.arrayAdd(strategies, access);
         }
         prop.putFeature(Features.Property.REF_CASCADE, strategies);
         return true;

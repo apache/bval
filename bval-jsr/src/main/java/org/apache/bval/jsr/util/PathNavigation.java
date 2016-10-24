@@ -16,8 +16,6 @@
  */
 package org.apache.bval.jsr.util;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-
 import javax.validation.ValidationException;
 import java.io.StringWriter;
 import java.text.ParsePosition;
@@ -166,7 +164,7 @@ public class PathNavigation {
 
     /**
      * Handles an index/key. If the text contained between [] is surrounded by a pair of " or ', it will be treated as a
-     * string which may contain Java escape sequences.
+     * string which may contain Java escape sequences. This function is only available if commons-lang3 is available on the classpath!
      * 
      * @param path
      * @param pos
@@ -219,14 +217,19 @@ public class PathNavigation {
                     pos.next();
                     return w.toString();
                 }
-                int codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, here, w);
-                if (codePoints == 0) {
-                    w.write(Character.toChars(Character.codePointAt(path, here)));
-                    pos.next();
-                } else {
-                    for (int i = 0; i < codePoints; i++) {
-                        pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
+                try {
+                    int codePoints = org.apache.commons.lang3.StringEscapeUtils.UNESCAPE_JAVA.translate(path, here, w);
+                    if (codePoints == 0) {
+                        w.write(Character.toChars(Character.codePointAt(path, here)));
+                        pos.next();
+                    } else {
+                        for (int i = 0; i < codePoints; i++) {
+                            pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
+                        }
                     }
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Java escaping in quotes is only supported with Apache commons-lang3 on the classpath!");
                 }
             }
             // if reached, reset due to no ending quote found

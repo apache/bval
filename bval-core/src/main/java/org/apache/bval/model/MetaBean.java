@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -287,7 +286,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
                 }
                 for (final Method m : clazz.getDeclaredMethods()) {
                     final String name = getPropertyName(m);
-                    if (StringUtils.isNotEmpty(name)) {
+                    if (name != null && !name.isEmpty()) {
                         if (!fields.containsKey(name)) {
                             fields.put(name, Integer.valueOf(++i));
                         }
@@ -320,7 +319,8 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
                 if (i2 == null) {
                     // java.util.TreeMap requires that the comparator be consistent with #equals(),
                     // therefore we must not incorrectly report 0 comparison for different property names
-                    return StringUtils.compare(o1, o2);
+                    // Both o1 and o2 cannot be null as they would have blown up with a NPE in fields.get already
+                    return o1.compareTo(o2);
                 }
                 return -1;
             }

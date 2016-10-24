@@ -16,7 +16,6 @@
  */
 package org.apache.bval.model;
 
-import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Description: ("artificial" enum with custom values).<br/>
@@ -85,7 +84,7 @@ public class DynaTypeEnum implements DynaType {
      * @return Value[]
      */
     public Value[] getEnumConstants() {
-        return ArrayUtils.clone(enumConstants);
+        return enumConstants != null ? enumConstants.clone() : null;
     }
 
     /**

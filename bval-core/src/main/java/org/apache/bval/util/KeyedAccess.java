@@ -16,8 +16,7 @@
  */
 package org.apache.bval.util;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import org.apache.bval.util.reflection.TypeUtils;
 
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Type;

@@ -24,23 +24,72 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 
 /**
  * Security-agnostic "blueprint" class for reflection-related operations. Intended for use by Apache BVal code.
  */
 public class Reflection {
+    private static final Object[][] NATIVE_CODES = new Object[][]{
+            {byte.class, "byte", "B"},
+            {char.class, "char", "C"},
+            {double.class, "double", "D"},
+            {float.class, "float", "F"},
+            {int.class, "int", "I"},
+            {long.class, "long", "J"},
+            {short.class, "short", "S"},
+            {boolean.class, "boolean", "Z"},
+            {void.class, "void", "V"}
+    };
+
     /**
-     * Get the named {@link Class} from the specified {@link ClassLoader}.
-     * @param classLoader
-     * @param className
-     * @return Class
-     * @throws Exception
+     * Maps primitive {@code Class}es to their corresponding wrapper {@code Class}.
      */
-    public static Class<?> getClass(final ClassLoader classLoader, final String className) throws Exception {
-        return ClassUtils.getClass(classLoader, className, true);
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_MAP = new HashMap<Class<?>, Class<?>>();
+    static {
+        PRIMITIVE_WRAPPER_MAP.put(Boolean.TYPE, Boolean.class);
+        PRIMITIVE_WRAPPER_MAP.put(Byte.TYPE, Byte.class);
+        PRIMITIVE_WRAPPER_MAP.put(Character.TYPE, Character.class);
+        PRIMITIVE_WRAPPER_MAP.put(Short.TYPE, Short.class);
+        PRIMITIVE_WRAPPER_MAP.put(Integer.TYPE, Integer.class);
+        PRIMITIVE_WRAPPER_MAP.put(Long.TYPE, Long.class);
+        PRIMITIVE_WRAPPER_MAP.put(Double.TYPE, Double.class);
+        PRIMITIVE_WRAPPER_MAP.put(Float.TYPE, Float.class);
+        PRIMITIVE_WRAPPER_MAP.put(Void.TYPE, Void.TYPE);
+    }
+
+
+
+    /**
+     * <p>Converts the specified primitive Class object to its corresponding
+     * wrapper Class object.</p>
+     *
+     * <p>NOTE: From v2.2, this method handles {@code Void.TYPE},
+     * returning {@code Void.TYPE}.</p>
+     *
+     * @param cls  the class to convert, may be null
+     * @return the wrapper class for {@code cls} or {@code cls} if
+     * {@code cls} is not a primitive. {@code null} if null input.
+     * @since 2.1
+     */
+    public static Class<?> primitiveToWrapper(final Class<?> cls) {
+        Class<?> convertedClass = cls;
+        if (cls != null && cls.isPrimitive()) {
+            convertedClass = PRIMITIVE_WRAPPER_MAP.get(cls);
+        }
+        return convertedClass;
+    }
+
+    public static Class<?> wrapperToPrimitive(final Class<?> cls) {
+        for (Map.Entry<Class<?>, Class<?>> primitiveEntry : PRIMITIVE_WRAPPER_MAP.entrySet()) {
+            if (primitiveEntry.getValue().equals(cls)) {
+                return primitiveEntry.getKey();
+            }
+        }
+        return null;
     }
 
     /**
@@ -80,6 +129,79 @@ public class Reflection {
         return cl == null ? clazz.getClassLoader() : cl;
     }
 
+    public static Class<?> toClass(String className) throws ClassNotFoundException
+    {
+        ClassLoader cl = getClassLoader(Reflection.class);
+        return toClass(className, cl);
+    }
+
+    /**
+     * Return the class for the given string, correctly handling
+     * primitive types. If the given class loader is null, the context
+     * loader of the current thread will be used.
+     *
+     * @throws RuntimeException on load error
+     */
+    public static Class toClass(String className, ClassLoader loader) throws ClassNotFoundException {
+        return toClass(className, false, loader);
+    }
+
+    /**
+     * Return the class for the given string, correctly handling
+     * primitive types. If the given class loader is null, the context
+     * loader of the current thread will be used.
+     *
+     * @throws RuntimeException on load error
+     */
+    public static Class toClass(String className, boolean resolve, ClassLoader loader) throws ClassNotFoundException {
+        if (className == null) {
+            throw new NullPointerException("className == null");
+        }
+
+        // array handling
+        int dims = 0;
+        while (className.endsWith("[]")) {
+            dims++;
+            className = className.substring(0, className.length() - 2);
+        }
+
+        // check against primitive types
+        boolean primitive = false;
+        if (className.indexOf('.') == -1) {
+            for (int i = 0; !primitive && (i < NATIVE_CODES.length); i++) {
+                if (NATIVE_CODES[i][1].equals(className)) {
+                    if (dims == 0) {
+                        return (Class) NATIVE_CODES[i][0];
+                    }
+                    className = (String) NATIVE_CODES[i][2];
+                    primitive = true;
+                }
+            }
+        }
+
+        if (dims > 0) {
+            StringBuilder buf = new StringBuilder(className.length() + dims + 2);
+            for (int i = 0; i < dims; i++) {
+                buf.append('[');
+            }
+            if (!primitive) {
+                buf.append('L');
+            }
+            buf.append(className);
+            if (!primitive) {
+                buf.append(';');
+            }
+            className = buf.toString();
+        }
+
+        if (loader == null) {
+            loader = Thread.currentThread().getContextClassLoader();
+        }
+
+        return Class.forName(className, resolve, loader);
+    }
+
+
     /**
      * Convenient point for {@link Privilizing} {@link System#getProperty(String)}.
      * @param name
@@ -114,7 +236,6 @@ public class Reflection {
 
     /**
      * Get the declared constructor from {@code clazz}.
-     * @param T generic type
      * @param clazz
      * @param parameters
      * @return {@link Constructor} or {@code null}

@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 
 import javax.validation.ConstraintValidator;
 
+import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
@@ -104,7 +104,7 @@ public class ConstraintDefaults {
             final List<Class<?>> classes = new LinkedList<Class<?>>();
             for (String className : StringUtils.split((String) entry.getValue(), ',')) {
                 try {
-                    classes.add(Reflection.getClass(classloader, className.trim()));
+                    classes.add(Reflection.toClass(className.trim(), classloader));
                 } catch (Exception e) {
                     log.log(Level.SEVERE, String.format("Cannot find class %s", className), e);
                 }

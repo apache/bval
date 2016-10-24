@@ -16,9 +16,9 @@
  */
 package org.apache.bval.model;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
-
 import java.lang.reflect.Type;
+
+import org.apache.bval.util.reflection.TypeUtils;
 
 /**
  * Description: the meta description of a property of a bean. It supports a map

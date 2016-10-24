@@ -24,7 +24,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 

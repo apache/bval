@@ -17,8 +17,12 @@
 package org.apache.bval.jsr.util;
 
 import javax.validation.ValidationException;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+
 import java.io.StringWriter;
 import java.text.ParsePosition;
+import java.util.logging.Logger;
 
 /**
  * Defines a path navigation algorithm and a means of interacting with same.
@@ -77,6 +81,20 @@ public class PathNavigation {
          */
         protected void complete() {
         }
+    }
+
+    private static final Logger LOG = Logger.getLogger(PathNavigation.class.getName());
+
+    private static final boolean COMMONS_LANG3_AVAILABLE;
+    static {
+        boolean b = true;
+        try {
+            new StringEscapeUtils();
+        } catch (Exception e) {
+            b = false;
+            LOG.warning("Apache commons-lang3 is not on the classpath; Java escaping in quotes will not be available.");
+        }
+        COMMONS_LANG3_AVAILABLE = b;
     }
 
     /**
@@ -219,19 +237,19 @@ public class PathNavigation {
                     pos.next();
                     return w.toString();
                 }
-                try {
-                    int codePoints = org.apache.commons.lang3.StringEscapeUtils.UNESCAPE_JAVA.translate(path, here, w);
-                    if (codePoints == 0) {
-                        w.write(Character.toChars(Character.codePointAt(path, here)));
-                        pos.next();
-                    } else {
-                        for (int i = 0; i < codePoints; i++) {
-                            pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
-                        }
+                final int codePoints;
+                if (COMMONS_LANG3_AVAILABLE) {
+                    codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, here, w);
+                } else {
+                    codePoints = 0;                    
+                }
+                if (codePoints == 0) {
+                    w.write(Character.toChars(Character.codePointAt(path, here)));
+                    pos.next();
+                } else {
+                    for (int i = 0; i < codePoints; i++) {
+                        pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException(
-                        "Java escaping in quotes is only supported with Apache commons-lang3 on the classpath!");
                 }
             }
             // if reached, reset due to no ending quote found

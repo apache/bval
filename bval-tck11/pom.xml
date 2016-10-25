@@ -133,6 +133,7 @@ under the License.
         <profile>
             <id>tck</id>
             <activation>
+                <activeByDefault>true</activeByDefault>
                 <property>
                     <name>tck11</name>
                 </property>

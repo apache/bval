@@ -38,11 +38,10 @@ package org.apache.bval.extras.constraints.checkdigit;
  *  <a href="http://en.wikipedia.org/wiki/Routing_transit_number">Wikipedia -
  *  Routing transit number</a>.
  */
-public final class ABANumberValidator
-    extends ModulusValidator<ABANumber> {
+public final class ABANumberValidator extends ModulusValidator<ABANumber> {
 
     /** weighting given to digits depending on their right position */
-    private static final int[] POSITION_WEIGHT = new int[] {3, 1, 7};
+    private static final int[] POSITION_WEIGHT = new int[] { 3, 1, 7 };
 
     public ABANumberValidator() {
         super(10);
@@ -61,8 +60,7 @@ public final class ABANumberValidator
      * {@inheritDoc}
      */
     @Override
-    protected int weightedValue( int charValue, int leftPos, int rightPos )
-            throws Exception {
+    protected int weightedValue(int charValue, int leftPos, int rightPos) throws Exception {
         int weight = POSITION_WEIGHT[rightPos % 3];
         return (charValue * weight);
     }

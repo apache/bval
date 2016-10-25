@@ -42,8 +42,7 @@ public class ComposedConstraintsTest extends ValidationTestBase {
     @Test
     public void testMetaDataAPI_ComposedConstraints() {
         ElementDescriptor ed =
-              validator.getConstraintsForClass(FrenchAddress.class)
-                    .getConstraintsForProperty("zipCode");
+            validator.getConstraintsForClass(FrenchAddress.class).getConstraintsForProperty("zipCode");
         assertEquals(1, ed.getConstraintDescriptors().size());
         for (ConstraintDescriptor<?> cd : ed.getConstraintDescriptors()) {
             assertTrue(cd.isReportAsSingleViolation());

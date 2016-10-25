@@ -26,12 +26,12 @@ import javax.validation.metadata.ParameterDescriptor;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-
 /**
  * Description: {@link javax.validation.metadata.ParameterDescriptor} implementation.<br/>
  */
 public class ParameterDescriptorImpl extends ElementDescriptorImpl implements ParameterDescriptor {
-    private final Set<GroupConversionDescriptor> groupConversions = new CopyOnWriteArraySet<GroupConversionDescriptor>();
+    private final Set<GroupConversionDescriptor> groupConversions =
+        new CopyOnWriteArraySet<GroupConversionDescriptor>();
     private final String name;
     private int index;
 

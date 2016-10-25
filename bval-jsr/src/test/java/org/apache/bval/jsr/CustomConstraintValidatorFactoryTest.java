@@ -87,7 +87,9 @@ public class CustomConstraintValidatorFactoryTest {
     public static @interface GoodPerson {
 
         String message() default "Not a good person";
-        Class<?>[] groups() default { };
+
+        Class<?>[] groups() default {};
+
         Class<? extends Payload>[] payload() default {};
 
         public static class GoodPersonValidator implements ConstraintValidator<GoodPerson, Person> {

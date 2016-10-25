@@ -33,16 +33,16 @@ public class BusinessObjectBeanInfo extends SimpleBeanInfo {
     public BeanInfo[] getAdditionalBeanInfo() {
         ExplicitBeanInfo bi = new ExplicitBeanInfo();
         bi.setPropertyDescriptors(_getPropertyDescriptors());
-        return new BeanInfo[]{bi};
+        return new BeanInfo[] { bi };
     }
 
     public PropertyDescriptor[] _getPropertyDescriptors() {
         try {
-            PropertyDescriptor numericValue = new PropertyDescriptor("numericValue",
-                    targetClass, "getNumericValue", "setNumericValue");
+            PropertyDescriptor numericValue =
+                new PropertyDescriptor("numericValue", targetClass, "getNumericValue", "setNumericValue");
             numericValue.setValue(Features.Property.MAX_VALUE, new Integer(100));
             numericValue.setValue(Features.Property.MIN_VALUE, new Integer(-100));
-            return new PropertyDescriptor[]{numericValue};
+            return new PropertyDescriptor[] { numericValue };
         } catch (IntrospectionException ex) {
             ex.printStackTrace();
             return null;

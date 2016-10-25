@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.groups.redefining;
 
-
 import org.apache.bval.constraints.ZipCodeCityCoherence;
 import org.apache.bval.jsr.example.ZipCodeCityCarrier;
 
@@ -32,28 +31,30 @@ import javax.validation.constraints.Size;
  * this sequence expresses the sequence of groups that does
  * substitute Default for this class.
  */
-@GroupSequence({Address.class, Address.HighLevelCoherence.class, Address.ExtraCareful.class })
+@GroupSequence({ Address.class, Address.HighLevelCoherence.class, Address.ExtraCareful.class })
 @ZipCodeCityCoherence(groups = Address.HighLevelCoherence.class)
 public class Address implements ZipCodeCityCarrier {
-    
+
     /**
      * check coherence on the overall object
      * Needs basic checking to be green first
      */
-    public interface HighLevelCoherence {}
-    
+    public interface HighLevelCoherence {
+    }
+
     /**
      * Extra-careful validation group.
      */
-    public interface ExtraCareful {}
+    public interface ExtraCareful {
+    }
 
     @NotNull
     @Size(max = 50, min = 1, groups = ExtraCareful.class)
     private String street1;
 
-    @NotNull 
+    @NotNull
     private String zipCode;
-    
+
     @NotNull
     @Size(max = 30)
     private String city;

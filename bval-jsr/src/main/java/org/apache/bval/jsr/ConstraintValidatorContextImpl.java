@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import org.apache.bval.jsr.util.LeafNodeBuilderCustomizableContextImpl;
 import org.apache.bval.jsr.util.NodeBuilderDefinedContextImpl;
 import org.apache.bval.jsr.util.NodeImpl;
@@ -40,8 +39,7 @@ import java.util.List;
  * a {@link ConstraintValidation} to its adapted {@link ConstraintValidator}. <br/>
  */
 public class ConstraintValidatorContextImpl implements ConstraintValidatorContext {
-    private final List<ValidationListener.Error> errorMessages =
-          new LinkedList<ValidationListener.Error>();
+    private final List<ValidationListener.Error> errorMessages = new LinkedList<ValidationListener.Error>();
 
     private final ConstraintValidation<?> constraintDescriptor;
     private final GroupValidationContext<?> validationContext;
@@ -54,7 +52,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
      * @param aConstraintValidation
      */
     public ConstraintValidatorContextImpl(GroupValidationContext<?> validationContext,
-                                          ConstraintValidation<?> aConstraintValidation) {
+        ConstraintValidation<?> aConstraintValidation) {
         this.validationContext = validationContext;
         this.constraintDescriptor = aConstraintValidation;
     }
@@ -79,8 +77,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
      * {@inheritDoc}
      */
     @Override
-    public ConstraintViolationBuilder buildConstraintViolationWithTemplate(
-          String messageTemplate) {
+    public ConstraintViolationBuilder buildConstraintViolationWithTemplate(String messageTemplate) {
         return new ConstraintViolationBuilderImpl(this, messageTemplate, validationContext.getPropertyPath());
     }
 
@@ -93,7 +90,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
     }
 
     private static final class ConstraintViolationBuilderImpl
-          implements ConstraintValidatorContext.ConstraintViolationBuilder {
+        implements ConstraintValidatorContext.ConstraintViolationBuilder {
         private final ConstraintValidatorContextImpl parent;
         private final String messageTemplate;
         private final PathImpl propertyPath;
@@ -104,8 +101,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
          * @param template
          * @param path
          */
-        ConstraintViolationBuilderImpl(ConstraintValidatorContextImpl contextImpl,
-                                       String template, PathImpl path) {
+        ConstraintViolationBuilderImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path) {
             parent = contextImpl;
             messageTemplate = template;
             propertyPath = path;
@@ -157,7 +153,8 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
         @Override
         public NodeBuilderDefinedContext addParameterNode(int index) {
             final Method method = parent.validationContext.getMethod();
-            final List<String> parameters = parent.validationContext.getParameterNameProvider().getParameterNames(method);
+            final List<String> parameters =
+                parent.validationContext.getParameterNameProvider().getParameterNames(method);
             final NodeImpl node = new NodeImpl.ParameterNodeImpl(parameters.get(index), index);
             node.setParameterIndex(index);
             node.setKind(ElementKind.PARAMETER);
@@ -185,15 +182,13 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
     public List<ValidationListener.Error> getErrorMessages() {
         if (defaultDisabled && errorMessages.isEmpty()) {
             throw new ValidationException(
-                  "At least one custom message must be created if the default error message gets disabled.");
+                "At least one custom message must be created if the default error message gets disabled.");
         }
 
-        List<ValidationListener.Error> returnedErrorMessages =
-              new ArrayList<ValidationListener.Error>(errorMessages);
+        List<ValidationListener.Error> returnedErrorMessages = new ArrayList<ValidationListener.Error>(errorMessages);
         if (!defaultDisabled) {
-            returnedErrorMessages.add(new ValidationListener.Error(
-                  getDefaultConstraintMessageTemplate(), validationContext.getPropertyPath(),
-                  null));
+            returnedErrorMessages.add(new ValidationListener.Error(getDefaultConstraintMessageTemplate(),
+                validationContext.getPropertyPath(), null));
         }
         return returnedErrorMessages;
     }

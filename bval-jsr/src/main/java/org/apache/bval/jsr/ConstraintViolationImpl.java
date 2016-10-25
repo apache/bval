@@ -62,9 +62,8 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      * @param parameters
      */
     public ConstraintViolationImpl(String messageTemplate, String message, T rootBean, Object leafBean,
-                                   Path propertyPath, Object value,
-                                   ConstraintDescriptor<?> constraintDescriptor, Class<T> rootBeanClass,
-                                   ElementType elementType, Object returnValue, Object[] parameters) {
+        Path propertyPath, Object value, ConstraintDescriptor<?> constraintDescriptor, Class<T> rootBeanClass,
+        ElementType elementType, Object returnValue, Object[] parameters) {
         this.messageTemplate = messageTemplate;
         this.message = message;
         this.rootBean = rootBean;
@@ -172,33 +171,43 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      */
     @Override
     public String toString() {
-        return "ConstraintViolationImpl{" + "rootBean=" + rootBean + ", propertyPath='" +
-              propertyPath + '\'' + ", message='" + message + '\'' + ", leafBean=" +
-              leafBean + ", value=" + value + '}';
+        return "ConstraintViolationImpl{" + "rootBean=" + rootBean + ", propertyPath='" + propertyPath + '\''
+            + ", message='" + message + '\'' + ", leafBean=" + leafBean + ", value=" + value + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         ConstraintViolationImpl that = (ConstraintViolationImpl) o;
 
-        if (constraintDescriptor != null ? !constraintDescriptor.equals(that.constraintDescriptor) : that.constraintDescriptor != null)
+        if (constraintDescriptor != null ? !constraintDescriptor.equals(that.constraintDescriptor)
+            : that.constraintDescriptor != null)
             return false;
-        if (elementType != that.elementType) return false;
-        if (leafBean != null ? !leafBean.equals(that.leafBean) : that.leafBean != null) return false;
-        if (message != null ? !message.equals(that.message) : that.message != null) return false;
+        if (elementType != that.elementType)
+            return false;
+        if (leafBean != null ? !leafBean.equals(that.leafBean) : that.leafBean != null)
+            return false;
+        if (message != null ? !message.equals(that.message) : that.message != null)
+            return false;
         if (messageTemplate != null ? !messageTemplate.equals(that.messageTemplate) : that.messageTemplate != null)
             return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
-        if (!Arrays.equals(parameters, that.parameters)) return false;
-        if (propertyPath != null ? !propertyPath.equals(that.propertyPath) : that.propertyPath != null) return false;
-        if (returnValue != null ? !returnValue.equals(that.returnValue) : that.returnValue != null) return false;
-        if (rootBean != null ? !rootBean.equals(that.rootBean) : that.rootBean != null) return false;
+        if (!Arrays.equals(parameters, that.parameters))
+            return false;
+        if (propertyPath != null ? !propertyPath.equals(that.propertyPath) : that.propertyPath != null)
+            return false;
+        if (returnValue != null ? !returnValue.equals(that.returnValue) : that.returnValue != null)
+            return false;
+        if (rootBean != null ? !rootBean.equals(that.rootBean) : that.rootBean != null)
+            return false;
         if (rootBeanClass != null ? !rootBeanClass.equals(that.rootBeanClass) : that.rootBeanClass != null)
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null) return false;
+        if (value != null ? !value.equals(that.value) : that.value != null)
+            return false;
 
         return true;
     }

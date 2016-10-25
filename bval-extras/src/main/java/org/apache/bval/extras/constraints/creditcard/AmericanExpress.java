@@ -43,10 +43,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Documented
 @Luhn
-@Pattern(regexp="^(3[47]\\d{13})$")
-@Constraint(validatedBy={})
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Pattern(regexp = "^(3[47]\\d{13})$")
+@Constraint(validatedBy = {})
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface AmericanExpress {
 
     Class<?>[] groups() default {};

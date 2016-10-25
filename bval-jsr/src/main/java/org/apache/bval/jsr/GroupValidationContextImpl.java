@@ -44,8 +44,8 @@ import java.util.Set;
 /**
  * Description: instance per validation process, not thread-safe<br/>
  */
-final class GroupValidationContextImpl<T> extends BeanValidationContext<ConstraintValidationListener<T>> implements
-    GroupValidationContext<T>, MessageInterpolator.Context {
+final class GroupValidationContextImpl<T> extends BeanValidationContext<ConstraintValidationListener<T>>
+    implements GroupValidationContext<T>, MessageInterpolator.Context {
 
     private final MessageInterpolator messageResolver;
     private final PathImpl path;
@@ -88,9 +88,8 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
      * @param rootMetaBean
      */
     public GroupValidationContextImpl(ConstraintValidationListener<T> listener, MessageInterpolator aMessageResolver,
-                                      TraversableResolver traversableResolver, ParameterNameProvider parameterNameProvider,
-                                      ConstraintValidatorFactory constraintValidatorFactory,
-                                      MetaBean rootMetaBean) {
+        TraversableResolver traversableResolver, ParameterNameProvider parameterNameProvider,
+        ConstraintValidatorFactory constraintValidatorFactory, MetaBean rootMetaBean) {
         super(listener, new HashMap<GraphBeanIdentity, Set<PathImpl>>());
         this.messageResolver = aMessageResolver;
         this.constraintValidatorFactory = constraintValidatorFactory;

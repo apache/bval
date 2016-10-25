@@ -32,7 +32,7 @@ import org.junit.Test;
  * @since <pre>02/03/2009</pre>
  * @version 1.0
  */
-public class DigitsValidatorTest  {
+public class DigitsValidatorTest {
     @Test
     public void testValidateNumber() {
         DigitsValidatorForNumber validator = new DigitsValidatorForNumber();

@@ -37,8 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
     // email
     @Pattern(regexp = "[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}"),
     // agimatec
-    @Pattern(regexp = ".*?COMPANY.*?")
-})
+    @Pattern(regexp = ".*?COMPANY.*?") })
 /**
  * test a constraint WITHOUT an own ConstraintValidator implementation.
  * the validations, that must be processed are in the combined constraints only!!
@@ -47,25 +46,25 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Constraint(validatedBy = {})
 @Documented
-@Target({ANNOTATION_TYPE, METHOD, FIELD, CONSTRUCTOR, PARAMETER})
+@Target({ ANNOTATION_TYPE, METHOD, FIELD, CONSTRUCTOR, PARAMETER })
 @Retention(RUNTIME)
 public @interface CompanyEmail {
     String message() default "Not an email of COMPANY";
 
-    @OverridesAttribute(constraint = Pattern.class, name = "message",
-          constraintIndex = 0) String emailMessage() default "Not an email";
+    @OverridesAttribute(constraint = Pattern.class, name = "message", constraintIndex = 0)
+    String emailMessage() default "Not an email";
 
-    @OverridesAttribute(constraint = Pattern.class, name = "message",
-          constraintIndex = 1) String agimatecMessage() default "Not COMPANY";
+    @OverridesAttribute(constraint = Pattern.class, name = "message", constraintIndex = 1)
+    String agimatecMessage() default "Not COMPANY";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
 
-    @Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER})
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER })
     @Retention(RUNTIME)
     @Documented
-          @interface List {
+    @interface List {
         CompanyEmail[] value();
     }
 }

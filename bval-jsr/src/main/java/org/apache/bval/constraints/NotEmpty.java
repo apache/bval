@@ -37,10 +37,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  */
 @Documented
-@Constraint(
-      validatedBy = {NotEmptyValidatorForCollection.class, NotEmptyValidatorForMap.class,
-            NotEmptyValidatorForString.class, NotEmptyValidator.class})
-@Target({METHOD, FIELD, ANNOTATION_TYPE, PARAMETER})
+@Constraint(validatedBy = { NotEmptyValidatorForCollection.class, NotEmptyValidatorForMap.class,
+    NotEmptyValidatorForString.class, NotEmptyValidator.class })
+@Target({ METHOD, FIELD, ANNOTATION_TYPE, PARAMETER })
 @Retention(RUNTIME)
 public @interface NotEmpty {
     Class<?>[] groups() default {};

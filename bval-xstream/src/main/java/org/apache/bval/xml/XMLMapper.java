@@ -28,10 +28,9 @@ public class XMLMapper {
 
     private XMLMapper() {
         xStream = new XStream();
-        xStream.processAnnotations(new Class[] {XMLFeaturesCapable.class,
-                XMLMetaFeature.class, XMLMetaBean.class, XMLMetaBeanInfos.class,
-                XMLMetaBeanReference.class, XMLMetaElement.class, XMLMetaProperty.class,
-                XMLMetaValidator.class, XMLMetaValidatorReference.class});
+        xStream.processAnnotations(new Class[] { XMLFeaturesCapable.class, XMLMetaFeature.class, XMLMetaBean.class,
+            XMLMetaBeanInfos.class, XMLMetaBeanReference.class, XMLMetaElement.class, XMLMetaProperty.class,
+            XMLMetaValidator.class, XMLMetaValidatorReference.class });
         xStream.setMode(XStream.NO_REFERENCES);
     }
 

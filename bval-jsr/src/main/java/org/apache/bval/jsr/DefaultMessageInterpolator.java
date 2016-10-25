@@ -54,8 +54,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private Locale defaultLocale;
 
     /** User specified resource bundles hashed against their locale. */
-    private final Map<Locale, ResourceBundle> userBundlesMap =
-          new ConcurrentHashMap<Locale, ResourceBundle>();
+    private final Map<Locale, ResourceBundle> userBundlesMap = new ConcurrentHashMap<Locale, ResourceBundle>();
 
     /** Builtin resource bundles hashed against their locale. */
     private final Map<Locale, ResourceBundle> defaultBundlesMap = new ConcurrentHashMap<Locale, ResourceBundle>();
@@ -86,7 +85,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
         MessageEvaluator ev = null;
         try {
-            ev = MessageEvaluator.class.cast(getClass().getClassLoader().loadClass("org.apache.bval.el.ELFacade").newInstance());
+            ev = MessageEvaluator.class
+                .cast(getClass().getClassLoader().loadClass("org.apache.bval.el.ELFacade").newInstance());
         } catch (final Throwable e) { // can be exception or error
             // no-op
         }
@@ -104,8 +104,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     /** {@inheritDoc} */
     @Override
     public String interpolate(String message, Context context, Locale locale) {
-        return interpolateMessage(message,
-                context.getConstraintDescriptor().getAttributes(), locale, context.getValidatedValue());
+        return interpolateMessage(message, context.getConstraintDescriptor().getAttributes(), locale,
+            context.getValidatedValue());
     }
 
     /**
@@ -120,9 +120,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      * @param locale               the <code>Locale</code> to use for the resource bundle.
      * @return the interpolated message.
      */
-    private String interpolateMessage(String message,
-                                      Map<String, Object> annotationParameters,
-                                      Locale locale, Object validatedValue) {
+    private String interpolateMessage(String message, Map<String, Object> annotationParameters, Locale locale,
+        Object validatedValue) {
         ResourceBundle userResourceBundle = findUserResourceBundle(locale);
         ResourceBundle defaultResourceBundle = findDefaultResourceBundle(locale);
 
@@ -131,19 +130,16 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         boolean evaluatedDefaultBundleOnce = false;
         do {
             // search the user bundle recursive (step1)
-            userBundleResolvedMessage =
-                  replaceVariables(resolvedMessage, userResourceBundle, locale, true);
+            userBundleResolvedMessage = replaceVariables(resolvedMessage, userResourceBundle, locale, true);
 
             // exit condition - we have at least tried to validate against the default bundle and there were no
             // further replacements
-            if (evaluatedDefaultBundleOnce &&
-                  !hasReplacementTakenPlace(userBundleResolvedMessage, resolvedMessage)) {
+            if (evaluatedDefaultBundleOnce && !hasReplacementTakenPlace(userBundleResolvedMessage, resolvedMessage)) {
                 break;
             }
 
             // search the default bundle non recursive (step2)
-            resolvedMessage = replaceVariables(userBundleResolvedMessage,
-                  defaultResourceBundle, locale, false);
+            resolvedMessage = replaceVariables(userBundleResolvedMessage, defaultResourceBundle, locale, false);
 
             evaluatedDefaultBundleOnce = true;
         } while (true);
@@ -157,7 +153,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         }
 
         // curly braces need to be scaped in the original msg, so unescape them now
-        resolvedMessage = resolvedMessage.replace( "\\{", "{" ).replace( "\\}", "}" ).replace( "\\\\", "\\" ).replace( "\\$", "$" );
+        resolvedMessage =
+            resolvedMessage.replace("\\{", "{").replace("\\}", "}").replace("\\\\", "\\").replace("\\$", "$");
 
         return resolvedMessage;
     }
@@ -176,27 +173,27 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         ResourceBundle rb = null;
         final ClassLoader classLoader = Reflection.getClassLoader(DefaultMessageInterpolator.class);
         if (classLoader != null) {
-            rb = loadBundle(classLoader, locale,
-                  USER_VALIDATION_MESSAGES + " not found by thread local classloader");
+            rb = loadBundle(classLoader, locale, USER_VALIDATION_MESSAGES + " not found by thread local classloader");
         }
 
         // 2011-03-27 jw: No privileged action required.
         // A class can always access the classloader of itself and of subclasses.
         if (rb == null) {
-            rb = loadBundle(getClass().getClassLoader(), locale, USER_VALIDATION_MESSAGES + " not found by validator classloader");
+            rb = loadBundle(getClass().getClassLoader(), locale,
+                USER_VALIDATION_MESSAGES + " not found by validator classloader");
         }
         if (LOG_FINEST) {
             if (rb != null) {
                 log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
             } else {
-                log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES, DEFAULT_VALIDATION_MESSAGES));
+                log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES,
+                    DEFAULT_VALIDATION_MESSAGES));
             }
         }
         return rb;
     }
 
-    private ResourceBundle loadBundle(ClassLoader classLoader, Locale locale,
-                                      String message) {
+    private ResourceBundle loadBundle(ClassLoader classLoader, Locale locale, String message) {
         ResourceBundle rb = null;
         try {
             rb = ResourceBundle.getBundle(USER_VALIDATION_MESSAGES, locale, classLoader);
@@ -206,8 +203,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         return rb;
     }
 
-    private String replaceVariables(String message, ResourceBundle bundle, Locale locale,
-                                    boolean recurse) {
+    private String replaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
         final Matcher matcher = messageParameterPattern.matcher(message);
         final StringBuffer sb = new StringBuffer(64);
         String resolvedParameterValue;
@@ -221,8 +217,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         return sb.toString();
     }
 
-    private String replaceAnnotationAttributes(final String message,
-                                               final Map<String, Object> annotationParameters) {
+    private String replaceAnnotationAttributes(final String message, final Map<String, Object> annotationParameters) {
         Matcher matcher = messageParameterPattern.matcher(message);
         StringBuffer sb = new StringBuffer(64);
         while (matcher.find()) {
@@ -244,8 +239,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         return sb.toString();
     }
 
-    private String resolveParameter(String parameterName, ResourceBundle bundle,
-                                    Locale locale, boolean recurse) {
+    private String resolveParameter(String parameterName, ResourceBundle bundle, Locale locale, boolean recurse) {
         String parameterValue;
         try {
             if (bundle != null) {
@@ -270,8 +264,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     private ResourceBundle findDefaultResourceBundle(Locale locale) {
         ResourceBundle bundle = defaultBundlesMap.get(locale);
-        if (bundle == null)
-        {
+        if (bundle == null) {
             bundle = ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, locale);
             defaultBundlesMap.put(locale, bundle);
         }
@@ -280,8 +273,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     private ResourceBundle findUserResourceBundle(Locale locale) {
         ResourceBundle bundle = userBundlesMap.get(locale);
-        if (bundle == null)
-        {
+        if (bundle == null) {
             bundle = getFileBasedResourceBundle(locale);
             if (bundle != null) {
                 userBundlesMap.put(locale, bundle);

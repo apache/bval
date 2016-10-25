@@ -111,8 +111,8 @@ public final class AnnotationProcessor {
      * @throws InvocationTargetException
      */
     public <A extends Annotation> boolean processAnnotation(A annotation, Meta prop, Class<?> owner,
-            AccessStrategy access, AppendValidation appender, boolean reflection) throws IllegalAccessException,
-        InvocationTargetException {
+        AccessStrategy access, AppendValidation appender, boolean reflection)
+        throws IllegalAccessException, InvocationTargetException {
         if (annotation instanceof Valid) {
             return addAccessStrategy(prop, access);
         }
@@ -232,8 +232,7 @@ public final class AnnotationProcessor {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private <A extends Annotation> boolean applyConstraint(
-        A annotation,
+    private <A extends Annotation> boolean applyConstraint(A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] rawConstraintClasses, Meta prop, Class<?> owner,
         AccessStrategy access, AppendValidation appender) throws IllegalAccessException, InvocationTargetException {
 
@@ -243,9 +242,7 @@ public final class AnnotationProcessor {
         }
 
         final AnnotationConstraintBuilder<A> builder =
-            new AnnotationConstraintBuilder<A>(
-                constraintClasses,
-                annotation, owner, access, null);
+            new AnnotationConstraintBuilder<A>(constraintClasses, annotation, owner, access, null);
 
         // JSR-303 3.4.4: Add implicit groups
         if (prop != null && prop.getParentMetaBean() != null) {

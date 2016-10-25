@@ -89,8 +89,10 @@ public class XMLMetaBeanInfos {
     }
 
     public XMLMetaBean getBean(String id) {
-        if (beans == null) return null;
-        if (beanLookup == null) initBeanLookup();
+        if (beans == null)
+            return null;
+        if (beanLookup == null)
+            initBeanLookup();
         return beanLookup.get(id);
     }
 
@@ -106,8 +108,7 @@ public class XMLMetaBeanInfos {
         final HashMap<String, XMLMetaValidator> map = new HashMap<String, XMLMetaValidator>(validators.size());
         for (XMLMetaValidator xv : validators) {
             if (xv.getJava() != null) {
-                Validation validation =
-                        (Validation) Reflection.toClass(xv.getJava()).newInstance();
+                Validation validation = (Validation) Reflection.toClass(xv.getJava()).newInstance();
                 xv.setValidation(validation);
                 map.put(xv.getId(), xv);
             }
@@ -116,18 +117,22 @@ public class XMLMetaBeanInfos {
     }
 
     public void addBean(XMLMetaBean bean) {
-        if (beans == null) beans = new ArrayList<XMLMetaBean>();
+        if (beans == null)
+            beans = new ArrayList<XMLMetaBean>();
         beans.add(bean);
     }
 
     public XMLMetaValidator getValidator(String id) throws Exception {
-        if (validators == null) return null;
-        if (validationLookup == null) initValidationLookup();
+        if (validators == null)
+            return null;
+        if (validationLookup == null)
+            initValidationLookup();
         return validationLookup.get(id);
     }
 
     public void addValidator(XMLMetaValidator validator) {
-        if (validators == null) validators = new ArrayList<XMLMetaValidator>();
+        if (validators == null)
+            validators = new ArrayList<XMLMetaValidator>();
         validators.add(validator);
     }
 }

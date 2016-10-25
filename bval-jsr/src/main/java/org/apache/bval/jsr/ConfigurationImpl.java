@@ -93,11 +93,12 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     protected volatile ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
     protected Class<? extends ParameterNameProvider> parameterNameProviderClass = null;
 
-    protected BootstrapConfiguration  bootstrapConfiguration;
+    protected BootstrapConfiguration bootstrapConfiguration;
 
     protected Collection<ExecutableType> executableValidation;
 
-    private Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
+    private Collection<BValExtension.Releasable<?>> releasables =
+        new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
 
     private boolean beforeCdi = false;
 
@@ -182,8 +183,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      * {@inheritDoc}
      */
     @Override
-    public ConfigurationImpl constraintValidatorFactory(
-          ConstraintValidatorFactory constraintFactory) {
+    public ConfigurationImpl constraintValidatorFactory(ConstraintValidatorFactory constraintFactory) {
         if (constraintFactory == null) {
             return this;
         }
@@ -321,7 +321,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ValidatorFactory buildValidatorFactory() {
-            return doBuildValidatorFactory();
+        return doBuildValidatorFactory();
     }
 
     @Privileged
@@ -354,7 +354,8 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     /** Check whether a validation.xml file exists and parses it with JAXB */
     private ValidationParser parseValidationXml() {
-        return ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this, ignoreXmlConfiguration);
+        return ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this,
+            ignoreXmlConfiguration);
     }
 
     /**
@@ -367,9 +368,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             return constraintValidatorFactory;
         }
 
-        if (constraintValidatorFactory == defaultConstraintValidatorFactory && constraintValidatorFactoryClass != null) {
+        if (constraintValidatorFactory == defaultConstraintValidatorFactory
+            && constraintValidatorFactoryClass != null) {
             synchronized (this) {
-                if (constraintValidatorFactory == defaultConstraintValidatorFactory && constraintValidatorFactoryClass != null) {
+                if (constraintValidatorFactory == defaultConstraintValidatorFactory
+                    && constraintValidatorFactoryClass != null) {
                     constraintValidatorFactory = newInstance(constraintValidatorFactoryClass);
                 }
             }
@@ -423,7 +426,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private ValidationProvider<?> findProvider() {
         if (providerClass == null) {
             return providerResolver.getValidationProviders().get(0);
-        } 
+        }
         for (ValidationProvider<?> provider : providerResolver.getValidationProviders()) {
             if (providerClass.isAssignableFrom(provider.getClass())) {
                 return provider;

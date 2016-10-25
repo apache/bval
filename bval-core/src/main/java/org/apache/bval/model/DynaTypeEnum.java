@@ -16,7 +16,6 @@
  */
 package org.apache.bval.model;
 
-
 /**
  * Description: ("artificial" enum with custom values).<br/>
  */

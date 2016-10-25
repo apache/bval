@@ -39,9 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: annotation to validate as ABANumber<br/>
  */
 @Documented
-@Constraint( validatedBy = ABANumberValidator.class )
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Constraint(validatedBy = ABANumberValidator.class)
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface ABANumber {
 
     Class<?>[] groups() default {};

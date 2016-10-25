@@ -23,7 +23,7 @@ import javax.validation.GroupSequence;
 /**
  * Description: <br/>
  */
-@GroupSequence( value = CyclicGroupSequence1.class)
+@GroupSequence(value = CyclicGroupSequence1.class)
 public interface CyclicGroupSequence2 {
 
 }

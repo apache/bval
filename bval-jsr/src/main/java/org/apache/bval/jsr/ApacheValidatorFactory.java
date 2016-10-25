@@ -113,18 +113,17 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     protected MetaBeanFinder buildMetaBeanFinder() {
         final List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>();
-        if (Boolean.parseBoolean(getProperties().get(
-                ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
+        if (Boolean.parseBoolean(getProperties().get(ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
             builders.add(new IntrospectorMetaBeanFactory());
         }
         final String[] factoryClassNames =
-                StringUtils.split(getProperties().get(
-                        ApacheValidatorConfiguration.Properties.METABEAN_FACTORY_CLASSNAMES));
+            StringUtils.split(getProperties().get(ApacheValidatorConfiguration.Properties.METABEAN_FACTORY_CLASSNAMES));
         if (factoryClassNames != null) {
             for (String clsName : factoryClassNames) {
                 // cast, relying on #createMetaBeanFactory to throw the exception if incompatible:
                 @SuppressWarnings("unchecked")
-                final Class<? extends MetaBeanFactory> factoryClass = (Class<? extends MetaBeanFactory>) loadClass(clsName);
+                final Class<? extends MetaBeanFactory> factoryClass =
+                    (Class<? extends MetaBeanFactory>) loadClass(clsName);
                 builders.add(createMetaBeanFactory(factoryClass));
             }
         }
@@ -137,8 +136,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         }
         @SuppressWarnings("deprecation")
         final boolean enableMetaBeansXml =
-                Boolean.parseBoolean(getProperties().get(
-                        ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML));
+            Boolean.parseBoolean(getProperties().get(ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML));
         if (enableMetaBeansXml) {
             XMLMetaBeanManagerCreator.addFactory(builders);
         }
@@ -261,8 +259,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @param traversableResolver
      */
-    public final void setTraversableResolver(
-            TraversableResolver traversableResolver) {
+    public final void setTraversableResolver(TraversableResolver traversableResolver) {
         if (traversableResolver != null) {
             this.traversableResolver = traversableResolver;
         }
@@ -287,8 +284,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @param constraintValidatorFactory
      */
-    public final void setConstraintValidatorFactory(
-            ConstraintValidatorFactory constraintValidatorFactory) {
+    public final void setConstraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
         if (constraintValidatorFactory != null) {
             this.constraintValidatorFactory = constraintValidatorFactory;
             if (DefaultConstraintValidatorFactory.class.isInstance(constraintValidatorFactory)) {
@@ -343,9 +339,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         // This code is unsecure.
         // It should allow only a fixed set of classes.
         // Can't fix this because don't know which classes this method should support.
-        
-        if (!(type.isInterface() || Modifier.isAbstract(type
-                .getModifiers()))) {
+
+        if (!(type.isInterface() || Modifier.isAbstract(type.getModifiers()))) {
             return newInstance(type);
         }
         try {
@@ -403,8 +398,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @param beanClass
      * @param metaConstraint
      */
-    public void addMetaConstraint(final Class<?> beanClass,
-                                  final MetaConstraint<?, ?> metaConstraint) {
+    public void addMetaConstraint(final Class<?> beanClass, final MetaConstraint<?, ?> metaConstraint) {
         List<MetaConstraint<?, ? extends Annotation>> slot = constraintMap.get(beanClass);
         if (slot == null) {
             slot = new ArrayList<MetaConstraint<?, ? extends Annotation>>();
@@ -453,8 +447,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return List of {@link MetaConstraint}s applicable to
      *         <code>beanClass</code>
      */
-    public <T> List<MetaConstraint<T, ? extends Annotation>> getMetaConstraints(
-            Class<T> beanClass) {
+    public <T> List<MetaConstraint<T, ? extends Annotation>> getMetaConstraints(Class<T> beanClass) {
         final List<MetaConstraint<?, ? extends Annotation>> slot = constraintMap.get(beanClass);
         if (slot == null) {
             return Collections.emptyList();
@@ -489,7 +482,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     private static Class<?>[] safeArray(Class<?>... array) {
-        return array == null || array.length == 0 ? ObjectUtils. EMPTY_CLASS_ARRAY : array.clone();
+        return array == null || array.length == 0 ? ObjectUtils.EMPTY_CLASS_ARRAY : array.clone();
     }
 
     /**
@@ -502,8 +495,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     @SuppressWarnings("deprecation")
     protected MetaBeanFinder createMetaBeanManager(List<MetaBeanFactory> builders) {
         // as long as we support both: jsr (in the builders list) and xstream-xml metabeans:
-        if (Boolean.parseBoolean(getProperties().get(
-                ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
+        if (Boolean.parseBoolean(getProperties().get(ApacheValidatorConfiguration.Properties.ENABLE_METABEANS_XML))) {
             return XMLMetaBeanManagerCreator.createXMLMetaBeanManager(builders);
         }
         return new MetaBeanManager(new MetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
@@ -549,7 +541,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         // bval-xstream an optional module.
         protected static MetaBeanManager createXMLMetaBeanManager(List<MetaBeanFactory> builders) {
             return new XMLMetaBeanManager(
-                    new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
+                new XMLMetaBeanBuilder(builders.toArray(new MetaBeanFactory[builders.size()])));
         }
     }
 

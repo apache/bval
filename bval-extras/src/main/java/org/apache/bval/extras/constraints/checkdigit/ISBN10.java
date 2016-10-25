@@ -39,9 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: annotation to validate as ISBN10<br/>
  */
 @Documented
-@Constraint( validatedBy = ISBN10Validator.class )
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Constraint(validatedBy = ISBN10Validator.class)
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface ISBN10 {
 
     Class<?>[] groups() default {};

@@ -64,8 +64,7 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
                 throw new IllegalArgumentException("No value provided for " + m.getName());
             }
         }
-        if (processedValuesFromDescriptor != descriptor.size()
-                && !Valid.class.equals(annotationType)) {
+        if (processedValuesFromDescriptor != descriptor.size() && !Valid.class.equals(annotationType)) {
             throw new RuntimeException("Trying to instanciate " + annotationType + " with unknown paramters.");
         }
         return result;

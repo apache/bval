@@ -37,11 +37,10 @@ import static java.lang.Character.getNumericValue;
  * See <a href="http://en.wikipedia.org/wiki/CUSIP">Wikipedia - CUSIP</a>
  * for more details.
  */
-public final class CUSIPValidator
-    extends ModulusValidator<CUSIP> {
+public final class CUSIPValidator extends ModulusValidator<CUSIP> {
 
     /** weighting given to digits depending on their right position */
-    private static final int[] POSITION_WEIGHT = new int[] {2, 1};
+    private static final int[] POSITION_WEIGHT = new int[] { 2, 1 };
 
     public CUSIPValidator() {
         super(10);
@@ -60,8 +59,7 @@ public final class CUSIPValidator
      * {@inheritDoc}
      */
     @Override
-    protected int weightedValue( int charValue, int leftPos, int rightPos )
-            throws Exception {
+    protected int weightedValue(int charValue, int leftPos, int rightPos) throws Exception {
         int weight = POSITION_WEIGHT[rightPos % 2];
         int weightedValue = (charValue * weight);
         return sumDigits(weightedValue);
@@ -74,11 +72,7 @@ public final class CUSIPValidator
     protected int toInt(char character, int leftPos, int rightPos) {
         int charValue = getNumericValue(character);
         if (charValue < 0 || charValue > 35) {
-            throw new IllegalArgumentException("Invalid Character["
-                                               + leftPos
-                                               + "] = '"
-                                               + charValue
-                                               + "'");
+            throw new IllegalArgumentException("Invalid Character[" + leftPos + "] = '" + charValue + "'");
         }
         return charValue;
     }

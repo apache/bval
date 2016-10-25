@@ -41,5 +41,5 @@ public class SizeValidatorForArrayOfByte extends SizeValidator implements Constr
         }
         final int length = Array.getLength(array);
         return length >= min && length <= max;
-	}
+    }
 }

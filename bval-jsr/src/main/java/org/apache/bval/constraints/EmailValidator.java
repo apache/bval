@@ -23,7 +23,6 @@ import org.apache.bval.routines.EMailValidationUtils;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-
 /**
  * Description: <br/>
  */

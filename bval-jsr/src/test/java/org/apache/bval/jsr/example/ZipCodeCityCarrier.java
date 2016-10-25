@@ -23,5 +23,6 @@ package org.apache.bval.jsr.example;
  */
 public interface ZipCodeCityCarrier {
     String getZipCode();
+
     String getCity();
 }

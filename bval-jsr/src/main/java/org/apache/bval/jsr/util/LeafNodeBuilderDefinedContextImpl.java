@@ -22,12 +22,14 @@ import org.apache.bval.jsr.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
 
-public class LeafNodeBuilderDefinedContextImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext {
+public class LeafNodeBuilderDefinedContextImpl
+    implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext {
     private final ConstraintValidatorContextImpl context;
     private final String template;
     private final PathImpl path;
 
-    public LeafNodeBuilderDefinedContextImpl(final ConstraintValidatorContextImpl context, final String tpl, final PathImpl path) {
+    public LeafNodeBuilderDefinedContextImpl(final ConstraintValidatorContextImpl context, final String tpl,
+        final PathImpl path) {
         this.context = context;
         this.template = tpl;
         this.path = path;

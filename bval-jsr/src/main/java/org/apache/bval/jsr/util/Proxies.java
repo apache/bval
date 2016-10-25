@@ -28,7 +28,7 @@ public final class Proxies {
     static {
         final Set<String> s = new HashSet<String>();
         s.add("org.jboss.weld.bean.proxy.ProxyObject");
-        KNOWN_PROXY_CLASSNAMES = Collections.unmodifiableSet(s); 
+        KNOWN_PROXY_CLASSNAMES = Collections.unmodifiableSet(s);
     }
 
     // get rid of proxies which probably contains wrong annotation metamodel

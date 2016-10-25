@@ -122,12 +122,9 @@ final class ConstraintValidatorIdentity {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result
-                + ((this.bean == null) ? 0 : this.bean.hashCode());
-        result = prime * result
-                + ((this.path == null) ? 0 : this.path.hashCode());
-        result = prime * result
-                + ((this.constraintValidator == null) ? 0 : this.constraintValidator.hashCode());
+        result = prime * result + ((this.bean == null) ? 0 : this.bean.hashCode());
+        result = prime * result + ((this.path == null) ? 0 : this.path.hashCode());
+        result = prime * result + ((this.constraintValidator == null) ? 0 : this.constraintValidator.hashCode());
         return result;
     }
 

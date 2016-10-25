@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.model.MetaBean;
 

@@ -46,7 +46,7 @@ public class JSONGenerator {
 
     public JSONGenerator(String templateName) throws IOException {
         Configuration freemarker = new Configuration();
-        freemarker.setNumberFormat("0.######");  // prevent locale-sensitive number format
+        freemarker.setNumberFormat("0.######"); // prevent locale-sensitive number format
         freemarker.setClassForTemplateLoading(getClass(), "");
         template = freemarker.getTemplate(templateName);
     }
@@ -61,15 +61,13 @@ public class JSONGenerator {
         return toJSON(metaBeans);
     }
 
-    public String toJSON(Collection<MetaBean> metaBeans)
-            throws IOException, TemplateException {
+    public String toJSON(Collection<MetaBean> metaBeans) throws IOException, TemplateException {
         final StringWriter out = new StringWriter();
         toJSON(metaBeans, out);
         return out.toString();
     }
 
-    public void toJSON(Collection<MetaBean> metaBeans, Writer out)
-            throws IOException, TemplateException {
+    public void toJSON(Collection<MetaBean> metaBeans, Writer out) throws IOException, TemplateException {
         Map<String, Object> rootMap = new HashMap<String, Object>();
         rootMap.put("metaBeans", metaBeans);
         rootMap.put("generator", this);

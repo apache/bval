@@ -36,7 +36,7 @@ public class Employee implements Person {
 
     @Override
     public String getMiddleName() {
-        return null;  // not supported
+        return null; // not supported
     }
 
     @Override

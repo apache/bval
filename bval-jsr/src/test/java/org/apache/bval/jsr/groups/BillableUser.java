@@ -32,7 +32,7 @@ public class BillableUser {
     @NotNull(groups = Default.class)
     private String lastname;
 
-    @NotNull(groups = {Billable.class, BuyInOneClick.class})
+    @NotNull(groups = { Billable.class, BuyInOneClick.class })
     private BillableCreditCard defaultCreditCard;
 
     public String getFirstname() {

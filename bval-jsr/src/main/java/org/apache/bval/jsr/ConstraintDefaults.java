@@ -44,7 +44,7 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 public class ConstraintDefaults {
     private static final Logger log = Logger.getLogger(ConstraintDefaults.class.getName());
     private static final String DEFAULT_CONSTRAINTS = "org/apache/bval/jsr/DefaultConstraints.properties";
-    
+
     /**
      * The default constraint data stored herein.
      */
@@ -72,7 +72,7 @@ public class ConstraintDefaults {
      */
     @SuppressWarnings("unchecked")
     public <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] getValidatorClasses(
-          Class<A> annotationType) {
+        Class<A> annotationType) {
         return (Class<? extends ConstraintValidator<A, ?>>[]) getDefaultConstraints().get(annotationType.getName());
     }
 

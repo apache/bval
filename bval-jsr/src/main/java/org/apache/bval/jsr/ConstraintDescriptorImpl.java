@@ -56,9 +56,10 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
      * @param descriptor
      */
     public ConstraintDescriptorImpl(final ConstraintDescriptor<T> descriptor) {
-        this(descriptor.getAnnotation(), descriptor.getGroups(), descriptor.getPayload(), descriptor
-            .getConstraintValidatorClasses(), descriptor.getAttributes(), descriptor.getComposingConstraints(),
-            descriptor.isReportAsSingleViolation(), descriptor.getValidationAppliesTo(), descriptor.getMessageTemplate());
+        this(descriptor.getAnnotation(), descriptor.getGroups(), descriptor.getPayload(),
+            descriptor.getConstraintValidatorClasses(), descriptor.getAttributes(),
+            descriptor.getComposingConstraints(), descriptor.isReportAsSingleViolation(),
+            descriptor.getValidationAppliesTo(), descriptor.getMessageTemplate());
     }
 
     /**
@@ -155,29 +156,49 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
         return reportAsSingleViolation;
     }
 
-
     /**
      * generated equals on all fields except hashCode
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ConstraintDescriptorImpl<?> that = (ConstraintDescriptorImpl<?>) o;
 
-        if (reportAsSingleViolation != that.reportAsSingleViolation) { return false; }
-        if (annotation != null ? !annotation.equals(that.annotation) : that.annotation != null) { return false; }
-        if (groups != null ? !groups.equals(that.groups) : that.groups != null) { return false; }
-        if (payload != null ? !payload.equals(that.payload) : that.payload != null) { return false; }
-        if (constraintValidatorClasses != null ? !constraintValidatorClasses.equals(that.constraintValidatorClasses) : that.constraintValidatorClasses != null) { return false; }
-        if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) { return false; }
-        if (composingConstraints != null ? !composingConstraints.equals(that.composingConstraints) : that.composingConstraints != null) { return false; }
-        if (validationAppliesTo != that.validationAppliesTo) { return false; }
+        if (reportAsSingleViolation != that.reportAsSingleViolation) {
+            return false;
+        }
+        if (annotation != null ? !annotation.equals(that.annotation) : that.annotation != null) {
+            return false;
+        }
+        if (groups != null ? !groups.equals(that.groups) : that.groups != null) {
+            return false;
+        }
+        if (payload != null ? !payload.equals(that.payload) : that.payload != null) {
+            return false;
+        }
+        if (constraintValidatorClasses != null ? !constraintValidatorClasses.equals(that.constraintValidatorClasses)
+            : that.constraintValidatorClasses != null) {
+            return false;
+        }
+        if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) {
+            return false;
+        }
+        if (composingConstraints != null ? !composingConstraints.equals(that.composingConstraints)
+            : that.composingConstraints != null) {
+            return false;
+        }
+        if (validationAppliesTo != that.validationAppliesTo) {
+            return false;
+        }
         return template != null ? template.equals(that.template) : that.template == null;
 
     }
-
 
     @Override
     public int hashCode() {

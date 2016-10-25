@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.example;
 
-
 import org.apache.bval.constraints.HasValue;
 
 import javax.validation.Valid;
@@ -28,7 +27,7 @@ import javax.validation.Valid;
  */
 public class AccessTestBusinessObject {
     // test that field-access is used, not method-access 
-    @HasValue({"1", "3"})
+    @HasValue({ "1", "3" })
     protected String var1;
 
     // test that field-access is used, not method-access
@@ -51,7 +50,6 @@ public class AccessTestBusinessObject {
     public void next(AccessTestBusinessObject next) {
         this._next = next;
     }
-
 
     public void setNext(AccessTestBusinessObject next) {
         this.next = next;

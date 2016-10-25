@@ -21,7 +21,6 @@ import javax.validation.Path;
 import javax.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 
-
 /** @see javax.validation.TraversableResolver */
 public class JPATraversableResolver implements TraversableResolver, CachingRelevant {
 
@@ -29,20 +28,18 @@ public class JPATraversableResolver implements TraversableResolver, CachingRelev
      * {@inheritDoc}
      */
     @Override
-    public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
-                               Class<?> rootBeanType, Path pathToTraversableObject,
-                               ElementType elementType) {
-        return traversableObject == null || Persistence.getPersistenceUtil()
-              .isLoaded(traversableObject, traversableProperty.getName());
+    public boolean isReachable(Object traversableObject, Path.Node traversableProperty, Class<?> rootBeanType,
+        Path pathToTraversableObject, ElementType elementType) {
+        return traversableObject == null
+            || Persistence.getPersistenceUtil().isLoaded(traversableObject, traversableProperty.getName());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
-                                Class<?> rootBeanType, Path pathToTraversableObject,
-                                ElementType elementType) {
+    public boolean isCascadable(Object traversableObject, Path.Node traversableProperty, Class<?> rootBeanType,
+        Path pathToTraversableObject, ElementType elementType) {
         return true;
     }
 

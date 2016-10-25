@@ -41,7 +41,7 @@ import org.junit.Test;
  * @author Carlos Vara
  */
 public class GroupSequenceIsolationTest extends ValidationTestBase {
-    
+
     /**
      * When validating the {@link Default} group in a bean whose class doesn't
      * define a {@link GroupSequence}, all the classes in the hierarchy must be
@@ -56,7 +56,7 @@ public class GroupSequenceIsolationTest extends ValidationTestBase {
 
         h.a1 = "good";
         assertEquals(set("a2", "b2"), violationPaths(validator.validate(h)));
-        
+
         h.b2 = "good";
         assertEquals(set("a2", "b1"), violationPaths(validator.validate(h)));
 
@@ -97,9 +97,9 @@ public class GroupSequenceIsolationTest extends ValidationTestBase {
         return result;
     }
 
-    @GroupSequence({GroupA1.class, A.class})
+    @GroupSequence({ GroupA1.class, A.class })
     public static class A {
-        @NotNull(groups={GroupA1.class})
+        @NotNull(groups = { GroupA1.class })
         public String a1;
         @NotNull
         public String a2;
@@ -108,9 +108,9 @@ public class GroupSequenceIsolationTest extends ValidationTestBase {
     public interface GroupA1 {
     }
 
-    @GroupSequence({B.class, GroupB1.class})
+    @GroupSequence({ B.class, GroupB1.class })
     public static class B extends A {
-        @NotNull(groups={GroupB1.class})
+        @NotNull(groups = { GroupB1.class })
         public String b1;
         @NotNull
         public String b2;
@@ -123,7 +123,7 @@ public class GroupSequenceIsolationTest extends ValidationTestBase {
     public static class HolderWithNoGS extends B {
     }
 
-    @GroupSequence({GroupA1.class, HolderWithGS.class, GroupB1.class})
+    @GroupSequence({ GroupA1.class, HolderWithGS.class, GroupB1.class })
     public static class HolderWithGS extends B {
     }
 }

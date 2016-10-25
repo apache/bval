@@ -31,18 +31,19 @@ import java.util.Hashtable;
 public class BValJndiFactory implements InitialContextFactory {
     public Context getInitialContext(final Hashtable<?, ?> environment) throws NamingException {
         return Context.class.cast(Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class<?>[] { Context.class }, new InvocationHandler() {
-            public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
-                if (method.getName().equals("lookup") && args != null && args.length == 1 && String.class.isInstance(args[0])) {
-                    if ("java:comp/ValidatorFactory".equals(args[0])) {
-                        return Validation.byDefaultProvider().configure().buildValidatorFactory();
+            new Class<?>[] { Context.class }, new InvocationHandler() {
+                public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+                    if (method.getName().equals("lookup") && args != null && args.length == 1
+                        && String.class.isInstance(args[0])) {
+                        if ("java:comp/ValidatorFactory".equals(args[0])) {
+                            return Validation.byDefaultProvider().configure().buildValidatorFactory();
+                        }
+                        if ("java:comp/Validator".equals(args[0])) {
+                            return Validation.byDefaultProvider().configure().buildValidatorFactory().getValidator();
+                        }
                     }
-                    if ("java:comp/Validator".equals(args[0])) {
-                        return Validation.byDefaultProvider().configure().buildValidatorFactory().getValidator();
-                    }
+                    return null;
                 }
-                return null;
-            }
-        }));
+            }));
     }
 }

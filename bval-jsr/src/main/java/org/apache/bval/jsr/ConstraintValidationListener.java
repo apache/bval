@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
@@ -74,8 +73,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
         }
     }
 
-    private void addError(String messageTemplate, Path propPath,
-                          ValidationContext<?> context) {
+    private void addError(String messageTemplate, Path propPath, ValidationContext<?> context) {
         if (compositeDepth > 0) {
             hasCompositeError |= true;
             return;
@@ -88,18 +86,19 @@ public final class ConstraintValidationListener<T> implements ValidationListener
             GroupValidationContext<?> gcontext = (GroupValidationContext<?>) context;
             value = gcontext.getValidatedValue();
             if (gcontext instanceof MessageInterpolator.Context) {
-                message = gcontext.getMessageResolver()
-                      .interpolate(messageTemplate,
-                            (MessageInterpolator.Context) gcontext);
-            } else {
                 message =
-                      gcontext.getMessageResolver().interpolate(messageTemplate, null);
+                    gcontext.getMessageResolver().interpolate(messageTemplate, (MessageInterpolator.Context) gcontext);
+            } else {
+                message = gcontext.getMessageResolver().interpolate(messageTemplate, null);
             }
             descriptor = gcontext.getConstraintValidation().asSerializableDescriptor();
-            if (propPath == null) propPath = gcontext.getPropertyPath();
+            if (propPath == null)
+                propPath = gcontext.getPropertyPath();
         } else {
-            if (context.getMetaProperty() == null) value = context.getBean();
-            else value = context.getPropertyValue();
+            if (context.getMetaProperty() == null)
+                value = context.getBean();
+            else
+                value = context.getPropertyValue();
             message = messageTemplate;
             if (propPath == null)
                 propPath = PathImpl.createPathFromString(context.getPropertyName());
@@ -147,9 +146,8 @@ public final class ConstraintValidationListener<T> implements ValidationListener
             }
 
             if (ElementKind.CONSTRUCTOR.equals(kind)
-                    && (ElementKind.CROSS_PARAMETER.equals(elementKind)
-                        || ElementKind.PARAMETER.equals(elementKind))
-                    && (it.hasNext() && it.next() != null && it.hasNext() && it.next() != null && !it.hasNext())) { // means inherited validation use real value
+                && (ElementKind.CROSS_PARAMETER.equals(elementKind) || ElementKind.PARAMETER.equals(elementKind))
+                && (it.hasNext() && it.next() != null && it.hasNext() && it.next() != null && !it.hasNext())) { // means inherited validation use real value
                 leaf = null;
             }
 
@@ -161,12 +159,8 @@ public final class ConstraintValidationListener<T> implements ValidationListener
             rootBean = this.rootBean;
         }
 
-        constraintViolations.add(new ConstraintViolationImpl<T>(
-                messageTemplate, message,
-                rootBean, leaf,
-                propPath, value, descriptor,
-                rootBeanType,
-                elementType, returnValue, parameters));
+        constraintViolations.add(new ConstraintViolationImpl<T>(messageTemplate, message, rootBean, leaf, propPath,
+            value, descriptor, rootBeanType, elementType, returnValue, parameters));
     }
 
     private static boolean kindOf(final Path propPath, final ElementKind... kinds) {
@@ -216,7 +210,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
     public Class<T> getRootBeanType() {
         return rootBeanType;
     }
-    
+
     /**
      * Get the count of encountered violations.
      * @return int
@@ -249,7 +243,7 @@ public final class ConstraintValidationListener<T> implements ValidationListener
      */
     public boolean endReportAsSingle() {
         boolean endOutMostReportAsSingle = (--compositeDepth == 0);
-        if( endOutMostReportAsSingle ) {
+        if (endOutMostReportAsSingle) {
             hasCompositeError = false;
         }
         return endOutMostReportAsSingle;

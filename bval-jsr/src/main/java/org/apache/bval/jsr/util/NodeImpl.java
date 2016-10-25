@@ -90,7 +90,7 @@ public class NodeImpl implements Path.Node, Serializable {
      * Create a new NodeImpl instance.
      * @param name
      */
-    public  NodeImpl(String name) {
+    public NodeImpl(String name) {
         this.name = name;
     }
 

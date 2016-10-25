@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * {@link Validator} CDI {@link Bean}.
  */
-public class ValidatorBean implements Bean<Validator> , PassivationCapable {
+public class ValidatorBean implements Bean<Validator>, PassivationCapable {
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
     private final ValidatorFactory factory;

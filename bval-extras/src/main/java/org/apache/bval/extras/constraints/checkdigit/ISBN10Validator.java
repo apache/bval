@@ -41,8 +41,7 @@ package org.apache.bval.extras.constraints.checkdigit;
  *       Transition details</a>.</li>
  * </ul>
  */
-public final class ISBN10Validator
-    extends ModulusValidator<ISBN10> {
+public final class ISBN10Validator extends ModulusValidator<ISBN10> {
 
     public ISBN10Validator() {
         super(11);
@@ -58,8 +57,7 @@ public final class ISBN10Validator
      * {@inheritDoc}
      */
     @Override
-    protected int weightedValue( int charValue, int leftPos, int rightPos )
-            throws Exception {
+    protected int weightedValue(int charValue, int leftPos, int rightPos) throws Exception {
         return (charValue * rightPos);
     }
 

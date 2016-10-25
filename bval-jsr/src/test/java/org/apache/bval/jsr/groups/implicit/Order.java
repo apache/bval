@@ -53,7 +53,7 @@ public class Order implements Auditable {
     }
 
     @NotNull
-    @Size(min=10, max=10)
+    @Size(min = 10, max = 10)
     public String getOrderNumber() {
         return this.orderNumber;
     }

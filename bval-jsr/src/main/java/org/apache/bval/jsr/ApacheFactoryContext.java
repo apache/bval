@@ -163,7 +163,7 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     boolean isTreatMapsLikeBeans() {
-        return Boolean.parseBoolean(factory.getProperties().get(
-            ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS));
+        return Boolean
+            .parseBoolean(factory.getProperties().get(ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS));
     }
 }

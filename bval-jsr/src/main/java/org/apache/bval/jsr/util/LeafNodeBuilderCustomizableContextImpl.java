@@ -23,13 +23,15 @@ import org.apache.bval.jsr.ConstraintValidatorContextImpl;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ElementKind;
 
-public class LeafNodeBuilderCustomizableContextImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext {
+public class LeafNodeBuilderCustomizableContextImpl
+    implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext {
     private final ConstraintValidatorContextImpl context;
     private final PathImpl path;
     private final String template;
     private final NodeImpl node;
 
-    public LeafNodeBuilderCustomizableContextImpl(final ConstraintValidatorContextImpl parent, String messageTemplate, PathImpl propertyPath) {
+    public LeafNodeBuilderCustomizableContextImpl(final ConstraintValidatorContextImpl parent, String messageTemplate,
+        PathImpl propertyPath) {
         context = parent;
         template = messageTemplate;
         path = propertyPath;
@@ -49,7 +51,8 @@ public class LeafNodeBuilderCustomizableContextImpl implements ConstraintValidat
         return context;
     }
 
-    private class LeafNodeContextBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeContextBuilder {
+    private class LeafNodeContextBuilderImpl
+        implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeContextBuilder {
         @Override
         public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext atKey(Object key) {
             path.getLeafNode().setKey(key);
@@ -57,7 +60,8 @@ public class LeafNodeBuilderCustomizableContextImpl implements ConstraintValidat
         }
 
         @Override
-        public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext atIndex(Integer index) {
+        public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext atIndex(
+            Integer index) {
             path.getLeafNode().setIndex(index);
             return new LeafNodeBuilderDefinedContextImpl(context, template, path);
         }

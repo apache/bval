@@ -39,9 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: annotation to validate as EAN13<br/>
  */
 @Documented
-@Constraint( validatedBy = EAN13Validator.class )
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Constraint(validatedBy = EAN13Validator.class)
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface EAN13 {
 
     Class<?>[] groups() default {};

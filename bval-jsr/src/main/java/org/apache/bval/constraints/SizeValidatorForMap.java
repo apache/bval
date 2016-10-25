@@ -41,6 +41,6 @@ public class SizeValidatorForMap extends SizeValidator implements ConstraintVali
         }
         final int size = map.size();
         return size >= min && size <= max;
-	}
+    }
 
 }

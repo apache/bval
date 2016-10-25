@@ -16,9 +16,7 @@
  */
 package org.apache.bval.model;
 
-
 import java.io.Serializable;
-
 
 /**
  * Description: The interface to collect errors found during validation<br/>
@@ -95,8 +93,7 @@ public interface ValidationListener {
          */
         @Override
         public String toString() {
-            return "Error{" + "reason='" + reason + '\'' + ", propertyName='" +
-                  propertyName + '\'' + '}';
+            return "Error{" + "reason='" + reason + '\'' + ", propertyName='" + propertyName + '\'' + '}';
         }
     }
 }

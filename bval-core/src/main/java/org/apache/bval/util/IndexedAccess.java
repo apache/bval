@@ -16,7 +16,6 @@
  */
 package org.apache.bval.util;
 
-
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
@@ -29,7 +28,7 @@ import org.apache.bval.util.reflection.TypeUtils;
 /**
  * {@link AccessStrategy} to get an indexed member of an {@link Iterable} or
  * array object.
- */ 
+ */
 public class IndexedAccess extends AccessStrategy {
     private static final TypeVariable<?> ITERABLE_TYPE = Iterable.class.getTypeParameters()[0];
 

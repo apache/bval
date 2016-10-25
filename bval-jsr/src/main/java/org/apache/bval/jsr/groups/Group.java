@@ -18,9 +18,7 @@
  */
 package org.apache.bval.jsr.groups;
 
-
 import javax.validation.groups.Default;
-
 
 /**
  * Immutable object that wraps an interface representing a single group.
@@ -70,8 +68,12 @@ public final class Group {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Group group1 = (Group) o;
 

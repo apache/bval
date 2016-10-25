@@ -91,9 +91,8 @@ public class ConstraintCompositionTest extends ValidationTestBase {
     @Test
     public void testAnnotationGroupsAreInherited() {
         // Check that the groups() value is right when querying the metadata
-        ConstraintDescriptor<?> manNameDesc =
-            validator.getConstraintsForClass(Man.class).getConstraintsForProperty("name").getConstraintDescriptors()
-                .iterator().next();
+        ConstraintDescriptor<?> manNameDesc = validator.getConstraintsForClass(Man.class)
+            .getConstraintsForProperty("name").getConstraintDescriptors().iterator().next();
         ConstraintDescriptor<?> personNameDesc = manNameDesc.getComposingConstraints().iterator().next();
         ConstraintDescriptor<?> notNullDesc = personNameDesc.getComposingConstraints().iterator().next();
         assertEquals("There should only be 1 group", 1, manNameDesc.getGroups().size());
@@ -118,9 +117,8 @@ public class ConstraintCompositionTest extends ValidationTestBase {
     @Test
     public void testAnnotationPayloadsAreInherited() {
         // Check that the payload() value is right when querying the metadata
-        ConstraintDescriptor<?> manNameDesc =
-            validator.getConstraintsForClass(Man.class).getConstraintsForProperty("name").getConstraintDescriptors()
-                .iterator().next();
+        ConstraintDescriptor<?> manNameDesc = validator.getConstraintsForClass(Man.class)
+            .getConstraintsForProperty("name").getConstraintDescriptors().iterator().next();
         ConstraintDescriptor<?> personNameDesc = manNameDesc.getComposingConstraints().iterator().next();
         ConstraintDescriptor<?> notNullDesc = personNameDesc.getComposingConstraints().iterator().next();
         assertEquals("There should only be 1 payload class", 1, manNameDesc.getPayload().size());
@@ -207,7 +205,7 @@ public class ConstraintCompositionTest extends ValidationTestBase {
     @NotNull(message = "A person needs a non null name", groups = { Group1.class }, payload = {})
     @Constraint(validatedBy = {})
     @Documented
-    @Target( { METHOD, FIELD, TYPE })
+    @Target({ METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface PersonName {
         String message() default "Wrong person name";
@@ -220,7 +218,7 @@ public class ConstraintCompositionTest extends ValidationTestBase {
     @PersonName(groups = { Group2.class }, payload = { Payload1.class, Payload2.class })
     @Constraint(validatedBy = {})
     @Documented
-    @Target( { METHOD, FIELD, TYPE })
+    @Target({ METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface ManName {
         String message() default "Wrong man name";
@@ -230,11 +228,11 @@ public class ConstraintCompositionTest extends ValidationTestBase {
         Class<? extends Payload>[] payload() default {};
     }
 
-    @Size.List( { @Size(min = 3, max = 3, message = "Id is too short"),
+    @Size.List({ @Size(min = 3, max = 3, message = "Id is too short"),
         @Size(min = 5, max = 5, message = "Id is too long") })
     @Constraint(validatedBy = {})
     @Documented
-    @Target( { METHOD, FIELD, TYPE })
+    @Target({ METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface PersonId {
         String message() default "Wrong person id";
@@ -255,7 +253,7 @@ public class ConstraintCompositionTest extends ValidationTestBase {
     @Constraint(validatedBy = {})
     @ReportAsSingleViolation
     @Documented
-    @Target( { METHOD, FIELD, TYPE })
+    @Target({ METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface ElevenDigitsCode {
         String message() default "Invalid code";

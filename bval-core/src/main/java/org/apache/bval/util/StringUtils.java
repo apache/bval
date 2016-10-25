@@ -163,8 +163,7 @@ public final class StringUtils {
                     ret.add(sb.toString());
                     sb.setLength(0); // reset the string
                 }
-            }
-            else {
+            } else {
                 sb.append(c);
             }
         }

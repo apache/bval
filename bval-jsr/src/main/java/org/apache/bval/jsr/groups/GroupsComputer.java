@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.groups;
 
-
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.ValidationException;
@@ -38,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Implementation is thread-safe.
  */
 public class GroupsComputer {
-    public static final Class<?>[] DEFAULT_GROUP = new Class<?>[]{Default.class};
+    public static final Class<?>[] DEFAULT_GROUP = new Class<?>[] { Default.class };
 
     /** The default group array used in case any of the validate methods is called without a group. */
     private static final Groups DEFAULT_GROUPS;
@@ -121,7 +120,7 @@ public class GroupsComputer {
     }
 
     private List<Group> resolveSequence(Class<?> group, GroupSequence sequenceAnnotation,
-                                        Set<Class<?>> processedSequences) {
+        Set<Class<?>> processedSequences) {
         if (processedSequences.contains(group)) {
             throw new GroupDefinitionException("Cyclic dependency in groups definition");
         } else {
@@ -134,8 +133,7 @@ public class GroupsComputer {
             if (anno == null) {
                 resolvedGroupSequence.add(new Group(clazz)); // group part of sequence
             } else {
-                List<Group> tmpSequence =
-                      resolveSequence(clazz, anno, processedSequences);  // recursion!
+                List<Group> tmpSequence = resolveSequence(clazz, anno, processedSequences); // recursion!
                 resolvedGroupSequence.addAll(tmpSequence);
             }
         }

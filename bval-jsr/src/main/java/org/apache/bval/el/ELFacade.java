@@ -48,18 +48,22 @@ public final class ELFacade implements MessageEvaluator {
     private static final ELResolver RESOLVER = initResolver();
 
     @Override
-    public String interpolate(final String message, final Map<String, Object> annotationParameters, final Object validatedValue) {
+    public String interpolate(final String message, final Map<String, Object> annotationParameters,
+        final Object validatedValue) {
         try {
             if (EXPRESSION_FACTORY != null) {
                 final BValELContext context = new BValELContext();
                 final VariableMapper variables = context.getVariableMapper();
                 for (final Map.Entry<String, Object> var : annotationParameters.entrySet()) {
-                    variables.setVariable(var.getKey(), EXPRESSION_FACTORY.createValueExpression(var.getValue(), Object.class));
+                    variables.setVariable(var.getKey(),
+                        EXPRESSION_FACTORY.createValueExpression(var.getValue(), Object.class));
                 }
-                variables.setVariable("validatedValue", EXPRESSION_FACTORY.createValueExpression(validatedValue, Object.class));
+                variables.setVariable("validatedValue",
+                    EXPRESSION_FACTORY.createValueExpression(validatedValue, Object.class));
 
                 // #{xxx} shouldn't be evaluated
-                return EXPRESSION_FACTORY.createValueExpression(context, message.replace("#{", "\\#{"), String.class).getValue(context).toString();
+                return EXPRESSION_FACTORY.createValueExpression(context, message.replace("#{", "\\#{"), String.class)
+                    .getValue(context).toString();
             }
         } catch (final Exception e) {
             // no-op
@@ -132,7 +136,7 @@ public final class ELFacade implements MessageEvaluator {
     public static class BValFormatter {
         private final Formatter formatter = new Formatter();
 
-        public Formatter format(final String format, final Object ... args) {
+        public Formatter format(final String format, final Object... args) {
             return formatter.format(format, args);
         }
     }

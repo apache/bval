@@ -36,7 +36,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Description: MetaData class<br/>
  */
 public abstract class ElementDescriptorImpl implements ElementDescriptor {
-    private final Set<GroupConversionDescriptor> groupConversions = new CopyOnWriteArraySet<GroupConversionDescriptor>();
+    private final Set<GroupConversionDescriptor> groupConversions =
+        new CopyOnWriteArraySet<GroupConversionDescriptor>();
     private boolean cascaded;
     private final Collection<Object> validated = new CopyOnWriteArraySet<Object>();
 
@@ -104,7 +105,7 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public ElementDescriptor.ConstraintFinder findConstraints() {
         return new ConstraintFinderImpl(metaBean, new HashSet(constraintDescriptors));
     }
@@ -114,8 +115,8 @@ public abstract class ElementDescriptorImpl implements ElementDescriptor {
      */
     @Override
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
-        return constraintDescriptors.isEmpty() ? Collections.<ConstraintDescriptor<?>> emptySet() : Collections
-            .unmodifiableSet(constraintDescriptors);
+        return constraintDescriptors.isEmpty() ? Collections.<ConstraintDescriptor<?>> emptySet()
+            : Collections.unmodifiableSet(constraintDescriptors);
     }
 
     /**

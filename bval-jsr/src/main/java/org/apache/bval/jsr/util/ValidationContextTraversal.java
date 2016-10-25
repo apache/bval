@@ -165,11 +165,11 @@ public class ValidationContextTraversal extends CallbackProcedure {
         MetaProperty mp = validationContext.getMetaProperty();
         if (mp != null) {
             if (mp.getMetaBean() == null) {
-                throw new UnknownPropertyException(String.format("Property %s.%s is not cascaded", mp
-                    .getParentMetaBean().getId(), mp.getName()));
+                throw new UnknownPropertyException(
+                    String.format("Property %s.%s is not cascaded", mp.getParentMetaBean().getId(), mp.getName()));
             }
-            validationContext.moveDown(mp, new NullSafePropertyAccess(validationContext.getMetaBean().getBeanClass(),
-                mp.getName()));
+            validationContext.moveDown(mp,
+                new NullSafePropertyAccess(validationContext.getMetaBean().getBeanClass(), mp.getName()));
         }
     }
 
@@ -215,8 +215,8 @@ public class ValidationContextTraversal extends CallbackProcedure {
             return;
         }
         if (validationContext.getMetaBean() instanceof DynamicMetaBean) {
-            validationContext.setMetaBean(validationContext.getMetaBean().resolveMetaBean(
-                ObjectUtils.defaultIfNull(validationContext.getBean(), rawType)));
+            validationContext.setMetaBean(validationContext.getMetaBean()
+                .resolveMetaBean(ObjectUtils.defaultIfNull(validationContext.getBean(), rawType)));
         }
     }
 }

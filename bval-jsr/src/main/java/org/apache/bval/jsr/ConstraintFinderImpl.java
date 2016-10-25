@@ -66,7 +66,7 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
         for (Group group : groupChain.getGroups()) {
             if (group.isDefault()) {
                 // If group is default, check if it gets redefined
-                for (Group defaultGroupMember : metaBean.<List<Group>>getFeature(JsrFeatures.Bean.GROUP_SEQUENCE)) {
+                for (Group defaultGroupMember : metaBean.<List<Group>> getFeature(JsrFeatures.Bean.GROUP_SEQUENCE)) {
                     for (ConstraintValidation<?> descriptor : constraintDescriptors) {
                         if (isInScope(descriptor) && isInGroup(descriptor, defaultGroupMember)) {
                             matchingDescriptors.add(descriptor);
@@ -122,24 +122,23 @@ final class ConstraintFinderImpl implements ElementDescriptor.ConstraintFinder {
     }
 
     private boolean isInScope(ConstraintValidation<?> descriptor) {
-        if (findInScopes.size() == Scope.values().length)
-         {
+        if (findInScopes.size() == Scope.values().length) {
             return true; // all scopes
         }
         if (metaBean != null) {
             final boolean isOwner = descriptor.getOwner().equals(metaBean.getBeanClass());
             for (Scope scope : findInScopes) {
                 switch (scope) {
-                    case LOCAL_ELEMENT:
-                        if (isOwner) {
-                            return true;
-                        }
-                        break;
-                    case HIERARCHY:
-                        if (!isOwner) {
-                            return true;
-                        }
-                        break;
+                case LOCAL_ELEMENT:
+                    if (isOwner) {
+                        return true;
+                    }
+                    break;
+                case HIERARCHY:
+                    if (!isOwner) {
+                        return true;
+                    }
+                    break;
                 }
             }
         }

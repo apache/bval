@@ -16,7 +16,6 @@
  */
 package org.apache.bval.routines;
 
-
 import org.apache.bval.model.Validation;
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
@@ -32,7 +31,8 @@ public class EMailValidation implements Validation {
 
     @Override
     public <T extends ValidationListener> void validate(ValidationContext<T> context) {
-        if (context.getPropertyValue() == null) return;
+        if (context.getPropertyValue() == null)
+            return;
         if (!EMailValidationUtils.isValid(context.getPropertyValue(), getPattern())) {
             context.getListener().addError(Reasons.EMAIL_ADDRESS, context);
         }

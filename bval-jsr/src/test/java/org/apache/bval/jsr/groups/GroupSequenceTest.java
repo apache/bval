@@ -48,8 +48,7 @@ public class GroupSequenceTest extends ValidationTestBase {
     @Test
     public void testGroupSequence1() {
         MetaBean metaBean =
-              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
-                    .findForClass(GInterface1.class);
+            ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder().findForClass(GInterface1.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
         assertNotNull(gseq);
         assertEquals(1, gseq.size());
@@ -59,8 +58,7 @@ public class GroupSequenceTest extends ValidationTestBase {
     @Test
     public void testGroupSequence2() {
         MetaBean metaBean =
-              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
-                    .findForClass(GClass1.class);
+            ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder().findForClass(GClass1.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
         assertNotNull(gseq);
         assertEquals(1, gseq.size());
@@ -70,8 +68,7 @@ public class GroupSequenceTest extends ValidationTestBase {
     @Test
     public void testGroupSequence3() {
         MetaBean metaBean =
-              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
-                    .findForClass(GClass2.class);
+            ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder().findForClass(GClass2.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
         assertNotNull(gseq);
         assertEquals(2, gseq.size());
@@ -82,8 +79,7 @@ public class GroupSequenceTest extends ValidationTestBase {
     @Test
     public void testGroupSequence4() {
         MetaBean metaBean =
-              ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder()
-                    .findForClass(GClass3.class);
+            ApacheValidatorFactory.getDefault().usingContext().getMetaBeanFinder().findForClass(GClass3.class);
         List<Group> gseq = metaBean.getFeature(JsrFeatures.Bean.GROUP_SEQUENCE);
         assertNotNull(gseq);
         assertEquals(2, gseq.size());
@@ -101,7 +97,7 @@ public class GroupSequenceTest extends ValidationTestBase {
         book.setAuthor(author);
 
         Set<ConstraintViolation<Book>> constraintViolations =
-              validator.validate(book, First.class, Second.class, Last.class);
+            validator.validate(book, First.class, Second.class, Last.class);
         assertEquals("Wrong number of constraints", 3, constraintViolations.size());
         assertNotNull(TestUtils.getViolation(constraintViolations, "title"));
         assertNotNull(TestUtils.getViolation(constraintViolations, "author.firstName"));
@@ -154,8 +150,7 @@ public class GroupSequenceTest extends ValidationTestBase {
         Book book = new Book();
         book.setAuthor(author);
 
-        Set<ConstraintViolation<Book>> constraintViolations =
-              validator.validate(book, Book.All.class);
+        Set<ConstraintViolation<Book>> constraintViolations = validator.validate(book, Book.All.class);
         assertEquals(2, constraintViolations.size());
 
         author.setFirstName("Kelvin");
@@ -190,10 +185,10 @@ public class GroupSequenceTest extends ValidationTestBase {
         assertEquals("Group1 should be evaluated first", "field1", violation.getPropertyPath().toString());
     }
 
-    @GroupSequence({Dummy.Group1.class, Dummy.class})
+    @GroupSequence({ Dummy.Group1.class, Dummy.class })
     public static class Dummy {
 
-        @NotNull(groups=Group1.class)
+        @NotNull(groups = Group1.class)
         public String field1;
 
         @NotNull

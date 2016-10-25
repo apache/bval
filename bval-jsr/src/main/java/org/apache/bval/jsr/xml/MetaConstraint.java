@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr.xml;
 
-
 import org.apache.bval.ConstructorAccess;
 import org.apache.bval.util.AccessStrategy;
 import org.apache.bval.util.FieldAccess;

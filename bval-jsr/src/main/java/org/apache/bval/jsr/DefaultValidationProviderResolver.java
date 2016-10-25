@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -37,8 +36,7 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 public class DefaultValidationProviderResolver implements ValidationProviderResolver {
 
     //TODO - Spec recommends caching per classloader
-    private static final String SPI_CFG =
-        "META-INF/services/javax.validation.spi.ValidationProvider";
+    private static final String SPI_CFG = "META-INF/services/javax.validation.spi.ValidationProvider";
 
     /**
      * {@inheritDoc}
@@ -69,11 +67,12 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
                                 final Class<? extends ValidationProvider> providerType =
                                     cl.loadClass(line).asSubclass(ValidationProvider.class);
                                 // create an instance to return
-                                providers.add(Reflection.newInstance(providerType.asSubclass(ValidationProvider.class)));
+                                providers
+                                    .add(Reflection.newInstance(providerType.asSubclass(ValidationProvider.class)));
 
                             } catch (ClassNotFoundException e) {
-                                throw new ValidationException("Failed to load provider " +
-                                    line + " configured in file " + url, e);
+                                throw new ValidationException(
+                                    "Failed to load provider " + line + " configured in file " + url, e);
                             }
                         }
                         line = br.readLine();

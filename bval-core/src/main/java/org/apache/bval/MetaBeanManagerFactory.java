@@ -34,7 +34,6 @@ public class MetaBeanManagerFactory {
         return manager;
     }
 
-
     /**
      * set global meta bean manager, that is responsible
      * for finding, caching, xml registry and enrichment algorithm.

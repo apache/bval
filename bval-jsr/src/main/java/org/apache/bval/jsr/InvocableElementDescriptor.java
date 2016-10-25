@@ -31,13 +31,15 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class InvocableElementDescriptor extends ElementDescriptorImpl implements ProcedureDescriptor {
-    private static final CopyOnWriteArraySet<ConstraintValidation<?>> NO_CONSTRAINTS = new CopyOnWriteArraySet<ConstraintValidation<?>>();
+    private static final CopyOnWriteArraySet<ConstraintValidation<?>> NO_CONSTRAINTS =
+        new CopyOnWriteArraySet<ConstraintValidation<?>>();
 
     private ReturnValueDescriptor returnValueDescriptor;
     private CrossParameterDescriptor crossParameterDescriptor;
     private final List<ParameterDescriptor> parameterDescriptors = new ArrayList<ParameterDescriptor>();
 
-    protected InvocableElementDescriptor(final MetaBean metaBean, final Class<?> elementClass, final Validation[] validations) {
+    protected InvocableElementDescriptor(final MetaBean metaBean, final Class<?> elementClass,
+        final Validation[] validations) {
         super(metaBean, elementClass, validations);
     }
 
@@ -88,7 +90,8 @@ public class InvocableElementDescriptor extends ElementDescriptorImpl implements
     }
 
     protected boolean hasConstrainedReturnValue() {
-        return getReturnValueDescriptor().isCascaded() || !getReturnValueDescriptor().getConstraintDescriptors().isEmpty();
+        return getReturnValueDescriptor().isCascaded()
+            || !getReturnValueDescriptor().getConstraintDescriptors().isEmpty();
     }
 
     @Override

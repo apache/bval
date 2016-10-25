@@ -41,5 +41,5 @@ public class SizeValidatorForArrayOfDouble extends SizeValidator implements Cons
         }
         final int length = Array.getLength(array);
         return length >= min && length <= max;
-	}
+    }
 }

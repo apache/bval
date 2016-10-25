@@ -50,5 +50,5 @@ public class DecimalMaxValidatorForNumber implements ConstraintValidator<Decimal
             return (new BigDecimal((BigInteger) value)).compareTo(maxValue) != 1;
         }
         return (new BigDecimal(value.doubleValue()).compareTo(maxValue)) != 1;
-    }           
+    }
 }

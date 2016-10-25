@@ -34,7 +34,7 @@ package org.apache.bval.jsr;
  * @author Carlos Vara
  */
 public class GraphBeanIdentity {
-    
+
     private final Object bean;
     private final Class<?> group;
     private final Class<?> owner;
@@ -50,7 +50,7 @@ public class GraphBeanIdentity {
         this.group = group;
         this.owner = owner;
     }
-    
+
     /**
      * Get the bean.
      * @return Object
@@ -104,11 +104,6 @@ public class GraphBeanIdentity {
         if (this.group != other.group) {
             return false;
         }
-        
-//        // Owner ref must be the same
-//        if (this.owner != other.owner) {
-//            return false;
-//        }
 
         return true;
     }
@@ -120,14 +115,9 @@ public class GraphBeanIdentity {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result
-                + ((this.bean == null) ? 0 : this.bean.hashCode());
-        result = prime * result
-                + ((this.group == null) ? 0 : this.group.hashCode());
-//        result = prime * result
-//                + ((this.owner == null) ? 0 : this.owner.hashCode());
+        result = prime * result + ((this.bean == null) ? 0 : this.bean.hashCode());
+        result = prime * result + ((this.group == null) ? 0 : this.group.hashCode());
         return result;
     }
 
-    
 }

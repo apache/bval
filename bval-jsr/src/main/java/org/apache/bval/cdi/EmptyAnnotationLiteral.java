@@ -29,12 +29,10 @@ import javax.enterprise.util.AnnotationLiteral;
  * Taken from Apache OpenWebBeans.
  * @param <T>
  */
-public abstract class EmptyAnnotationLiteral<T extends Annotation> extends AnnotationLiteral<T>
-{
+public abstract class EmptyAnnotationLiteral<T extends Annotation> extends AnnotationLiteral<T> {
     private Class<T> annotationType;
 
-    protected EmptyAnnotationLiteral()
-    {
+    protected EmptyAnnotationLiteral() {
         // Leave this constructor protected, because an EmptyAnnotationLiteral may never directly be instantiated
     }
 
@@ -43,10 +41,8 @@ public abstract class EmptyAnnotationLiteral<T extends Annotation> extends Annot
      * See OWB-802.
      */
     @Override
-    public Class<? extends Annotation> annotationType()
-    {
-        if (annotationType == null)
-        {
+    public Class<? extends Annotation> annotationType() {
+        if (annotationType == null) {
             annotationType = getAnnotationType(getClass());
         }
         return annotationType;
@@ -62,8 +58,7 @@ public abstract class EmptyAnnotationLiteral<T extends Annotation> extends Annot
      * @return always 0
      */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return 0;
     }
 
@@ -73,50 +68,37 @@ public abstract class EmptyAnnotationLiteral<T extends Annotation> extends Annot
      * as there are no members in this annotation at all.
      */
     @Override
-    public boolean equals(final Object other)
-    {
+    public boolean equals(final Object other) {
         // implemented for performance reasons
-        return Annotation.class.isInstance(other) &&
-                Annotation.class.cast(other).annotationType().equals(annotationType());
+        return Annotation.class.isInstance(other)
+            && Annotation.class.cast(other).annotationType().equals(annotationType());
     }
 
-    private Class<T> getAnnotationType(Class<?> definedClazz)
-    {
+    private Class<T> getAnnotationType(Class<?> definedClazz) {
         Type superClazz = definedClazz.getGenericSuperclass();
 
         Class<T> clazz = null;
 
-        if (superClazz.equals(Object.class))
-        {
+        if (superClazz.equals(Object.class)) {
             throw new RuntimeException("Super class must be parametrized type!");
-        }
-        else if (superClazz instanceof ParameterizedType)
-        {
+        } else if (superClazz instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) superClazz;
             Type[] actualArgs = paramType.getActualTypeArguments();
 
-            if (actualArgs.length == 1)
-            {
+            if (actualArgs.length == 1) {
                 //Actual annotation type
                 Type type = actualArgs[0];
 
-                if (type instanceof Class)
-                {
+                if (type instanceof Class) {
                     clazz = (Class<T>) type;
                     return clazz;
-                }
-                else
-                {
+                } else {
                     throw new RuntimeException("Not class type!");
                 }
-            }
-            else
-            {
+            } else {
                 throw new RuntimeException("More than one parametric type!");
             }
-        }
-        else
-        {
+        } else {
             return getAnnotationType((Class<?>) superClazz);
         }
     }

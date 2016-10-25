@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.groups;
 
-
 import javax.validation.GroupDefinitionException;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,28 +88,26 @@ public class Groups {
         }
     }
 
-    private void ensureExpandable(List<Group> groupList, List<Group> defaultGroupList,
-                                  int defaultGroupIndex) {
+    private void ensureExpandable(List<Group> groupList, List<Group> defaultGroupList, int defaultGroupIndex) {
         for (int i = 0; i < defaultGroupList.size(); i++) {
             Group group = defaultGroupList.get(i);
             if (group.isDefault()) {
                 continue; // the default group is the one we want to replace
             }
-            int index = groupList
-                  .indexOf(group); // sequence contains group of default group sequence
+            int index = groupList.indexOf(group); // sequence contains group of default group sequence
             if (index == -1) {
                 continue; // if group is not in the sequence
             }
 
-            if ((i == 0 && index == defaultGroupIndex - 1) ||
-                  (i == defaultGroupList.size() - 1 && index == defaultGroupIndex + 1)) {
+            if ((i == 0 && index == defaultGroupIndex - 1)
+                || (i == defaultGroupList.size() - 1 && index == defaultGroupIndex + 1)) {
                 // if we are at the beginning or end of he defaultGroupSequence and the
                 // matches are either directly before or after we can continue,
                 // since we basically have two groups
                 continue;
             }
-            throw new GroupDefinitionException("Unable to expand default group list" +
-                  defaultGroupList + " into sequence " + groupList);
+            throw new GroupDefinitionException(
+                "Unable to expand default group list" + defaultGroupList + " into sequence " + groupList);
         }
     }
 

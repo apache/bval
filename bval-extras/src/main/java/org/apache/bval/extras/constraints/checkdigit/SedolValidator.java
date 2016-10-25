@@ -37,11 +37,10 @@ import static java.lang.Character.getNumericValue;
  * See <a href="http://en.wikipedia.org/wiki/SEDOL">Wikipedia - SEDOL</a>
  * for more details.
  */
-public final class SedolValidator
-    extends ModulusValidator<Sedol> {
+public final class SedolValidator extends ModulusValidator<Sedol> {
 
     /** weighting given to digits depending on their right position */
-    private static final int[] POSITION_WEIGHT = new int[] {1, 3, 1, 7, 3, 9, 1};
+    private static final int[] POSITION_WEIGHT = new int[] { 1, 3, 1, 7, 3, 9, 1 };
 
     public SedolValidator() {
         super(10);
@@ -51,8 +50,7 @@ public final class SedolValidator
      * {@inheritDoc}
      */
     @Override
-    protected int weightedValue( int charValue, int leftPos, int rightPos )
-            throws Exception {
+    protected int weightedValue(int charValue, int leftPos, int rightPos) throws Exception {
         return (charValue * POSITION_WEIGHT[leftPos - 1]);
     }
 
@@ -60,14 +58,10 @@ public final class SedolValidator
      * {@inheritDoc}
      */
     @Override
-    protected int toInt( char character, int leftPos, int rightPos ) {
+    protected int toInt(char character, int leftPos, int rightPos) {
         int charValue = getNumericValue(character);
         if (charValue < 0 || charValue > 35) {
-            throw new IllegalArgumentException("Invalid Character["
-                                               + leftPos
-                                               + "] = '"
-                                               + charValue
-                                               + "'");
+            throw new IllegalArgumentException("Invalid Character[" + leftPos + "] = '" + charValue + "'");
         }
         return charValue;
     }

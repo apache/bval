@@ -146,7 +146,8 @@ public enum ConstraintAnnotationAttributes {
 
     // this is static but related to Worker
     private static final ConcurrentMap<Class<?>, Worker<?>> WORKER_CACHE = new ConcurrentHashMap<Class<?>, Worker<?>>();
-    private static final ConcurrentMap<Class<?>, ConcurrentMap<String, Method>> METHOD_BY_NAME_AND_CLASS = new ConcurrentHashMap<Class<?>, ConcurrentMap<String, Method>>();
+    private static final ConcurrentMap<Class<?>, ConcurrentMap<String, Method>> METHOD_BY_NAME_AND_CLASS =
+        new ConcurrentHashMap<Class<?>, ConcurrentMap<String, Method>>();
     private static final Method NULL_METHOD;
     static {
         try {

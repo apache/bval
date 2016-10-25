@@ -23,6 +23,6 @@ import javax.validation.GroupSequence;
 /**
  * Description: <br/>
  */
-@GroupSequence({GClass3.class, GClass1.class})
+@GroupSequence({ GClass3.class, GClass1.class })
 public class GClass3 {
 }

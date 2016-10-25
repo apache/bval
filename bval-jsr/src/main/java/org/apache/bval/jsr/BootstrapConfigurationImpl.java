@@ -36,14 +36,10 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
     private String defaultProviderClassName;
 
     public BootstrapConfigurationImpl(final String defaultProviderClassName,
-                                      final String constraintValidatorFactoryClassName,
-                                      final String messageInterpolatorClassName,
-                                      final String traversableResolverClassName,
-                                      final String parameterNameProviderClassName,
-                                      final Set<String> constraintMappingResourcePaths,
-                                      final boolean executableValidationEnabled,
-                                      final Set<ExecutableType> defaultValidatedExecutableTypes,
-                                      final Map<String, String> properties) {
+        final String constraintValidatorFactoryClassName, final String messageInterpolatorClassName,
+        final String traversableResolverClassName, final String parameterNameProviderClassName,
+        final Set<String> constraintMappingResourcePaths, final boolean executableValidationEnabled,
+        final Set<ExecutableType> defaultValidatedExecutableTypes, final Map<String, String> properties) {
         this.properties = Collections.unmodifiableMap(properties);
         this.defaultValidatedExecutableTypes = Collections.unmodifiableSet(defaultValidatedExecutableTypes);
         this.executableValidationEnabled = executableValidationEnabled;

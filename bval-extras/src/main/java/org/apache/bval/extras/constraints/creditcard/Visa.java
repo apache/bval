@@ -43,10 +43,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Documented
 @Luhn
-@Pattern(regexp="^(4)(\\d{12}|\\d{15})$")
-@Constraint(validatedBy={})
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Pattern(regexp = "^(4)(\\d{12}|\\d{15})$")
+@Constraint(validatedBy = {})
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface Visa {
 
     Class<?>[] groups() default {};

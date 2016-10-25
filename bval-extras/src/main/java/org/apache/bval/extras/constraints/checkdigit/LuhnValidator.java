@@ -34,11 +34,10 @@ package org.apache.bval.extras.constraints.checkdigit;
  * See <a href="http://en.wikipedia.org/wiki/Luhn_algorithm">Wikipedia</a>
  * for more details.
  */
-public final class LuhnValidator
-    extends ModulusValidator<Luhn> {
+public final class LuhnValidator extends ModulusValidator<Luhn> {
 
     /** weighting given to digits depending on their right position */
-    private static final int[] POSITION_WEIGHT = new int[] {2, 1};
+    private static final int[] POSITION_WEIGHT = new int[] { 2, 1 };
 
     public LuhnValidator() {
         super(10);
@@ -55,8 +54,7 @@ public final class LuhnValidator
      * {@inheritDoc}
      */
     @Override
-    protected int weightedValue( int charValue, int leftPos, int rightPos )
-            throws Exception {
+    protected int weightedValue(int charValue, int leftPos, int rightPos) throws Exception {
         int weight = POSITION_WEIGHT[rightPos % 2];
         int weightedValue = (charValue * weight);
         return (weightedValue > 9 ? (weightedValue - 9) : weightedValue);

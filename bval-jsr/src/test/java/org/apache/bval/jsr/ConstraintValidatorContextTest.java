@@ -78,8 +78,7 @@ public class ConstraintValidatorContextTest {
 
     @Test
     public void testPersonLawyerName() {
-        cvb.addNode("person").addNode("name").inIterable().atKey("john")
-                .addConstraintViolation();
+        cvb.addNode("person").addNode("name").inIterable().atKey("john").addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
         assertEquals("Incorrect path created", "person[john].name", errorPath.toString());
@@ -87,8 +86,7 @@ public class ConstraintValidatorContextTest {
 
     @Test
     public void test0Name() {
-        cvb.addNode(null).addNode("name").inIterable().atIndex(0).addNode(null)
-                .inIterable().addConstraintViolation();
+        cvb.addNode(null).addNode("name").inIterable().atIndex(0).addNode(null).inIterable().addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
         assertEquals("Incorrect path created", "[0].name[]", errorPath.toString());
@@ -105,8 +103,7 @@ public class ConstraintValidatorContextTest {
     @Test
     public void testRootPath() {
         // Adding only nulls should still give a root path
-        cvb.addNode(null).addNode(null).addNode(null).addNode(null)
-                .addConstraintViolation();
+        cvb.addNode(null).addNode(null).addNode(null).addNode(null).addConstraintViolation();
         Error error = cvc.getErrorMessages().iterator().next();
         PathImpl errorPath = (PathImpl) error.getOwner();
         assertTrue("Created path must be a root path", errorPath.isRootPath());

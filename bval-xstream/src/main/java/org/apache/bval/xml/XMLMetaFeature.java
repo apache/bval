@@ -50,7 +50,6 @@ public class XMLMetaFeature implements Serializable {
         this.key = key;
     }
 
-
     public Object getValue() {
         return value;
     }

@@ -107,8 +107,8 @@ public class CustomValidatorFactoryTest {
 
     @Test
     public void testDefaultValidatorFactory() {
-        Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().unwrap(
-            ApacheValidatorFactory.class);
+        Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory()
+            .unwrap(ApacheValidatorFactory.class);
     }
 
     @Test

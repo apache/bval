@@ -130,11 +130,11 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
     }
 
     public static class Person {
-        @MinList( { @Min(value = 20), @Min(value = 30) })
+        @MinList({ @Min(value = 20), @Min(value = 30) })
         public Integer age;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     public static @interface MinList {
@@ -146,7 +146,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })
@@ -161,7 +161,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })
@@ -178,7 +178,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })
@@ -193,7 +193,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })
@@ -213,7 +213,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })
@@ -228,7 +228,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })
@@ -245,7 +245,7 @@ public class ConstraintDefinitionsTest extends ValidationTestBase {
         public String prop;
     }
 
-    @Target( { METHOD, FIELD, ANNOTATION_TYPE })
+    @Target({ METHOD, FIELD, ANNOTATION_TYPE })
     @Retention(RUNTIME)
     @Documented
     @Constraint(validatedBy = { NotNullValidator.class })

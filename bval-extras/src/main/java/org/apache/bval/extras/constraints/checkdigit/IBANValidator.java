@@ -40,8 +40,7 @@ import static java.lang.Character.getNumericValue;
  *  <a href="http://en.wikipedia.org/wiki/International_Bank_Account_Number">Wikipedia -
  *  IBAN number</a>.
  */
-public final class IBANValidator
-    implements ConstraintValidator<IBAN, String> {
+public final class IBANValidator implements ConstraintValidator<IBAN, String> {
 
     private static final long MAX = 999999999;
 
@@ -76,7 +75,7 @@ public final class IBANValidator
      * {@inheritDoc}
      */
     @Override
-    public void initialize( IBAN iban ) {
+    public void initialize(IBAN iban) {
         // not needed
     }
 

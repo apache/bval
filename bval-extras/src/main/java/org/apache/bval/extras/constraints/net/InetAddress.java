@@ -39,9 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: annotation to validate a java.io.File is a directory<br/>
  */
 @Documented
-@Constraint( validatedBy = InetAddressValidator.class )
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Constraint(validatedBy = InetAddressValidator.class)
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface InetAddress {
 
     Class<?>[] groups() default {};

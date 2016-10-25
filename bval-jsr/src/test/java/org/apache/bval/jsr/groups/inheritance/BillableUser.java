@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.groups.inheritance;
 
-
 import org.apache.bval.jsr.groups.Billable;
 import org.apache.bval.jsr.groups.BillableCreditCard;
 
@@ -35,7 +34,7 @@ public class BillableUser {
     @NotNull(groups = Default.class)
     private String lastname;
 
-    @NotNull(groups = {Billable.class})
+    @NotNull(groups = { Billable.class })
     private BillableCreditCard defaultCreditCard;
 
     public String getFirstname() {

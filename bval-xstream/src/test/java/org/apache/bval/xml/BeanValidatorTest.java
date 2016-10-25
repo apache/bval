@@ -40,25 +40,22 @@ public class BeanValidatorTest {
 
     @Test
     public void testValidateMapAsBean() {
-        XMLMetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
-              BusinessObject.class.getResource("test-beanInfos.xml")));
+        XMLMetaBeanManagerFactory.getRegistry()
+            .addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
 
-        MetaBean mb = XMLMetaBeanManagerFactory.getFinder()
-              .findForId("org.apache.bval.example.Address");
+        MetaBean mb = XMLMetaBeanManagerFactory.getFinder().findForId("org.apache.bval.example.Address");
 
         // 1. validate a bean
         BusinessObjectAddress adr = new BusinessObjectAddress();
         BeanValidator<ValidationResults> validator = new BeanValidator<ValidationResults>();
         ValidationResults results = validator.validate(adr, mb);
-        assertEquals(2,
-              results.getErrorsByReason().get(Features.Property.MANDATORY).size());
+        assertEquals(2, results.getErrorsByReason().get(Features.Property.MANDATORY).size());
 
         // 2. validate a map with the same metabean
         validator.setTreatMapsLikeBeans(true);
         results = validator.validate(new HashMap<String, Object>(), mb);
         assertFalse(results.isEmpty());
-        assertEquals(2,
-              results.getErrorsByReason().get(Features.Property.MANDATORY).size());
+        assertEquals(2, results.getErrorsByReason().get(Features.Property.MANDATORY).size());
 
         // 3. validate as empty map (jsr303 behavior)
         validator.setTreatMapsLikeBeans(false);
@@ -69,8 +66,8 @@ public class BeanValidatorTest {
     @Test
     public void testValidate() {
         MetaBeanFinder finder = XMLMetaBeanManagerFactory.getFinder();
-        XMLMetaBeanManagerFactory.getRegistry().addLoader(new XMLMetaBeanURLLoader(
-              BusinessObject.class.getResource("test-beanInfos.xml")));
+        XMLMetaBeanManagerFactory.getRegistry()
+            .addLoader(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos.xml")));
         MetaBean info = finder.findForClass(BusinessObject.class);
         BusinessObject object = new BusinessObject();
         object.setAddress(new BusinessObjectAddress());
@@ -81,9 +78,7 @@ public class BeanValidatorTest {
         assertTrue(results.hasError(object, null));
         assertTrue(results.hasError(object.getAddress(), null));
 
-        assertTrue(
-              validator.validateProperty(object, info.getProperty("firstName")).hasError(
-                    object, "firstName"));
+        assertTrue(validator.validateProperty(object, info.getProperty("firstName")).hasError(object, "firstName"));
 
         object.setUserId(1L);
         object.setFirstName("Hans");
@@ -104,8 +99,7 @@ public class BeanValidatorTest {
 
         // 4th address is too much!
         object.getAddresses().add(object.getAddress());
-        assertFalse(
-              validator.validate(object, info).isEmpty()); // cardinality error found
+        assertFalse(validator.validate(object, info).isEmpty()); // cardinality error found
     }
 
 }

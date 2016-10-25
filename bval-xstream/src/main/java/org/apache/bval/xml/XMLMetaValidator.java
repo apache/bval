@@ -35,7 +35,7 @@ public class XMLMetaValidator implements Serializable {
     @XStreamAsAttribute
     private String id;
     @XStreamAsAttribute
-    private String java;  // implementation of Validation
+    private String java; // implementation of Validation
 
     @XStreamAsAttribute
     private String jsFunction; // name of java script function

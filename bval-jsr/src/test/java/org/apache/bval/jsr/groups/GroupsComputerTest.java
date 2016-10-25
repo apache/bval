@@ -136,7 +136,6 @@ public class GroupsComputerTest extends TestCase {
         assertEquals(2, chain.groups.size());
     }
 
-
     public void testSequenceResolution() {
         Set<Class<?>> groups = new HashSet<Class<?>>();
         groups.add(Address.Complete.class);

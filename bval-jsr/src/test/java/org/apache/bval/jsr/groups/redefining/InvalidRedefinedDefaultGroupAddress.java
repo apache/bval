@@ -21,13 +21,12 @@ package org.apache.bval.jsr.groups.redefining;
 import javax.validation.GroupSequence;
 import javax.validation.constraints.NotNull;
 
-
 /**
  * If a @GroupSequence redefining the Default group for a class A does not
  * contain the group A, a GroupDefinitionException is raised when the class is
  * validated or when its metadata is requested.
  */
-@GroupSequence({Address.class, Address.HighLevelCoherence.class})
+@GroupSequence({ Address.class, Address.HighLevelCoherence.class })
 public class InvalidRedefinedDefaultGroupAddress {
     @NotNull(groups = Address.HighLevelCoherence.class)
     private String street;
@@ -39,6 +38,7 @@ public class InvalidRedefinedDefaultGroupAddress {
      * check coherence on the overall object
      * Needs basic checking to be green first
      */
-    public interface HighLevelCoherence {}
+    public interface HighLevelCoherence {
+    }
 
 }

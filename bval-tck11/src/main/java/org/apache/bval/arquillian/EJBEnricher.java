@@ -36,7 +36,8 @@ public class EJBEnricher implements TestEnricher {
                     for (final Field f : field.getType().getDeclaredFields()) {
                         if (f.getAnnotation(Resource.class) != null) {
                             if (f.getType().equals(Validator.class)) {
-                                f.set(instance, Validation.byDefaultProvider().configure().buildValidatorFactory().getValidator());
+                                f.set(instance,
+                                    Validation.byDefaultProvider().configure().buildValidatorFactory().getValidator());
                             } else if (f.getType().equals(ValidatorFactory.class)) {
                                 f.set(instance, Validation.byDefaultProvider().configure().buildValidatorFactory());
                             }

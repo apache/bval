@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class MetaBeanBuilder {
 
-    private static final Logger log =  Logger.getLogger(MetaBeanBuilder.class.getName());
+    private static final Logger log = Logger.getLogger(MetaBeanBuilder.class.getName());
 
     /**
      * here you can install different kinds of factories to create MetaBeans

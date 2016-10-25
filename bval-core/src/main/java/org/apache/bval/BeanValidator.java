@@ -213,7 +213,8 @@ public class BeanValidator<T extends ValidationListener> {
      * @param context
      * @param prop
      */
-    protected <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context, MetaProperty prop) {
+    protected <VL extends ValidationListener> void validateRelatedBean(ValidationContext<VL> context,
+        MetaProperty prop) {
         AccessStrategy[] access = prop.getFeature(Features.Property.REF_CASCADE);
         if (access == null && prop.getMetaBean() != null) { // single property access strategy
             // save old values from context

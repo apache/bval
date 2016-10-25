@@ -187,7 +187,7 @@ public class BootstrapTest {
 
         final ProviderSpecificBootstrap<ApacheValidatorConfiguration> specializedBuilderFactory =
             type.providerResolver(resolver);
-        
+
         thrown.expect(ValidationException.class);
         thrown.expectMessage("provider");
         thrown.expectMessage(ApacheValidationProvider.class.getName());

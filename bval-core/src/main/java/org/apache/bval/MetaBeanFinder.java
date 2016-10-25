@@ -16,7 +16,6 @@
  */
 package org.apache.bval;
 
-
 import org.apache.bval.model.MetaBean;
 
 /**

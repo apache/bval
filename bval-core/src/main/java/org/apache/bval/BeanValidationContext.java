@@ -36,8 +36,7 @@ import java.util.Map;
  * validation
  * processing per thread.<br/></b>
  */
-public class BeanValidationContext<T extends ValidationListener>
-      implements ValidationContext<T> {
+public class BeanValidationContext<T extends ValidationListener> implements ValidationContext<T> {
     /** represent an unknown propertyValue. */
     private static final Object UNKNOWN = new Object() {
         @Override

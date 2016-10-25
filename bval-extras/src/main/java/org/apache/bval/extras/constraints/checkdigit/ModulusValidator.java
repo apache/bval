@@ -38,8 +38,7 @@ import static java.lang.Character.isDigit;
  *
  * @param <A>
  */
-abstract class ModulusValidator<A extends Annotation>
-    implements ConstraintValidator<A, String> {
+abstract class ModulusValidator<A extends Annotation> implements ConstraintValidator<A, String> {
 
     private final int modulus;
 
@@ -66,7 +65,7 @@ abstract class ModulusValidator<A extends Annotation>
         int total = 0;
         for (int i = 0; i < code.length(); i++) {
             int lth = code.length();
-            int leftPos  = i + 1;
+            int leftPos = i + 1;
             int rightPos = lth - i;
             try {
                 int charValue = toInt(code.charAt(i), leftPos, rightPos);
@@ -96,8 +95,7 @@ abstract class ModulusValidator<A extends Annotation>
      * @param rightPos The position of the character in the code, counting from right to left
      * @return The weighted value of the character
      */
-    protected abstract int weightedValue(int charValue, int leftPos, int rightPos)
-        throws Exception;
+    protected abstract int weightedValue(int charValue, int leftPos, int rightPos) throws Exception;
 
     /**
      * Convert a character at a specified position to an integer value.
@@ -115,11 +113,7 @@ abstract class ModulusValidator<A extends Annotation>
         if (isDigit(character)) {
             return getNumericValue(character);
         }
-        throw new IllegalArgumentException("Invalid Character["
-                                           + leftPos
-                                           + "] = '"
-                                           + character
-                                           + "'");
+        throw new IllegalArgumentException("Invalid Character[" + leftPos + "] = '" + character + "'");
     }
 
     /**
@@ -133,7 +127,7 @@ abstract class ModulusValidator<A extends Annotation>
         int todo = number;
         while (todo > 0) {
             total += todo % 10;
-            todo  = todo / 10;
+            todo = todo / 10;
         }
         return total;
     }

@@ -44,9 +44,9 @@ public class NullValidatorTest {
      */
     @Test
     public void testNullValidator() {
-    	NullValidator nv = new NullValidator();
-    	assertTrue("Null value validation must succeed", nv.isValid(null, null));
-    	assertFalse("Non null value validation must fail", nv.isValid("hello", null));    	
+        NullValidator nv = new NullValidator();
+        assertTrue("Null value validation must succeed", nv.isValid(null, null));
+        assertFalse("Non null value validation must fail", nv.isValid("hello", null));
     }
-    
+
 }

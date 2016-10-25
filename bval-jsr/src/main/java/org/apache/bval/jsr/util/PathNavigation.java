@@ -129,14 +129,16 @@ public class PathNavigation {
                 break;
             case '.':
                 if (sep) {
-                    throw new IllegalStateException(String.format("Position %s: expected property, index/key, or end of expression", here));
+                    throw new IllegalStateException(
+                        String.format("Position %s: expected property, index/key, or end of expression", here));
                 }
                 sep = true;
                 pos.next();
                 // fall through:
             default:
                 if (!sep) {
-                    throw new IllegalStateException(String.format("Position %s: expected property path separator, index/key, or end of expression", here));
+                    throw new IllegalStateException(String.format(
+                        "Position %s: expected property path separator, index/key, or end of expression", here));
                 }
                 pos.handleProperty(parseProperty(path, pos));
             }
@@ -227,9 +229,9 @@ public class PathNavigation {
                             pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
                         }
                     }
-                }
-                catch (Exception e) {
-                    throw new RuntimeException("Java escaping in quotes is only supported with Apache commons-lang3 on the classpath!");
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                        "Java escaping in quotes is only supported with Apache commons-lang3 on the classpath!");
                 }
             }
             // if reached, reset due to no ending quote found
@@ -318,7 +320,7 @@ public class PathNavigation {
         public boolean equals(Object obj) {
             return super.equals(obj);
         }
-        
+
         /**
          * {@inheritDoc}
          */

@@ -155,11 +155,11 @@ public class StandardValidationTest implements ValidationListener {
         metaProperty.setName("dateValue");
         Date dt = new Date();
         metaProperty.putFeature(Features.Property.MIN_VALUE, dt);
-        dateValue = new Timestamp(dt.getTime()+1000);
+        dateValue = new Timestamp(dt.getTime() + 1000);
         validation.validateMinValue(context);
         assertTrue(reasons.isEmpty());
         context.unknownValue();
-        dateValue = new Timestamp(dt.getTime()-1000);
+        dateValue = new Timestamp(dt.getTime() - 1000);
         validation.validateMinValue(context);
         assertTrue(reasons.contains(Property.MIN_VALUE));
     }

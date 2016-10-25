@@ -47,8 +47,7 @@ public class GroupInheritanceTest extends TestCase {
     public void testValidGroupBuyInOneClick() {
         BillableUser user = new BillableUser();
 
-        Set<ConstraintViolation<BillableUser>> violations =
-              validator.validate(user, BuyInOneClick.class);
+        Set<ConstraintViolation<BillableUser>> violations = validator.validate(user, BuyInOneClick.class);
         assertEquals(3, violations.size());
         assertNotNull(TestUtils.getViolation(violations, "firstname"));
         assertNotNull(TestUtils.getViolation(violations, "lastname"));

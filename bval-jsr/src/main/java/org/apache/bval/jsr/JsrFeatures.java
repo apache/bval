@@ -61,9 +61,6 @@ public interface JsrFeatures {
          **/
         String GROUP_SEQUENCE = "GroupSequence";
 
-//        INFO: cached sorted Array with ValidationEntries 
-//        String VALIDATION_SEQUENCE = "ValidationSequence";
-
         /**
          * INFO: cached BeanDescriptorImpl of the bean
          */

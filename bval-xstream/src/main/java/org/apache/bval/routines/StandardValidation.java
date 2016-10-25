@@ -61,8 +61,10 @@ public class StandardValidation implements Validation {
 
     protected <T extends ValidationListener> void validateTimeLag(ValidationContext<T> context) {
         String lag = (String) context.getMetaProperty().getFeature(TIME_LAG);
-        if (lag == null) return;
-        if (context.getPropertyValue() == null) return;
+        if (lag == null)
+            return;
+        if (context.getPropertyValue() == null)
+            return;
         long date = ((Date) context.getPropertyValue()).getTime();
         long now = System.currentTimeMillis();
         if (XMLMetaValue.TIMELAG_Future.equals(lag)) {
@@ -83,8 +85,10 @@ public class StandardValidation implements Validation {
     protected <T extends ValidationListener> void validateRegExp(ValidationContext<T> context) {
         final MetaProperty meta = context.getMetaProperty();
         final String regExp = (String) meta.getFeature(REG_EXP);
-        if (regExp == null) return;
-        if (context.getPropertyValue() == null) return;
+        if (regExp == null)
+            return;
+        if (context.getPropertyValue() == null)
+            return;
 
         final String value = String.valueOf(context.getPropertyValue());
         try {
@@ -97,15 +101,15 @@ public class StandardValidation implements Validation {
                 context.getListener().addError(REG_EXP, context);
             }
         } catch (PatternSyntaxException e) {
-            throw new IllegalArgumentException(
-                  "regular expression malformed. regexp " + regExp + " at " + context, e);
+            throw new IllegalArgumentException("regular expression malformed. regexp " + regExp + " at " + context, e);
         }
     }
 
     protected <T extends ValidationListener> void validateMinValue(ValidationContext<T> context) {
         @SuppressWarnings("unchecked")
         Comparable<Object> minValue = (Comparable<Object>) context.getMetaProperty().getFeature(MIN_VALUE);
-        if (minValue == null || context.getPropertyValue() == null) return;
+        if (minValue == null || context.getPropertyValue() == null)
+            return;
         if (compare(context, minValue, context.getPropertyValue()) > 0) {
             context.getListener().addError(MIN_VALUE, context);
         }
@@ -114,14 +118,15 @@ public class StandardValidation implements Validation {
     protected <T extends ValidationListener> void validateMaxValue(ValidationContext<T> context) {
         @SuppressWarnings("unchecked")
         Comparable<Object> maxValue = (Comparable<Object>) context.getMetaProperty().getFeature(MAX_VALUE);
-        if (maxValue == null || context.getPropertyValue() == null) return;
+        if (maxValue == null || context.getPropertyValue() == null)
+            return;
         if (compare(context, maxValue, context.getPropertyValue()) < 0) {
             context.getListener().addError(MAX_VALUE, context);
         }
     }
 
     private <T extends ValidationListener> int compare(ValidationContext<T> context, Comparable<Object> constraintValue,
-                        Object currentValue) {
+        Object currentValue) {
         int r;
         if (constraintValue.getClass().isAssignableFrom(currentValue.getClass())) {
             r = constraintValue.compareTo(context.getPropertyValue());
@@ -136,10 +141,11 @@ public class StandardValidation implements Validation {
     }
 
     protected <T extends ValidationListener> void validateMaxLength(ValidationContext<T> context) {
-        Integer maxLength = (Integer) context.getMetaProperty()
-              .getFeature(Features.Property.MAX_LENGTH);
-        if (maxLength == null) return;
-        if (context.getPropertyValue() == null) return;
+        Integer maxLength = (Integer) context.getMetaProperty().getFeature(Features.Property.MAX_LENGTH);
+        if (maxLength == null)
+            return;
+        if (context.getPropertyValue() == null)
+            return;
 
         final Object value = context.getPropertyValue();
         int length = 0;
@@ -154,10 +160,11 @@ public class StandardValidation implements Validation {
     }
 
     protected <T extends ValidationListener> void validateMinLength(ValidationContext<T> context) {
-        Integer maxLength = (Integer) context.getMetaProperty()
-              .getFeature(Features.Property.MIN_LENGTH);
-        if (maxLength == null) return;
-        if (context.getPropertyValue() == null) return;
+        Integer maxLength = (Integer) context.getMetaProperty().getFeature(Features.Property.MIN_LENGTH);
+        if (maxLength == null)
+            return;
+        if (context.getPropertyValue() == null)
+            return;
 
         final Object value = context.getPropertyValue();
         int length = 0;

@@ -46,7 +46,7 @@ public class AppendValidationToBuilder extends BaseAppendValidation {
         // Any groups definition on a composing annotation is ignored.
         final Set<Class<?>> inheritedGroups = builder.getConstraintValidation().getGroups();
         validation.setGroups(inheritedGroups);
-        
+
         // JSR-303 2.3 p:
         // Payloads are also inherited
         final Set<Class<? extends Payload>> inheritedPayload = builder.getConstraintValidation().getPayload();

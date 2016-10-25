@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.util;
 
-
 import org.apache.bval.jsr.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
@@ -27,8 +26,7 @@ import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.No
 /**
  * Description: Implementation of {@link NodeContextBuilder}.<br/>
  */
-final class NodeContextBuilderImpl
-      implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
+final class NodeContextBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
     private final ConstraintValidatorContextImpl parent;
     private final String messageTemplate;
     private final PathImpl propertyPath;
@@ -42,8 +40,7 @@ final class NodeContextBuilderImpl
      * @param template
      * @param path
      */
-    NodeContextBuilderImpl(ConstraintValidatorContextImpl contextImpl,
-                                    String template, PathImpl path, NodeImpl node) {
+    NodeContextBuilderImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path, NodeImpl node) {
         parent = contextImpl;
         messageTemplate = template;
         propertyPath = path;
@@ -54,8 +51,7 @@ final class NodeContextBuilderImpl
      * {@inheritDoc}
      */
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(
-          Object key) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(Object key) {
         node.setKey(key);
         propertyPath.addNode(node);
         return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
@@ -65,8 +61,7 @@ final class NodeContextBuilderImpl
      * {@inheritDoc}
      */
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(
-          Integer index) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(Integer index) {
         node.setIndex(index);
         propertyPath.addNode(node);
         return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
@@ -76,14 +71,14 @@ final class NodeContextBuilderImpl
      * {@inheritDoc}
      */
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(
-          String name) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         propertyPath.addNode(node);
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(
+        String name) {
         propertyPath.addProperty(name);
         return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, node.getName());
     }
@@ -102,5 +97,5 @@ final class NodeContextBuilderImpl
         parent.addError(messageTemplate, propertyPath);
         return parent;
     }
-    
+
 }

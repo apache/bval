@@ -33,8 +33,8 @@ public class Continent {
 
     @NotNull
     public String name;
-    
+
     @Valid
     public Set<Country> countries = new HashSet<Country>();
-    
+
 }

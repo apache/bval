@@ -36,7 +36,6 @@ import javax.validation.constraints.NotNull;
 
 import org.junit.Test;
 
-
 /**
  * Checks the correct behavior of the validator resolution algorithm.
  * 
@@ -60,7 +59,7 @@ public class ValidatorResolutionTest extends ValidationTestBase {
 
     @Constraint(validatedBy = { InvalidPersonNameValidator.class })
     @Documented
-    @Target( { METHOD, FIELD, TYPE })
+    @Target({ METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface PersonName {
         String message() default "Wrong person name";

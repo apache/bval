@@ -27,6 +27,6 @@ public class StringUtilsTest {
         Assert.assertArrayEquals(new String[0], StringUtils.split(""));
         Assert.assertArrayEquals(new String[0], StringUtils.split("  "));
         Assert.assertArrayEquals(new String[0], StringUtils.split("  \n  "));
-        Assert.assertArrayEquals(new String[]{"a", "bbb", "cccc"}, StringUtils.split(" a bbb cccc"));
+        Assert.assertArrayEquals(new String[] { "a", "bbb", "cccc" }, StringUtils.split(" a bbb cccc"));
     }
 }

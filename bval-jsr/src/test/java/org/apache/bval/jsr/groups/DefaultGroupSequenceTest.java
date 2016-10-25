@@ -82,7 +82,6 @@ public class DefaultGroupSequenceTest extends TestCase {
         chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
     }
 
-
     public void testAssertDefaulGroupSequenceIsExpandableWithDefaultAtBeginningOfSequence() {
         // create a dummy sequence
         Group a = new Group(GroupA.class);
@@ -103,7 +102,6 @@ public class DefaultGroupSequenceTest extends TestCase {
         defaultSequence.add(Group.DEFAULT);
         defaultSequence.add(new Group(GroupA.class));
         chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-
 
         defaultSequence.clear();
         defaultSequence.add(new Group(GroupA.class));

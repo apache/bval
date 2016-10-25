@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.Groups;
 import org.apache.bval.jsr.util.PathImpl;
@@ -36,9 +35,8 @@ import java.lang.reflect.Method;
 /**
  * Description: JSR-303 {@link ValidationContext} extension. <br/>
  */
-public interface GroupValidationContext<T>
-      extends ValidationContext<ConstraintValidationListener<T>> {
-    
+public interface GroupValidationContext<T> extends ValidationContext<ConstraintValidationListener<T>> {
+
     /**
      * Get the groups of this {@link GroupValidationContext}.
      * @return the groups in their sequence for validation

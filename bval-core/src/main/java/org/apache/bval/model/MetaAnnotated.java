@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.apache.bval.util.ObjectUtils;
 
-
 public abstract class MetaAnnotated extends Meta {
     private static final long serialVersionUID = 1L;
 
@@ -31,7 +30,8 @@ public abstract class MetaAnnotated extends Meta {
 
     public Annotation[] getAnnotations() {
         if (annArray == null) {
-            annArray = annotations.isEmpty() ? ObjectUtils.EMPTY_ANNOTATION_ARRAY : annotations.toArray(new Annotation[annotations.size()]);
+            annArray = annotations.isEmpty() ? ObjectUtils.EMPTY_ANNOTATION_ARRAY
+                : annotations.toArray(new Annotation[annotations.size()]);
         }
         return annArray;
     }

@@ -103,7 +103,8 @@ public class TestUtils {
      * @param constraintFinder
      * @param types
      */
-    public static void assertConstraintTypesFound(ConstraintFinder constraintFinder, Class<? extends Annotation>... types) {
+    public static void assertConstraintTypesFound(ConstraintFinder constraintFinder,
+        Class<? extends Annotation>... types) {
         outer: for (Class<? extends Annotation> type : types) {
             for (ConstraintDescriptor<?> descriptor : constraintFinder.getConstraintDescriptors()) {
                 if (descriptor.getAnnotation().annotationType().equals(type)) {

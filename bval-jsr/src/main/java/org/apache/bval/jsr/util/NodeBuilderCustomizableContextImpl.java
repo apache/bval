@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.util;
 
-
 import org.apache.bval.jsr.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
@@ -28,7 +27,7 @@ import javax.validation.ElementKind;
  * Description: implementation of {@link javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
  */
 final class NodeBuilderCustomizableContextImpl
-      implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {
+    implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {
     private final ConstraintValidatorContextImpl parent;
     private final String messageTemplate;
     private final PathImpl propertyPath;
@@ -41,8 +40,8 @@ final class NodeBuilderCustomizableContextImpl
      * @param path
      * @param name
      */
-    NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl contextImpl, String template,
-                              PathImpl path, String name) {
+    NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path,
+        String name) {
         parent = contextImpl;
         messageTemplate = template;
         propertyPath = path;
@@ -71,7 +70,8 @@ final class NodeBuilderCustomizableContextImpl
     }
 
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(
+        String name) {
         propertyPath.addNode(node);
         node = new NodeImpl.PropertyNodeImpl(name);
         node.setKind(ElementKind.PROPERTY);
@@ -96,5 +96,5 @@ final class NodeBuilderCustomizableContextImpl
         parent.addError(messageTemplate, propertyPath);
         return parent;
     }
-    
+
 }

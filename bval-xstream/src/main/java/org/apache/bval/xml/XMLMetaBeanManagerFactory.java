@@ -26,14 +26,14 @@ import org.apache.bval.MetaBeanFinder;
  */
 public class XMLMetaBeanManagerFactory {
     private static XMLMetaBeanManager manager = new XMLMetaBeanManager();
-     /**
-     * global meta bean finder.
-     * @return
-     */
+
+    /**
+    * global meta bean finder.
+    * @return
+    */
     public static MetaBeanFinder getFinder() {
         return manager;
     }
-
 
     /**
      * set global meta bean manager, that is responsible

@@ -53,7 +53,6 @@ public class XMLMetaProperty extends XMLMetaElement {
     @XStreamAsAttribute()
     private String timeLag;
 
-
     public Integer getMaxValue() {
         return maxValue;
     }
@@ -88,7 +87,7 @@ public class XMLMetaProperty extends XMLMetaElement {
 
     @Override
     public void mergeInto(MetaProperty prop) throws ClassNotFoundException {
-        super.mergeInto(prop);   // call super!
+        super.mergeInto(prop); // call super!
         if (getMaxValue() != null) {
             prop.putFeature(MAX_VALUE, getMaxValue());
         }

@@ -39,9 +39,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: annotation to validate as Verhoeff<br/>
  */
 @Documented
-@Constraint( validatedBy = VerhoeffValidator.class )
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Constraint(validatedBy = VerhoeffValidator.class)
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface Verhoeff {
 
     Class<?>[] groups() default {};

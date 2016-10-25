@@ -37,7 +37,6 @@ public class PastValidatorForCalendar implements ConstraintValidator<Past, Calen
         return cal == null || cal.before(now());
     }
 
-
     /**
      * overwrite when you need a different algorithm for 'now'.
      *

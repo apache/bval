@@ -39,11 +39,10 @@ package org.apache.bval.extras.constraints.checkdigit;
  *       Standard Book Number (ISBN)</a>.</li>
  * </ul>
  */
-public final class EAN13Validator
-    extends ModulusValidator<EAN13> {
+public final class EAN13Validator extends ModulusValidator<EAN13> {
 
     /** weighting given to digits depending on their right position */
-    private static final int[] POSITION_WEIGHT = new int[] {3, 1};
+    private static final int[] POSITION_WEIGHT = new int[] { 3, 1 };
 
     public EAN13Validator() {
         super(10);
@@ -60,8 +59,7 @@ public final class EAN13Validator
      * {@inheritDoc}
      */
     @Override
-    protected int weightedValue( int charValue, int leftPos, int rightPos )
-            throws Exception {
+    protected int weightedValue(int charValue, int leftPos, int rightPos) throws Exception {
         int weight = POSITION_WEIGHT[rightPos % 2];
         return (charValue * weight);
     }

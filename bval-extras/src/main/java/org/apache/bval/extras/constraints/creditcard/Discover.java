@@ -43,10 +43,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Documented
 @Luhn
-@Pattern(regexp="^((6011\\d{12})|(64[4-9]\\d{13})|(65\\d{14}))$")
-@Constraint(validatedBy={})
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Pattern(regexp = "^((6011\\d{12})|(64[4-9]\\d{13})|(65\\d{14}))$")
+@Constraint(validatedBy = {})
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface Discover {
 
     Class<?>[] groups() default {};

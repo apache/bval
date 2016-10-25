@@ -103,9 +103,9 @@ public class MethodValidatorImplTest extends TestCase {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
         Constructor constructor = service.getClass().getConstructor(String.class, String.class);
-        String[] params = new String[] {"Hello ", "world" };
-        
-        assertTrue(mv.<ExampleMethodService>validateConstructorParameters(constructor, params).isEmpty());
+        String[] params = new String[] { "Hello ", "world" };
+
+        assertTrue(mv.<ExampleMethodService> validateConstructorParameters(constructor, params).isEmpty());
 
         params[0] = "";
         assertEquals(1, mv.validateConstructorParameters(constructor, params).size());
@@ -154,7 +154,8 @@ public class MethodValidatorImplTest extends TestCase {
         assertTrue("No violations expected", mv.validateParameters(service, personOp1, new Object[] { p }).isEmpty());
 
         // validate with null person
-        assertTrue("No violations expected", mv.validateParameters(service, personOp1, new Object[] { null }).isEmpty());
+        assertTrue("No violations expected",
+            mv.validateParameters(service, personOp1, new Object[] { null }).isEmpty());
     }
 
     public void testValidateNotNullValidParam() throws NoSuchMethodException {
@@ -164,7 +165,8 @@ public class MethodValidatorImplTest extends TestCase {
         Method personOp2 = service.getClass().getMethod("personOp2", Person.class);
 
         // Validate with null person
-        assertEquals("Expected 1 violation", 1, mv.validateParameters(service, personOp2, new Object[] { null }).size());
+        assertEquals("Expected 1 violation", 1,
+            mv.validateParameters(service, personOp2, new Object[] { null }).size());
 
         // Validate with invalid person
         Person p = new ExampleMethodService.Person();
@@ -209,7 +211,6 @@ public class MethodValidatorImplTest extends TestCase {
     }
 
     private Validator getValidator() {
-        return Validation.byProvider(ApacheValidationProvider.class).configure()
-            .buildValidatorFactory().getValidator();
+        return Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator();
     }
 }

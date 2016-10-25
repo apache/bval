@@ -41,5 +41,5 @@ public class SizeValidatorForArrayOfBoolean extends SizeValidator implements Con
         }
         final int length = Array.getLength(array);
         return length >= min && length <= max;
-	}
+    }
 }

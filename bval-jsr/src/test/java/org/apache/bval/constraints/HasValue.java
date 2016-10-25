@@ -31,8 +31,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Description: allow distinct string values for element (like enums) <br/>
  */
-@Target({ANNOTATION_TYPE, METHOD, FIELD})
-@Constraint(validatedBy = {HasStringValidator.class})
+@Target({ ANNOTATION_TYPE, METHOD, FIELD })
+@Constraint(validatedBy = { HasStringValidator.class })
 @Retention(RUNTIME)
 public @interface HasValue {
     String[] value();
@@ -41,5 +41,5 @@ public @interface HasValue {
 
     Class<?>[] groups() default {};
 
-    Class<? extends Payload>[] payload() default { };
+    Class<? extends Payload>[] payload() default {};
 }

@@ -46,9 +46,8 @@ public class XMLMetaBeanManagerTest {
 
     @Test
     public void testEnrichCopies() throws Exception {
-        Map<String, MetaBean> copies =
-            mbm.enrichCopies(new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos-custom.xml"))
-                .load());
+        Map<String, MetaBean> copies = mbm.enrichCopies(
+            new XMLMetaBeanURLLoader(BusinessObject.class.getResource("test-beanInfos-custom.xml")).load());
         assertNotNull(copies);
         MetaBean mb = copies.get(BusinessObject.class.getName());
         assertFalse(mb.getProperty("lastName").isMandatory());

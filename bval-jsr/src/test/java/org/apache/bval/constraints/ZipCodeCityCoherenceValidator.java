@@ -18,7 +18,6 @@
  */
 package org.apache.bval.constraints;
 
-
 import org.apache.bval.jsr.example.ZipCodeCityCarrier;
 
 import javax.validation.ConstraintValidator;
@@ -30,8 +29,7 @@ import javax.validation.ConstraintValidatorContext;
  * Date: 01.04.2008 <br/>
  * Time: 11:45:22 <br/>
  */
-public class ZipCodeCityCoherenceValidator
-      implements ConstraintValidator<ZipCodeCityCoherence, ZipCodeCityCarrier> {
+public class ZipCodeCityCoherenceValidator implements ConstraintValidator<ZipCodeCityCoherence, ZipCodeCityCarrier> {
     @Override
     public void initialize(ZipCodeCityCoherence constraintAnnotation) {
     }
@@ -46,7 +44,8 @@ public class ZipCodeCityCoherenceValidator
         }
         if ("error".equals(adr.getCity())) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("city not OK").addPropertyNode("city").addConstraintViolation();
+            context.buildConstraintViolationWithTemplate("city not OK").addPropertyNode("city")
+                .addConstraintViolation();
             r = false;
         }
         return r;

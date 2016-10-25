@@ -43,10 +43,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Documented
 @Luhn
-@Pattern(regexp="^(5[1-5]\\d{14})$")
-@Constraint(validatedBy={})
-@Target( { FIELD, ANNOTATION_TYPE, PARAMETER } )
-@Retention( RUNTIME )
+@Pattern(regexp = "^(5[1-5]\\d{14})$")
+@Constraint(validatedBy = {})
+@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Retention(RUNTIME)
 public @interface Mastercard {
 
     Class<?>[] groups() default {};

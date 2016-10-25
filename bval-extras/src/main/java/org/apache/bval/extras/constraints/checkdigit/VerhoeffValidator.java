@@ -33,9 +33,9 @@ import static java.lang.Character.getNumericValue;
  * See <a href="http://en.wikipedia.org/wiki/Verhoeff_algorithm">Wikipedia
  *  - Verhoeff algorithm</a> for more details.
  */
-public final class VerhoeffValidator
-    implements ConstraintValidator<Verhoeff, String> {
+public final class VerhoeffValidator implements ConstraintValidator<Verhoeff, String> {
 
+    //@formatter:off
     /** D - multiplication table */
     private static final int[][] D_TABLE = new int[][] {
         {0,  1,  2,  3,  4,  5,  6,  7,  8,  9},
@@ -59,6 +59,7 @@ public final class VerhoeffValidator
         {4,  2,  8,  6,  5,  7,  3,  9,  0,  1},
         {2,  7,  9,  3,  8,  0,  6,  4,  1,  5},
         {7,  0,  4,  6,  9,  1,  3,  2,  5,  8}};
+    //@formatter:on
 
     /**
      * {@inheritDoc}

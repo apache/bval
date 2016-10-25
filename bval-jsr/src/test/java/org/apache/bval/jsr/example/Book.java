@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.example;
 
-
 import org.apache.bval.constraints.NotEmpty;
 
 import javax.validation.GroupSequence;
@@ -26,7 +25,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-@GroupSequence({First.class, Second.class, Book.class, Last.class})
+@GroupSequence({ First.class, Second.class, Book.class, Last.class })
 public class Book {
     @NotNull(groups = First.class)
     @NotEmpty(groups = First.class)
@@ -76,7 +75,7 @@ public class Book {
         this.author = author;
     }
 
-    @GroupSequence(value = {First.class, Second.class, Last.class})
+    @GroupSequence(value = { First.class, Second.class, Last.class })
     public interface All {
     }
 }

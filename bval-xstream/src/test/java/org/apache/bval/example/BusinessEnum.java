@@ -20,5 +20,5 @@ package org.apache.bval.example;
  * Description: <br/>
  */
 public enum BusinessEnum {
-    VALUE1, VALUE2, VALUE3
+                          VALUE1, VALUE2, VALUE3
 }

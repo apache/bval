@@ -46,11 +46,9 @@ import java.util.logging.Logger;
  */
 @Privilizing(@CallTo(Reflection.class))
 public class PropertyAccess extends AccessStrategy {
-    private static final Logger log =  Logger.getLogger(PropertyAccess.class.getName());
-    private static final String BEANUTILS =
-        "org.apache.commons.beanutils.BeanUtils";
-    private static final String BEANUTILS_PROPERTY_ACCESS =
-        "org.apache.bval.util.BeanUtilsPropertyAccess";
+    private static final Logger log = Logger.getLogger(PropertyAccess.class.getName());
+    private static final String BEANUTILS = "org.apache.commons.beanutils.BeanUtils";
+    private static final String BEANUTILS_PROPERTY_ACCESS = "org.apache.bval.util.BeanUtilsPropertyAccess";
     private static final Constructor<? extends PropertyAccess> BEANUTILS_PROPERTY_ACCESS_CTOR;
     private static final ConcurrentMap<Class<?>, Map<String, PropertyDescriptor>> PROPERTY_DESCRIPTORS =
         new ConcurrentHashMap<Class<?>, Map<String, PropertyDescriptor>>();
@@ -67,11 +65,9 @@ public class PropertyAccess extends AccessStrategy {
         Constructor<? extends PropertyAccess> ctor;
         if (useBeanUtils) {
             try {
-                final Class<?> beanUtilsPropertyAccess =
-                    Reflection.toClass(BEANUTILS_PROPERTY_ACCESS, cl);
+                final Class<?> beanUtilsPropertyAccess = Reflection.toClass(BEANUTILS_PROPERTY_ACCESS, cl);
 
-                ctor = Reflection.getDeclaredConstructor(
-                    beanUtilsPropertyAccess.asSubclass(PropertyAccess.class),
+                ctor = Reflection.getDeclaredConstructor(beanUtilsPropertyAccess.asSubclass(PropertyAccess.class),
                     Class.class, String.class);
 
             } catch (Exception e) {
@@ -90,18 +86,13 @@ public class PropertyAccess extends AccessStrategy {
      * @return PropertyAccess
      * @since 1.1.2
      */
-    public static PropertyAccess getInstance(Class<?> clazz,
-        String propertyName) {
+    public static PropertyAccess getInstance(Class<?> clazz, String propertyName) {
         if (BEANUTILS_PROPERTY_ACCESS_CTOR != null) {
             try {
-                return BEANUTILS_PROPERTY_ACCESS_CTOR.newInstance(clazz,
-                    propertyName);
+                return BEANUTILS_PROPERTY_ACCESS_CTOR.newInstance(clazz, propertyName);
             } catch (Exception e) {
-                log.log(Level.WARNING,
-                    String.format(
-                        "Exception encountered attempting to instantiate %s(%s, %s)",
-                        BEANUTILS_PROPERTY_ACCESS_CTOR, clazz, propertyName),
-                    e);
+                log.log(Level.WARNING, String.format("Exception encountered attempting to instantiate %s(%s, %s)",
+                    BEANUTILS_PROPERTY_ACCESS_CTOR, clazz, propertyName), e);
             }
         }
         return new PropertyAccess(clazz, propertyName);
@@ -132,13 +123,12 @@ public class PropertyAccess extends AccessStrategy {
         return rememberField != null ? ElementType.FIELD : ElementType.METHOD;
     }
 
-    protected Object getPublicProperty(Object bean) throws InvocationTargetException,
-        NoSuchMethodException, IllegalAccessException {
+    protected Object getPublicProperty(Object bean)
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         if (bean instanceof Map<?, ?>) {
             return ((Map<?, ?>) bean).get(propertyName);
         }
-        final Method readMethod =
-            getPropertyReadMethod(propertyName, bean.getClass());
+        final Method readMethod = getPropertyReadMethod(propertyName, bean.getClass());
         if (readMethod == null) {
             throw new NoSuchMethodException(toString());
         }
@@ -163,8 +153,7 @@ public class PropertyAccess extends AccessStrategy {
      * @throws IllegalAccessException
      */
     public static Object getProperty(Object bean, String propertyName)
-        throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         return getInstance(bean.getClass(), propertyName).get(bean);
     }
 
@@ -215,10 +204,8 @@ public class PropertyAccess extends AccessStrategy {
         return null;
     }
 
-    private static Method getPropertyReadMethod(String propertyName,
-        Class<?> beanClass) {
-        final Map<String, PropertyDescriptor> propertyDescriptors =
-            getPropertyDescriptors(beanClass);
+    private static Method getPropertyReadMethod(String propertyName, Class<?> beanClass) {
+        final Map<String, PropertyDescriptor> propertyDescriptors = getPropertyDescriptors(beanClass);
         if (propertyDescriptors.containsKey(propertyName)) {
             return propertyDescriptors.get(propertyName).getReadMethod();
         }
@@ -323,7 +310,7 @@ public class PropertyAccess extends AccessStrategy {
         result = 31 * result + propertyName.hashCode();
         return result;
     }
-    
+
     private static Map<String, PropertyDescriptor> getPropertyDescriptors(Class<?> type) {
         if (PROPERTY_DESCRIPTORS.containsKey(type)) {
             return PROPERTY_DESCRIPTORS.get(type);

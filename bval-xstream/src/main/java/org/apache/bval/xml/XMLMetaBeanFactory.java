@@ -42,7 +42,7 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
 
     // use LinkedHashMap to keep sequence of loaders
     private final Map<XMLMetaBeanLoader, XMLMetaBeanInfos> resources =
-          new LinkedHashMap<XMLMetaBeanLoader, XMLMetaBeanInfos>();
+        new LinkedHashMap<XMLMetaBeanLoader, XMLMetaBeanInfos>();
 
     private StandardValidation standardValidation = StandardValidation.getInstance();
 
@@ -72,11 +72,11 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
 
     @Override
     public void buildMetaBean(final MetaBean metaBean) throws Exception {
-        if(metaBean.getId() == null) return;
-         visitXMLBeanMeta(metaBean.getId(), new Visitor() {
+        if (metaBean.getId() == null)
+            return;
+        visitXMLBeanMeta(metaBean.getId(), new Visitor() {
             @Override
-            public void visit(XMLMetaBean xmlMeta, XMLMetaBeanInfos xmlInfos)
-                  throws Exception {
+            public void visit(XMLMetaBean xmlMeta, XMLMetaBeanInfos xmlInfos) throws Exception {
                 enrichMetaBean(metaBean, new XMLResult(xmlMeta, xmlInfos));
             }
 
@@ -112,7 +112,7 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
         if (result.xmlMeta.getName() != null) {
             meta.setName(result.xmlMeta.getName());
         }
-/*        if (meta.getBeanClass() == null && result.xmlMeta.getImpl() != null) {
+        /*        if (meta.getBeanClass() == null && result.xmlMeta.getImpl() != null) {
             meta.setBeanClass(findLocalClass(result.xmlMeta.getImpl()));
         }*/
         result.xmlMeta.mergeFeaturesInto(meta);
@@ -130,51 +130,44 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
     }
 
     @SuppressWarnings("deprecation")
-    protected void enrichValidations(FeaturesCapable prop, XMLFeaturesCapable xmlProp,
-                                     XMLResult result, boolean addStandard)
-          throws Exception {
+    protected void enrichValidations(FeaturesCapable prop, XMLFeaturesCapable xmlProp, XMLResult result,
+        boolean addStandard) throws Exception {
         if (xmlProp.getValidators() != null) {
             // obsolete code? remove from here --->
             String[] func = prop.getFeature(JAVASCRIPT_VALIDATION_FUNCTIONS);
-            List<String> jsValidators = new ArrayList<String>(
-                  xmlProp.getValidators().size() + (func == null ? 0 : func.length));
+            List<String> jsValidators =
+                new ArrayList<String>(xmlProp.getValidators().size() + (func == null ? 0 : func.length));
             if (func != null && func.length > 0) {
                 jsValidators.addAll(Arrays.asList(func));
-            }  // <--- to here
+            } // <--- to here
             boolean useStandard = prop instanceof MetaProperty;
             for (XMLMetaValidatorReference valRef : xmlProp.getValidators()) {
-                if (standardValidation != null &&
-                      valRef.getRefId().equals(standardValidation.getValidationId())) {
+                if (standardValidation != null && valRef.getRefId().equals(standardValidation.getValidationId())) {
                     useStandard = false;
                 }
-                XMLMetaValidator validator =
-                      result.xmlInfos.getValidator(valRef.getRefId());
+                XMLMetaValidator validator = result.xmlInfos.getValidator(valRef.getRefId());
                 if (validator != null) {
                     if (validator.getValidation() != null) {
                         prop.addValidation(validator.getValidation());
                     }
-                    if (validator.getJsFunction() != null &&
-                          !jsValidators.contains(validator.getJsFunction())) {
+                    if (validator.getJsFunction() != null && !jsValidators.contains(validator.getJsFunction())) {
                         jsValidators.add(validator.getJsFunction());
                     }
                 }
             }
             if (!jsValidators.isEmpty()) {
-                prop.putFeature(JAVASCRIPT_VALIDATION_FUNCTIONS,
-                      jsValidators.toArray(new String[jsValidators.size()]));
+                prop.putFeature(JAVASCRIPT_VALIDATION_FUNCTIONS, jsValidators.toArray(new String[jsValidators.size()]));
             }
             if (useStandard && standardValidation != null) {
                 if (!prop.hasValidation(standardValidation))
                     prop.addValidation(standardValidation);
             }
-        } else if (addStandard && standardValidation != null &&
-              !prop.hasValidation(standardValidation)) {
+        } else if (addStandard && standardValidation != null && !prop.hasValidation(standardValidation)) {
             prop.addValidation(standardValidation);
         }
     }
 
-    protected MetaProperty enrichElement(MetaBean meta, XMLMetaElement xmlProp,
-                                         XMLResult result) throws Exception {
+    protected MetaProperty enrichElement(MetaBean meta, XMLMetaElement xmlProp, XMLResult result) throws Exception {
         MetaProperty prop = meta.getProperty(xmlProp.getName());
         if (prop == null) {
             prop = new MetaProperty();
@@ -186,10 +179,8 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
         return prop;
     }
 
-
     public void visitXMLBeanMeta(String beanId, Visitor visitor) throws Exception {
-        for (Map.Entry<XMLMetaBeanLoader, XMLMetaBeanInfos> entry : resources
-              .entrySet()) {
+        for (Map.Entry<XMLMetaBeanLoader, XMLMetaBeanInfos> entry : resources.entrySet()) {
             if (entry.getValue() == null) {
                 // load when not already loaded
                 try {
@@ -217,8 +208,7 @@ public class XMLMetaBeanFactory implements MetaBeanFactory {
      * @return null or the bean found from the first loader that has it.
      */
     protected XMLResult findXMLBeanMeta(String beanId) {
-        for (Map.Entry<XMLMetaBeanLoader, XMLMetaBeanInfos> entry : resources
-              .entrySet()) {
+        for (Map.Entry<XMLMetaBeanLoader, XMLMetaBeanInfos> entry : resources.entrySet()) {
             if (entry.getValue() == null) {
                 // load when not already loaded
                 try {

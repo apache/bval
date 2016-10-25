@@ -22,7 +22,8 @@ import javax.validation.metadata.ReturnValueDescriptor;
 import java.util.Collection;
 
 public class ReturnValueDescriptorImpl extends ElementDescriptorImpl implements ReturnValueDescriptor {
-    public ReturnValueDescriptorImpl(final MetaBean metaBean, Class<?> returnType, final Collection<ConstraintValidation<?>> list, boolean cascaded) {
+    public ReturnValueDescriptorImpl(final MetaBean metaBean, Class<?> returnType,
+        final Collection<ConstraintValidation<?>> list, boolean cascaded) {
         super(metaBean, returnType, list.toArray(new ConstraintValidation<?>[list.size()]));
         setCascaded(cascaded);
     }

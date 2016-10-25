@@ -16,7 +16,6 @@
  */
 package org.apache.bval.xml;
 
-
 import org.apache.bval.model.MetaBean;
 
 import java.util.Map;

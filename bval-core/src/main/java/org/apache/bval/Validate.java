@@ -29,7 +29,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Description: Annotate an element (parameter) to be validated.
  * <br>
  */
-@Target({METHOD, FIELD, CONSTRUCTOR, PARAMETER})
+@Target({ METHOD, FIELD, CONSTRUCTOR, PARAMETER })
 @Retention(RUNTIME)
 public @interface Validate {
     /**

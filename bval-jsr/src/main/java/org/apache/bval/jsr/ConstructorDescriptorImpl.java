@@ -16,7 +16,6 @@
  */
 package org.apache.bval.jsr;
 
-
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.MetaConstructor;
 import org.apache.bval.model.Validation;
@@ -27,7 +26,7 @@ import javax.validation.metadata.ConstructorDescriptor;
  * Description: {@link javax.validation.metadata.ConstructorDescriptor} implementation.<br/>
  */
 public class ConstructorDescriptorImpl extends InvocableElementDescriptor
-      implements ConstructorDescriptor, ProcedureDescriptor {
+    implements ConstructorDescriptor, ProcedureDescriptor {
     /**
      * Create a new ConstructorDescriptorImpl instance.
      * @param metaBean

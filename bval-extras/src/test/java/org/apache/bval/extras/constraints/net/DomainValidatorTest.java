@@ -51,7 +51,8 @@ public class DomainValidatorTest {
 
         assertTrue("single-character domain label should validate", validator.isValid("z.com", null));
 
-        assertTrue("i.have.an-example.domain.name should validate", validator.isValid("i.have.an-example.domain.name", null));
+        assertTrue("i.have.an-example.domain.name should validate",
+            validator.isValid("i.have.an-example.domain.name", null));
     }
 
     @Test
@@ -61,7 +62,8 @@ public class DomainValidatorTest {
         assertFalse("domain name containing spaces shouldn't validate", validator.isValid("apa che.org", null));
         assertFalse("domain name starting with dash shouldn't validate", validator.isValid("-testdomain.name", null));
         assertFalse("domain name ending with dash shouldn't validate", validator.isValid("testdomain-.name", null));
-        assertFalse("domain name starting with multiple dashes shouldn't validate", validator.isValid("---c.com", null));
+        assertFalse("domain name starting with multiple dashes shouldn't validate",
+            validator.isValid("---c.com", null));
         assertFalse("domain name ending with multiple dashes shouldn't validate", validator.isValid("c--.com", null));
         assertFalse("domain name with invalid TLD shouldn't validate", validator.isValid("apache.rog", null));
 
@@ -94,10 +96,9 @@ public class DomainValidatorTest {
 
     @Test
     public void testAllowLocal() {
-       DomainValidator noLocal = new DomainValidator();
-       DomainValidator allowLocal = new DomainValidator();
-       allowLocal.initialize( new Domain()
-       {
+        DomainValidator noLocal = new DomainValidator();
+        DomainValidator allowLocal = new DomainValidator();
+        allowLocal.initialize(new Domain() {
 
             @Override
             public Class<? extends Annotation> annotationType() {
@@ -130,24 +131,24 @@ public class DomainValidatorTest {
             }
         });
 
-       // Default won't allow local
-       assertFalse("localhost.localdomain should validate", noLocal.isValid("localhost.localdomain", null));
-       assertFalse("localhost should validate", noLocal.isValid("localhost", null));
+        // Default won't allow local
+        assertFalse("localhost.localdomain should validate", noLocal.isValid("localhost.localdomain", null));
+        assertFalse("localhost should validate", noLocal.isValid("localhost", null));
 
-       // But it may be requested
-       assertTrue("localhost.localdomain should validate", allowLocal.isValid("localhost.localdomain", null));
-       assertTrue("localhost should validate", allowLocal.isValid("localhost", null));
-       assertTrue("hostname should validate", allowLocal.isValid("hostname", null));
-       assertTrue("machinename should validate", allowLocal.isValid("machinename", null));
+        // But it may be requested
+        assertTrue("localhost.localdomain should validate", allowLocal.isValid("localhost.localdomain", null));
+        assertTrue("localhost should validate", allowLocal.isValid("localhost", null));
+        assertTrue("hostname should validate", allowLocal.isValid("hostname", null));
+        assertTrue("machinename should validate", allowLocal.isValid("machinename", null));
 
-       // Check the localhost one with a few others
-       assertTrue("apache.org should validate", allowLocal.isValid("apache.org", null));
-       assertFalse("domain name with spaces shouldn't validate", allowLocal.isValid(" apache.org ", null));
+        // Check the localhost one with a few others
+        assertTrue("apache.org should validate", allowLocal.isValid("apache.org", null));
+        assertFalse("domain name with spaces shouldn't validate", allowLocal.isValid(" apache.org ", null));
     }
 
     @Test
     public void testIDN() {
-       assertTrue("b\u00fccher.ch in IDN should validate", validator.isValid("www.xn--bcher-kva.ch", null));
+        assertTrue("b\u00fccher.ch in IDN should validate", validator.isValid("www.xn--bcher-kva.ch", null));
     }
 
 }

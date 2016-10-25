@@ -41,5 +41,5 @@ public class SizeValidatorForArrayOfFloat extends SizeValidator implements Const
         }
         final int length = Array.getLength(array);
         return length >= min && length <= max;
-	}
+    }
 }

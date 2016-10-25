@@ -25,9 +25,15 @@ import javax.validation.constraints.NotNull;
  * Example 3.7. Example of interface / group hosting constraints
  */
 public interface Auditable {
-    @NotNull String getCreationDate();
+    @NotNull
+    String getCreationDate();
+
     @NotNull
     String getLastUpdate();
-    @NotNull String getLastModifier();
-    @NotNull String getLastReader();
+
+    @NotNull
+    String getLastModifier();
+
+    @NotNull
+    String getLastReader();
 }

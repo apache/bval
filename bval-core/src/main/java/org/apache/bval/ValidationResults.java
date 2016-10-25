@@ -16,7 +16,6 @@
  */
 package org.apache.bval;
 
-
 import org.apache.bval.model.ValidationContext;
 import org.apache.bval.model.ValidationListener;
 
@@ -37,7 +36,6 @@ public class ValidationResults implements ValidationListener, Serializable {
     private Map<String, List<Error>> errorsByReason;
     private Map<Object, Map<String, List<Error>>> errorsByOwner;
 
-
     /**
      * API to add an error to the validation results.
      *
@@ -51,12 +49,11 @@ public class ValidationResults implements ValidationListener, Serializable {
         addError(error, context);
     }
 
-
-     /**
+    /**
      * API to add an error to the validation results.
      *
      * @param error       - holding the description of reason and object to describe
-      *                     the validation error
+     *                     the validation error
      * @param context     - null or the context to provide additional information
      */
     @Override

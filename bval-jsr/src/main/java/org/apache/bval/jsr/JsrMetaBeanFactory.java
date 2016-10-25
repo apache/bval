@@ -121,12 +121,13 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private void processClass(Class<?> beanClass, MetaBean metabean) throws IllegalAccessException,
-        InvocationTargetException {
+    private void processClass(Class<?> beanClass, MetaBean metabean)
+        throws IllegalAccessException, InvocationTargetException {
 
         // if NOT ignore class level annotations
         if (!factory.getAnnotationIgnores().isIgnoreAnnotations(beanClass)) {
-            annotationProcessor.processAnnotations(null, beanClass, beanClass, null, new AppendValidationToMeta(metabean));
+            annotationProcessor.processAnnotations(null, beanClass, beanClass, null,
+                new AppendValidationToMeta(metabean));
         }
 
         final Collection<String> missingValid = new ArrayList<String>();
@@ -198,15 +199,16 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private void addXmlConstraints(Class<?> beanClass, MetaBean metabean) throws IllegalAccessException,
-        InvocationTargetException {
+    private void addXmlConstraints(Class<?> beanClass, MetaBean metabean)
+        throws IllegalAccessException, InvocationTargetException {
         for (final MetaConstraint<?, ? extends Annotation> metaConstraint : factory.getMetaConstraints(beanClass)) {
             Meta meta;
             AccessStrategy access = metaConstraint.getAccessStrategy();
             boolean create = false;
             if (access == null) { // class level
                 meta = null;
-            } else if (access.getElementType() == ElementType.METHOD && !metaConstraint.getMember().getName().startsWith("get")) { // TODO: better getter test
+            } else if (access.getElementType() == ElementType.METHOD
+                && !metaConstraint.getMember().getName().startsWith("get")) { // TODO: better getter test
                 final Method method = Method.class.cast(metaConstraint.getMember());
                 meta = metabean.getMethod(method);
                 final MetaMethod metaMethod;
@@ -229,7 +231,7 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
                     metaMethod.addAnnotation(metaConstraint.getAnnotation());
                 }
                 continue;
-            } else if (access.getElementType() == ElementType.CONSTRUCTOR){
+            } else if (access.getElementType() == ElementType.CONSTRUCTOR) {
                 final Constructor<?> constructor = Constructor.class.cast(metaConstraint.getMember());
                 meta = metabean.getConstructor(constructor);
                 final MetaConstructor metaConstructor;
@@ -289,7 +291,8 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
         GroupSequence annotation = beanClass.getAnnotation(GroupSequence.class);
         List<Group> groupSeq = metabean.getFeature(key);
         if (groupSeq == null) {
-            groupSeq = metabean.initFeature(key, new ArrayList<Group>(annotation == null ? 1 : annotation.value().length));
+            groupSeq =
+                metabean.initFeature(key, new ArrayList<Group>(annotation == null ? 1 : annotation.value().length));
         }
         Class<?>[] groupClasses = factory.getDefaultSequence(beanClass);
         if (groupClasses == null || groupClasses.length == 0) {
@@ -315,7 +318,8 @@ public class JsrMetaBeanFactory implements MetaBeanFactory {
         if (!containsDefault) {
             throw new GroupDefinitionException("Redefined default group sequence must contain " + beanClass.getName());
         }
-        log.log(Level.FINEST, String.format("Default group sequence for bean %s is: %s", beanClass.getName(), groupSeq));
+        log.log(Level.FINEST,
+            String.format("Default group sequence for bean %s is: %s", beanClass.getName(), groupSeq));
     }
 
     /**

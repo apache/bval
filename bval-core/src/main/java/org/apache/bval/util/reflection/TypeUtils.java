@@ -38,13 +38,12 @@ import org.apache.bval.util.Validate;
  * <p> Utility methods focusing on type inspection, particularly with regard to
  * generics. </p>
  *
- * @since 3.0
+ * @since 1.1.2
  */
 public class TypeUtils {
 
     /**
      * {@link WildcardType} builder.
-     * @since 3.2
      */
     public static class WildcardTypeBuilder {
         /**
@@ -86,7 +85,6 @@ public class TypeUtils {
 
     /**
      * ParameterizedType implementation class.
-     * @since 3.2 
      */
     private static final class ParameterizedTypeImpl implements ParameterizedType {
         private final Class<?> raw;
@@ -148,7 +146,6 @@ public class TypeUtils {
         /**
          * {@inheritDoc}
          */
-        @SuppressWarnings( "deprecation" )  // ObjectUtils.hashCode(Object) has been deprecated in 3.2
         @Override
         public int hashCode() {
             int result = 71 << 4;
@@ -163,7 +160,6 @@ public class TypeUtils {
 
     /**
      * WildcardType implementation class.
-     * @since 3.2 
      */
     private static final class WildcardTypeImpl implements WildcardType {
         private static final Type[] EMPTY_BOUNDS = new Type[0];
@@ -423,15 +419,15 @@ public class TypeUtils {
 
     }
 
-        /**
-         * <p>Checks if the subject type may be implicitly cast to the target
-         * parameterized type following the Java generics rules.</p>
-         *
-         * @param type the subject type to be assigned to the target type
-         * @param toParameterizedType the target parameterized type
-         * @param typeVarAssigns a map with type variables
-         * @return {@code true} if {@code type} is assignable to {@code toType}.
-         */
+    /**
+     * <p>Checks if the subject type may be implicitly cast to the target
+     * parameterized type following the Java generics rules.</p>
+     *
+     * @param type the subject type to be assigned to the target type
+     * @param toParameterizedType the target parameterized type
+     * @param typeVarAssigns a map with type variables
+     * @return {@code true} if {@code type} is assignable to {@code toType}.
+     */
     private static boolean isAssignable(final Type type, final ParameterizedType toParameterizedType,
             final Map<TypeVariable<?>, Type> typeVarAssigns) {
         if (type == null) {
@@ -499,7 +495,6 @@ public class TypeUtils {
      * @param var the type variable to look up
      * @param typeVarAssigns the map used for the look up
      * @return Type or {@code null} if some variable was not in the map
-     * @since 3.2
      */
     private static Type unrollVariableAssignments(TypeVariable<?> var, final Map<TypeVariable<?>, Type> typeVarAssigns) {
         Type result;
@@ -1233,7 +1228,6 @@ public class TypeUtils {
      * @param typeArguments as from {@link TypeUtils#getTypeArguments(Type, Class)}
      * @param type the type to unroll variable assignments for
      * @return Type
-     * @since 3.2
      */
     public static Type unrollVariables(Map<TypeVariable<?>, Type> typeArguments, final Type type) {
         if (typeArguments == null) {
@@ -1276,7 +1270,6 @@ public class TypeUtils {
      * @param typeArguments assignments {@link Map}
      * @param bounds in which to expand variables
      * @return {@code bounds} with any variables reassigned
-     * @since 3.2
      */
     private static Type[] unrollBounds(final Map<TypeVariable<?>, Type> typeArguments, final Type[] bounds) {
         Type[] result = bounds;
@@ -1299,7 +1292,6 @@ public class TypeUtils {
      *
      * @param type the type to check for type variables
      * @return boolean
-     * @since 3.2
      */
     public static boolean containsTypeVariables(final Type type) {
         if (type instanceof TypeVariable<?>) {
@@ -1333,7 +1325,6 @@ public class TypeUtils {
      * @param typeArguments the types used for parameterization
      *
      * @return {@link ParameterizedType}
-     * @since 3.2
      */
     public static final ParameterizedType parameterizeWithOwner(final Type owner, final Class<?> raw,
         final Type... typeArguments) {
@@ -1359,7 +1350,6 @@ public class TypeUtils {
     /**
      * Get a {@link WildcardTypeBuilder}.
      * @return {@link WildcardTypeBuilder}
-     * @since 3.2
      */
     public static WildcardTypeBuilder wildcardType() {
         return new WildcardTypeBuilder();
@@ -1371,9 +1361,7 @@ public class TypeUtils {
      * @param t1 the first type
      * @param t2 the second type
      * @return boolean
-     * @since 3.2
      */
-    @SuppressWarnings( "deprecation" )  // ObjectUtils.equals(Object, Object) has been deprecated in 3.2
     public static boolean equals(final Type t1, final Type t2) {
         if (t1 == t2) {
             return true;
@@ -1402,7 +1390,6 @@ public class TypeUtils {
      * @param p LHS
      * @param t RHS
      * @return boolean
-     * @since 3.2
      */
     private static boolean equals(final ParameterizedType p, final Type t) {
         if (t instanceof ParameterizedType) {
@@ -1419,7 +1406,6 @@ public class TypeUtils {
      * @param a LHS
      * @param t RHS
      * @return boolean
-     * @since 3.2
      */
     private static boolean equals(final GenericArrayType a, final Type t) {
         return t instanceof GenericArrayType
@@ -1431,7 +1417,6 @@ public class TypeUtils {
      * @param w LHS
      * @param t RHS
      * @return boolean
-     * @since 3.2
      */
     private static boolean equals(final WildcardType w, final Type t) {
         if (t instanceof WildcardType) {
@@ -1447,7 +1432,6 @@ public class TypeUtils {
      * @param t1 LHS
      * @param t2 RHS
      * @return boolean
-     * @since 3.2
      */
     private static boolean equals(final Type[] t1, final Type[] t2) {
         if (t1.length == t2.length) {
@@ -1466,7 +1450,6 @@ public class TypeUtils {
      *
      * @param type the type to create a String representation for, not {@code null}
      * @return String
-     * @since 3.2
      */
     public static String toString(final Type type) {
         Validate.notNull(type);
@@ -1493,7 +1476,6 @@ public class TypeUtils {
      * Format a {@link Class} as a {@link String}.
      * @param c {@code Class} to format
      * @return String
-     * @since 3.2
      */
     private static String classToString(final Class<?> c) {
         final StringBuilder buf = new StringBuilder();
@@ -1515,7 +1497,6 @@ public class TypeUtils {
      * Format a {@link TypeVariable} as a {@link String}.
      * @param v {@code TypeVariable} to format
      * @return String
-     * @since 3.2
      */
     private static String typeVariableToString(final TypeVariable<?> v) {
         final StringBuilder buf = new StringBuilder(v.getName());
@@ -1531,7 +1512,6 @@ public class TypeUtils {
      * Format a {@link ParameterizedType} as a {@link String}.
      * @param p {@code ParameterizedType} to format
      * @return String
-     * @since 3.2
      */
     private static String parameterizedTypeToString(final ParameterizedType p) {
         final StringBuilder buf = new StringBuilder();
@@ -1558,7 +1538,6 @@ public class TypeUtils {
      * Format a {@link WildcardType} as a {@link String}.
      * @param w {@code WildcardType} to format
      * @return String
-     * @since 3.2
      */
     private static String wildcardTypeToString(final WildcardType w) {
         final StringBuilder buf = new StringBuilder().append('?');
@@ -1576,7 +1555,6 @@ public class TypeUtils {
      * Format a {@link GenericArrayType} as a {@link String}.
      * @param g {@code GenericArrayType} to format
      * @return String
-     * @since 3.2
      */
     private static String genericArrayTypeToString(final GenericArrayType g) {
         return String.format("%s[]", toString(g.getGenericComponentType()));
@@ -1588,7 +1566,6 @@ public class TypeUtils {
      * @param sep separator
      * @param types to append
      * @return {@code buf}
-     * @since 3.2
      */
     private static StringBuilder appendAllTo(final StringBuilder buf, final String sep, final Type... types) {
         if (types.length > 0) {

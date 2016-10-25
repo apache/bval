@@ -171,13 +171,12 @@ public class Jsr303Test extends ValidationTestBase {
         Set<ConstraintViolation<MaxTestEntity>> violations = validator.validate(entity);
         assertEquals(4, violations.size());
     }
-    
+
     @Test
     public void testConstraintValidatorResolutionAlgorithm2() {
         thrown.expect(UnexpectedTypeException.class);
         thrown.expectMessage("No validator could be found for type java.lang.Object. "
-                + "See: @Max at private java.lang.Object org.apache.bval.jsr.example."
-                + "NoValidatorTestEntity.anything");
+            + "See: @Max at private java.lang.Object org.apache.bval.jsr.example." + "NoValidatorTestEntity.anything");
 
         NoValidatorTestEntity entity2 = new NoValidatorTestEntity();
         validator.validate(entity2);

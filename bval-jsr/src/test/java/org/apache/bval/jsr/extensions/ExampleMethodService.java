@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.extensions;
 
-
 import org.apache.bval.constraints.NotEmpty;
 
 import javax.validation.Valid;
@@ -42,28 +41,28 @@ public class ExampleMethodService {
     public String concat(@NotNull @NotEmpty String s1, @NotNull String s2) {
         return s1 + s2;
     }
-    
-    public void save(@Pattern(regexp="[a-f0-9]{4}") String data) {
-    	return;
+
+    public void save(@Pattern(regexp = "[a-f0-9]{4}") String data) {
+        return;
     }
-    
+
     @NotNull
-    @Size(min=3,max=10)
-    public String echo(@NotNull @Size(min=3,max=10) String str) {
-    	return str;
+    @Size(min = 3, max = 10)
+    public String echo(@NotNull @Size(min = 3, max = 10) String str) {
+        return str;
     }
-    
+
     public void personOp1(@Valid Person p) {
         return;
     }
-    
+
     public void personOp2(@NotNull @Valid Person p) {
         return;
     }
-    
+
     public static class Person {
         @NotNull
         String name;
     }
-    
+
 }

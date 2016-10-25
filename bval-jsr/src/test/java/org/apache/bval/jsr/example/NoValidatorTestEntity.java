@@ -26,5 +26,5 @@ import javax.validation.constraints.Max;
 public class NoValidatorTestEntity {
     @Max(20)
     private Object anything;
-    
+
 }

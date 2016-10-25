@@ -37,7 +37,6 @@ public class FutureValidatorForCalendar implements ConstraintValidator<Future, C
         return cal == null || cal.after(now());
     }
 
-
     /**
      * overwrite when you need a different algorithm for 'now'.
      *

@@ -297,8 +297,8 @@ public class ValidationTest extends ValidationTestBase {
     }
 
     @Test
-    public void testValidateNestedPropertyPath() throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+    public void testValidateNestedPropertyPath()
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         final String propPath = "addresses[0].country.ISO2Code";
 
         Author author = new Author();
@@ -331,8 +331,8 @@ public class ValidationTest extends ValidationTestBase {
     }
 
     @Test
-    public void testValidateCascadingNestedBean() throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+    public void testValidateCascadingNestedBean()
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         final String propPath = "addresses[0]";
 
         CascadingPropertyValidator v = validator.unwrap(CascadingPropertyValidator.class);
@@ -375,8 +375,8 @@ public class ValidationTest extends ValidationTestBase {
     }
 
     @Test
-    public void testValidateCascadingNestedProperty() throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+    public void testValidateCascadingNestedProperty()
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         final String propPath = "addresses[0].country";
 
         CascadingPropertyValidator v = validator.unwrap(CascadingPropertyValidator.class);
@@ -436,8 +436,8 @@ public class ValidationTest extends ValidationTestBase {
     }
 
     @Test
-    public void testValidateCascadingKeyedElement() throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+    public void testValidateCascadingKeyedElement()
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         final String propPath = "[foo]";
 
         CascadingPropertyValidator v = validator.unwrap(CascadingPropertyValidator.class);
@@ -484,8 +484,8 @@ public class ValidationTest extends ValidationTestBase {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testValidateCascadingKeyedGenericElement() throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+    public void testValidateCascadingKeyedGenericElement()
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         final String propPath = "[foo]";
 
         CascadingPropertyValidator v = validator.unwrap(CascadingPropertyValidator.class);
@@ -527,8 +527,8 @@ public class ValidationTest extends ValidationTestBase {
     }
 
     @Test
-    public void testValidateCascadingIndexedElement() throws InvocationTargetException, NoSuchMethodException,
-        IllegalAccessException {
+    public void testValidateCascadingIndexedElement()
+        throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         final String propPath = "[0]";
         CascadingPropertyValidator v = validator.unwrap(CascadingPropertyValidator.class);
         Address value = new Address();
@@ -575,31 +575,31 @@ public class ValidationTest extends ValidationTestBase {
         Object list = Collections.singletonList(value);
         iv = v.validateProperty(list, propPath, true);
         assertEquals(1, iv.size()); // null country
-        
+
         value.setCountry(new Country());
         iv = v.validateProperty(list, propPath, true);
         assertEquals(1, iv.size()); // null country.name
-        
+
         value.getCountry().setName("NWO");
         iv = v.validateProperty(list, propPath, true);
         assertEquals(0, iv.size());
-        
+
         value = new Address();
         value.setCity("whatever");
         value.setAddressline1("1 address line");
         Set<?> iv2;
         iv2 = v.validateValue(List.class, propPath, value, true);
         assertEquals(1, iv2.size()); // null country
-        
+
         value.setCountry(new Country());
         iv2 = v.validateValue(List.class, propPath, value, true);
         assertEquals(1, iv2.size()); // null country.name
-        
+
         value.getCountry().setName("NWO");
         iv2 = v.validateValue(List.class, propPath, value, true);
         assertEquals(0, iv2.size());
     }
-    
+
     public interface Foo {
     }
 
@@ -678,7 +678,8 @@ public class ValidationTest extends ValidationTestBase {
     @Test
     public void testKeyedMetadata() {
         @SuppressWarnings("serial")
-        BeanDescriptor beanDescriptor = validator.getConstraintsForClass(new HashMap<String, Object>() {}.getClass());
+        BeanDescriptor beanDescriptor = validator.getConstraintsForClass(new HashMap<String, Object>() {
+        }.getClass());
         assertNotNull(beanDescriptor);
         assertFalse(beanDescriptor.isBeanConstrained());
         assertNull(beanDescriptor.getConstraintsForProperty("[foo]"));
@@ -710,8 +711,8 @@ public class ValidationTest extends ValidationTestBase {
 
     @Test
     public void testValidateClassImplementingCloneable() {
-    	Set<ConstraintViolation<TestCloneableClass>> errors = validator.validate(new TestCloneableClass());
-    	assertTrue(errors.isEmpty());
+        Set<ConstraintViolation<TestCloneableClass>> errors = validator.validate(new TestCloneableClass());
+        assertTrue(errors.isEmpty());
     }
 
     @Test

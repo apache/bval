@@ -75,7 +75,8 @@ public class XMLMetaBean extends XMLFeaturesCapable {
     }
 
     public void addProperty(XMLMetaProperty property) {
-        if (properties == null) properties = new ArrayList<XMLMetaProperty>();
+        if (properties == null)
+            properties = new ArrayList<XMLMetaProperty>();
         properties.add(property);
     }
 
@@ -102,9 +103,11 @@ public class XMLMetaBean extends XMLFeaturesCapable {
     }
 
     private XMLMetaProperty findProperty(String name) {
-        if (properties == null) return null;
+        if (properties == null)
+            return null;
         for (XMLMetaProperty prop : properties) {
-            if (name.equals(prop.getName())) return prop;
+            if (name.equals(prop.getName()))
+                return prop;
         }
         return null;
     }
@@ -117,9 +120,9 @@ public class XMLMetaBean extends XMLFeaturesCapable {
         this.beanRelations = beanRelations;
     }
 
-
     public void addBeanRef(XMLMetaBeanReference beanRelation) {
-        if (beanRelations == null) beanRelations = new ArrayList<XMLMetaBeanReference>();
+        if (beanRelations == null)
+            beanRelations = new ArrayList<XMLMetaBeanReference>();
         beanRelations.add(beanRelation);
     }
 
@@ -146,9 +149,11 @@ public class XMLMetaBean extends XMLFeaturesCapable {
     }
 
     private XMLMetaBeanReference findBeanRef(String name) {
-        if (beanRelations == null) return null;
+        if (beanRelations == null)
+            return null;
         for (XMLMetaBeanReference relation : beanRelations) {
-            if (name.equals(relation.getName())) return relation;
+            if (name.equals(relation.getName()))
+                return relation;
         }
         return null;
     }

@@ -16,7 +16,6 @@
  */
 package org.apache.bval.util;
 
-
 /**
  * Some used Validate from commons.
  *
@@ -35,7 +34,6 @@ public final class Validate {
         }
         return object;
     }
-
 
     public static void isTrue(final boolean expression, final String message, final Object... values) {
         if (expression == false) {

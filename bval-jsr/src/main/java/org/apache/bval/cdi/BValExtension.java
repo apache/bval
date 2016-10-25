@@ -42,7 +42,6 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.MethodType;
 
-
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -61,7 +60,7 @@ public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
     private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER = new AnnotatedTypeFilter() {
-        
+
         @Override
         public boolean accept(AnnotatedType<?> annotatedType) {
             return !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
@@ -93,14 +92,17 @@ public class BValExtension implements Extension {
         config = Validation.byDefaultProvider().configure();
         try {
             final BootstrapConfiguration bootstrap = config.getBootstrapConfiguration();
-            globalExecutableTypes = Collections.unmodifiableSet(convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes()));
+            globalExecutableTypes =
+                Collections.unmodifiableSet(convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes()));
             isExecutableValidationEnabled = bootstrap.isExecutableValidationEnabled();
 
             // TODO we never contain IMPLICIT or ALL
-            validBean = globalExecutableTypes.contains(ExecutableType.IMPLICIT) || globalExecutableTypes.contains(ExecutableType.ALL);
+            validBean = globalExecutableTypes.contains(ExecutableType.IMPLICIT)
+                || globalExecutableTypes.contains(ExecutableType.ALL);
             validConstructors = validBean || globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS);
             validBusinessMethods = validBean || globalExecutableTypes.contains(ExecutableType.NON_GETTER_METHODS);
-            validGetterMethods = globalExecutableTypes.contains(ExecutableType.ALL) || globalExecutableTypes.contains(ExecutableType.GETTER_METHODS);
+            validGetterMethods = globalExecutableTypes.contains(ExecutableType.ALL)
+                || globalExecutableTypes.contains(ExecutableType.GETTER_METHODS);
         } catch (final Exception e) { // custom providers can throw an exception
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
 
@@ -121,7 +123,8 @@ public class BValExtension implements Extension {
         validator = factory.getValidator();
     }
 
-    private static Set<ExecutableType> convertToRuntimeTypes(final Set<ExecutableType> defaultValidatedExecutableTypes) {
+    private static Set<ExecutableType> convertToRuntimeTypes(
+        final Set<ExecutableType> defaultValidatedExecutableTypes) {
         final Set<ExecutableType> types = EnumSet.noneOf(ExecutableType.class);
         for (final ExecutableType type : defaultValidatedExecutableTypes) {
             if (ExecutableType.NONE == type) {
@@ -172,14 +175,14 @@ public class BValExtension implements Extension {
                 try {
                     final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
                     if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
-                            || hasValidationAnnotation(annotatedType.getMethods())
-                            || hasValidationAnnotation(annotatedType.getConstructors())
-                            || classConstraints != null
-                            && (validBean && classConstraints.isBeanConstrained()
-                                || validConstructors && !classConstraints.getConstrainedConstructors().isEmpty()
-                                || validBusinessMethods && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty()
-                                || validGetterMethods && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())
-                            ) {
+                        || hasValidationAnnotation(annotatedType.getMethods())
+                        || hasValidationAnnotation(annotatedType.getConstructors())
+                        || classConstraints != null && (validBean && classConstraints.isBeanConstrained()
+                            || validConstructors && !classConstraints.getConstrainedConstructors().isEmpty()
+                            || validBusinessMethods
+                                && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty()
+                            || validGetterMethods
+                                && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
                         final BValAnnotatedType<A> bValAnnotatedType = new BValAnnotatedType<A>(annotatedType);
                         pat.setAnnotatedType(bValAnnotatedType);
                     }
@@ -194,7 +197,8 @@ public class BValExtension implements Extension {
         }
     }
 
-    private static <A> boolean hasValidationAnnotation(final Collection<? extends AnnotatedCallable<? super A>> methods) {
+    private static <A> boolean hasValidationAnnotation(
+        final Collection<? extends AnnotatedCallable<? super A>> methods) {
         for (final AnnotatedCallable<? super A> m : methods) {
             if (m.isAnnotationPresent(ValidateOnExecution.class)) {
                 return true;
@@ -299,7 +303,8 @@ public class BValExtension implements Extension {
         private final InjectionTarget<T> injectionTarget;
         private final T instance;
 
-        private Releasable(final CreationalContext<T> context, final InjectionTarget<T> injectionTarget, final T instance) {
+        private Releasable(final CreationalContext<T> context, final InjectionTarget<T> injectionTarget,
+            final T instance) {
             this.context = context;
             this.injectionTarget = injectionTarget;
             this.instance = instance;

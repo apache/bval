@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.groups.inheritance;
 
-
 import org.apache.bval.jsr.groups.Billable;
 
 import javax.validation.groups.Default;

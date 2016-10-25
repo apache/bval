@@ -26,12 +26,14 @@ import org.apache.bval.jsr.util.PathImpl;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ElementKind;
 
-public class NodeContextBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
+public class NodeContextBuilderImpl
+    implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
     private final PathImpl path;
     private final String template;
     private final ConstraintValidatorContextImpl context;
 
-    public NodeContextBuilderImpl(final ConstraintValidatorContextImpl context, final String template, final PathImpl path) {
+    public NodeContextBuilderImpl(final ConstraintValidatorContextImpl context, final String template,
+        final PathImpl path) {
         this.context = context;
         this.template = template;
         this.path = path;
@@ -55,7 +57,8 @@ public class NodeContextBuilderImpl implements ConstraintValidatorContext.Constr
     }
 
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(String name) {
+    public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(
+        String name) {
         return new NodeBuilderCustomizableContextImpl(context, template, path).addPropertyNode(name);
     }
 

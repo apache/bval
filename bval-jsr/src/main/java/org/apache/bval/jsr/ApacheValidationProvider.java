@@ -81,7 +81,8 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
             if (validatorFactoryClassname == null) {
                 validatorFactoryClass = ApacheValidatorFactory.class;
             } else {
-                validatorFactoryClass = Reflection.toClass(validatorFactoryClassname).asSubclass(ValidatorFactory.class);
+                validatorFactoryClass =
+                    Reflection.toClass(validatorFactoryClassname).asSubclass(ValidatorFactory.class);
             }
         } catch (ValidationException ex) {
             throw ex;

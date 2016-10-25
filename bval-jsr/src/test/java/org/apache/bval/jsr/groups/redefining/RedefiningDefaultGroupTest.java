@@ -69,9 +69,7 @@ public class RedefiningDefaultGroupTest extends ValidationTestBase {
          * the group sequence defined on the Address class is used.
          */
         violations = validator.validate(address);
-        assertEquals(
-              "redefined default group for Address must also validate HighLevelCoherence",
-              1, violations.size());
+        assertEquals("redefined default group for Address must also validate HighLevelCoherence", 1, violations.size());
     }
 
     @Test

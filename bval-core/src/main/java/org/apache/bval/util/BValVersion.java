@@ -152,7 +152,7 @@ public class BValVersion {
      * Main method of this class that prints the {@link #toString()} to <code>System.out</code>.
      * @param args ignored
      */
-    public static void main(String [] args) {
+    public static void main(String[] args) {
         System.out.println(new BValVersion().toString());
     }
 

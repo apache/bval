@@ -31,20 +31,12 @@ public class CUSIPValidatorTest extends AbstractCheckDigitTest {
 
     @Override
     protected String[] getValid() {
-        return new String[] {
-            "037833100",
-            "931142103",
-            "837649128",
-            "392690QT3",
-            "594918104",
-            "86770G101",
-            "Y8295N109",
-            "G8572F100"
-        };
+        return new String[] { "037833100", "931142103", "837649128", "392690QT3", "594918104", "86770G101", "Y8295N109",
+            "G8572F100" };
     }
 
     @Override
     protected String[] getInvalid() {
-        return new String[] {"0378#3100"};
+        return new String[] { "0378#3100" };
     }
 }

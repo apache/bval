@@ -45,7 +45,8 @@ public class XMLFeaturesCapable implements Serializable {
 
     public void putFeature(String key, Object value) {
         XMLMetaFeature anno = findFeature(key);
-        if (features == null) features = new ArrayList<XMLMetaFeature>();
+        if (features == null)
+            features = new ArrayList<XMLMetaFeature>();
         if (anno == null) {
             features.add(new XMLMetaFeature(key, value));
         } else {
@@ -66,9 +67,11 @@ public class XMLFeaturesCapable implements Serializable {
     }
 
     private XMLMetaFeature findFeature(String key) {
-        if (features == null) return null;
+        if (features == null)
+            return null;
         for (XMLMetaFeature anno : features) {
-            if (key.equals(anno.getKey())) return anno;
+            if (key.equals(anno.getKey()))
+                return anno;
         }
         return null;
     }
@@ -82,7 +85,8 @@ public class XMLFeaturesCapable implements Serializable {
     }
 
     public void addValidator(String validatorId) {
-        if (validators == null) validators = new ArrayList<XMLMetaValidatorReference>();
+        if (validators == null)
+            validators = new ArrayList<XMLMetaValidatorReference>();
         validators.add(new XMLMetaValidatorReference(validatorId));
     }
 

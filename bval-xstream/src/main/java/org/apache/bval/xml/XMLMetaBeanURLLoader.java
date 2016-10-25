@@ -27,7 +27,8 @@ public class XMLMetaBeanURLLoader implements XMLMetaBeanLoader {
     private final URL url;
 
     public XMLMetaBeanURLLoader(URL url) {
-        if (url == null) throw new NullPointerException("URL required");
+        if (url == null)
+            throw new NullPointerException("URL required");
         this.url = url;
     }
 
@@ -35,8 +36,7 @@ public class XMLMetaBeanURLLoader implements XMLMetaBeanLoader {
     public XMLMetaBeanInfos load() throws IOException {
         InputStream stream = url.openStream();
         try {
-            XMLMetaBeanInfos beanInfos = (XMLMetaBeanInfos) XMLMapper.getInstance()
-                    .getXStream().fromXML(stream);
+            XMLMetaBeanInfos beanInfos = (XMLMetaBeanInfos) XMLMapper.getInstance().getXStream().fromXML(stream);
             beanInfos.setId(url.toExternalForm());
             return beanInfos;
         } finally {

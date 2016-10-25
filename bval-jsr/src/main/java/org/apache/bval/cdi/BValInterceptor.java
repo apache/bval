@@ -124,9 +124,8 @@ public class BValInterceptor implements Serializable {
             return context.proceed();
         }
 
-        final MethodDescriptor constraintsForMethod =
-            validator.getConstraintsForClass(targetClass).getConstraintsForMethod(method.getName(),
-                method.getParameterTypes());
+        final MethodDescriptor constraintsForMethod = validator.getConstraintsForClass(targetClass)
+            .getConstraintsForMethod(method.getName(), method.getParameterTypes());
         if (constraintsForMethod == null) {
             return context.proceed();
         }
@@ -161,7 +160,8 @@ public class BValInterceptor implements Serializable {
         if (constructorValidated == null) {
             synchronized (this) {
                 if (constructorValidated == null) {
-                    final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(constructor.getDeclaringClass());
+                    final AnnotatedType<?> annotatedType =
+                        CDI.current().getBeanManager().createAnnotatedType(constructor.getDeclaringClass());
                     AnnotatedConstructor<?> annotatedConstructor = null;
                     for (final AnnotatedConstructor<?> ac : annotatedType.getConstructors()) {
                         if (!constructor.equals(ac.getJavaMember())) {
@@ -170,16 +170,15 @@ public class BValInterceptor implements Serializable {
                         annotatedConstructor = ac;
                         break;
                     }
-                    final ValidateOnExecution annotation = annotatedConstructor != null ?
-                            annotatedConstructor.getAnnotation(ValidateOnExecution.class) :
-                            targetClass.getConstructor(constructor.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
+                    final ValidateOnExecution annotation = annotatedConstructor != null
+                        ? annotatedConstructor.getAnnotation(ValidateOnExecution.class) : targetClass
+                            .getConstructor(constructor.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
                     if (annotation == null) {
                         constructorValidated = classConfiguration.contains(ExecutableType.CONSTRUCTORS);
                     } else {
                         final Collection<ExecutableType> types = Arrays.asList(annotation.type());
-                        constructorValidated =
-                            types.contains(ExecutableType.CONSTRUCTORS) || types.contains(ExecutableType.IMPLICIT)
-                                || types.contains(ExecutableType.ALL);
+                        constructorValidated = types.contains(ExecutableType.CONSTRUCTORS)
+                            || types.contains(ExecutableType.IMPLICIT) || types.contains(ExecutableType.ALL);
                     }
                 }
             }
@@ -205,7 +204,7 @@ public class BValInterceptor implements Serializable {
                 methodConfig = methodConfiguration.get(method);
                 if (methodConfig == null) {
                     final List<Class<?>> classHierarchy =
-                            ClassHelper.fillFullClassHierarchyAsList(new LinkedList<Class<?>>(), targetClass);
+                        ClassHelper.fillFullClassHierarchyAsList(new LinkedList<Class<?>>(), targetClass);
                     Collections.reverse(classHierarchy);
 
                     // search on method @ValidateOnExecution
@@ -216,7 +215,8 @@ public class BValInterceptor implements Serializable {
                         AnnotatedMethod<?> annotatedMethod = null;
                         for (final AnnotatedMethod<?> m : annotatedType.getMethods()) {
                             if (!m.getJavaMember().getName().equals(method.getName())
-                                    || !asList(method.getGenericParameterTypes()).equals(asList(m.getJavaMember().getGenericParameterTypes()))) {
+                                || !asList(method.getGenericParameterTypes())
+                                    .equals(asList(m.getJavaMember().getGenericParameterTypes()))) {
                                 continue;
                             }
                             annotatedMethod = m;
@@ -286,7 +286,8 @@ public class BValInterceptor implements Serializable {
                 if (classConfiguration == null) {
                     classConfiguration = EnumSet.noneOf(ExecutableType.class);
 
-                    final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(targetClass);
+                    final AnnotatedType<?> annotatedType =
+                        CDI.current().getBeanManager().createAnnotatedType(targetClass);
                     final ValidateOnExecution annotation = annotatedType.getAnnotation(ValidateOnExecution.class);
                     if (annotation == null) {
                         classConfiguration.addAll(globalConfiguration.getGlobalExecutableTypes());
@@ -325,13 +326,13 @@ public class BValInterceptor implements Serializable {
     }
 
     private static boolean doValidMethod(final Method method, final Set<ExecutableType> config) {
-        return isGetter(method) ? config.contains(ExecutableType.GETTER_METHODS) : config
-            .contains(ExecutableType.NON_GETTER_METHODS);
+        return isGetter(method) ? config.contains(ExecutableType.GETTER_METHODS)
+            : config.contains(ExecutableType.NON_GETTER_METHODS);
     }
 
     private static boolean isGetter(final Method method) {
         final String name = method.getName();
         return method.getParameterTypes().length == 0 && !Void.TYPE.equals(method.getReturnType())
             && (name.startsWith("get") || name.startsWith("is") && boolean.class.equals(method.getReturnType()));
-   }
+    }
 }

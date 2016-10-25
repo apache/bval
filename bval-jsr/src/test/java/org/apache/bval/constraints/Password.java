@@ -45,5 +45,5 @@ public @interface Password {
 
     int robustness() default 8;
 
-    Class<? extends Payload>[] payload() default { };
+    Class<? extends Payload>[] payload() default {};
 }

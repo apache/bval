@@ -58,7 +58,7 @@ public class ValidationHelper {
      * @param context
      *            The current validation context.
      */
-    static public void validateContext(ValidationContext<?> context, ValidateCallback s, boolean treatMapsLikeBeans) {
+    public static void validateContext(ValidationContext<?> context, ValidateCallback s, boolean treatMapsLikeBeans) {
         if (context.getBean() != null) {
             if (!treatMapsLikeBeans && context.getBean() instanceof Map<?, ?>) {
                 validateMapInContext(context, s);
@@ -81,7 +81,8 @@ public class ValidationHelper {
      *            object.
      * @param s
      */
-    static protected <VL extends ValidationListener> void validateBeanInContext(ValidationContext<VL> context, ValidateCallback s) {
+    protected static <VL extends ValidationListener> void validateBeanInContext(ValidationContext<VL> context,
+        ValidateCallback s) {
         if (getDynamicMetaBean(context) != null) {
             context.setMetaBean(getDynamicMetaBean(context).resolveMetaBean(context.getBean()));
         }
@@ -96,7 +97,8 @@ public class ValidationHelper {
      * @param context
      *            The validation context, its current bean must be an array.
      */
-    static protected <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context, ValidateCallback s) {
+    protected static <VL extends ValidationListener> void validateArrayInContext(ValidationContext<VL> context,
+        ValidateCallback s) {
         int index = 0;
         DynamicMetaBean dyn = getDynamicMetaBean(context);
         Object[] array = (Object[]) context.getBean();
@@ -130,7 +132,8 @@ public class ValidationHelper {
      *            The validation context, its current bean must implement
      *            {@link Iterable}.
      */
-    static protected <VL extends ValidationListener> void validateIterableInContext(ValidationContext<VL> context, ValidateCallback s) {
+    protected static <VL extends ValidationListener> void validateIterableInContext(ValidationContext<VL> context,
+        ValidateCallback s) {
 
         final boolean positional = context.getBean() instanceof List<?>;
         int index = 0;
@@ -169,7 +172,8 @@ public class ValidationHelper {
      *            The validation context, its current bean must implement
      *            {@link Map}.
      */
-    static protected <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context, ValidateCallback s) {
+    protected static <VL extends ValidationListener> void validateMapInContext(ValidationContext<VL> context,
+        ValidateCallback s) {
         // jsr303 spec: For Map, the value of each Map.Entry is validated (key
         // is not validated).
         Map<?, ?> currentBean = (Map<?, ?>) context.getBean();
@@ -202,15 +206,14 @@ public class ValidationHelper {
      * @return the current {@link DynamicMetaBean} in context, or
      *         <code>null</code> if the current meta bean is not dynamic.
      */
-    static private <VL extends ValidationListener> DynamicMetaBean getDynamicMetaBean(ValidationContext<VL> context) {
+    private static <VL extends ValidationListener> DynamicMetaBean getDynamicMetaBean(ValidationContext<VL> context) {
         return context.getMetaBean() instanceof DynamicMetaBean ? (DynamicMetaBean) context.getMetaBean() : null;
     }
-
 
     /**
      * Validate a single bean only, no related beans will be validated.
      */
-    static public <VL extends ValidationListener> void validateBean(ValidationContext<VL> context) {
+    public static <VL extends ValidationListener> void validateBean(ValidationContext<VL> context) {
         // execute all property level validations
         for (MetaProperty prop : context.getMetaBean().getProperties()) {
             context.setMetaProperty(prop);
@@ -224,12 +227,11 @@ public class ValidationHelper {
         }
     }
 
-
     /**
      * Validate a single property only. Performs all validations
      * for this property.
      */
-    static public <VL extends ValidationListener> void validateProperty(ValidationContext<VL> context) {
+    public static <VL extends ValidationListener> void validateProperty(ValidationContext<VL> context) {
         for (Validation validation : context.getMetaProperty().getValidations()) {
             validation.validate(context);
         }

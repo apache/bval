@@ -73,13 +73,12 @@ public class BeanDescriptorTest extends ValidationTestBase {
      */
     @Test
     public void testCorrectValueForInheritedGroupsAttribute() {
-        Set<ConstraintDescriptor<?>> passwordDescriptors =
-            validator.getConstraintsForClass(Account.class).getConstraintsForProperty("password")
-                .getConstraintDescriptors();
+        Set<ConstraintDescriptor<?>> passwordDescriptors = validator.getConstraintsForClass(Account.class)
+            .getConstraintsForProperty("password").getConstraintDescriptors();
         assertEquals("Incorrect number of descriptors", 1, passwordDescriptors.size());
         ConstraintDescriptor<?> passwordDescriptor = passwordDescriptors.iterator().next();
-        assertEquals("Incorrect number of composing constraints", 1, passwordDescriptor
-            .getComposingConstraints().size());
+        assertEquals("Incorrect number of composing constraints", 1,
+            passwordDescriptor.getComposingConstraints().size());
         ConstraintDescriptor<?> notNullDescriptor = passwordDescriptor.getComposingConstraints().iterator().next();
 
         // Check that the groups value containts Group1.class
@@ -110,10 +109,10 @@ public class BeanDescriptorTest extends ValidationTestBase {
         // Person and the Default group
         Class<?>[] notNullGroups = (Class<?>[]) notNullDescriptor.getAttributes().get("groups");
         assertEquals("Incorrect number of groups", 2, notNullGroups.length);
-        assertTrue("Default group not present", notNullGroups[0].equals(Default.class)
-            || notNullGroups[1].equals(Default.class));
-        assertTrue("Implicit group not present", notNullGroups[0].equals(Person.class)
-            || notNullGroups[1].equals(Person.class));
+        assertTrue("Default group not present",
+            notNullGroups[0].equals(Default.class) || notNullGroups[1].equals(Default.class));
+        assertTrue("Implicit group not present",
+            notNullGroups[0].equals(Person.class) || notNullGroups[1].equals(Person.class));
     }
 
     /**
@@ -179,7 +178,7 @@ public class BeanDescriptorTest extends ValidationTestBase {
     @NotNull(groups = {})
     @Constraint(validatedBy = {})
     @Documented
-    @Target( { METHOD, FIELD, TYPE })
+    @Target({ METHOD, FIELD, TYPE })
     @Retention(RUNTIME)
     public static @interface Password {
         String message() default "Invalid password";

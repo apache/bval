@@ -62,7 +62,8 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
         assertNotNull(ValidationParser.getInputStream("sample-validation.xml"));
 
         // make sure there are duplicate resources on the classpath before the next checks:
-        final Enumeration<URL> resources = Reflection.getClassLoader(ValidationParser.class).getResources("META-INF/MANIFEST.MF");
+        final Enumeration<URL> resources =
+            Reflection.getClassLoader(ValidationParser.class).getResources("META-INF/MANIFEST.MF");
 
         assumeTrue(resources.hasMoreElements());
         resources.nextElement();
@@ -92,8 +93,7 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
     }
 
     private ValidatorFactory getFactory() {
-        ApacheValidatorConfiguration config =
-              Validation.byProvider(ApacheValidationProvider.class).configure();
+        ApacheValidatorConfiguration config = Validation.byProvider(ApacheValidationProvider.class).configure();
         config.addProperty(VALIDATION_XML_PATH, "sample-validation.xml");
         return config.buildValidatorFactory();
     }

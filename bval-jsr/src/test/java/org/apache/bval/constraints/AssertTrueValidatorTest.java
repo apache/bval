@@ -39,16 +39,16 @@ import org.junit.Test;
  * @author Carlos Vara
  */
 public class AssertTrueValidatorTest {
-	
+
     /**
      * Test {@link AssertTrueValidator} with null context.
      */
     @Test
     public void testAssertTrueValidator() {
-    	AssertTrueValidator atv = new AssertTrueValidator();
-    	assertTrue("True value validation must succeed", atv.isValid(true, null));
-    	assertFalse("False value validation must fail", atv.isValid(false, null));
-    	assertTrue("Null value validation must succeed", atv.isValid(null, null));
+        AssertTrueValidator atv = new AssertTrueValidator();
+        assertTrue("True value validation must succeed", atv.isValid(true, null));
+        assertFalse("False value validation must fail", atv.isValid(false, null));
+        assertTrue("Null value validation must succeed", atv.isValid(null, null));
     }
 
 }

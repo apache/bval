@@ -43,20 +43,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = FrenchZipcodeValidator.class)
 @ReportAsSingleViolation
 @Documented
-@Target({ANNOTATION_TYPE, METHOD, FIELD})
+@Target({ ANNOTATION_TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface FrenchZipCode {
-    @OverridesAttribute.List({
-            @OverridesAttribute(constraint = Size.class, name= "min"),
-        @OverridesAttribute(constraint = Size.class, name = "max")})
+    @OverridesAttribute.List({ @OverridesAttribute(constraint = Size.class, name = "min"),
+        @OverridesAttribute(constraint = Size.class, name = "max") })
     int size() default 6;
 
-    @OverridesAttribute(constraint=Size.class, name="message")
+    @OverridesAttribute(constraint = Size.class, name = "message")
     String sizeMessage() default "{error.zipcode.size}";
 
     String message() default "Wrong zipcode";
 
     Class<?>[] groups() default {};
 
-    Class<? extends Payload>[] payload() default { };
+    Class<? extends Payload>[] payload() default {};
 }

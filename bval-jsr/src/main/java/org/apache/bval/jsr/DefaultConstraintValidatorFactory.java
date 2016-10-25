@@ -28,12 +28,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-
 /**
  * Description: create constraint instances with the default / no-arg constructor <br/>
  */
 public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory, Closeable {
-    private final Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
+    private final Collection<BValExtension.Releasable<?>> releasables =
+        new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
     private volatile Boolean useCdi = null; // store it to avoid NoClassDefFoundError when cdi is not present (it is slow) + lazily (to wait cdi is started)
 
     /**

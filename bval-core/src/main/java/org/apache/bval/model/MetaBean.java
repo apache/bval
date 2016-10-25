@@ -214,7 +214,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         }
         if (property == null) {
             this.properties.remove(name);
-        } else {        
+        } else {
             property.setParentMetaBean(this);
             this.properties.put(name, property);
         }
@@ -236,7 +236,7 @@ public class MetaBean extends FeaturesCapable implements Cloneable, Features.Bea
         super.copyInto(target);
         final MetaBean copy = (MetaBean) target;
         if (properties != null) {
-            copy.properties = new TreeMap<String, MetaProperty>();        
+            copy.properties = new TreeMap<String, MetaProperty>();
             for (Map.Entry<String, MetaProperty> entry : properties.entrySet()) {
                 copy.properties.put(entry.getKey(), (MetaProperty) entry.getValue().copy());
             }

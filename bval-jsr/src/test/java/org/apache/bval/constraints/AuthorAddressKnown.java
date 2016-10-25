@@ -36,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 
  * @version $Rev: 999729 $ $Date: 2010-09-21 21:37:54 -0500 (Tue, 21 Sep 2010) $
  */
-@Target( { ANNOTATION_TYPE, METHOD, FIELD })
+@Target({ ANNOTATION_TYPE, METHOD, FIELD })
 @Constraint(validatedBy = AuthorAddressKnown.Validator.class)
 @Retention(RUNTIME)
 public @interface AuthorAddressKnown {
@@ -45,7 +45,7 @@ public @interface AuthorAddressKnown {
 
     Class<?>[] groups() default {};
 
-    Class<? extends Payload>[] payload() default { };
+    Class<? extends Payload>[] payload() default {};
 
     public static class Validator implements ConstraintValidator<AuthorAddressKnown, Author> {
 

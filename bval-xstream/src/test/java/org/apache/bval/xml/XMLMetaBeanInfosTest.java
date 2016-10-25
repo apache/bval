@@ -125,25 +125,19 @@ public class XMLMetaBeanInfosTest {
         infos.getBeans().add(bean2);
 
         String xml = XMLMapper.getInstance().getXStream().toXML(infos);
-        XMLMetaBeanInfos infos2 =
-              (XMLMetaBeanInfos) XMLMapper.getInstance().getXStream().fromXML(xml);
+        XMLMetaBeanInfos infos2 = (XMLMetaBeanInfos) XMLMapper.getInstance().getXStream().fromXML(xml);
         assertEquals(2, infos2.getBeans().size());
     }
 
     @Test
     public void testMaxValueParsing() {
-        String xml = "\n" +
-              "<beanInfos>  <bean id=\"org.apache.bval.test.model.Profile\">\n" +
-              "    <property name=\"activationDay\" minValue=\"1\" maxValue=\"31\"/>\n" +
-              "    <property name=\"activationMonth\" minValue=\"1\" maxValue=\"12\"/>\n" +
-              "  </bean></beanInfos>";
-        XMLMetaBeanInfos beanInfos = (XMLMetaBeanInfos) XMLMapper.getInstance()
-              .getXStream().fromXML(xml);
+        String xml = "\n" + "<beanInfos>  <bean id=\"org.apache.bval.test.model.Profile\">\n"
+            + "    <property name=\"activationDay\" minValue=\"1\" maxValue=\"31\"/>\n"
+            + "    <property name=\"activationMonth\" minValue=\"1\" maxValue=\"12\"/>\n" + "  </bean></beanInfos>";
+        XMLMetaBeanInfos beanInfos = (XMLMetaBeanInfos) XMLMapper.getInstance().getXStream().fromXML(xml);
         assertNotNull(beanInfos);
-        assertEquals(Integer.valueOf(31),
-              beanInfos.getBeans().get(0).getProperty("activationDay").getMaxValue());
-        assertEquals(Integer.valueOf(1),
-              beanInfos.getBeans().get(0).getProperty("activationDay").getMinValue());
+        assertEquals(Integer.valueOf(31), beanInfos.getBeans().get(0).getProperty("activationDay").getMaxValue());
+        assertEquals(Integer.valueOf(1), beanInfos.getBeans().get(0).getProperty("activationDay").getMinValue());
     }
 
 }

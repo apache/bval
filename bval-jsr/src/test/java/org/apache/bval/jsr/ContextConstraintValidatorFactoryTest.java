@@ -46,45 +46,45 @@ import org.junit.Test;
  */
 public class ContextConstraintValidatorFactoryTest extends ValidationTestBase {
 
-	@Documented
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
-	@Constraint(validatedBy = { Contrived.Validator.class })
-	public @interface Contrived {
-		String message() default "{org.apache.bval.constraints.Contrived.message}";
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+    @Constraint(validatedBy = { Contrived.Validator.class })
+    public @interface Contrived {
+        String message() default "{org.apache.bval.constraints.Contrived.message}";
 
-		Class<?>[] groups() default {};
+        Class<?>[] groups() default {};
 
-		Class<? extends Payload>[] payload() default {};
+        Class<? extends Payload>[] payload() default {};
 
-		public static class Validator implements ConstraintValidator<Contrived, Object> {
-			private Object requiredCollaborator;
+        public static class Validator implements ConstraintValidator<Contrived, Object> {
+            private Object requiredCollaborator;
 
-			public Object getRequiredCollaborator() {
-				return requiredCollaborator;
-			}
+            public Object getRequiredCollaborator() {
+                return requiredCollaborator;
+            }
 
-			public void setRequiredCollaborator(Object requiredCollaborator) {
-				this.requiredCollaborator = requiredCollaborator;
-			}
+            public void setRequiredCollaborator(Object requiredCollaborator) {
+                this.requiredCollaborator = requiredCollaborator;
+            }
 
-			@Override
+            @Override
             public void initialize(Contrived constraintAnnotation) {
-			}
+            }
 
-			@Override
+            @Override
             public boolean isValid(Object value, ConstraintValidatorContext context) {
-				getRequiredCollaborator().toString();
-				return true;
-			}
+                getRequiredCollaborator().toString();
+                return true;
+            }
 
-		}
+        }
 
-	}
+    }
 
-	@Contrived
-	public static class Example {
-	}
+    @Contrived
+    public static class Example {
+    }
 
     @Override
     protected Validator createValidator() {
@@ -110,9 +110,9 @@ public class ContextConstraintValidatorFactoryTest extends ValidationTestBase {
         return factory.usingContext().constraintValidatorFactory(constraintValidatorFactory).getValidator();
     }
 
-	@Test
-	public void testContextBoundConstraintValidatorFactory() {
-		final Set<ConstraintViolation<Example>> violations = validator.validate(new Example());
-		assertTrue(violations.isEmpty());
-	}
+    @Test
+    public void testContextBoundConstraintValidatorFactory() {
+        final Set<ConstraintViolation<Example>> violations = validator.validate(new Example());
+        assertTrue(violations.isEmpty());
+    }
 }

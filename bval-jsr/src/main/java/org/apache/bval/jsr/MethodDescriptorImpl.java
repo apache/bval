@@ -25,7 +25,8 @@ import java.lang.reflect.Method;
 /**
  * Description: {@link MethodDescriptor} implementation.<br/>
  */
-public class MethodDescriptorImpl extends InvocableElementDescriptor implements javax.validation.metadata.MethodDescriptor, ProcedureDescriptor {
+public class MethodDescriptorImpl extends InvocableElementDescriptor
+    implements javax.validation.metadata.MethodDescriptor, ProcedureDescriptor {
     private static final Validation[] EMPTY_VALIDATION = new Validation[0];
 
     private final String name;

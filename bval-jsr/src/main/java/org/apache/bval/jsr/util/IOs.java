@@ -38,17 +38,17 @@ public class IOs {
         /*if (stream.markSupported()) {
             return stream;
         } else {*/
-            try {
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                final byte[] buffer = new byte[1024];
-                int length;
-                while ((length = stream.read(buffer)) != -1) {
-                    baos.write(buffer, 0, length);
-                }
-                return new ByteArrayInputStream(baos.toByteArray());
-            } catch (final IOException e) {
-                throw new RuntimeException(e);
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final byte[] buffer = new byte[1024];
+            int length;
+            while ((length = stream.read(buffer)) != -1) {
+                baos.write(buffer, 0, length);
             }
+            return new ByteArrayInputStream(baos.toByteArray());
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
         /*}*/
     }
 

@@ -34,13 +34,11 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     private static final boolean LOG_FINEST = log.isLoggable(Level.FINEST);
 
     /** Class to load to check whether JPA 2 is on the classpath. */
-    private static final String PERSISTENCE_UTIL_CLASSNAME =
-          "javax.persistence.PersistenceUtil";
+    private static final String PERSISTENCE_UTIL_CLASSNAME = "javax.persistence.PersistenceUtil";
 
     /** Class to instantiate in case JPA 2 is on the classpath. */
     private static final String JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME =
-          "org.apache.bval.jsr.resolver.JPATraversableResolver";
-
+        "org.apache.bval.jsr.resolver.JPATraversableResolver";
 
     private TraversableResolver jpaTR;
 
@@ -55,22 +53,20 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
      * {@inheritDoc}
      */
     @Override
-    public boolean isReachable(Object traversableObject, Path.Node traversableProperty,
-                               Class<?> rootBeanType, Path pathToTraversableObject,
-                               ElementType elementType) {
-        return jpaTR == null || jpaTR.isReachable(traversableObject, traversableProperty,
-              rootBeanType, pathToTraversableObject, elementType);
+    public boolean isReachable(Object traversableObject, Path.Node traversableProperty, Class<?> rootBeanType,
+        Path pathToTraversableObject, ElementType elementType) {
+        return jpaTR == null || jpaTR.isReachable(traversableObject, traversableProperty, rootBeanType,
+            pathToTraversableObject, elementType);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isCascadable(Object traversableObject, Path.Node traversableProperty,
-                                Class<?> rootBeanType, Path pathToTraversableObject,
-                                ElementType elementType) {
-        return jpaTR == null || jpaTR.isCascadable(traversableObject, traversableProperty,
-              rootBeanType, pathToTraversableObject, elementType);
+    public boolean isCascadable(Object traversableObject, Path.Node traversableProperty, Class<?> rootBeanType,
+        Path pathToTraversableObject, ElementType elementType) {
+        return jpaTR == null || jpaTR.isCascadable(traversableObject, traversableProperty, rootBeanType,
+            pathToTraversableObject, elementType);
     }
 
     /** Tries to load detect and load JPA. */
@@ -83,19 +79,27 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
                 log.log(Level.FINEST, String.format("Found %s on classpath.", PERSISTENCE_UTIL_CLASSNAME));
             }
         } catch (final Exception e) {
-            log.log(Level.FINEST, String.format("Cannot find %s on classpath. All properties will per default be traversable.", PERSISTENCE_UTIL_CLASSNAME));
+            log.log(Level.FINEST,
+                String.format("Cannot find %s on classpath. All properties will per default be traversable.",
+                    PERSISTENCE_UTIL_CLASSNAME));
             return;
         }
 
         try {
             Class<? extends TraversableResolver> jpaAwareResolverClass =
-              (Class<? extends TraversableResolver>) Reflection.toClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME, classLoader);
+                (Class<? extends TraversableResolver>) Reflection.toClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME,
+                    classLoader);
             jpaTR = jpaAwareResolverClass.newInstance();
             if (LOG_FINEST) {
-                log.log(Level.FINEST, String.format("Instantiated an instance of %s.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME));
+                log.log(Level.FINEST,
+                    String.format("Instantiated an instance of %s.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME));
             }
         } catch (final Exception e) {
-            log.log(Level.WARNING, String.format("Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME), e);
+            log.log(Level.WARNING,
+                String.format(
+                    "Unable to load or instantiate JPA aware resolver %s. All properties will per default be traversable.",
+                    JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME),
+                e);
         }
     }
 

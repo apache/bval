@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.example;
 
-
 import org.apache.bval.constraints.ZipCodeCityCoherence;
 
 import javax.validation.GroupSequence;
@@ -96,7 +95,7 @@ public class Address implements ZipCodeCityCarrier {
      * Check both basic constraints and high level ones.
      * High level constraints are not checked if basic constraints fail.
      */
-    @GroupSequence(value = {Default.class, HighLevelCoherence.class})
+    @GroupSequence(value = { Default.class, HighLevelCoherence.class })
     public interface Complete {
     }
 }

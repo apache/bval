@@ -80,9 +80,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     private Class<? extends ConstraintValidator<T, ?>>[] validatorClasses;
     private ConstraintTarget validationAppliesTo = null;
 
-    public ConstraintValidation(Class<? extends ConstraintValidator<T, ?>>[] validatorClasses,
-                                T annotation, Class<?> owner, AccessStrategy access,
-                                boolean reportFromComposite, ConstraintTarget target) {
+    public ConstraintValidation(Class<? extends ConstraintValidator<T, ?>>[] validatorClasses, T annotation,
+        Class<?> owner, AccessStrategy access, boolean reportFromComposite, ConstraintTarget target) {
         this.attributes = new HashMap<String, Object>();
         this.validatorClasses = validatorClasses != null ? validatorClasses.clone() : null;
         this.annotation = annotation;
@@ -156,8 +155,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             synchronized (this) {
                 if (validator == null) {
                     try {
-                        validator = getConstraintValidator(
-                                context.getConstraintValidatorFactory(), annotation, validatorClasses, owner, access);
+                        validator = getConstraintValidator(context.getConstraintValidatorFactory(), annotation,
+                            validatorClasses, owner, access);
                         if (validator != null) {
                             validator.initialize(annotation);
                         }
@@ -235,7 +234,7 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
     }
 
     private <A extends Annotation> ConstraintValidator<A, ? super T> getConstraintValidator(
-            ConstraintValidatorFactory factory, A annotation,
+        ConstraintValidatorFactory factory, A annotation,
         Class<? extends ConstraintValidator<A, ?>>[] constraintClasses, Class<?> owner, AccessStrategy access) {
         if (ObjectUtils.isNotEmpty(constraintClasses)) {
             final Type type = determineTargetedType(owner, access);
@@ -248,7 +247,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
              * T and not a supertype of the chosen ConstraintValidator supported
              * type.
              */
-            final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorTypes = getValidatorsTypes(constraintClasses);
+            final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorTypes =
+                getValidatorsTypes(constraintClasses);
             reduceTarget(validatorTypes, access);
 
             final List<Type> assignableTypes = new ArrayList<Type>(constraintClasses.length);
@@ -262,7 +262,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                     "Only a validator for Object or Object[] should be provided for cross-parameter validators");
             }
 
-            final Collection<Class<? extends ConstraintValidator<A, ?>>> key = validatorTypes.get(assignableTypes.get(0));
+            final Collection<Class<? extends ConstraintValidator<A, ?>>> key =
+                validatorTypes.get(assignableTypes.get(0));
             if (key.size() > 1) {
                 final String message = "Factory returned " + key.size() + " validators";
                 if (ParametersAccess.class.isInstance(access)) { // cross parameter
@@ -272,7 +273,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             }
 
             @SuppressWarnings("unchecked")
-            final ConstraintValidator<A, ? super T> validator = (ConstraintValidator<A, ? super T>) factory.getInstance(key.iterator().next());
+            final ConstraintValidator<A, ? super T> validator =
+                (ConstraintValidator<A, ? super T>) factory.getInstance(key.iterator().next());
             if (validator == null) {
                 throw new ValidationException("Factory returned null validator for: " + key);
 
@@ -283,8 +285,11 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         return null;
     }
 
-    private <A extends Annotation> void reduceTarget(final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validator, final AccessStrategy access) {
-        for (final Map.Entry<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> entry : validator.entrySet()) {
+    private <A extends Annotation> void reduceTarget(
+        final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validator,
+        final AccessStrategy access) {
+        for (final Map.Entry<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> entry : validator
+            .entrySet()) {
             final Collection<Class<? extends ConstraintValidator<A, ?>>> validators = entry.getValue();
             final Iterator<Class<? extends ConstraintValidator<A, ?>>> it = validators.iterator();
             while (it.hasNext()) {
@@ -297,7 +302,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                 final SupportedValidationTarget target = clazz.getAnnotation(SupportedValidationTarget.class);
                 if (target != null) {
                     final Collection<ValidationTarget> targets = Arrays.asList(target.value());
-                    final boolean isParameter = ParameterAccess.class.isInstance(access) || ParametersAccess.class.isInstance(access);
+                    final boolean isParameter =
+                        ParameterAccess.class.isInstance(access) || ParametersAccess.class.isInstance(access);
                     if ((isParameter && !targets.contains(ValidationTarget.PARAMETERS))
                         || (!isParameter && !targets.contains(ValidationTarget.ANNOTATED_ELEMENT))) {
                         it.remove();
@@ -314,23 +320,25 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         AccessStrategy access) {
 
         if (types.isEmpty()) {
-            final String message = "No validator could be found for type " + stringForType(targetType)
-                + ". See: @" + anno.annotationType().getSimpleName() + " at " + stringForLocation(owner, access);
+            final String message = "No validator could be found for type " + stringForType(targetType) + ". See: @"
+                + anno.annotationType().getSimpleName() + " at " + stringForLocation(owner, access);
             if (Object[].class.equals(targetType)) { // cross parameter
                 throw new ConstraintDefinitionException(message);
             }
             throw new UnexpectedTypeException(message);
         }
         if (types.size() > 1) {
-            throw new UnexpectedTypeException(String.format(
-                "Ambiguous validators for type %s. See: @%s at %s. Validators are: %s", stringForType(targetType), anno
-                    .annotationType().getSimpleName(), stringForLocation(owner, access), StringUtils.join(types, ", ")));
+            throw new UnexpectedTypeException(
+                String.format("Ambiguous validators for type %s. See: @%s at %s. Validators are: %s",
+                    stringForType(targetType), anno.annotationType().getSimpleName(), stringForLocation(owner, access),
+                    StringUtils.join(types, ", ")));
         }
     }
 
     private static String stringForType(Type clazz) {
         if (clazz instanceof Class<?>) {
-            return ((Class<?>) clazz).isArray() ? ((Class<?>) clazz).getComponentType().getName() + "[]" : ((Class<?>) clazz).getName();
+            return ((Class<?>) clazz).isArray() ? ((Class<?>) clazz).getComponentType().getName() + "[]"
+                : ((Class<?>) clazz).getName();
         }
         return clazz.toString();
     }
@@ -380,9 +388,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
         final Map<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>> validatorsTypes =
             new HashMap<Type, Collection<Class<? extends ConstraintValidator<A, ?>>>>();
         for (Class<? extends ConstraintValidator<A, ?>> validatorType : constraintValidatorClasses) {
-            Type validatedType =
-                TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class).get(
-                    ConstraintValidator.class.getTypeParameters()[1]);
+            Type validatedType = TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class)
+                .get(ConstraintValidator.class.getTypeParameters()[1]);
             if (validatedType == null) {
                 throw new ValidationException(String.format("Could not detect validated type for %s", validatorType));
             }
@@ -428,9 +435,10 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
                 // Either a "legit" problem initializing the validator or a
                 // ClassCastException if the validator associated annotation is
                 // not a supertype of the validated annotation.
-                throw new ConstraintDefinitionException("Incorrect validator ["
-                    + validator.getClass().getCanonicalName() + "] for annotation "
-                    + annotation.annotationType().getCanonicalName(), e);
+                throw new ConstraintDefinitionException(
+                    "Incorrect validator [" + validator.getClass().getCanonicalName() + "] for annotation "
+                        + annotation.annotationType().getCanonicalName(),
+                    e);
             }
         }
     }
@@ -558,7 +566,8 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      */
     @Override
     public List<Class<? extends ConstraintValidator<T, ?>>> getConstraintValidatorClasses() {
-        return validatorClasses == null ? Collections.<Class<? extends ConstraintValidator<T, ?>>> emptyList() : Arrays.asList(validatorClasses);
+        return validatorClasses == null ? Collections.<Class<? extends ConstraintValidator<T, ?>>> emptyList()
+            : Arrays.asList(validatorClasses);
     }
 
     public void setValidationAppliesTo(final ConstraintTarget validationAppliesTo) {

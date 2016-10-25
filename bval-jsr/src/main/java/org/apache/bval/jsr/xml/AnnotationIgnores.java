@@ -47,11 +47,13 @@ public final class AnnotationIgnores {
      * <code>true</code> in the configuration
      * for this class.
      */
-    private final Map<Class<?>, Map<Member, Boolean>> ignoreAnnotationOnMember = new HashMap<Class<?>, Map<Member, Boolean>>();
+    private final Map<Class<?>, Map<Member, Boolean>> ignoreAnnotationOnMember =
+        new HashMap<Class<?>, Map<Member, Boolean>>();
 
     private final Map<Class<?>, Boolean> ignoreAnnotationOnClass = new HashMap<Class<?>, Boolean>();
 
-    private final Map<Class<?>, Map<Member, Map<Integer, Boolean>>> ignoreAnnotationOnParameter = new HashMap<Class<?>, Map<Member, Map<Integer, Boolean>>>();
+    private final Map<Class<?>, Map<Member, Map<Integer, Boolean>>> ignoreAnnotationOnParameter =
+        new HashMap<Class<?>, Map<Member, Map<Integer, Boolean>>>();
     private final Map<Member, Boolean> ignoreAnnotationOnReturn = new HashMap<Member, Boolean>();
     private final Map<Member, Boolean> ignoreAnnotationOnCrossParameter = new HashMap<Member, Boolean>();
 
@@ -70,8 +72,7 @@ public final class AnnotationIgnores {
      * @return boolean
      */
     public boolean getDefaultIgnoreAnnotation(Class<?> clazz) {
-        return ignoreAnnotationDefaults.containsKey(clazz)
-                && ignoreAnnotationDefaults.get(clazz);
+        return ignoreAnnotationDefaults.containsKey(clazz) && ignoreAnnotationDefaults.get(clazz);
     }
 
     /**
@@ -144,7 +145,8 @@ public final class AnnotationIgnores {
         } else {
             type = "Property";
         }
-        log.log(Level.FINEST, String.format("%s level annotations are getting ignored for %s.%s", type, clazz.getName(), member.getName()));
+        log.log(Level.FINEST, String.format("%s level annotations are getting ignored for %s.%s", type, clazz.getName(),
+            member.getName()));
     }
 
     /**
@@ -169,7 +171,7 @@ public final class AnnotationIgnores {
             ignoreAnnotation = getDefaultIgnoreAnnotation(clazz);
         }
         if (ignoreAnnotation) {
-        	log.log(Level.FINEST, String.format("Class level annotation are getting ignored for %s", clazz.getName()));
+            log.log(Level.FINEST, String.format("Class level annotation are getting ignored for %s", clazz.getName()));
         }
         return ignoreAnnotation;
     }

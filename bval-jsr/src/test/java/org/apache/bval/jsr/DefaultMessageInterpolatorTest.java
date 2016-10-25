@@ -49,8 +49,8 @@ public class DefaultMessageInterpolatorTest {
 
         final Validator gvalidator = getValidator();
 
-        assertFalse(gvalidator.getConstraintsForClass(PreferredGuest.class).getConstraintsForProperty(
-            "guestCreditCardNumber").getConstraintDescriptors().isEmpty());
+        assertFalse(gvalidator.getConstraintsForClass(PreferredGuest.class)
+            .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().isEmpty());
 
         MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
 
@@ -110,8 +110,8 @@ public class DefaultMessageInterpolatorTest {
 
             @Override
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return validator.getConstraintsForClass(Person.class)
-                    .getConstraintsForProperty("idNumber").getConstraintDescriptors().iterator().next();
+                return validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                    .getConstraintDescriptors().iterator().next();
             }
 
             @Override
@@ -134,8 +134,8 @@ public class DefaultMessageInterpolatorTest {
 
             @Override
             public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return validator.getConstraintsForClass(Person.class)
-                    .getConstraintsForProperty("otherId").getConstraintDescriptors().iterator().next();
+                return validator.getConstraintsForClass(Person.class).getConstraintsForProperty("otherId")
+                    .getConstraintDescriptors().iterator().next();
             }
 
             @Override

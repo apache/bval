@@ -39,8 +39,9 @@ public class TckReproducerTest extends ValidationTestBase {
 
     private static <T> void assertCorrectNumberOfViolations(Set<ConstraintViolation<T>> violations,
         int expectedViolations) {
-        assertEquals("Wrong number of constraint violations. Expected: " + expectedViolations + " Actual: "
-            + violations.size(), expectedViolations, violations.size());
+        assertEquals(
+            "Wrong number of constraint violations. Expected: " + expectedViolations + " Actual: " + violations.size(),
+            expectedViolations, violations.size());
     }
 
     @Test

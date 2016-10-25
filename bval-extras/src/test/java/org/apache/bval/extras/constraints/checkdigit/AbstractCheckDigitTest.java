@@ -60,7 +60,7 @@ public abstract class AbstractCheckDigitTest {
     protected abstract String[] getValid();
 
     protected String[] getInvalid() {
-        return new String[] {"12345678A"};
+        return new String[] { "12345678A" };
     }
 
     protected String getZeroSum() {
@@ -97,7 +97,7 @@ public abstract class AbstractCheckDigitTest {
     public void testIsValidTrue() {
         // test valid values
         for (int i = 0; i < valid.length; i++) {
-            assertTrue("valid[" + i +"]: " + valid[i], routine.isValid(valid[i], null));
+            assertTrue("valid[" + i + "]: " + valid[i], routine.isValid(valid[i], null));
         }
     }
 
@@ -108,13 +108,14 @@ public abstract class AbstractCheckDigitTest {
     public void testIsValidFalse() {
         // test invalid code values
         for (int i = 0; i < invalid.length; i++) {
-            assertFalse("invalid[" + i +"]: " + invalid[i], routine.isValid(invalid[i], null));
+            assertFalse("invalid[" + i + "]: " + invalid[i], routine.isValid(invalid[i], null));
         }
 
         // test invalid check digit values
         String[] invalidCheckDigits = createInvalidCodes(valid);
         for (int i = 0; i < invalidCheckDigits.length; i++) {
-            assertFalse("invalid check digit[" + i +"]: " + invalidCheckDigits[i], routine.isValid(invalidCheckDigits[i], null));
+            assertFalse("invalid check digit[" + i + "]: " + invalidCheckDigits[i],
+                routine.isValid(invalidCheckDigits[i], null));
         }
     }
 
@@ -147,9 +148,9 @@ public abstract class AbstractCheckDigitTest {
         // create invalid check digit values
         for (int i = 0; i < codes.length; i++) {
             String code = removeCheckDigit(codes[i]);
-            String check  = checkDigit(codes[i]);
+            String check = checkDigit(codes[i]);
             for (int j = 0; j < 10; j++) {
-                String curr =  "" + Character.forDigit(j, 10);
+                String curr = "" + Character.forDigit(j, 10);
                 if (!curr.equals(check)) {
                     list.add(code + curr);
                 }

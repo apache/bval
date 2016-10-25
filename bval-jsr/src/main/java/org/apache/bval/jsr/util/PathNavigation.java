@@ -20,7 +20,9 @@ import javax.validation.ValidationException;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.text.ParsePosition;
 import java.util.logging.Logger;
 
@@ -83,18 +85,65 @@ public class PathNavigation {
         }
     }
 
+    private static class QuotedStringParser {
+        String parseQuotedString(CharSequence path, PathPosition pos) throws Exception {
+            final int len = path.length();
+            final int start = pos.getIndex();
+            if (start < len) {
+                final char quote = path.charAt(start);
+                pos.next();
+                final StringWriter w = new StringWriter();
+                while (pos.getIndex() < len) {
+                    final int here = pos.getIndex();
+                    // look for matching quote
+                    if (path.charAt(here) == quote) {
+                        pos.next();
+                        return w.toString();
+                    }
+                    handleNextChar(path, pos, w);
+                }
+                // if reached, reset due to no ending quote found
+                pos.setIndex(start);
+            }
+            return null;
+        }
+
+        protected void handleNextChar(CharSequence path, PathPosition pos, Writer target) throws IOException {
+            target.write(Character.toChars(Character.codePointAt(path, pos.getIndex())));
+            pos.next();
+        }
+    }
+
+    private static class FullQuotedStringParser extends QuotedStringParser {
+
+        @Override
+        protected void handleNextChar(CharSequence path, PathPosition pos, Writer target) throws IOException {
+            final int 
+                codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, pos.getIndex(), target);
+            if (codePoints == 0) {
+                super.handleNextChar(path, pos, target);
+            } else {
+                for (int i = 0; i < codePoints; i++) {
+                    pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
+                }
+            }
+        }
+
+    }
+
     private static final Logger LOG = Logger.getLogger(PathNavigation.class.getName());
 
-    private static final boolean COMMONS_LANG3_AVAILABLE;
+    private static final QuotedStringParser QUOTED_STRING_PARSER;
+    
     static {
-        boolean b = true;
+        QuotedStringParser quotedStringParser;
         try {
-            new StringEscapeUtils();
+            quotedStringParser = new FullQuotedStringParser();
         } catch (Exception e) {
-            b = false;
             LOG.warning("Apache commons-lang3 is not on the classpath; Java escaping in quotes will not be available.");
+            quotedStringParser = new QuotedStringParser();
         }
-        COMMONS_LANG3_AVAILABLE = b;
+        QUOTED_STRING_PARSER = quotedStringParser;
     }
 
     /**
@@ -196,7 +245,7 @@ public class PathNavigation {
         if (start < len) {
             char first = path.charAt(pos.getIndex());
             if (first == '"' || first == '\'') {
-                String s = parseQuotedString(path, pos);
+                String s = QUOTED_STRING_PARSER.parseQuotedString(path, pos);
                 if (s != null && path.charAt(pos.getIndex()) == ']') {
                     pos.handleIndexOrKey(s);
                     pos.next();
@@ -221,41 +270,6 @@ public class PathNavigation {
             }
         }
         throw new IllegalStateException(String.format("Position %s: unparsable index", start));
-    }
-
-    private static String parseQuotedString(CharSequence path, PathPosition pos) throws Exception {
-        int len = path.length();
-        int start = pos.getIndex();
-        if (start < len) {
-            char quote = path.charAt(start);
-            pos.next();
-            StringWriter w = new StringWriter();
-            while (pos.getIndex() < len) {
-                int here = pos.getIndex();
-                // look for matching quote
-                if (path.charAt(here) == quote) {
-                    pos.next();
-                    return w.toString();
-                }
-                final int codePoints;
-                if (COMMONS_LANG3_AVAILABLE) {
-                    codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, here, w);
-                } else {
-                    codePoints = 0;                    
-                }
-                if (codePoints == 0) {
-                    w.write(Character.toChars(Character.codePointAt(path, here)));
-                    pos.next();
-                } else {
-                    for (int i = 0; i < codePoints; i++) {
-                        pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
-                    }
-                }
-            }
-            // if reached, reset due to no ending quote found
-            pos.setIndex(start);
-        }
-        return null;
     }
 
     /**

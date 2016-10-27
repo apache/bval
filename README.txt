@@ -4,8 +4,8 @@ Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 
 About
 =====
-This is an implementation of JSR 303 (Bean Validation), a specification of the
-Java API for Javabean validation in Java EE and Java SE.
+This is an implementation of the Java Bean Validation (JSRs 303, 349)
+specification for Java EE and Java SE.
 The technical objective is to provide a class level constraint declaration and
 validation facility for the Java application developer, as well as a constraint
 metadata repository and query API.

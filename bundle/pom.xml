@@ -66,9 +66,10 @@
                         <Main-Class>org.apache.bval.util.BValVersion</Main-Class>
                         <Implementation-Title>Apache BVal</Implementation-Title>
                         <Implementation-Build>${buildNumber}</Implementation-Build>
-                        <Specification-Title>JSR-303 Bean Validation</Specification-Title>
-                        <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
-                        <Specification-Version>1.0</Specification-Version>
+                        <Implementation-Vendor>org.apache</Implementation-Vendor>
+                        <Specification-Title>Java Bean Validation</Specification-Title>
+                        <Specification-Vendor>Java Community Process</Specification-Vendor>
+                        <Specification-Version>1.1</Specification-Version>
                         <Bundle-DocURL>${project.url}</Bundle-DocURL>
                         <Embed-Dependency>*;inline=true</Embed-Dependency>
                         <Private-Package />

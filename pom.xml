@@ -40,7 +40,7 @@
     <description>Apache BVal parent pom</description>
 
     <properties>
-        <site.deploy.url>scp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
+        <site.deploy.url>sftp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
         <commons.weaver.version>1.3</commons.weaver.version>
         <privilizer.policy>DYNAMIC</privilizer.policy>
     </properties>

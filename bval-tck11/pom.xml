@@ -23,7 +23,7 @@ under the License.
     <parent>
         <artifactId>bval-parent</artifactId>
         <groupId>org.apache.bval</groupId>
-        <version>1.1.2-SNAPSHOT</version>
+        <version>1.1.2</version>
     </parent>
 
     <artifactId>bval-tck11-runner</artifactId>

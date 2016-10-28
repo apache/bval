@@ -37,18 +37,12 @@
     <description>BVal Metadata Engine</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
         <!-- we only support validation in DynaBeans, but do not use c-beanutils in BVal itself -->
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils-core</artifactId>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-weaver-privilizer-api</artifactId>

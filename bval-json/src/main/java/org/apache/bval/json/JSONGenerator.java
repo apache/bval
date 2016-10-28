@@ -35,7 +35,7 @@ import java.util.Map;
  * This implementation uses a freemarker template to generate the output.<br/>
  *
  * This is an optional module which requires the freemarker dependency
- * and template resourece file "bean-infos-json.ftl" with it.
+ * and template resource file "bean-infos-json.ftl" with it.
  */
 public class JSONGenerator {
     private final Template template;

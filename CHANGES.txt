@@ -52,6 +52,28 @@ How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
+
+Release Notes - BVal - Version 1.1.2
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-105] - Multiple use of @ReportAsSingleViolation composing constraints on one bean leads to internal RuntimeError
+    * [BVAL-117] - EMailValidationUtils matches not at circumflex
+    * [BVAL-137] - Apache Bean Validation fails on CDI proxies when integrated with Weld CDI 1.2
+    * [BVAL-142] - bval-xstream Failed to execute goal org.apache.commons:commons-weaver-maven-plugin
+    * [BVAL-147] - TraversableResolver, ConstraintValidatorFactory and MessageInterpolator shouldnt invalidate the metadata cache
+    * [BVAL-148] - Incorrect double-checked locking
+    * [BVAL-149] - ConstraintViolation contains wrong property
+    * [BVAL-150] - improve performance of empty Annotations
+
+Improvement
+-----------
+
+    * [BVAL-151] - remove dependency on commons-lang
+
+
 Release Notes - BVal - Version 1.1.1
 ==========================================
 

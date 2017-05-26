@@ -308,7 +308,7 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
     }
 
     @Override
-    public <T> T unwrap(Class<T> type) {
+    public <U> U unwrap(Class<U> type) {
         if (type.isInstance(this)) {
             return type.cast(this);
         }

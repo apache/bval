@@ -21,10 +21,40 @@ package org.apache.bval.jsr.util;
 import org.apache.bval.jsr.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
-import javax.validation.ElementKind;
+import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext;
+import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeContextBuilder;
 
 public class LeafNodeBuilderCustomizableContextImpl
     implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext {
+
+    private final class LeafNodeContextBuilderImpl implements LeafNodeContextBuilder {
+        private final LeafNodeBuilderDefinedContext definedContext = new LeafNodeBuilderDefinedContext() {
+
+            @Override
+            public ConstraintValidatorContext addConstraintViolation() {
+                return LeafNodeBuilderCustomizableContextImpl.this.addConstraintViolation();
+            }
+        };
+
+        @Override
+        public LeafNodeBuilderDefinedContext atKey(Object key) {
+            node.setKey(key);
+            return definedContext;
+        }
+
+        @Override
+        public LeafNodeBuilderDefinedContext atIndex(
+            Integer index) {
+            node.setIndex(index);
+            return definedContext;
+        }
+
+        @Override
+        public ConstraintValidatorContext addConstraintViolation() {
+            return LeafNodeBuilderCustomizableContextImpl.this.addConstraintViolation();
+        }
+    }
+
     private final ConstraintValidatorContextImpl context;
     private final PathImpl path;
     private final String template;
@@ -35,41 +65,20 @@ public class LeafNodeBuilderCustomizableContextImpl
         context = parent;
         template = messageTemplate;
         path = propertyPath;
-        node = new NodeImpl((String) null);
-        node.setKind(ElementKind.BEAN);
+        node = new NodeImpl.BeanNodeImpl();
     }
 
     @Override
-    public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeContextBuilder inIterable() {
-        path.getLeafNode().setInIterable(true);
+    public LeafNodeContextBuilder inIterable() {
+        node.setInIterable(true);
         return new LeafNodeContextBuilderImpl();
     }
 
     @Override
     public ConstraintValidatorContext addConstraintViolation() {
+        path.addNode(node);
         context.addError(template, path);
         return context;
     }
 
-    private class LeafNodeContextBuilderImpl
-        implements ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeContextBuilder {
-        @Override
-        public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext atKey(Object key) {
-            path.getLeafNode().setKey(key);
-            return new LeafNodeBuilderDefinedContextImpl(context, template, path);
-        }
-
-        @Override
-        public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext atIndex(
-            Integer index) {
-            path.getLeafNode().setIndex(index);
-            return new LeafNodeBuilderDefinedContextImpl(context, template, path);
-        }
-
-        @Override
-        public ConstraintValidatorContext addConstraintViolation() {
-            context.addError(template, path);
-            return context;
-        }
-    }
 }

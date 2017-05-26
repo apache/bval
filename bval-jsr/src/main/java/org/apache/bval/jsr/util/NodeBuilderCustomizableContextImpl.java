@@ -26,7 +26,7 @@ import javax.validation.ElementKind;
 /**
  * Description: implementation of {@link javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
  */
-final class NodeBuilderCustomizableContextImpl
+public final class NodeBuilderCustomizableContextImpl
     implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {
     private final ConstraintValidatorContextImpl parent;
     private final String messageTemplate;
@@ -40,13 +40,19 @@ final class NodeBuilderCustomizableContextImpl
      * @param path
      * @param name
      */
-    NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path,
+    public NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path,
         String name) {
         parent = contextImpl;
         messageTemplate = template;
         propertyPath = path;
-        node = new NodeImpl(name);
-        node.setKind(ElementKind.PROPERTY);
+
+        if (propertyPath.isRootPath() || propertyPath.getLeafNode().getKind() != null) {
+            node = new NodeImpl.PropertyNodeImpl(name);
+        } else {
+            node = propertyPath.removeLeafNode();
+            node.setName(name);
+            node.setKind(ElementKind.PROPERTY); // enforce it
+        }
     }
 
     /**
@@ -54,7 +60,6 @@ final class NodeBuilderCustomizableContextImpl
      */
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder inIterable() {
-        // Modifies the "previous" node in the path
         node.setInIterable(true);
         return new NodeContextBuilderImpl(parent, messageTemplate, propertyPath, node);
     }
@@ -64,9 +69,7 @@ final class NodeBuilderCustomizableContextImpl
      */
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
-        propertyPath.addNode(node);
-        node = new NodeImpl(name);
-        return this; // Re-use this instance
+        return addPropertyNode(name);
     }
 
     @Override
@@ -74,15 +77,12 @@ final class NodeBuilderCustomizableContextImpl
         String name) {
         propertyPath.addNode(node);
         node = new NodeImpl.PropertyNodeImpl(name);
-        node.setKind(ElementKind.PROPERTY);
-        return null;
+        return this;
     }
 
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
         propertyPath.addNode(node);
-        node = new NodeImpl((String) null);
-        node.setKind(ElementKind.BEAN);
         return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
     }
 

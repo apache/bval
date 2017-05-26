@@ -19,6 +19,7 @@
 package org.apache.bval.jsr;
 
 import org.apache.bval.jsr.util.LeafNodeBuilderCustomizableContextImpl;
+import org.apache.bval.jsr.util.NodeBuilderCustomizableContextImpl;
 import org.apache.bval.jsr.util.NodeBuilderDefinedContextImpl;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
@@ -26,7 +27,6 @@ import org.apache.bval.model.ValidationListener;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import javax.validation.ElementKind;
 import javax.validation.Path;
 import javax.validation.ValidationException;
 import java.lang.reflect.Method;
@@ -125,28 +125,11 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
 
         @Override
         public NodeBuilderCustomizableContext addPropertyNode(String name) {
-            final NodeImpl node;
-            if (!propertyPath.isRootPath()) {
-                if (propertyPath.getLeafNode().getKind() != null) {
-                    node = new NodeImpl.PropertyNodeImpl(name);
-                    propertyPath.addNode(node);
-                } else {
-                    node = propertyPath.getLeafNode();
-                }
-            } else {
-                node = new NodeImpl.PropertyNodeImpl(name);
-                propertyPath.addNode(node);
-            }
-            node.setName(name);
-            node.setKind(ElementKind.PROPERTY); // enforce it
-            return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
+            return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
         }
 
         @Override
         public LeafNodeBuilderCustomizableContext addBeanNode() {
-            final NodeImpl node = new NodeImpl.BeanNodeImpl();
-            node.setKind(ElementKind.BEAN);
-            propertyPath.addNode(node);
             return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
         }
 
@@ -156,8 +139,6 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             final List<String> parameters =
                 parent.validationContext.getParameterNameProvider().getParameterNames(method);
             final NodeImpl node = new NodeImpl.ParameterNodeImpl(parameters.get(index), index);
-            node.setParameterIndex(index);
-            node.setKind(ElementKind.PARAMETER);
             if (!propertyPath.isRootPath()) {
                 propertyPath.removeLeafNode();
             }

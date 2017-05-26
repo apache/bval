@@ -72,19 +72,19 @@ final class NodeContextBuilderImpl implements ConstraintValidatorContext.Constra
      */
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
-        propertyPath.addNode(node);
-        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
+        return addPropertyNode(name);
     }
 
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(
         String name) {
-        propertyPath.addProperty(name);
-        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, node.getName());
+        propertyPath.addNode(node);
+        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
     }
 
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
+        propertyPath.addNode(node);
         return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
     }
 

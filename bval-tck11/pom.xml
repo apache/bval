@@ -32,8 +32,8 @@ under the License.
 
     <properties>
         <tck.version>1.1.4.Final</tck.version>
-        <owb.version>1.6.0</owb.version>
-        <arquillian.version>1.1.8.Final</arquillian.version>
+        <owb.version>1.7.2</owb.version>
+        <arquillian.version>1.1.13.Final</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
 

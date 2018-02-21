@@ -21,6 +21,7 @@ package org.apache.bval.jsr;
 import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
 import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ValidateUnwrappedValue;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -219,5 +220,17 @@ public class ConstraintDescriptorImpl<T extends Annotation> implements Constrain
         result = 31 * result + (validationAppliesTo != null ? validationAppliesTo.hashCode() : 0);
         result = 31 * result + (template != null ? template.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public ValidateUnwrappedValue getValueUnwrapping() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <U> U unwrap(Class<U> arg0) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -32,8 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Description: create constraint instances with the default / no-arg constructor <br/>
  */
 public class DefaultConstraintValidatorFactory implements ConstraintValidatorFactory, Closeable {
-    private final Collection<BValExtension.Releasable<?>> releasables =
-        new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
+    private final Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
     private volatile Boolean useCdi = null; // store it to avoid NoClassDefFoundError when cdi is not present (it is slow) + lazily (to wait cdi is started)
 
     /**
@@ -49,9 +48,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
                 if (useCdi == null) {
                     try {
                         useCdi = BValExtension.getBeanManager() != null;
-                    } catch (final NoClassDefFoundError error) {
-                        useCdi = Boolean.FALSE;
-                    } catch (final Exception e) {
+                    } catch (NoClassDefFoundError | Exception error) {
                         useCdi = Boolean.FALSE;
                     }
                 }
@@ -69,10 +66,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
                         return instance.getInstance();
                     }
                     throw new IllegalStateException("Can't create " + constraintClass.getName());
-                } catch (final Exception e) {
-                    return constraintClass.newInstance();
-                } catch (final NoClassDefFoundError error) {
-                    return constraintClass.newInstance();
+                } catch (Exception | NoClassDefFoundError e) {
                 }
             }
             return constraintClass.newInstance();

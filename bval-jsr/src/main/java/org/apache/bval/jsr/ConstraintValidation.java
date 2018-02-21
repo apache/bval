@@ -39,6 +39,8 @@ import javax.validation.ValidationException;
 import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.ValidateUnwrappedValue;
+
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -54,6 +56,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Description: Adapter between Constraint (JSR303) and Validation (Core)<br/>
@@ -328,10 +331,12 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             throw new UnexpectedTypeException(message);
         }
         if (types.size() > 1) {
-            throw new UnexpectedTypeException(
-                String.format("Ambiguous validators for type %s. See: @%s at %s. Validators are: %s",
-                    stringForType(targetType), anno.annotationType().getSimpleName(), stringForLocation(owner, access),
-                    StringUtils.join(types, ", ")));
+            throw new UnexpectedTypeException(String.format(
+                "Ambiguous validators for type %s. See: @%s at %s. Validators are: %s",
+                stringForType(targetType),
+                anno.annotationType().getSimpleName(),
+                stringForLocation(owner, access), types.stream()
+                    .map(Object::toString).collect(Collectors.joining(", "))));
         }
     }
 
@@ -524,9 +529,13 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Set<ConstraintDescriptor<?>> getComposingConstraints() {
-        return composedConstraints == null ? Collections.EMPTY_SET : composedConstraints;
+        if (composedConstraints == null) {
+            return Collections.emptySet();
+        }
+        final Set result = composedConstraints;
+        return result;
     }
 
     /**
@@ -580,5 +589,17 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
 
     public void setValidated(final boolean validated) {
         this.validated = validated;
+    }
+
+    @Override
+    public ValidateUnwrappedValue getValueUnwrapping() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <U> U unwrap(Class<U> arg0) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

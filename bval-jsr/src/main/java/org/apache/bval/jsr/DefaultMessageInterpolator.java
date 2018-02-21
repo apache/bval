@@ -54,10 +54,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private Locale defaultLocale;
 
     /** User specified resource bundles hashed against their locale. */
-    private final Map<Locale, ResourceBundle> userBundlesMap = new ConcurrentHashMap<Locale, ResourceBundle>();
+    private final Map<Locale, ResourceBundle> userBundlesMap = new ConcurrentHashMap<>();
 
     /** Builtin resource bundles hashed against their locale. */
-    private final Map<Locale, ResourceBundle> defaultBundlesMap = new ConcurrentHashMap<Locale, ResourceBundle>();
+    private final Map<Locale, ResourceBundle> defaultBundlesMap = new ConcurrentHashMap<>();
 
     private final MessageEvaluator evaluator;
 
@@ -83,12 +83,12 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             userBundlesMap.put(defaultLocale, resourceBundle);
         }
 
-        MessageEvaluator ev = null;
+        MessageEvaluator ev;
         try {
             ev = MessageEvaluator.class
                 .cast(getClass().getClassLoader().loadClass("org.apache.bval.el.ELFacade").newInstance());
         } catch (final Throwable e) { // can be exception or error
-            // no-op
+            ev = null;
         }
         evaluator = ev;
     }
@@ -170,47 +170,42 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      * @return the resource bundle or <code>null</code> if none is found.
      */
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
-        ResourceBundle rb = null;
+        ResourceBundle rb;
         final ClassLoader classLoader = Reflection.getClassLoader(DefaultMessageInterpolator.class);
         if (classLoader != null) {
             rb = loadBundle(classLoader, locale, USER_VALIDATION_MESSAGES + " not found by thread local classloader");
-        }
-
+        } else {
         // 2011-03-27 jw: No privileged action required.
         // A class can always access the classloader of itself and of subclasses.
-        if (rb == null) {
             rb = loadBundle(getClass().getClassLoader(), locale,
                 USER_VALIDATION_MESSAGES + " not found by validator classloader");
         }
         if (LOG_FINEST) {
-            if (rb != null) {
-                log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
-            } else {
+            if (rb == null) {
                 log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES,
                     DEFAULT_VALIDATION_MESSAGES));
+            } else {
+                log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
             }
         }
         return rb;
     }
 
     private ResourceBundle loadBundle(ClassLoader classLoader, Locale locale, String message) {
-        ResourceBundle rb = null;
         try {
-            rb = ResourceBundle.getBundle(USER_VALIDATION_MESSAGES, locale, classLoader);
+            return ResourceBundle.getBundle(USER_VALIDATION_MESSAGES, locale, classLoader);
         } catch (final MissingResourceException e) {
             log.fine(message);
         }
-        return rb;
+        return null;
     }
 
     private String replaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
         final Matcher matcher = messageParameterPattern.matcher(message);
         final StringBuffer sb = new StringBuffer(64);
-        String resolvedParameterValue;
         while (matcher.find()) {
             final String parameter = matcher.group(1);
-            resolvedParameterValue = resolveParameter(parameter, bundle, locale, recurse);
-
+            String resolvedParameterValue = resolveParameter(parameter, bundle, locale, recurse);
             matcher.appendReplacement(sb, sanitizeForAppendReplacement(resolvedParameterValue));
         }
         matcher.appendTail(sb);
@@ -242,13 +237,13 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private String resolveParameter(String parameterName, ResourceBundle bundle, Locale locale, boolean recurse) {
         String parameterValue;
         try {
-            if (bundle != null) {
+            if (bundle == null) {
+                parameterValue = parameterName;
+            } else {
                 parameterValue = bundle.getString(removeCurlyBrace(parameterName));
                 if (recurse) {
                     parameterValue = replaceVariables(parameterValue, bundle, locale, recurse);
                 }
-            } else {
-                parameterValue = parameterName;
             }
         } catch (final MissingResourceException e) {
             // return parameter itself

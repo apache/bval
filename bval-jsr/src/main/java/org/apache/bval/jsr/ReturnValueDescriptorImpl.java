@@ -18,8 +18,10 @@ package org.apache.bval.jsr;
 
 import org.apache.bval.model.MetaBean;
 
+import javax.validation.metadata.ContainerElementTypeDescriptor;
 import javax.validation.metadata.ReturnValueDescriptor;
 import java.util.Collection;
+import java.util.Set;
 
 public class ReturnValueDescriptorImpl extends ElementDescriptorImpl implements ReturnValueDescriptor {
     public ReturnValueDescriptorImpl(final MetaBean metaBean, Class<?> returnType,
@@ -31,5 +33,11 @@ public class ReturnValueDescriptorImpl extends ElementDescriptorImpl implements 
     @Override
     public boolean hasConstraints() {
         return false;
+    }
+
+    @Override
+    public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -38,7 +38,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -121,7 +123,7 @@ public final class AnnotationProcessor {
             if (!reflection) {
                 Collection<Annotation> annotations = prop.getFeature(JsrFeatures.Property.ANNOTATIONS_TO_PROCESS);
                 if (annotations == null) {
-                    annotations = new ArrayList<Annotation>();
+                    annotations = new ArrayList<>();
                     prop.putFeature(JsrFeatures.Property.ANNOTATIONS_TO_PROCESS, annotations);
                 }
                 annotations.add(annotation);
@@ -129,18 +131,19 @@ public final class AnnotationProcessor {
             return true;
         }
 
-        /**
+        /*
          * An annotation is considered a constraint definition if its retention
          * policy contains RUNTIME and if the annotation itself is annotated
          * with javax.validation.Constraint.
          */
         final Constraint vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
         if (vcAnno != null) {
-            Class<? extends ConstraintValidator<A, ?>>[] validatorClasses;
-            validatorClasses = findConstraintValidatorClasses(annotation, vcAnno);
+            Class<? extends ConstraintValidator<A, ?>>[] validatorClasses =
+                findConstraintValidatorClasses(annotation, vcAnno);
             return applyConstraint(annotation, validatorClasses, prop, owner, access, appender);
         }
-        /**
+
+        /*
          * Multi-valued constraints: To support this requirement, the bean
          * validation provider treats regular annotations (annotations not
          * annotated by @Constraint) whose value element has a return type of an
@@ -202,15 +205,14 @@ public final class AnnotationProcessor {
             vcAnno = annotation.annotationType().getAnnotation(Constraint.class);
         }
         final Class<A> annotationType = (Class<A>) annotation.annotationType();
-        Class<? extends ConstraintValidator<A, ?>>[] validatorClasses =
-            factory.getConstraintsCache().getConstraintValidators(annotationType);
+        List<Class<? extends ConstraintValidator<A, ?>>> validatorClasses =
+            factory.getConstraintsCache().getConstraintValidatorClasses(annotationType);
         if (validatorClasses == null) {
-            validatorClasses = (Class<? extends ConstraintValidator<A, ?>>[]) vcAnno.validatedBy();
-            if (validatorClasses.length == 0) {
-                validatorClasses = factory.getDefaultConstraints().getValidatorClasses(annotationType);
+            validatorClasses = Arrays.asList((Class<? extends ConstraintValidator<A, ?>>[]) vcAnno.validatedBy());
+            if (validatorClasses.isEmpty()) {
             }
         }
-        return validatorClasses;
+        return validatorClasses.toArray(new Class[validatorClasses.size()]);
     }
 
     /**

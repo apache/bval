@@ -54,10 +54,9 @@ public final class ELFacade implements MessageEvaluator {
             if (EXPRESSION_FACTORY != null) {
                 final BValELContext context = new BValELContext();
                 final VariableMapper variables = context.getVariableMapper();
-                for (final Map.Entry<String, Object> var : annotationParameters.entrySet()) {
-                    variables.setVariable(var.getKey(),
-                        EXPRESSION_FACTORY.createValueExpression(var.getValue(), Object.class));
-                }
+                annotationParameters.forEach(
+                    (k, v) -> variables.setVariable(k, EXPRESSION_FACTORY.createValueExpression(v, Object.class)));
+
                 variables.setVariable("validatedValue",
                     EXPRESSION_FACTORY.createValueExpression(validatedValue, Object.class));
 
@@ -83,13 +82,8 @@ public final class ELFacade implements MessageEvaluator {
     }
 
     private static class BValELContext extends ELContext {
-        private final FunctionMapper functions;
-        private final VariableMapper variables;
-
-        public BValELContext() {
-            this.variables = new BValVariableMapper();
-            this.functions = new BValFunctionMapper();
-        }
+        private final FunctionMapper functions = new BValFunctionMapper();
+        private final VariableMapper variables = new BValVariableMapper();
 
         @Override
         public ELResolver getELResolver() {

@@ -32,7 +32,7 @@ public class DirectoryValidator implements ConstraintValidator<Directory, File> 
      */
     @Override
     public boolean isValid(File value, ConstraintValidatorContext context) {
-        return value.exists() && value.isDirectory();
+        return value.isDirectory();
     }
 
     /**

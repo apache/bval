@@ -33,7 +33,7 @@ import static java.lang.Character.getNumericValue;
  * See <a href="http://en.wikipedia.org/wiki/Verhoeff_algorithm">Wikipedia
  *  - Verhoeff algorithm</a> for more details.
  */
-public final class VerhoeffValidator implements ConstraintValidator<Verhoeff, String> {
+public final class VerhoeffValidator implements ConstraintValidator<Verhoeff, CharSequence> {
 
     //@formatter:off
     /** D - multiplication table */
@@ -65,7 +65,7 @@ public final class VerhoeffValidator implements ConstraintValidator<Verhoeff, St
      * {@inheritDoc}
      */
     @Override
-    public boolean isValid(String code, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence code, ConstraintValidatorContext context) {
         if (code.length() == 0) {
             return false;
         }

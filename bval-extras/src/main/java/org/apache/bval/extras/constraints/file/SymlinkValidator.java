@@ -49,7 +49,7 @@ public class SymlinkValidator implements ConstraintValidator<Symlink, File> {
         }
 
         try {
-            File fileInCanonicalDir = null;
+            File fileInCanonicalDir;
             if (value.getParent() == null) {
                 fileInCanonicalDir = value;
             } else {

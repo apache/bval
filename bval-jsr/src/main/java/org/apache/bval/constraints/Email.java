@@ -19,34 +19,41 @@
 package org.apache.bval.constraints;
 
 import javax.validation.Constraint;
+import javax.validation.OverridesAttribute;
 import javax.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * <p>
  * --
- * TODO - This class is NOT part of the bean_validation spec and might disappear
- * as soon as a final version of the specification contains a similar functionality.
+ * NOTE - This constraint predates the equivalent version from the bean_validation spec.
  * --
  * </p>
  * Description: annotation to validate an email address (by pattern)<br/>
  */
+@Deprecated
 @Documented
-@Constraint(validatedBy = EmailValidator.class)
-@Target({ METHOD, FIELD, ANNOTATION_TYPE, PARAMETER })
+@Constraint(validatedBy = {})
+@javax.validation.constraints.Email
+@Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
 @Retention(RUNTIME)
 public @interface Email {
+    @OverridesAttribute(constraint = javax.validation.constraints.Email.class, name = "groups")
     Class<?>[] groups() default {};
 
+    @OverridesAttribute(constraint = javax.validation.constraints.Email.class, name = "message")
     String message() default "{org.apache.bval.constraints.Email.message}";
 
+    @OverridesAttribute(constraint = javax.validation.constraints.Email.class, name = "payload")
     Class<? extends Payload>[] payload() default {};
 }

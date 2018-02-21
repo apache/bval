@@ -28,7 +28,7 @@ import java.lang.annotation.Annotation;
 public class VerhoeffCheckDigitTest extends AbstractCheckDigitTest {
 
     @Override
-    protected ConstraintValidator<? extends Annotation, String> getConstraint() {
+    protected ConstraintValidator<? extends Annotation, ? super String> getConstraint() {
         return new VerhoeffValidator();
     }
 

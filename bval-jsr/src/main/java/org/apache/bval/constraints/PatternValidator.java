@@ -27,7 +27,7 @@ import java.util.regex.PatternSyntaxException;
  * validator using a regular expression,
  * based on the jsr Pattern constraint annotation.
  */
-public class PatternValidator implements ConstraintValidator<Pattern, String> {
+public class PatternValidator implements ConstraintValidator<Pattern, CharSequence> {
     protected java.util.regex.Pattern pattern;
 
     @Override
@@ -46,7 +46,7 @@ public class PatternValidator implements ConstraintValidator<Pattern, String> {
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
         return value == null || pattern.matcher(value).matches();
     }
 }

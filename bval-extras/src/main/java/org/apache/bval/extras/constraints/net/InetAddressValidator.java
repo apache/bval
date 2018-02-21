@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  *
  * <p>This class provides methods to validate a candidate IP address.
  */
-public class InetAddressValidator implements ConstraintValidator<InetAddress, String> {
+public class InetAddressValidator implements ConstraintValidator<InetAddress, CharSequence> {
 
     private static final Pattern IPV4_PATTERN =
         Pattern.compile("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
@@ -37,7 +37,7 @@ public class InetAddressValidator implements ConstraintValidator<InetAddress, St
      * {@inheritDoc}
      */
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
         if (!IPV4_PATTERN.matcher(value).matches()) {
             return false;
         }

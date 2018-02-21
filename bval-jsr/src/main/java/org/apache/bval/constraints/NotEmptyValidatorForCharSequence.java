@@ -20,34 +20,15 @@ package org.apache.bval.constraints;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.Max;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 
 /**
- * Check that the number being validated is less than or equal to the maximum
- * value specified.
+ * Description: <br/>
  */
-public class MaxValidatorForNumber implements ConstraintValidator<Max, Number> {
-
-    private long max;
-
-    @Override
-    public void initialize(Max annotation) {
-        this.max = annotation.value();
-    }
+public class NotEmptyValidatorForCharSequence
+    implements ConstraintValidator<javax.validation.constraints.NotEmpty, CharSequence> {
 
     @Override
-    public boolean isValid(Number value, ConstraintValidatorContext context) {
-        if (value == null) {
-            return true;
-        }
-        if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(max)) < 1;
-        }
-        if (value instanceof BigInteger) {
-            return ((BigInteger) value).compareTo(BigInteger.valueOf(max)) < 1;
-        }
-        return value.longValue() <= max;
+    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+        return value == null || value.length() > 0;
     }
 }

@@ -30,10 +30,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.enterprise.util.AnnotationLiteral;
+import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
@@ -45,11 +47,21 @@ import javax.validation.groups.ConvertGroup;
  */
 @Privilizing(@CallTo(Reflection.class))
 public final class AnnotationProxyBuilder<A extends Annotation> {
-    private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<Class<?>, Method[]>();
+    private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<>();
+
+    public static <A> Method[] findMethods(final Class<A> annotationType) {
+        // cache only built-in constraints to avoid memory leaks:
+        // TODO use configurable cache size property?
+        if (annotationType.getName().startsWith("javax.validation.constraints.")) {
+            return METHODS_CACHE.computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
+        }
+        return Reflection.getDeclaredMethods(annotationType);
+    }
 
     private final Class<A> type;
-    private final Map<String, Object> elements = new HashMap<String, Object>();
+    private final Map<String, Object> elements = new HashMap<>();
     private final Method[] methods;
+    private boolean changed;
 
     /**
      * Create a new AnnotationProxyBuilder instance.
@@ -61,21 +73,6 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
         this.methods = findMethods(annotationType);
     }
 
-    public static <A> Method[] findMethods(final Class<A> annotationType) {
-        if (annotationType.getName().startsWith("javax.validation.constraints.")) { // cache built-in constraints only to avoid mem leaks
-            Method[] mtd = METHODS_CACHE.get(annotationType);
-            if (mtd == null) {
-                final Method[] value = Reflection.getDeclaredMethods(annotationType);
-                mtd = METHODS_CACHE.putIfAbsent(annotationType, value);
-                if (mtd == null) {
-                    mtd = value;
-                }
-            }
-            return mtd;
-        }
-        return Reflection.getDeclaredMethods(annotationType);
-    }
-
     /**
      * Create a new AnnotationProxyBuilder instance.
      *
@@ -84,16 +81,15 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      */
     public AnnotationProxyBuilder(Class<A> annotationType, Map<String, Object> elements) {
         this(annotationType);
-        for (Map.Entry<String, Object> entry : elements.entrySet()) {
-            this.elements.put(entry.getKey(), entry.getValue());
-        }
+        elements.forEach(this.elements::put);
     }
 
     /**
      * Create a builder initially configured to create an annotation equivalent
-     * to <code>annot</code>.
+     * to {@code annot}.
      * 
-     * @param annot Annotation to be replicated.
+     * @param annot
+     *            Annotation to be replicated.
      */
     @SuppressWarnings("unchecked")
     public AnnotationProxyBuilder(A annot) {
@@ -102,8 +98,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
         for (Method m : methods) {
             final boolean mustUnset = Reflection.setAccessible(m, true);
             try {
-                Object value = m.invoke(annot);
-                this.elements.put(m.getName(), value);
+                this.elements.put(m.getName(), m.invoke(annot));
             } catch (Exception e) {
                 throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName(), e);
             } finally {
@@ -124,8 +119,22 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * @param elementName
      * @param value
      */
-    public void putValue(String elementName, Object value) {
-        elements.put(elementName, value);
+    @Deprecated
+    public Object putValue(String elementName, Object value) {
+        return elements.put(elementName, value);
+    }
+
+    /**
+     * Add an element to the configuration.
+     *
+     * @param elementName
+     * @param value
+     * @return whether any change occurred
+     */
+    public boolean setValue(String elementName, Object value) {
+        final boolean result = !Objects.equals(elements.put(elementName, value), value);
+        changed |= result;
+        return result;
     }
 
     /**
@@ -171,27 +180,42 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * Configure the well-known JSR303 "message" element.
      *
      * @param message
+     * @return
      */
-    public void setMessage(String message) {
-        ConstraintAnnotationAttributes.MESSAGE.put(elements, message);
+    public boolean setMessage(String message) {
+        return setValue(ConstraintAnnotationAttributes.MESSAGE.getAttributeName(), message);
     }
 
     /**
      * Configure the well-known JSR303 "groups" element.
      *
      * @param groups
+     * @return
      */
-    public void setGroups(Class<?>[] groups) {
-        ConstraintAnnotationAttributes.GROUPS.put(elements, groups);
+    public boolean setGroups(Class<?>[] groups) {
+        return setValue(ConstraintAnnotationAttributes.GROUPS.getAttributeName(), groups);
     }
 
     /**
      * Configure the well-known JSR303 "payload" element.
      * 
      * @param payload
+     * @return
      */
-    public void setPayload(Class<? extends Payload>[] payload) {
-        ConstraintAnnotationAttributes.PAYLOAD.put(elements, payload);
+    public boolean setPayload(Class<? extends Payload>[] payload) {
+        return setValue(ConstraintAnnotationAttributes.PAYLOAD.getAttributeName(), payload);
+    }
+
+    /**
+     * Configure the well-known "validationAppliesTo" element.
+     * 
+     * @param constraintTarget
+     */
+    public boolean setValidationAppliesTo(ConstraintTarget constraintTarget) {
+        return setValue(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName(), constraintTarget);
+    }
+    public boolean isChanged() {
+        return changed;
     }
 
     /**
@@ -203,16 +227,22 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
         final ClassLoader classLoader = Reflection.getClassLoader(getType());
         @SuppressWarnings("unchecked")
         final Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
-        final InvocationHandler handler = new AnnotationProxy(this);
-        return doCreateAnnotation(proxyClass, handler);
+        return doCreateAnnotation(proxyClass, new AnnotationProxy(this));
     }
 
     @Privileged
     private A doCreateAnnotation(final Class<A> proxyClass, final InvocationHandler handler) {
         try {
-            Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
-            Reflection.setAccessible(constructor, true); // java 8
-            return constructor.newInstance(handler);
+            final Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
+            final boolean mustUnset = Reflection.setAccessible(constructor, true); // java
+                                                                                   // 8
+            try {
+                return constructor.newInstance(handler);
+            } finally {
+                if (mustUnset) {
+                    Reflection.setAccessible(constructor, false);
+                }
+            }
         } catch (Exception e) {
             throw new ValidationException("Unable to create annotation for configured constraint", e);
         }

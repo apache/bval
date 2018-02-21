@@ -19,6 +19,8 @@
 package org.apache.bval.jsr.xml;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -84,6 +86,18 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
     }
 
     @Test
+    public void testParseV11() {
+        ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
+        ValidationParser.processValidationConfig("sample-validation11.xml", config, false);
+    }
+
+    @Test
+    public void testParseV20() {
+        ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
+        ValidationParser.processValidationConfig("sample-validation2.xml", config, false);
+    }
+
+    @Test
     public void testConfigureFromXml() {
         ValidatorFactory factory = getFactory();
         assertThat(factory.getMessageInterpolator(), instanceOf(TestMessageInterpolator.class));
@@ -105,8 +119,8 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
         bean.setValueCode("illegal");
         Validator validator = getFactory().getValidator();
         Set<ConstraintViolation<XmlEntitySampleBean>> results = validator.validate(bean);
-        assertTrue(!results.isEmpty());
-        assertTrue(results.size() == 3);
+        assertFalse(results.isEmpty());
+        assertEquals(3, results.size());
 
         bean.setZipCode("123");
         bean.setValueCode("20");

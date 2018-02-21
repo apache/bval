@@ -18,11 +18,39 @@
  */
 package org.apache.bval.jsr;
 
+import java.io.Closeable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.validation.ClockProvider;
+import javax.validation.ConstraintValidatorFactory;
+import javax.validation.MessageInterpolator;
+import javax.validation.ParameterNameProvider;
+import javax.validation.TraversableResolver;
+import javax.validation.Validation;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.spi.ConfigurationState;
+
 import org.apache.bval.IntrospectorMetaBeanFactory;
 import org.apache.bval.MetaBeanBuilder;
 import org.apache.bval.MetaBeanFactory;
 import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.MetaBeanManager;
+import org.apache.bval.jsr.descriptor.DescriptorManager;
+import org.apache.bval.jsr.metadata.MetadataBuilders;
+import org.apache.bval.jsr.util.AnnotationsManager;
+import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.jsr.xml.AnnotationIgnores;
 import org.apache.bval.jsr.xml.MetaConstraint;
 import org.apache.bval.jsr.xml.ValidationMappingParser;
@@ -37,28 +65,6 @@ import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ParameterNameProvider;
-import javax.validation.TraversableResolver;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ConfigurationState;
-import java.io.Closeable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 /**
  * Description: a factory is a complete configurated object that can create
  * validators.<br/>
@@ -68,13 +74,17 @@ import java.util.concurrent.ConcurrentMap;
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
-    private static final ConstraintDefaults DEFAULT_CONSTRAINTS = new ConstraintDefaults();
 
     private MessageInterpolator messageResolver;
     private TraversableResolver traversableResolver;
     private ConstraintValidatorFactory constraintValidatorFactory;
     private ParameterNameProvider parameterNameProvider;
+    private ClockProvider clockProvider;
     private final Map<String, String> properties;
+    private final AnnotationsManager annotationsManager;
+    private final DescriptorManager descriptorManager = new DescriptorManager(this);
+    private final MetadataBuilders metadataBuilders = new MetadataBuilders();
+    private final ValueExtractors valueExtractors = new ValueExtractors();
 
     /**
      * information from xml parsing
@@ -89,7 +99,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final ConcurrentMap<Class<?>, List<AccessStrategy>> validAccesses;
     private final ConcurrentMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>> constraintMap;
 
-    private final Collection<Closeable> toClose = new ArrayList<Closeable>();
+    private final Collection<Closeable> toClose = new ArrayList<>();
     private final MetaBeanFinder defaultMetaBeanFinder;
 
     /**
@@ -112,7 +122,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * @return a new instance of MetaBeanManager with adequate MetaBeanFactories
      */
     protected MetaBeanFinder buildMetaBeanFinder() {
-        final List<MetaBeanFactory> builders = new ArrayList<MetaBeanFactory>();
+        final List<MetaBeanFactory> builders = new ArrayList<>();
         if (Boolean.parseBoolean(getProperties().get(ApacheValidatorConfiguration.Properties.ENABLE_INTROSPECTOR))) {
             builders.add(new IntrospectorMetaBeanFactory());
         }
@@ -121,9 +131,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         if (factoryClassNames != null) {
             for (String clsName : factoryClassNames) {
                 // cast, relying on #createMetaBeanFactory to throw the exception if incompatible:
-                @SuppressWarnings("unchecked")
                 final Class<? extends MetaBeanFactory> factoryClass =
-                    (Class<? extends MetaBeanFactory>) loadClass(clsName);
+                    loadClass(clsName).asSubclass(MetaBeanFactory.class);
                 builders.add(createMetaBeanFactory(factoryClass));
             }
         }
@@ -173,24 +182,27 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      * Create a new ApacheValidatorFactory instance.
      */
     public ApacheValidatorFactory(ConfigurationState configuration) {
-        properties = new HashMap<String, String>(configuration.getProperties());
-        defaultSequences = new HashMap<Class<?>, Class<?>[]>();
-        validAccesses = new ConcurrentHashMap<Class<?>, List<AccessStrategy>>();
-        constraintMap = new ConcurrentHashMap<Class<?>, List<MetaConstraint<?, ? extends Annotation>>>();
+        properties = new HashMap<>(configuration.getProperties());
+        defaultSequences = new HashMap<>();
+        validAccesses = new ConcurrentHashMap<>();
+        constraintMap = new ConcurrentHashMap<>();
 
         parameterNameProvider = configuration.getParameterNameProvider();
         messageResolver = configuration.getMessageInterpolator();
         traversableResolver = configuration.getTraversableResolver();
         constraintValidatorFactory = configuration.getConstraintValidatorFactory();
+        clockProvider = configuration.getClockProvider();
 
         if (ConfigurationImpl.class.isInstance(configuration)) {
-            final ConfigurationImpl impl = ConfigurationImpl.class.cast(configuration);
-            toClose.add(impl.getClosable());
+            toClose.add(ConfigurationImpl.class.cast(configuration).getClosable());
         }
 
         new ValidationMappingParser(this).processMappingConfig(configuration.getMappingStreams());
 
         defaultMetaBeanFinder = buildMetaBeanFinder();
+
+        configuration.getValueExtractors().forEach(valueExtractors::add);
+        annotationsManager = new AnnotationsManager(this);
     }
 
     /**
@@ -203,8 +215,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Shortcut method to create a new Validator instance with factory's
-     * settings
+     * Shortcut method to create a new Validator instance with factory's settings
      *
      * @return the new validator instance
      */
@@ -271,6 +282,12 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         }
     }
 
+    public void setClockProvider(final ClockProvider clockProvider) {
+        if (clockProvider != null) {
+            this.clockProvider = clockProvider;
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -307,6 +324,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     @Override
+    public ClockProvider getClockProvider() {
+        return clockProvider;
+    }
+
+    @Override
     public void close() {
         try {
             for (final Closeable c : toClose) {
@@ -319,13 +341,14 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Return an object of the specified type to allow access to the
-     * provider-specific API. If the Bean Validation provider implementation
-     * does not support the specified class, the ValidationException is thrown.
+     * Return an object of the specified type to allow access to the provider-specific API. If the Bean Validation
+     * provider implementation does not support the specified class, the ValidationException is thrown.
      *
-     * @param type the class of the object to be returned.
+     * @param type
+     *            the class of the object to be returned.
      * @return an instance of the specified class
-     * @throws ValidationException if the provider does not support the call.
+     * @throws ValidationException
+     *             if the provider does not support the call.
      */
     @Override
     public <T> T unwrap(final Class<T> type) {
@@ -365,15 +388,6 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Get the detected {@link ConstraintDefaults}.
-     *
-     * @return ConstraintDefaults
-     */
-    public ConstraintDefaults getDefaultConstraints() {
-        return DEFAULT_CONSTRAINTS;
-    }
-
-    /**
      * Get the detected {@link AnnotationIgnores}.
      *
      * @return AnnotationIgnores
@@ -392,8 +406,34 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Add a meta-constraint to this {@link ApacheValidatorFactory}'s runtime
-     * customizations.
+     * Get the {@link AnnotationsManager}.
+     * 
+     * @return {@link AnnotationsManager}
+     */
+    public AnnotationsManager getAnnotationsManager() {
+        return annotationsManager;
+    }
+
+    /**
+     * Get the {@link DescriptorManager}.
+     * 
+     * @return {@link DescriptorManager}
+     */
+    public DescriptorManager getDescriptorManager() {
+        return descriptorManager;
+    }
+
+    /**
+     * Get the {@link ValueExtractors}.
+     * 
+     * @return {@link ValueExtractors}
+     */
+    public ValueExtractors getValueExtractors() {
+        return valueExtractors;
+    }
+
+    /**
+     * Add a meta-constraint to this {@link ApacheValidatorFactory}'s runtime customizations.
      *
      * @param beanClass
      * @param metaConstraint
@@ -401,7 +441,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     public void addMetaConstraint(final Class<?> beanClass, final MetaConstraint<?, ?> metaConstraint) {
         List<MetaConstraint<?, ? extends Annotation>> slot = constraintMap.get(beanClass);
         if (slot == null) {
-            slot = new ArrayList<MetaConstraint<?, ? extends Annotation>>();
+            slot = new ArrayList<>();
             final List<MetaConstraint<?, ? extends Annotation>> old = constraintMap.putIfAbsent(beanClass, slot);
             if (old != null) {
                 slot = old;
@@ -420,7 +460,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     public void addValid(Class<?> beanClass, AccessStrategy accessStrategy) {
         List<AccessStrategy> slot = validAccesses.get(beanClass);
         if (slot == null) {
-            slot = new ArrayList<AccessStrategy>();
+            slot = new ArrayList<>();
             final List<AccessStrategy> old = validAccesses.putIfAbsent(beanClass, slot);
             if (old != null) {
                 slot = old;
@@ -444,8 +484,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      *
      * @param <T>
      * @param beanClass
-     * @return List of {@link MetaConstraint}s applicable to
-     *         <code>beanClass</code>
+     * @return List of {@link MetaConstraint}s applicable to <code>beanClass</code>
      */
     public <T> List<MetaConstraint<T, ? extends Annotation>> getMetaConstraints(Class<T> beanClass) {
         final List<MetaConstraint<?, ? extends Annotation>> slot = constraintMap.get(beanClass);
@@ -459,16 +498,15 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Get the {@link AccessStrategy} {@link List} indicating nested bean
-     * validations that must be triggered in the course of validating a
-     * <code>beanClass</code> graph.
+     * Get the {@link AccessStrategy} {@link List} indicating nested bean validations that must be triggered in the
+     * course of validating a <code>beanClass</code> graph.
      *
      * @param beanClass
      * @return {@link List} of {@link AccessStrategy}
      */
     public List<AccessStrategy> getValidAccesses(Class<?> beanClass) {
         final List<AccessStrategy> slot = validAccesses.get(beanClass);
-        return slot == null ? Collections.<AccessStrategy> emptyList() : Collections.unmodifiableList(slot);
+        return slot == null ? Collections.emptyList() : Collections.unmodifiableList(slot);
     }
 
     /**
@@ -479,6 +517,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
      */
     public Class<?>[] getDefaultSequence(Class<?> beanClass) {
         return safeArray(defaultSequences.get(beanClass));
+    }
+
+    public MetadataBuilders getMetadataBuilders() {
+        return metadataBuilders;
     }
 
     private static Class<?>[] safeArray(Class<?>... array) {
@@ -519,9 +561,8 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * separate class to prevent the classloader to immediately load optional
-     * classes: XMLMetaBeanManager, XMLMetaBeanFactory, XMLMetaBeanBuilder that
-     * might not be available in the classpath
+     * separate class to prevent the classloader to immediately load optional classes: XMLMetaBeanManager,
+     * XMLMetaBeanFactory, XMLMetaBeanBuilder that might not be available in the classpath
      */
     private static class XMLMetaBeanManagerCreator {
 
@@ -530,10 +571,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         }
 
         /**
-         * Create the {@link MetaBeanManager} to process JSR303 XML. Requires
-         * bval-xstream at RT.
+         * Create the {@link MetaBeanManager} to process JSR303 XML. Requires bval-xstream at RT.
          *
-         * @param builders meta bean builders
+         * @param builders
+         *            meta bean builders
          * @return {@link MetaBeanManager}
          */
         // NOTE - We return MetaBeanManager instead of XMLMetaBeanManager to

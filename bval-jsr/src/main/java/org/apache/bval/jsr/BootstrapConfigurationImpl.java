@@ -34,12 +34,15 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
     private String messageInterpolatorClassName;
     private String constraintValidatorFactoryClassName;
     private String defaultProviderClassName;
+    private String clockProviderClassName;
+    private Set<String> valueExtractorClassNames;
 
     public BootstrapConfigurationImpl(final String defaultProviderClassName,
         final String constraintValidatorFactoryClassName, final String messageInterpolatorClassName,
         final String traversableResolverClassName, final String parameterNameProviderClassName,
         final Set<String> constraintMappingResourcePaths, final boolean executableValidationEnabled,
-        final Set<ExecutableType> defaultValidatedExecutableTypes, final Map<String, String> properties) {
+        final Set<ExecutableType> defaultValidatedExecutableTypes, final Map<String, String> properties,
+        final String clockProviderClassName, final Set<String> valueExtractorClassNames) {
         this.properties = Collections.unmodifiableMap(properties);
         this.defaultValidatedExecutableTypes = Collections.unmodifiableSet(defaultValidatedExecutableTypes);
         this.executableValidationEnabled = executableValidationEnabled;
@@ -49,6 +52,8 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
         this.messageInterpolatorClassName = messageInterpolatorClassName;
         this.constraintValidatorFactoryClassName = constraintValidatorFactoryClassName;
         this.defaultProviderClassName = defaultProviderClassName;
+        this.clockProviderClassName = clockProviderClassName;
+        this.valueExtractorClassNames = valueExtractorClassNames;
     }
 
     @Override
@@ -78,7 +83,7 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
 
     @Override
     public Set<String> getConstraintMappingResourcePaths() {
-        return constraintMappingResourcePaths;
+        return Collections.unmodifiableSet(constraintMappingResourcePaths);
     }
 
     @Override
@@ -88,11 +93,27 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
 
     @Override
     public Set<ExecutableType> getDefaultValidatedExecutableTypes() {
-        return defaultValidatedExecutableTypes;
+        return Collections.unmodifiableSet(defaultValidatedExecutableTypes);
     }
 
     @Override
     public Map<String, String> getProperties() {
-        return properties;
+        return Collections.unmodifiableMap(properties);
+    }
+
+    /**
+     * @since 2.0
+     */
+    @Override
+    public String getClockProviderClassName() {
+        return clockProviderClassName;
+    }
+
+    /**
+     * @since 2.0
+     */
+    @Override
+    public Set<String> getValueExtractorClassNames() {
+        return Collections.unmodifiableSet(valueExtractorClassNames);
     }
 }

@@ -32,7 +32,7 @@ public interface ApacheValidatorConfiguration extends Configuration<ApacheValida
     /**
      * Proprietary property keys for {@link ConfigurationImpl}  
      */
-    public interface Properties {
+    interface Properties {
         /**
          * the location where to look for the validation.xml file.
          * default: "META-INF/validation.xml"
@@ -91,5 +91,10 @@ public interface ApacheValidatorConfiguration extends Configuration<ApacheValida
          * </ol>
          */
         String METABEAN_FACTORY_CLASSNAMES = "apache.bval.metabean-factory-classnames";
+
+        /**
+         * Size to use for caching of constraint-related information. Default is {@code 50}.
+         */
+        String CONSTRAINTS_CACHE_SIZE = "apache.bval.constraints-cache-size";
     }
 }

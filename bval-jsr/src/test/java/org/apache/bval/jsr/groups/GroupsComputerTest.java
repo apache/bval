@@ -18,21 +18,24 @@
  */
 package org.apache.bval.jsr.groups;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.bval.jsr.example.Address;
-import org.apache.bval.jsr.example.First;
-import org.apache.bval.jsr.example.Last;
-import org.apache.bval.jsr.example.Second;
+import static org.junit.Assert.assertEquals;
 
-import javax.validation.GroupDefinitionException;
-import javax.validation.ValidationException;
-import javax.validation.groups.Default;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.validation.GroupDefinitionException;
+import javax.validation.ValidationException;
+import javax.validation.groups.Default;
+
+import org.apache.bval.jsr.example.Address;
+import org.apache.bval.jsr.example.First;
+import org.apache.bval.jsr.example.Last;
+import org.apache.bval.jsr.example.Second;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * GroupListComputer Tester.
@@ -41,79 +44,41 @@ import java.util.Set;
  * @version 1.0
  * @since <pre>04/09/2009</pre>
  */
-public class GroupsComputerTest extends TestCase {
+public class GroupsComputerTest {
     GroupsComputer groupsComputer;
 
-    public GroupsComputerTest(String name) {
-        super(name);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         groupsComputer = new GroupsComputer();
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(GroupsComputerTest.class);
-    }
-
+    @Test(expected = ValidationException.class)
     public void testComputeGroupsNotAnInterface() {
-        Set<Class<?>> groups = new HashSet<Class<?>>();
-        groups.add(String.class);
-        try {
-            groupsComputer.computeGroups(groups);
-            fail();
-        } catch (ValidationException ex) {
-
-        }
+        groupsComputer.computeGroups(Collections.singleton(String.class));
     }
 
+    @Test(expected = IllegalArgumentException.class)
     public void testGroupChainForNull() {
-        try {
             groupsComputer.computeGroups((Class<?>[]) null);
-            fail();
-        } catch (IllegalArgumentException ex) {
-
-        }
     }
 
+    @Test
     public void testGroupChainForEmptySet() {
-        try {
-            groupsComputer.computeGroups(new HashSet<Class<?>>());
-            fail();
-        } catch (IllegalArgumentException ex) {
-
-        }
+        assertEquals(Collections.singletonList(Group.DEFAULT),
+            groupsComputer.computeGroups(new HashSet<Class<?>>()).getGroups());
     }
 
+    @Test(expected = GroupDefinitionException.class)
     public void testCyclicGroupSequences() {
-        try {
-            Set<Class<?>> groups = new HashSet<Class<?>>();
-            groups.add(CyclicGroupSequence1.class);
-            groupsComputer.computeGroups(groups);
-            fail();
-        } catch (GroupDefinitionException ex) {
-
-        }
+        groupsComputer.computeGroups(Collections.singleton(CyclicGroupSequence1.class));
     }
 
+    @Test(expected = GroupDefinitionException.class)
     public void testCyclicGroupSequence() {
-        try {
-            Set<Class<?>> groups = new HashSet<Class<?>>();
-            groups.add(CyclicGroupSequence.class);
-            groupsComputer.computeGroups(groups);
-            fail();
-        } catch (GroupDefinitionException ex) {
-
-        }
+        groupsComputer.computeGroups(Collections.singleton(CyclicGroupSequence.class));
     }
 
+    @Test
     public void testGroupDuplicates() {
         Set<Class<?>> groups = new HashSet<Class<?>>();
         groups.add(First.class);
@@ -136,6 +101,7 @@ public class GroupsComputerTest extends TestCase {
         assertEquals(2, chain.groups.size());
     }
 
+    @Test
     public void testSequenceResolution() {
         Set<Class<?>> groups = new HashSet<Class<?>>();
         groups.add(Address.Complete.class);

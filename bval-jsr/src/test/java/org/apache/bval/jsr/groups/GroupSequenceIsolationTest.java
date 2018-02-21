@@ -52,16 +52,13 @@ public class GroupSequenceIsolationTest extends ValidationTestBase {
     public void testGroupSequencesInHierarchyClasses() {
         HolderWithNoGS h = new HolderWithNoGS();
 
-        assertEquals(set("a1", "b2"), violationPaths(validator.validate(h)));
-
-        h.a1 = "good";
         assertEquals(set("a2", "b2"), violationPaths(validator.validate(h)));
 
         h.b2 = "good";
-        assertEquals(set("a2", "b1"), violationPaths(validator.validate(h)));
-
-        h.b1 = "good";
         assertEquals(set("a2"), violationPaths(validator.validate(h)));
+
+        h.a2 = "good";
+        assertEquals(set("b1"), violationPaths(validator.validate(h)));
     }
 
     /**
@@ -82,6 +79,7 @@ public class GroupSequenceIsolationTest extends ValidationTestBase {
         assertEquals(Collections.singleton("b1"), violationPaths(validator.validate(h)));
     }
 
+    @SafeVarargs
     private static <T> Set<T> set(T... elements) {
         return new HashSet<T>(Arrays.asList(elements));
     }

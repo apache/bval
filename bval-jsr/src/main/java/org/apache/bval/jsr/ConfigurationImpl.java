@@ -19,9 +19,10 @@
 package org.apache.bval.jsr;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.io.InputStream;
+import java.time.Clock;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.validation.BootstrapConfiguration;
+import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.ParameterNameProvider;
@@ -40,6 +42,7 @@ import javax.validation.executable.ExecutableType;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
+import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.cdi.BValExtension;
 import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
@@ -76,29 +79,33 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     protected MessageInterpolator defaultMessageInterpolator = new DefaultMessageInterpolator();
     protected volatile MessageInterpolator messageInterpolator = defaultMessageInterpolator;
-    protected Class<? extends MessageInterpolator> messageInterpolatorClass = null;
+    protected Class<? extends MessageInterpolator> messageInterpolatorClass;
 
     /**
      * Configured {@link ConstraintValidatorFactory}
      */
     protected ConstraintValidatorFactory defaultConstraintValidatorFactory = new DefaultConstraintValidatorFactory();
     protected volatile ConstraintValidatorFactory constraintValidatorFactory = defaultConstraintValidatorFactory;
-    protected Class<? extends ConstraintValidatorFactory> constraintValidatorFactoryClass = null;
+    protected Class<? extends ConstraintValidatorFactory> constraintValidatorFactoryClass;
 
     protected TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
     protected volatile TraversableResolver traversableResolver = defaultTraversableResolver;
-    protected Class<? extends TraversableResolver> traversableResolverClass = null;
+    protected Class<? extends TraversableResolver> traversableResolverClass;
 
     protected ParameterNameProvider defaultParameterNameProvider = new DefaultParameterNameProvider();
     protected volatile ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
-    protected Class<? extends ParameterNameProvider> parameterNameProviderClass = null;
+    protected Class<? extends ParameterNameProvider> parameterNameProviderClass;
 
     protected BootstrapConfiguration bootstrapConfiguration;
 
     protected Collection<ExecutableType> executableValidation;
 
-    private Collection<BValExtension.Releasable<?>> releasables =
-        new CopyOnWriteArrayList<BValExtension.Releasable<?>>();
+    private Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
+    protected ClockProvider defaultClockProvider = Clock::systemDefaultZone;
+    protected volatile ClockProvider clockProvider = defaultClockProvider;
+    protected Class<? extends ClockProvider> clockProviderClass;
+
+    protected Set<ValueExtractor<?>> valueExtractors = new HashSet<>();
 
     private boolean beforeCdi = false;
 
@@ -109,8 +116,8 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private boolean prepared = false;
     // END DEFAULTS
 
-    private Set<InputStream> mappingStreams = new HashSet<InputStream>();
-    private Map<String, String> properties = new HashMap<String, String>();
+    private Set<InputStream> mappingStreams = new HashSet<>();
+    private Map<String, String> properties = new HashMap<>();
     private boolean ignoreXmlConfiguration = false;
 
     private volatile ValidationParser parser;
@@ -134,6 +141,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         } else {
             throw new ValidationException("either provider or state are required");
         }
+        initializePropertyDefaults();
     }
 
     /**
@@ -141,13 +149,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
-        if (resolver == null) {
-            return this;
+        if (resolver != null) {
+            this.traversableResolverClass = null;
+            this.traversableResolver = resolver;
+            this.prepared = false;
         }
-
-        this.traversableResolverClass = null;
-        this.traversableResolver = resolver;
-        this.prepared = false;
         return this;
     }
 
@@ -169,13 +175,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ConfigurationImpl messageInterpolator(MessageInterpolator resolver) {
-        if (resolver == null) {
-            return this;
+        if (resolver != null) {
+            this.messageInterpolatorClass = null;
+            this.messageInterpolator = resolver;
+            this.prepared = false;
         }
-
-        this.messageInterpolatorClass = null;
-        this.messageInterpolator = resolver;
-        this.prepared = false;
         return this;
     }
 
@@ -184,23 +188,20 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ConfigurationImpl constraintValidatorFactory(ConstraintValidatorFactory constraintFactory) {
-        if (constraintFactory == null) {
-            return this;
+        if (constraintFactory != null) {
+            this.constraintValidatorFactoryClass = null;
+            this.constraintValidatorFactory = constraintFactory;
+            this.prepared = false;
         }
-
-        this.constraintValidatorFactoryClass = null;
-        this.constraintValidatorFactory = constraintFactory;
-        this.prepared = false;
         return this;
     }
 
     @Override
     public ApacheValidatorConfiguration parameterNameProvider(ParameterNameProvider parameterNameProvider) {
-        if (parameterNameProvider == null) {
-            return this;
+        if (parameterNameProvider != null) {
+            this.parameterNameProviderClass = null;
+            this.parameterNameProvider = parameterNameProvider;
         }
-        this.parameterNameProviderClass = null;
-        this.parameterNameProvider = parameterNameProvider;
         return this;
     }
 
@@ -213,10 +214,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ApacheValidatorConfiguration addMapping(InputStream stream) {
-        if (stream == null) {
-            return this;
+        if (stream != null) {
+            mappingStreams.add(IOs.convertToMarkableInputStream(stream));
         }
-        mappingStreams.add(IOs.convertToMarkableInputStream(stream));
         return this;
     }
 
@@ -297,7 +297,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (beforeCdi) {
             return defaultMessageInterpolator;
         }
-
         if (messageInterpolator == defaultMessageInterpolator && messageInterpolatorClass != null) {
             synchronized (this) {
                 if (messageInterpolator == defaultMessageInterpolator && messageInterpolatorClass != null) {
@@ -336,7 +335,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (prepared) {
             return this;
         }
-
         createBootstrapConfiguration();
         parser.applyConfigWithInstantiation(this); // instantiate the config if needed
 
@@ -367,7 +365,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (beforeCdi) {
             return constraintValidatorFactory;
         }
-
         if (constraintValidatorFactory == defaultConstraintValidatorFactory
             && constraintValidatorFactoryClass != null) {
             synchronized (this) {
@@ -388,7 +385,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (beforeCdi) {
             return defaultTraversableResolver;
         }
-
         if (traversableResolver == defaultTraversableResolver && traversableResolverClass != null) {
             synchronized (this) {
                 if (traversableResolver == defaultTraversableResolver && traversableResolverClass != null) {
@@ -404,7 +400,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (beforeCdi) {
             return defaultParameterNameProvider;
         }
-
         if (parameterNameProvider == defaultParameterNameProvider && parameterNameProviderClass != null) {
             synchronized (this) {
                 if (parameterNameProvider == defaultParameterNameProvider && parameterNameProviderClass != null) {
@@ -452,14 +447,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     public Closeable getClosable() {
-        return new Closeable() {
-            @Override
-            public void close() throws IOException {
-                for (final BValExtension.Releasable<?> releasable : releasables) {
-                    releasable.release();
-                }
-                releasables.clear();
+        return () -> {
+            for (final BValExtension.Releasable<?> releasable : releasables) {
+                releasable.release();
             }
+            releasables.clear();
         };
     }
 
@@ -469,8 +461,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
             releasables.add(releasable);
             return releasable.getInstance();
-        } catch (final Exception e) {
-        } catch (final NoClassDefFoundError error) {
+        } catch (Exception | NoClassDefFoundError e) {
         }
         try {
             return cls.newInstance();
@@ -493,5 +484,46 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     public void parameterNameProviderClass(final Class<? extends ParameterNameProvider> clazz) {
         parameterNameProviderClass = clazz;
+    }
+
+    @Override
+    public ApacheValidatorConfiguration clockProvider(ClockProvider clockProvider) {
+        this.clockProvider = clockProvider;
+        return this;
+    }
+
+    @Override
+    public ApacheValidatorConfiguration addValueExtractor(ValueExtractor<?> extractor) {
+        valueExtractors.add(extractor);
+        return this;
+    }
+
+    @Override
+    public ClockProvider getDefaultClockProvider() {
+        return defaultClockProvider;
+    }
+
+    @Override
+    public Set<ValueExtractor<?>> getValueExtractors() {
+        return Collections.unmodifiableSet(valueExtractors);
+    }
+
+    @Override
+    public ClockProvider getClockProvider() {
+        if (beforeCdi) {
+            return defaultClockProvider;
+        }
+        if (clockProvider == defaultClockProvider && clockProviderClass != null) {
+            synchronized (this) {
+                if (clockProvider == defaultClockProvider && clockProviderClass != null) {
+                    clockProvider = newInstance(clockProviderClass);
+                }
+            }
+        }
+        return clockProvider;
+    }
+
+    protected void initializePropertyDefaults() {
+        properties.put(Properties.CONSTRAINTS_CACHE_SIZE, Integer.toString(50));
     }
 }

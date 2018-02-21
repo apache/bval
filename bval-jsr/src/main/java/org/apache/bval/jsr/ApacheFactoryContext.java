@@ -18,46 +18,56 @@
  */
 package org.apache.bval.jsr;
 
-import org.apache.bval.MetaBeanFinder;
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.weaver.privilizer.Privilizing;
-import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
-
+import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.ParameterNameProvider;
 import javax.validation.TraversableResolver;
 import javax.validation.Validator;
 import javax.validation.ValidatorContext;
+import javax.validation.valueextraction.ValueExtractor;
+
+import org.apache.bval.MetaBeanFinder;
+import org.apache.bval.jsr.descriptor.DescriptorManager;
+import org.apache.bval.jsr.groups.GroupsComputer;
+import org.apache.bval.jsr.valueextraction.ValueExtractors;
+import org.apache.bval.util.Lazy;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
- * Description: Represents the context that is used to create
- * {@link ClassValidator} instances.
+ * Description: Represents the context that is used to create {@link ClassValidator} instances.
  */
 @Privilizing(@CallTo(Reflection.class))
 public class ApacheFactoryContext implements ValidatorContext {
+    private final Lazy<GroupsComputer> groupsComputer = new Lazy<>(GroupsComputer::new);
     private final ApacheValidatorFactory factory;
+    private final ValueExtractors valueExtractors;
     private volatile MetaBeanFinder metaBeanFinder;
 
     private MessageInterpolator messageInterpolator;
     private TraversableResolver traversableResolver;
     private ParameterNameProvider parameterNameProvider;
     private ConstraintValidatorFactory constraintValidatorFactory;
+    private ClockProvider clockProvider;
 
     /**
      * Create a new ApacheFactoryContext instance.
      * 
-     * @param factory validator factory
-     * @param metaBeanFinder meta finder
+     * @param factory
+     *            validator factory
+     * @param metaBeanFinder
+     *            meta finder
      */
     public ApacheFactoryContext(ApacheValidatorFactory factory, MetaBeanFinder metaBeanFinder) {
         this.factory = factory;
         this.metaBeanFinder = metaBeanFinder;
+        valueExtractors = factory.getValueExtractors().createChild();
     }
 
     /**
-     * Get the {@link ApacheValidatorFactory} used by this
-     * {@link ApacheFactoryContext}.
+     * Get the {@link ApacheValidatorFactory} used by this {@link ApacheFactoryContext}.
      * 
      * @return {@link ApacheValidatorFactory}
      */
@@ -75,13 +85,13 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     /**
-     * Discard cached metadata. Calling this method unnecessarily has the effect of severly
-     * limiting performance, therefore only do so when changes have been made that affect
-     * validation metadata, i.e. particularly NOT in response to:
+     * Discard cached metadata. Calling this method unnecessarily has the effect of severly limiting performance,
+     * therefore only do so when changes have been made that affect validation metadata, i.e. particularly NOT in
+     * response to:
      * <ul>
-     *   <li>{@link #messageInterpolator(MessageInterpolator)}</li>
-     *   <li>{@link #traversableResolver(TraversableResolver)}</li>
-     *   <li>{@link #constraintValidatorFactory(ConstraintValidatorFactory)</li>
+     * <li>{@link #messageInterpolator(MessageInterpolator)}</li>
+     * <li>{@link #traversableResolver(TraversableResolver)}</li>
+     * <li>{@link #constraintValidatorFactory(ConstraintValidatorFactory)</li>
      * </ul>
      */
     private synchronized void resetMeta() {
@@ -92,7 +102,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      * {@inheritDoc}
      */
     @Override
-    public ValidatorContext messageInterpolator(MessageInterpolator messageInterpolator) {
+    public ApacheFactoryContext messageInterpolator(MessageInterpolator messageInterpolator) {
         this.messageInterpolator = messageInterpolator;
         return this;
     }
@@ -101,7 +111,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      * {@inheritDoc}
      */
     @Override
-    public ValidatorContext traversableResolver(TraversableResolver traversableResolver) {
+    public ApacheFactoryContext traversableResolver(TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
         return this;
     }
@@ -110,15 +120,27 @@ public class ApacheFactoryContext implements ValidatorContext {
      * {@inheritDoc}
      */
     @Override
-    public ValidatorContext constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
+    public ApacheFactoryContext constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
         return this;
     }
 
     @Override
-    public ValidatorContext parameterNameProvider(ParameterNameProvider parameterNameProvider) {
+    public ApacheFactoryContext parameterNameProvider(ParameterNameProvider parameterNameProvider) {
         this.parameterNameProvider = parameterNameProvider;
         resetMeta(); // needed since parameter names are a component of validation metadata
+        return this;
+    }
+
+    @Override
+    public ApacheFactoryContext clockProvider(ClockProvider clockProvider) {
+        this.clockProvider = clockProvider;
+        return this;
+    }
+
+    @Override
+    public ApacheFactoryContext addValueExtractor(ValueExtractor<?> extractor) {
+        valueExtractors.add(extractor);
         return this;
     }
 
@@ -137,7 +159,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      */
     @Override
     public Validator getValidator() {
-        return new ClassValidator(this);
+        return new ValidatorImpl(this);
     }
 
     /**
@@ -160,6 +182,23 @@ public class ApacheFactoryContext implements ValidatorContext {
 
     public ParameterNameProvider getParameterNameProvider() {
         return parameterNameProvider == null ? factory.getParameterNameProvider() : parameterNameProvider;
+    }
+
+    public ClockProvider getClockProvider() {
+        return clockProvider == null ? factory.getClockProvider() : clockProvider;
+    }
+
+    public ValueExtractors getValueExtractors() {
+        return valueExtractors;
+    }
+
+    public DescriptorManager getDescriptorManager() {
+        // TODO handle context customizations
+        return factory.getDescriptorManager();
+    }
+
+    public GroupsComputer getGroupsComputer() {
+        return groupsComputer.get();
     }
 
     boolean isTreatMapsLikeBeans() {

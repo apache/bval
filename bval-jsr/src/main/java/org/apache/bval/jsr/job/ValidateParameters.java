@@ -170,11 +170,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
     protected abstract T getRootBean();
 
     @Override
-    ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,
-        Path propertyPath) {
-
-        final String message = validatorContext.getMessageInterpolator().interpolate(messageTemplate, context);
-
+    ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
+        ConstraintValidatorContextImpl<T> context, Path propertyPath) {
         return new ConstraintViolationImpl<T>(messageTemplate, message, getRootBean(), context.getFrame().getBean(),
             propertyPath, context.getFrame().context.getValue(), context.getConstraintDescriptor(), getRootBeanClass(),
             context.getConstraintDescriptor().unwrap(ConstraintD.class).getDeclaredOn(), null, parameterValues);

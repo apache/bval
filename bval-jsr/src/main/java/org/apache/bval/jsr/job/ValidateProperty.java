@@ -511,10 +511,8 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
     }
 
     @Override
-    ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,
-        Path propertyPath) {
-        final String message = validatorContext.getMessageInterpolator().interpolate(messageTemplate, context);
-
+    ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
+        ConstraintValidatorContextImpl<T> context, Path propertyPath) {
         return new ConstraintViolationImpl<>(messageTemplate, message, rootBean, context.getFrame().getBean(),
             propertyPath, context.getFrame().context.getValue(), context.getConstraintDescriptor(), rootBeanClass,
             context.getConstraintDescriptor().unwrap(ConstraintD.class).getDeclaredOn(), null, null);

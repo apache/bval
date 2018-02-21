@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintTarget;
 import javax.validation.GroupSequence;
 import javax.validation.Valid;
 import javax.validation.constraintvalidation.ValidationTarget;
@@ -51,6 +53,7 @@ import org.apache.bval.jsr.descriptor.GroupConversion;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
@@ -209,7 +212,7 @@ public class ReflectionBuilder {
 
                 @Override
                 public Annotation[] getDeclaredConstraints(Metas<E> meta) {
-                    return getConstraints(meta, ValidationTarget.ANNOTATED_ELEMENT);
+                    return getConstraints(ConstraintTarget.RETURN_VALUE);
                 }
             };
         }
@@ -219,43 +222,72 @@ public class ReflectionBuilder {
             return new ReflectionBuilder.ForElement<E>(meta) {
                 @Override
                 public Annotation[] getDeclaredConstraints(Metas<E> meta) {
-                    return getConstraints(meta, ValidationTarget.PARAMETERS);
+                    return getConstraints(ConstraintTarget.PARAMETERS);
                 }
             };
         }
 
-        private Annotation[] getConstraints(Metas<E> ignored, ValidationTarget validationTarget) {
-            return Optional.of(getConstraintsByTarget(meta)).map(m -> m.get(validationTarget))
+        private Annotation[] getConstraints(ConstraintTarget constraintTarget) {
+            return Optional.of(getConstraintsByTarget()).map(m -> m.get(constraintTarget))
                 .map(l -> l.toArray(new Annotation[l.size()])).orElse(ObjectUtils.EMPTY_ANNOTATION_ARRAY);
         }
 
-        private Map<ValidationTarget, List<Annotation>> getConstraintsByTarget(Metas<E> ignored) {
+        private Map<ConstraintTarget, List<Annotation>> getConstraintsByTarget() {
             final Annotation[] declaredConstraints = AnnotationsManager.getDeclaredConstraints(meta);
             if (ObjectUtils.isEmpty(declaredConstraints)) {
                 return Collections.emptyMap();
             }
-            final Map<ValidationTarget, List<Annotation>> result = new EnumMap<>(ValidationTarget.class);
+            final Map<ConstraintTarget, List<Annotation>> result = new EnumMap<>(ConstraintTarget.class);
 
             for (Annotation constraint : declaredConstraints) {
                 final Class<? extends Annotation> constraintType = constraint.annotationType();
-                final Optional<ValidationTarget> explicitTarget =
+                final Optional<ConstraintTarget> explicitTarget =
                     Optional.of(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.analyze(constraintType))
-                        .filter(ConstraintAnnotationAttributes.Worker::isValid).map(w -> w.read(constraint));
+                        .filter(ConstraintAnnotationAttributes.Worker::isValid)
+                        .<ConstraintTarget> map(w -> w.read(constraint)).filter(et -> et != ConstraintTarget.IMPLICIT);
 
-                final ValidationTarget target = explicitTarget.orElseGet(() -> {
+                final ConstraintTarget target;
+
+                if (explicitTarget.isPresent()) {
+                    target = explicitTarget.get();
+                } else {
                     final Set<ValidationTarget> supportedTargets =
-                        validatorFactory.getAnnotationsManager().supportedTargets(constraintType);
+                            validatorFactory.getAnnotationsManager().supportedTargets(constraintType);
 
-                    Validate.validState(supportedTargets.size() == 1,
-                        "Found %d possible %s types for constraint type %s and no explicit assignment via #%s()",
-                        supportedTargets.size(), ValidationTarget.class.getSimpleName(), constraintType.getName(),
-                        ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName());
-
-                    return supportedTargets.iterator().next();
-                });
+                    if (supportedTargets.size() == 1) {
+                        final ValidationTarget validationTarget = supportedTargets.iterator().next();
+                        switch (validationTarget) {
+                        case PARAMETERS:
+                            target = ConstraintTarget.PARAMETERS;
+                            break;
+                        case ANNOTATED_ELEMENT:
+                            target = ConstraintTarget.RETURN_VALUE;
+                            break;
+                        default:
+                            throw Exceptions.create(IllegalStateException::new, "Unknown %s %s for %s",
+                                ValidationTarget.class.getSimpleName(), validationTarget, constraintType);
+                        }
+                    } else {
+                        target = impliedConstraintTarget();
+                        Exceptions.raiseIf(target == null, ConstraintDeclarationException::new,
+                            "Found %d possible %s types for constraint type %s and no explicit assignment via #%s()",
+                            supportedTargets.size(), ValidationTarget.class.getSimpleName(), constraintType.getName(),
+                            ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName());
+                    }
+                }
                 result.computeIfAbsent(target, k -> new ArrayList<>()).add(constraint);
             }
             return result;
+        }
+
+        private ConstraintTarget impliedConstraintTarget() {
+            if (meta.getHost().getParameterCount() == 0) {
+                return ConstraintTarget.RETURN_VALUE;
+            }
+            if (Void.TYPE.equals(meta.getType())) {
+                return ConstraintTarget.PARAMETERS;
+            }
+            return null;
         }
     }
 

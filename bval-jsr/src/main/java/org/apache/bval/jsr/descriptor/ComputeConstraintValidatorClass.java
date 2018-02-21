@@ -23,6 +23,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -139,7 +140,7 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         @SuppressWarnings("unchecked")
         final Class<A> constraintType = (Class<A>) constraint.annotationType();
 
-        Exceptions.raiseIf(set.size() > 1 || !composed && set.isEmpty(), UnexpectedTypeException::new,
+        Exceptions.raiseIf(set.size() > 1 || !composed && set.isEmpty(), ConstraintDefinitionException::new,
             "%d cross-parameter %ss found for constraint type %s", set.size(), CV, constraintType);
 
         final Class<? extends ConstraintValidator<A, ?>> result = set.iterator().next().getType();
@@ -153,10 +154,14 @@ class ComputeConstraintValidatorClass<A extends Annotation>
     private Class<? extends ConstraintValidator<A, ?>> findAnnotatedElementValidator(
         Set<ConstraintValidatorInfo<A>> infos) {
 
-        final Map<Class<?>, Class<? extends ConstraintValidator<?, ?>>> validators =
-            infos.stream().filter(info -> info.getSupportedTargets().contains(ValidationTarget.ANNOTATED_ELEMENT))
-                .map(ConstraintValidatorInfo::getType)
-                .collect(Collectors.toMap(ComputeConstraintValidatorClass::getValidatedType, Function.identity()));
+        final Map<Class<?>, Class<? extends ConstraintValidator<?, ?>>> validators = infos.stream()
+            .filter(info -> info.getSupportedTargets().contains(ValidationTarget.ANNOTATED_ELEMENT))
+            .map(ConstraintValidatorInfo::getType).collect(
+                Collectors.toMap(ComputeConstraintValidatorClass::getValidatedType, Function.identity(), (v1, v2) -> {
+                    Exceptions.raiseUnless(Objects.equals(v1, v2), UnexpectedTypeException::new,
+                        "Detected collision of constraint and target type between %s and %s", v1, v2);
+                    return v1;
+                }));
 
         final Map<Type, Class<? extends ConstraintValidator<?, ?>>> candidates = new HashMap<>();
 

@@ -113,7 +113,9 @@ public class XmlBuilder {
 
         @Override
         public MetadataBuilder.ForClass getClass(Metas<Class<?>> meta) {
-            return new XmlBuilder.ForClass(descriptor.getClassType());
+            final ClassType classType = descriptor.getClassType();
+            return classType == null ? EmptyBuilder.instance().forBean().getClass(meta)
+                : new XmlBuilder.ForClass(classType);
         }
 
         @Override

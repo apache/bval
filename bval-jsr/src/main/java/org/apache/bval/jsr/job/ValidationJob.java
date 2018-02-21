@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintViolation;
+import javax.validation.MessageInterpolator;
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
 import javax.validation.UnexpectedTypeException;
@@ -371,10 +372,25 @@ public abstract class ValidationJob<T> {
             .getBeanDescriptor(Validate.notNull(bean, "bean").getClass());
     }
 
+    final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,
+        Path propertyPath) {
+        return createViolation(messageTemplate, interpolate(messageTemplate, context), context, propertyPath);
+    }
+
     abstract ConstraintViolationImpl<T> createViolation(String messageTemplate,
-        ConstraintValidatorContextImpl<T> context, Path propertyPath);
+        String message, ConstraintValidatorContextImpl<T> context, Path propertyPath);
 
     protected abstract Frame<?> computeBaseFrame();
 
     protected abstract Class<T> getRootBeanClass();
+
+    private final String interpolate(String messageTemplate, MessageInterpolator.Context context) {
+        try {
+            return validatorContext.getMessageInterpolator().interpolate(messageTemplate, context);
+        } catch (ValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ValidationException(e);
+        }
+    }
 }

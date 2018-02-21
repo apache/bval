@@ -43,12 +43,14 @@ public class DecimalMinValidatorForNumber implements ConstraintValidator<Decimal
         if (value == null) {
             return true;
         }
+        BigDecimal bigValue;
         if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(minValue) != -1;
+            bigValue = (BigDecimal) value;
+        } else if (value instanceof BigInteger) {
+            bigValue = new BigDecimal((BigInteger) value);
+        } else {
+            bigValue = new BigDecimal(value.doubleValue());
         }
-        if (value instanceof BigInteger) {
-            return (new BigDecimal((BigInteger) value)).compareTo(minValue) != -1;
-        }
-        return (new BigDecimal(value.doubleValue()).compareTo(minValue)) != -1;
+        return bigValue.compareTo(minValue) >= 0;
     }
 }

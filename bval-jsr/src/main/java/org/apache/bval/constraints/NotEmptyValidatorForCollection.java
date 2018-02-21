@@ -25,11 +25,8 @@ import java.util.Collection;
 /**
  * Description: <br/>
  */
-public class NotEmptyValidatorForCollection implements ConstraintValidator<NotEmpty, Collection<?>> {
-    @Override
-    public void initialize(NotEmpty constraintAnnotation) {
-        // do nothing
-    }
+public class NotEmptyValidatorForCollection
+    implements ConstraintValidator<javax.validation.constraints.NotEmpty, Collection<?>> {
 
     @Override
     public boolean isValid(Collection<?> value, ConstraintValidatorContext context) {

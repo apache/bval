@@ -42,10 +42,10 @@ public class MinValidatorForNumber implements ConstraintValidator<Min, Number> {
             return true;
         }
         if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(minValue)) != -1;
+            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(minValue)) >= 0;
         }
         if (value instanceof BigInteger) {
-            return ((BigInteger) value).compareTo(BigInteger.valueOf(minValue)) != -1;
+            return ((BigInteger) value).compareTo(BigInteger.valueOf(minValue)) >= 0;
         }
         return value.longValue() >= minValue;
     }

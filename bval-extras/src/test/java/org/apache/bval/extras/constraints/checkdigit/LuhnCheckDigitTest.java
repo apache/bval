@@ -37,7 +37,7 @@ public class LuhnCheckDigitTest extends AbstractCheckDigitTest {
     private static final String VALID_DINERS     = "30569309025904";
 
     @Override
-    protected ConstraintValidator<? extends Annotation, String> getConstraint() {
+    protected ConstraintValidator<? extends Annotation, ? super String> getConstraint() {
         return new LuhnValidator();
     }
 

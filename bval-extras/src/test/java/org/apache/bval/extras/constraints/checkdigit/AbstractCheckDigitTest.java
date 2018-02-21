@@ -37,7 +37,7 @@ public abstract class AbstractCheckDigitTest {
     private int checkDigitLth;
 
     /** Check digit routine being tested */
-    private ConstraintValidator<? extends Annotation, String> routine;
+    private ConstraintValidator<? extends Annotation, ? super String> routine;
 
     /** Array of valid code values */
     private String[] valid;
@@ -55,7 +55,7 @@ public abstract class AbstractCheckDigitTest {
         return 1;
     }
 
-    protected abstract ConstraintValidator<? extends Annotation, String> getConstraint();
+    protected abstract ConstraintValidator<? extends Annotation, ? super String> getConstraint();
 
     protected abstract String[] getValid();
 

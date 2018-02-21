@@ -20,11 +20,12 @@ package org.apache.bval.extras.constraints.net;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Arrays.asList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * <p><b>Domain name</b> validation routines.</p>
@@ -63,7 +64,7 @@ import static java.util.Arrays.asList;
  * {@link java.net.InetAddress} for that functionality.)
  * </p>
  */
-public class DomainValidator implements ConstraintValidator<Domain, String> {
+public class DomainValidator implements ConstraintValidator<Domain, CharSequence> {
 
     private boolean allowLocal;
 
@@ -77,15 +78,13 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
      * {@inheritDoc}
      */
     @Override
-    public boolean isValid(String domain, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence domain, ConstraintValidatorContext context) {
         Matcher matcher = DOMAIN_NAME_REGEX.matcher(domain);
         if (matcher.matches()) {
             domain = matcher.group(1);
-            return isValidTld(domain);
-        } else if (allowLocal && DOMAIN_LABEL.matcher(domain).matches()) {
-            return true;
+            return isValidTld(domain.toString());
         }
-        return false;
+        return allowLocal && DOMAIN_LABEL.matcher(domain).matches();
     }
 
     /**
@@ -154,7 +153,7 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
     }
 
     private static String chompLeadingDot(String str) {
-        if (str.startsWith(".")) {
+        if (str.charAt(0) == '.') {
             return str.substring(1);
         }
         return str;
@@ -165,11 +164,11 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
     // ----- Authoritative and comprehensive list at:
     // ----- http://data.iana.org/TLD/tlds-alpha-by-domain.txt
 
-    private static final List<String> INFRASTRUCTURE_TLDS = asList("arpa", // internet infrastructure
+    private static final Set<String> INFRASTRUCTURE_TLDS = new HashSet<>(Arrays.asList("arpa", // internet infrastructure
         "root" // diagnostic marker for non-truncated root zone
-    );
+    ));
 
-    private static final List<String> GENERIC_TLDS = asList("aero", // air transport industry
+    private static final Set<String> GENERIC_TLDS = new HashSet<>(Arrays.asList("aero", // air transport industry
         "asia", // Pan-Asia/Asia Pacific
         "biz", // businesses
         "cat", // Catalan linguistic/cultural community
@@ -189,9 +188,9 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
         "edu", // accredited postsecondary US education entities
         "mil", // United States Military
         "int" // organizations established by international treaty
-    );
+    ));
 
-    private static final List<String> COUNTRY_CODE_TLDS = asList("ac", // Ascension Island
+    private static final Set<String> COUNTRY_CODE_TLDS = new HashSet<>(Arrays.asList("ac", // Ascension Island
         "ad", // Andorra
         "ae", // United Arab Emirates
         "af", // Afghanistan
@@ -440,11 +439,11 @@ public class DomainValidator implements ConstraintValidator<Domain, String> {
         "za", // South Africa
         "zm", // Zambia
         "zw" // Zimbabwe
-    );
+    ));
 
-    private static final List<String> LOCAL_TLDS = asList("localhost", // RFC2606 defined
+    private static final Set<String> LOCAL_TLDS = new HashSet<>(Arrays.asList("localhost", // RFC2606 defined
         "localdomain" // Also widely used as localhost.localdomain
-    );
+    ));
 
     /**
      * {@inheritDoc}

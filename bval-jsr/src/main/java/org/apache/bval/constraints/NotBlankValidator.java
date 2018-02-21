@@ -14,40 +14,21 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.
+ * under the License.    
  */
 package org.apache.bval.constraints;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.Max;
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import javax.validation.constraints.NotBlank;
 
 /**
- * Check that the number being validated is less than or equal to the maximum
- * value specified.
+ * Validate {@link NotBlank} for {@link CharSequence}.
  */
-public class MaxValidatorForNumber implements ConstraintValidator<Max, Number> {
-
-    private long max;
+public class NotBlankValidator implements ConstraintValidator<NotBlank, CharSequence> {
 
     @Override
-    public void initialize(Max annotation) {
-        this.max = annotation.value();
-    }
-
-    @Override
-    public boolean isValid(Number value, ConstraintValidatorContext context) {
-        if (value == null) {
-            return true;
-        }
-        if (value instanceof BigDecimal) {
-            return ((BigDecimal) value).compareTo(BigDecimal.valueOf(max)) < 1;
-        }
-        if (value instanceof BigInteger) {
-            return ((BigInteger) value).compareTo(BigInteger.valueOf(max)) < 1;
-        }
-        return value.longValue() <= max;
+    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+        return value == null || value.length() > 0 && !value.chars().allMatch(Character::isWhitespace);
     }
 }

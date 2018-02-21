@@ -38,7 +38,7 @@ import static java.lang.Character.isDigit;
  *
  * @param <A>
  */
-abstract class ModulusValidator<A extends Annotation> implements ConstraintValidator<A, String> {
+abstract class ModulusValidator<A extends Annotation> implements ConstraintValidator<A, CharSequence> {
 
     private final int modulus;
 
@@ -58,7 +58,7 @@ abstract class ModulusValidator<A extends Annotation> implements ConstraintValid
      * {@inheritDoc}
      */
     @Override
-    public boolean isValid(String code, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence code, ConstraintValidatorContext context) {
         if (code.length() == 0) {
             return false;
         }

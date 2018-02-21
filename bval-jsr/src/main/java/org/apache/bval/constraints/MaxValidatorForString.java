@@ -42,7 +42,7 @@ public class MaxValidatorForString implements ConstraintValidator<Max, String> {
             return true;
         }
         try {
-            return new BigDecimal(value).compareTo(BigDecimal.valueOf(max)) != 1;
+            return new BigDecimal(value).compareTo(BigDecimal.valueOf(max)) < 1;
         } catch (NumberFormatException nfe) {
             return false;
         }

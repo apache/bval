@@ -48,7 +48,7 @@ public class DecimalMinValidatorForString implements ConstraintValidator<Decimal
             return true;
         }
         try {
-            return new BigDecimal(value).compareTo(minValue) != -1;
+            return new BigDecimal(value).compareTo(minValue) >= 0;
         } catch (NumberFormatException nfe) {
             return false;
         }

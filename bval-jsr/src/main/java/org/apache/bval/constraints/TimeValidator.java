@@ -18,20 +18,27 @@
  */
 package org.apache.bval.constraints;
 
+import java.lang.annotation.Annotation;
+import java.time.Clock;
+import java.util.function.Function;
+import java.util.function.IntPredicate;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-/**
- * Description: <br/>
- */
-public class NotEmptyValidatorForString implements ConstraintValidator<NotEmpty, String> {
-    @Override
-    public void initialize(NotEmpty constraintAnnotation) {
-        // do nothing
+public abstract class TimeValidator<A extends Annotation, T extends Comparable<T>> implements ConstraintValidator<A, T> {
+
+    private final Function<Clock, T> now;
+    private final IntPredicate test;
+    
+    protected TimeValidator(Function<Clock, T> now, IntPredicate test) {
+        super();
+        this.now = now;
+        this.test = test;
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
-        return value == null || !value.isEmpty();
+    public final boolean isValid(T value, ConstraintValidatorContext context) {
+        return value == null || test.test(value.compareTo(now.apply(context.getClockProvider().getClock())));
     }
 }

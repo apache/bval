@@ -42,7 +42,7 @@ public class MinValidatorForString implements ConstraintValidator<Min, String> {
             return true;
         }
         try {
-            return new BigDecimal(value).compareTo(BigDecimal.valueOf(minValue)) != -1;
+            return new BigDecimal(value).compareTo(BigDecimal.valueOf(minValue)) >= 0;
         } catch (NumberFormatException nfe) {
             return false;
         }

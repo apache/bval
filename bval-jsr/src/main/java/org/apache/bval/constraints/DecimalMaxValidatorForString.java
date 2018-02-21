@@ -46,7 +46,7 @@ public class DecimalMaxValidatorForString implements ConstraintValidator<Decimal
             return true;
         }
         try {
-            return new BigDecimal(value).compareTo(maxValue) != 1;
+            return new BigDecimal(value).compareTo(maxValue) < 1;
         } catch (NumberFormatException nfe) {
             return false;
         }

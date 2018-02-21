@@ -18,17 +18,21 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE_USE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.validation.Constraint;
+import javax.validation.OverridesAttribute;
+import javax.validation.Payload;
 
 /**
  * <pre>
@@ -37,14 +41,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  */
 @Documented
-@Constraint(validatedBy = { NotEmptyValidatorForCollection.class, NotEmptyValidatorForMap.class,
-    NotEmptyValidatorForString.class, NotEmptyValidator.class })
-@Target({ METHOD, FIELD, ANNOTATION_TYPE, PARAMETER })
+@Constraint(validatedBy = {})
+@Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
 @Retention(RUNTIME)
+@javax.validation.constraints.NotEmpty
+@Deprecated
 public @interface NotEmpty {
     Class<?>[] groups() default {};
 
+    @OverridesAttribute(constraint = javax.validation.constraints.NotEmpty.class, name = "message")
     String message() default "{org.apache.bval.constraints.NotEmpty.message}";
 
     Class<? extends Payload>[] payload() default {};
+
+    public @interface List {
+        NotEmpty[] value();
+    }
 }

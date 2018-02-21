@@ -26,7 +26,7 @@ import static java.lang.Character.getNumericValue;
 /**
  * <b>IBAN</b> (International Bank Account Number) Check Digit calculation/validation.
  * <p>
- * This rountine is based on the ISO 7064 Mod 97,10 check digit caluclation routine.
+ * This routine is based on the ISO 7064 Mod 97,10 check digit caluclation routine.
  * <p>
  * The two check digit characters in a IBAN number are the third and fourth characters
  * in the code. For <i>check digit</i> calculation/validation the first four characters are moved
@@ -40,7 +40,7 @@ import static java.lang.Character.getNumericValue;
  *  <a href="http://en.wikipedia.org/wiki/International_Bank_Account_Number">Wikipedia -
  *  IBAN number</a>.
  */
-public final class IBANValidator implements ConstraintValidator<IBAN, String> {
+public final class IBANValidator implements ConstraintValidator<IBAN, CharSequence> {
 
     private static final long MAX = 999999999;
 
@@ -50,12 +50,12 @@ public final class IBANValidator implements ConstraintValidator<IBAN, String> {
      * {@inheritDoc}
      */
     @Override
-    public boolean isValid(String code, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence code, ConstraintValidatorContext context) {
         if (code.length() < 5) {
             return false;
         }
 
-        String reformattedCode = code.substring(4) + code.substring(0, 4);
+        String reformattedCode = code.subSequence(4, code.length()).toString() + code.subSequence(0, 4).toString();
         long total = 0;
         for (int i = 0; i < reformattedCode.length(); i++) {
             int charValue = getNumericValue(reformattedCode.charAt(i));

@@ -28,7 +28,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -45,7 +47,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Luhn
 @Pattern(regexp = "^(30[0-5]\\d{11}|3095\\d{10}|36\\d{12}|3[8-9]\\d{12})$")
 @Constraint(validatedBy = {})
-@Target({ FIELD, ANNOTATION_TYPE, PARAMETER })
+@Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER })
 @Retention(RUNTIME)
 public @interface Diners {
 

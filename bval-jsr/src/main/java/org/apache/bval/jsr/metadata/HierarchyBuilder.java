@@ -18,11 +18,9 @@ package org.apache.bval.jsr.metadata;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -30,13 +28,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.validation.metadata.Scope;
 
-import org.apache.bval.jsr.descriptor.GroupConversion;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
@@ -106,71 +102,6 @@ public class HierarchyBuilder extends CompositeBuilder {
             @Override
             public List<Class<?>> getGroupSequence(Metas<Class<?>> meta) {
                 return delegate.getGroupSequence(hierarchyType);
-            }
-        }
-
-        static class ForGetter extends HierarchyDelegate<MetadataBuilder.ForContainer<Method>>
-            implements MetadataBuilder.ForContainer<Method> {
-            final Metas.ForMethod meta;
-
-            ForGetter(MetadataBuilder.ForContainer<Method> delegate,
-                org.apache.bval.jsr.metadata.Metas.ForMethod meta) {
-                super(delegate);
-                this.meta = Validate.notNull(meta, "meta");
-            }
-
-            @Override
-            public Annotation[] getDeclaredConstraints(Metas<Method> meta) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public boolean isCascade(Metas<Method> meta) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-
-            @Override
-            public Set<GroupConversion> getGroupConversions(Metas<Method> meta) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public Map<ContainerElementKey, org.apache.bval.jsr.metadata.MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-                Metas<Method> meta) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-        }
-
-        static class ForMethod extends HierarchyDelegate<MetadataBuilder.ForExecutable<Method>>
-            implements MetadataBuilder.ForExecutable<Method> {
-            final Metas.ForMethod meta;
-
-            public ForMethod(MetadataBuilder.ForExecutable<Method> delegate, Metas.ForMethod meta) {
-                super(delegate);
-                this.meta = Validate.notNull(meta, "meta");
-            }
-
-            @Override
-            public MetadataBuilder.ForContainer<Method> getReturnValue(Metas<Method> meta) {
-
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public MetadataBuilder.ForElement<Method> getCrossParameter(Metas<Method> meta) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Metas<Method> meta) {
-                // TODO Auto-generated method stub
-                return null;
             }
         }
     }

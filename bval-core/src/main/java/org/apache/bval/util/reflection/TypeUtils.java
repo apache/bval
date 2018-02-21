@@ -28,8 +28,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 
 /**
@@ -148,13 +151,7 @@ public class TypeUtils {
          */
         @Override
         public int hashCode() {
-            int result = 71 << 4;
-            result |= raw.hashCode();
-            result <<= 4;
-            result |= useOwner == null ? 0 : useOwner.hashCode();
-            result <<= 8;
-            result |= Arrays.hashCode(typeArguments);
-            return result;
+            return Objects.hash(raw, useOwner, typeArguments);
         }
     }
 
@@ -162,7 +159,8 @@ public class TypeUtils {
      * WildcardType implementation class.
      */
     private static final class WildcardTypeImpl implements WildcardType {
-        private static final Type[] EMPTY_BOUNDS = new Type[0];
+        private static final Type[] EMPTY_UPPER_BOUNDS = { Object.class };
+        private static final Type[] EMPTY_LOWER_BOUNDS = new Type[0];
 
         private final Type[] upperBounds;
         private final Type[] lowerBounds;
@@ -173,8 +171,8 @@ public class TypeUtils {
          * @param lowerBounds of this type
          */
         private WildcardTypeImpl(final Type[] upperBounds, final Type[] lowerBounds) {
-            this.upperBounds = upperBounds != null ? upperBounds : EMPTY_BOUNDS;
-            this.lowerBounds = lowerBounds != null ? lowerBounds : EMPTY_BOUNDS;
+            this.upperBounds = ObjectUtils.isEmpty(upperBounds) ? EMPTY_UPPER_BOUNDS : upperBounds;
+            this.lowerBounds = lowerBounds == null ? EMPTY_LOWER_BOUNDS : lowerBounds;
         }
 
         /**
@@ -214,11 +212,7 @@ public class TypeUtils {
          */
         @Override
         public int hashCode() {
-            int result = 73 << 8;
-            result |= Arrays.hashCode(upperBounds);
-            result <<= 8;
-            result |= Arrays.hashCode(lowerBounds);
-            return result;
+            return Objects.hash(upperBounds, lowerBounds);
         }
     }
 
@@ -320,19 +314,13 @@ public class TypeUtils {
         if (type instanceof TypeVariable<?>) {
             // if any of the bounds are assignable to the class, then the
             // type is assignable to the class.
-            for (final Type bound : ((TypeVariable<?>) type).getBounds()) {
-                if (isAssignable(bound, toClass)) {
-                    return true;
-                }
-            }
-
-            return false;
+            return Stream.of(((TypeVariable<?>) type).getBounds()).anyMatch(bound -> isAssignable(bound, toClass));
         }
 
         // the only classes to which a generic array type can be assigned
         // are class Object and array classes
         if (type instanceof GenericArrayType) {
-            return toClass.equals(Object.class)
+            return Object.class.equals(toClass)
                     || toClass.isArray()
                     && isAssignable(((GenericArrayType) type).getGenericComponentType(), toClass
                             .getComponentType());
@@ -554,25 +542,15 @@ public class TypeUtils {
 
         if (type instanceof WildcardType) {
             // so long as one of the upper bounds is assignable, it's good
-            for (final Type bound : getImplicitUpperBounds((WildcardType) type)) {
-                if (isAssignable(bound, toGenericArrayType)) {
-                    return true;
-                }
-            }
-
-            return false;
+            return Stream.of(getImplicitUpperBounds((WildcardType) type))
+                .anyMatch(bound -> isAssignable(bound, toGenericArrayType));
         }
 
         if (type instanceof TypeVariable<?>) {
             // probably should remove the following logic and just return false.
             // type variables cannot specify arrays as bounds.
-            for (final Type bound : getImplicitBounds((TypeVariable<?>) type)) {
-                if (isAssignable(bound, toGenericArrayType)) {
-                    return true;
-                }
-            }
-
-            return false;
+            return Stream.of(getImplicitBounds((TypeVariable<?>) type))
+                .anyMatch(bound -> isAssignable(bound, toGenericArrayType));
         }
 
         if (type instanceof ParameterizedType) {
@@ -871,8 +849,7 @@ public class TypeUtils {
                     getRawType(parameterizedOwnerType), subtypeVarAssigns);
         } else {
             // no owner, prep the type variable assignments map
-            typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
-                    : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
+            typeVarAssigns = subtypeVarAssigns == null ? new HashMap<>() : new HashMap<>(subtypeVarAssigns);
         }
 
         // get the subject parameterized type's arguments
@@ -917,7 +894,7 @@ public class TypeUtils {
             if (toClass.isPrimitive()) {
                 // dealing with widening here. No type arguments to be
                 // harvested with these two types.
-                return new HashMap<TypeVariable<?>, Type>();
+                return new HashMap<>();
             }
 
             // work with wrapper the wrapper class instead of the primitive
@@ -925,8 +902,8 @@ public class TypeUtils {
         }
 
         // create a copy of the incoming map, or an empty one if it's null
-        final HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
+        final Map<TypeVariable<?>, Type> typeVarAssigns =
+            subtypeVarAssigns == null ? new HashMap<>() : new HashMap<>(subtypeVarAssigns);
 
         // has target class been reached?
         if (toClass.equals(cls)) {
@@ -1030,7 +1007,7 @@ public class TypeUtils {
             return bounds;
         }
 
-        final Set<Type> types = new HashSet<Type>(bounds.length);
+        final Set<Type> types = new HashSet<>(bounds.length);
 
         for (final Type type1 : bounds) {
             boolean subtypeFound = false;
@@ -1243,7 +1220,7 @@ public class TypeUtils {
                 if (p.getOwnerType() == null) {
                     parameterizedTypeArguments = typeArguments;
                 } else {
-                    parameterizedTypeArguments = new HashMap<TypeVariable<?>, Type>(typeArguments);
+                    parameterizedTypeArguments = new HashMap<>(typeArguments);
                     parameterizedTypeArguments.putAll(TypeUtils.getTypeArguments(p));
                 }
                 final Type[] args = p.getActualTypeArguments();

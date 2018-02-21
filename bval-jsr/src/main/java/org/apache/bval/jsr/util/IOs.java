@@ -33,25 +33,20 @@ public class IOs {
         if (stream == null) {
             return null;
         }
-
-        // force ByteArrayOutputStream since we close the stream ATM
-        /*if (stream.markSupported()) {
-            return stream;
-        } else {*/
-        try {
+        try (InputStream in = stream) {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             final byte[] buffer = new byte[1024];
             int length;
-            while ((length = stream.read(buffer)) != -1) {
+            while ((length = in.read(buffer)) != -1) {
                 baos.write(buffer, 0, length);
             }
             return new ByteArrayInputStream(baos.toByteArray());
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        /*}*/
     }
 
+    //TODO see if needed
     public static void closeQuietly(Closeable closeable) {
         if (closeable != null) {
             try {

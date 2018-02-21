@@ -26,7 +26,7 @@ public final class Proxies {
     private static final Set<String> KNOWN_PROXY_CLASSNAMES;
 
     static {
-        final Set<String> s = new HashSet<String>();
+        final Set<String> s = new HashSet<>();
         s.add("org.jboss.weld.bean.proxy.ProxyObject");
         KNOWN_PROXY_CLASSNAMES = Collections.unmodifiableSet(s);
     }

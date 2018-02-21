@@ -24,8 +24,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.commons.weaver.privilizer.Privilizing;
 
@@ -33,35 +41,43 @@ import org.apache.commons.weaver.privilizer.Privilizing;
  * Security-agnostic "blueprint" class for reflection-related operations. Intended for use by Apache BVal code.
  */
 public class Reflection {
+    /**
+     * Inclusivity literals for {@link #hierarchy(Class, Interfaces)}.
+     * Taken from commons-lang3.
+     */
+    public enum Interfaces {
+        INCLUDE, EXCLUDE
+    }
+
     private static final Object[][] NATIVE_CODES = new Object[][]{
-            {byte.class, "byte", "B"},
-            {char.class, "char", "C"},
-            {double.class, "double", "D"},
-            {float.class, "float", "F"},
-            {int.class, "int", "I"},
-            {long.class, "long", "J"},
-            {short.class, "short", "S"},
-            {boolean.class, "boolean", "Z"},
-            {void.class, "void", "V"}
+            { byte.class, "byte", "B" },
+            { char.class, "char", "C" },
+            { double.class, "double", "D" },
+            { float.class, "float", "F" },
+            { int.class, "int", "I" },
+            { long.class, "long", "J" },
+            { short.class, "short", "S" },
+            { boolean.class, "boolean", "Z" },
+            { void.class, "void", "V" }
     };
 
     /**
      * Maps primitive {@code Class}es to their corresponding wrapper {@code Class}.
      */
-    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_MAP = new HashMap<Class<?>, Class<?>>();
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_MAP;
     static {
-        PRIMITIVE_WRAPPER_MAP.put(Boolean.TYPE, Boolean.class);
-        PRIMITIVE_WRAPPER_MAP.put(Byte.TYPE, Byte.class);
-        PRIMITIVE_WRAPPER_MAP.put(Character.TYPE, Character.class);
-        PRIMITIVE_WRAPPER_MAP.put(Short.TYPE, Short.class);
-        PRIMITIVE_WRAPPER_MAP.put(Integer.TYPE, Integer.class);
-        PRIMITIVE_WRAPPER_MAP.put(Long.TYPE, Long.class);
-        PRIMITIVE_WRAPPER_MAP.put(Double.TYPE, Double.class);
-        PRIMITIVE_WRAPPER_MAP.put(Float.TYPE, Float.class);
-        PRIMITIVE_WRAPPER_MAP.put(Void.TYPE, Void.TYPE);
+        final Map<Class<?>, Class<?>> m = new HashMap<>();
+        m.put(Boolean.TYPE, Boolean.class);
+        m.put(Byte.TYPE, Byte.class);
+        m.put(Character.TYPE, Character.class);
+        m.put(Short.TYPE, Short.class);
+        m.put(Integer.TYPE, Integer.class);
+        m.put(Long.TYPE, Long.class);
+        m.put(Double.TYPE, Double.class);
+        m.put(Float.TYPE, Float.class);
+        m.put(Void.TYPE, Void.TYPE);
+        PRIMITIVE_WRAPPER_MAP = Collections.unmodifiableMap(m);
     }
-
-
 
     /**
      * <p>Converts the specified primitive Class object to its corresponding
@@ -129,8 +145,7 @@ public class Reflection {
         return cl == null ? clazz.getClassLoader() : cl;
     }
 
-    public static Class<?> toClass(String className) throws ClassNotFoundException
-    {
+    public static Class<?> toClass(String className) throws ClassNotFoundException {
         ClassLoader cl = getClassLoader(Reflection.class);
         return toClass(className, cl);
     }
@@ -142,7 +157,7 @@ public class Reflection {
      *
      * @throws RuntimeException on load error
      */
-    public static Class toClass(String className, ClassLoader loader) throws ClassNotFoundException {
+    public static Class<?> toClass(String className, ClassLoader loader) throws ClassNotFoundException {
         return toClass(className, false, loader);
     }
 
@@ -153,7 +168,7 @@ public class Reflection {
      *
      * @throws RuntimeException on load error
      */
-    public static Class toClass(String className, boolean resolve, ClassLoader loader) throws ClassNotFoundException {
+    public static Class<?> toClass(String className, boolean resolve, ClassLoader loader) throws ClassNotFoundException {
         if (className == null) {
             throw new NullPointerException("className == null");
         }
@@ -171,7 +186,7 @@ public class Reflection {
             for (int i = 0; !primitive && (i < NATIVE_CODES.length); i++) {
                 if (NATIVE_CODES[i][1].equals(className)) {
                     if (dims == 0) {
-                        return (Class) NATIVE_CODES[i][0];
+                        return (Class<?>) NATIVE_CODES[i][0];
                     }
                     className = (String) NATIVE_CODES[i][2];
                     primitive = true;
@@ -296,6 +311,22 @@ public class Reflection {
     }
 
     /**
+     * Perform a search against the class hierarchy.
+     * @param clazz
+     * @param search
+     * @return T or {@code null}
+     */
+    public static <T> T find(final Class<?> clazz, Function<Class<?>, T> search) {
+        for (Class<?> t : hierarchy(clazz, Interfaces.INCLUDE)) {
+            final T value = search.apply(t);
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Construct a new instance of {@code cls} using its default constructor.
      * @param cls
      * @return T
@@ -333,4 +364,94 @@ public class Reflection {
         return true;
     }
 
+    /**
+     * Get an {@link Iterable} that can iterate over a class hierarchy in ascending (subclass to superclass) order.
+     * Taken from commons-lang3.
+     *
+     * @param type the type to get the class hierarchy from
+     * @param interfacesBehavior switch indicating whether to include or exclude interfaces
+     * @return Iterable an Iterable over the class hierarchy of the given class
+     */
+    public static Iterable<Class<?>> hierarchy(final Class<?> type, final Interfaces interfacesBehavior) {
+        if (type == null) {
+            return Collections.emptySet();
+        }
+        final Iterable<Class<?>> classes = new Iterable<Class<?>>() {
+
+            @Override
+            public Iterator<Class<?>> iterator() {
+                return new Iterator<Class<?>>() {
+                    Optional<Class<?>> next;
+                    {
+                        next = Optional.of(type);
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return next.isPresent();
+                    }
+
+                    @Override
+                    public Class<?> next() {
+                        final Class<?> result = next.orElseThrow(NoSuchElementException::new);
+                        next = Optional.ofNullable(result.getSuperclass());
+                        return result;
+                    }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+        if (interfacesBehavior != Interfaces.INCLUDE) {
+            return classes;
+        }
+        return new Iterable<Class<?>>() {
+
+            @Override
+            public Iterator<Class<?>> iterator() {
+                final Set<Class<?>> seenInterfaces = new HashSet<Class<?>>();
+                final Iterator<Class<?>> wrapped = classes.iterator();
+    
+                return new Iterator<Class<?>>() {
+                    Iterator<Class<?>> interfaces = Collections.emptyIterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return interfaces.hasNext() || wrapped.hasNext();
+                    }
+
+                    @Override
+                    public Class<?> next() {
+                        if (interfaces.hasNext()) {
+                            final Class<?> nextInterface = interfaces.next();
+                            seenInterfaces.add(nextInterface);
+                            return nextInterface;
+                        }
+                        final Class<?> nextSuperclass = wrapped.next();
+                        final Set<Class<?>> currentInterfaces = new LinkedHashSet<>();
+                        walkInterfaces(currentInterfaces, nextSuperclass);
+                        interfaces = currentInterfaces.iterator();
+                        return nextSuperclass;
+                    }
+
+                    private void walkInterfaces(final Set<Class<?>> addTo, final Class<?> c) {
+                        for (final Class<?> iface : c.getInterfaces()) {
+                            if (!seenInterfaces.contains(iface)) {
+                                addTo.add(iface);
+                            }
+                            walkInterfaces(addTo, iface);
+                        }
+                    }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
 }

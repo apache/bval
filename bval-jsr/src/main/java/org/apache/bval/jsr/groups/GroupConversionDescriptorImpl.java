@@ -26,10 +26,9 @@ public class GroupConversionDescriptorImpl implements GroupConversionDescriptor 
 
     public GroupConversionDescriptorImpl(final Group from, final Group to) {
         this.from = from.getGroup();
-        if (this.from.getAnnotation(GroupSequence.class) != null) {
+        if (this.from.isAnnotationPresent(GroupSequence.class)) {
             throw new ConstraintDeclarationException("from() can't get a group sequence");
         }
-
         this.to = to.getGroup();
     }
 

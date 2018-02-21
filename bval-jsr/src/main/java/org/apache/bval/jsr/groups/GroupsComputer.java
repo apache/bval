@@ -18,18 +18,23 @@
  */
 package org.apache.bval.jsr.groups;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.ValidationException;
 import javax.validation.groups.Default;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 
 /**
  * Description: compute group order, based on the RI behavior as to guarantee
@@ -37,107 +42,91 @@ import java.util.concurrent.ConcurrentHashMap;
  * Implementation is thread-safe.
  */
 public class GroupsComputer {
-    public static final Class<?>[] DEFAULT_GROUP = new Class<?>[] { Default.class };
+    public static final Class<?>[] DEFAULT_GROUP = { Default.class };
 
-    /** The default group array used in case any of the validate methods is called without a group. */
+    /**
+     * The default group array used in case any of the validate methods is
+     * called without a group.
+     */
     private static final Groups DEFAULT_GROUPS;
     static {
-        DEFAULT_GROUPS = new GroupsComputer().computeGroups(Arrays.asList(DEFAULT_GROUP));
+        DEFAULT_GROUPS = new Groups();
+        for (Class<?> g : DEFAULT_GROUP) {
+            DEFAULT_GROUPS.insertGroup(new Group(g));
+        }
     }
 
     /** caching resolved groups in a thread-safe map. */
-    private final Map<Class<?>, List<Group>> resolvedSequences = new ConcurrentHashMap<Class<?>, List<Group>>();
+    private final Map<Class<?>, List<Group>> resolvedSequences = new ConcurrentHashMap<>();
 
     /**
      * Compute groups from an array of group classes.
+     * 
      * @param groups
      * @return {@link Groups}
      */
-    public Groups computeGroups(Class<?>[] groups) {
-        if (groups == null) {
-            throw new IllegalArgumentException("null passed as group");
-        }
-
-        // if no groups is specified use the default
-        if (groups.length == 0) {
-            return DEFAULT_GROUPS;
-        }
-
+    @SafeVarargs
+    public final Groups computeGroups(Class<?>... groups) {
+        Exceptions.raiseIf(groups == null, IllegalArgumentException::new, "null validation groups specified");
         return computeGroups(Arrays.asList(groups));
     }
 
     /**
      * Main compute implementation.
+     * 
      * @param groups
      * @return {@link Groups}
      */
     protected Groups computeGroups(Collection<Class<?>> groups) {
-        if (groups == null || groups.size() == 0) {
-            throw new IllegalArgumentException("At least one group has to be specified.");
+        Validate.notNull(groups, "groups");
+
+        if (groups.isEmpty() || Arrays.asList(DEFAULT_GROUP).equals(new ArrayList<>(groups))) {
+            return DEFAULT_GROUPS;
         }
+        Exceptions.raiseIf(groups.stream().anyMatch(Objects::isNull), IllegalArgumentException::new,
+            "Null group specified");
 
         for (final Class<?> clazz : groups) {
-            if (clazz == null) {
-                throw new IllegalArgumentException("At least one group has to be specified.");
-            }
-
-            if (!clazz.isInterface()) {
-                throw new ValidationException("A group has to be an interface. " + clazz.getName() + " is not.");
-            }
+            Exceptions.raiseUnless(clazz.isInterface(), ValidationException::new,
+                "A group must be an interface. %s is not.", clazz);
         }
-
-        Groups chain = new Groups();
+        final Groups chain = new Groups();
         for (Class<?> clazz : groups) {
-            GroupSequence anno = clazz.getAnnotation(GroupSequence.class);
+            final GroupSequence anno = clazz.getAnnotation(GroupSequence.class);
             if (anno == null) {
-                Group group = new Group(clazz);
-                chain.insertGroup(group);
+                chain.insertGroup(new Group(clazz));
                 insertInheritedGroups(clazz, chain);
-            } else {
-                insertSequence(clazz, anno, chain);
+                continue;
             }
+            chain.insertSequence(
+                resolvedSequences.computeIfAbsent(clazz, g -> resolveSequence(g, anno, new HashSet<>())));
         }
-
         return chain;
     }
 
     private void insertInheritedGroups(Class<?> clazz, Groups chain) {
         for (Class<?> extendedInterface : clazz.getInterfaces()) {
-            Group group = new Group(extendedInterface);
-            chain.insertGroup(group);
+            chain.insertGroup(new Group(extendedInterface));
             insertInheritedGroups(extendedInterface, chain);
         }
     }
 
-    private void insertSequence(Class<?> clazz, GroupSequence anno, Groups chain) {
-        List<Group> sequence;
-        if (resolvedSequences.containsKey(clazz)) {
-            sequence = resolvedSequences.get(clazz);
-        } else {
-            sequence = resolveSequence(clazz, anno, new HashSet<Class<?>>());
-        }
-        chain.insertSequence(sequence);
-    }
-
     private List<Group> resolveSequence(Class<?> group, GroupSequence sequenceAnnotation,
         Set<Class<?>> processedSequences) {
-        if (processedSequences.contains(group)) {
-            throw new GroupDefinitionException("Cyclic dependency in groups definition");
-        } else {
-            processedSequences.add(group);
-        }
-        List<Group> resolvedGroupSequence = new LinkedList<Group>();
-        Class<?>[] sequenceArray = sequenceAnnotation.value();
-        for (Class<?> clazz : sequenceArray) {
-            GroupSequence anno = clazz.getAnnotation(GroupSequence.class);
+        Exceptions.raiseUnless(processedSequences.add(group), GroupDefinitionException::new,
+            "Cyclic dependency in groups definition");
+
+        final List<Group> resolvedGroupSequence = new ArrayList<>();
+        for (Class<?> clazz : sequenceAnnotation.value()) {
+            final GroupSequence anno = clazz.getAnnotation(GroupSequence.class);
             if (anno == null) {
-                resolvedGroupSequence.add(new Group(clazz)); // group part of sequence
+                // group part of sequence
+                resolvedGroupSequence.add(new Group(clazz));
             } else {
-                List<Group> tmpSequence = resolveSequence(clazz, anno, processedSequences); // recursion!
-                resolvedGroupSequence.addAll(tmpSequence);
+                // recursion!
+                resolvedGroupSequence.addAll(resolveSequence(clazz, anno, processedSequences));
             }
         }
-        resolvedSequences.put(group, resolvedGroupSequence);
         return resolvedGroupSequence;
     }
 }

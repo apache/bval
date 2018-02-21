@@ -18,6 +18,8 @@
  */
 package org.apache.bval.jsr.groups;
 
+import java.util.Objects;
+
 import javax.validation.groups.Default;
 
 /**
@@ -52,7 +54,7 @@ public final class Group {
      */
     @Override
     public String toString() {
-        return "Group{" + "group=" + group + '}';
+        return String.format("%s{group=%s}", Group.class.getSimpleName(), group);
     }
 
     /**
@@ -71,13 +73,10 @@ public final class Group {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || !getClass().equals(o.getClass())) {
             return false;
         }
-
-        Group group1 = (Group) o;
-
-        return group != null ? group.equals(group1.group) : group1.group == null;
+        return Objects.equals(group, ((Group) o).group);
     }
 
     /**
@@ -85,6 +84,6 @@ public final class Group {
      */
     @Override
     public int hashCode() {
-        return (group != null ? group.hashCode() : 0);
+        return Objects.hashCode(group);
     }
 }

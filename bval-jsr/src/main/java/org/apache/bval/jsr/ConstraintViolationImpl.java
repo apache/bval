@@ -20,15 +20,20 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
+
+import org.apache.bval.util.Exceptions;
+
 import java.io.Serializable;
 import java.lang.annotation.ElementType;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Description: Describe a constraint validation defect.<br/>
- * From rootBean and propertyPath, it is possible to rebuild the context of the failure
+ * From rootBean and propertyPath, it is possible to rebuild the context of the
+ * failure
  */
-class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable {
+public class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable {
     /** Serialization version */
     private static final long serialVersionUID = 1L;
 
@@ -49,8 +54,11 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
 
     /**
      * Create a new ConstraintViolationImpl instance.
-     * @param messageTemplate - message reason (raw message)
-     * @param message - interpolated message (locale specific)
+     * 
+     * @param messageTemplate
+     *            - message reason (raw message)
+     * @param message
+     *            - interpolated message (locale specific)
      * @param rootBean
      * @param leafBean
      * @param propertyPath
@@ -79,8 +87,8 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
     }
 
     /**
-     * {@inheritDoc}
-     * former name getInterpolatedMessage()
+     * {@inheritDoc} former name getInterpolatedMessage()
+     * 
      * @return The interpolated error message for this constraint violation.
      */
     @Override
@@ -98,6 +106,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
 
     /**
      * {@inheritDoc}
+     * 
      * @return Root bean being validated
      */
     @Override
@@ -133,6 +142,7 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
 
     /**
      * {@inheritDoc}
+     * 
      * @return The value failing to pass the constraint
      */
     @Override
@@ -142,8 +152,9 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
 
     /**
      * {@inheritDoc}
-     * @return the property path to the value from <code>rootBean</code>
-     *         Null if the value is the rootBean itself
+     * 
+     * @return the property path to the value from <code>rootBean</code> Null if
+     *         the value is the rootBean itself
      */
     @Override
     public Path getPropertyPath() {
@@ -160,10 +171,8 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
 
     @Override
     public <U> U unwrap(Class<U> type) {
-        if (type.isInstance(this)) {
-            return type.cast(this);
-        }
-        throw new ValidationException("Type " + type + " is not supported");
+        Exceptions.raiseUnless(type.isInstance(this), ValidationException::new, "Type %s is not supported", type);
+        return type.cast(this);
     }
 
     /**
@@ -171,45 +180,28 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
      */
     @Override
     public String toString() {
-        return "ConstraintViolationImpl{" + "rootBean=" + rootBean + ", propertyPath='" + propertyPath + '\''
-            + ", message='" + message + '\'' + ", leafBean=" + leafBean + ", value=" + value + '}';
+        return String.format("%s{rootBean=%s, propertyPath='%s', message='%s', leafBean=%s, value=%s}",
+            ConstraintViolationImpl.class.getSimpleName(), rootBean, propertyPath, message, leafBean, value);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || !getClass().equals(o.getClass())) {
             return false;
+        }
 
-        ConstraintViolationImpl that = (ConstraintViolationImpl) o;
+        @SuppressWarnings("rawtypes")
+        final ConstraintViolationImpl that = (ConstraintViolationImpl) o;
 
-        if (constraintDescriptor != null ? !constraintDescriptor.equals(that.constraintDescriptor)
-            : that.constraintDescriptor != null)
-            return false;
-        if (elementType != that.elementType)
-            return false;
-        if (leafBean != null ? !leafBean.equals(that.leafBean) : that.leafBean != null)
-            return false;
-        if (message != null ? !message.equals(that.message) : that.message != null)
-            return false;
-        if (messageTemplate != null ? !messageTemplate.equals(that.messageTemplate) : that.messageTemplate != null)
-            return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
-        if (!Arrays.equals(parameters, that.parameters))
-            return false;
-        if (propertyPath != null ? !propertyPath.equals(that.propertyPath) : that.propertyPath != null)
-            return false;
-        if (returnValue != null ? !returnValue.equals(that.returnValue) : that.returnValue != null)
-            return false;
-        if (rootBean != null ? !rootBean.equals(that.rootBean) : that.rootBean != null)
-            return false;
-        if (rootBeanClass != null ? !rootBeanClass.equals(that.rootBeanClass) : that.rootBeanClass != null)
-            return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
-            return false;
-
-        return true;
+        return Objects.equals(constraintDescriptor, that.constraintDescriptor) && elementType == that.elementType
+            && Objects.equals(leafBean, that.leafBean) && Objects.equals(message, that.message)
+            && Objects.equals(messageTemplate, that.messageTemplate) && Arrays.equals(parameters, that.parameters)
+            && Objects.equals(propertyPath, that.propertyPath) && Objects.equals(returnValue, that.returnValue)
+            && Objects.equals(rootBean, that.rootBean) && Objects.equals(rootBeanClass, that.rootBeanClass)
+            && Objects.equals(value, that.value);
     }
 
     @Override
@@ -217,18 +209,10 @@ class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Serializable
         return hashCode;
     }
 
-    public int computeHashCode() {
-        int result = messageTemplate != null ? messageTemplate.hashCode() : 0;
-        result = 31 * result + (message != null ? message.hashCode() : 0);
-        result = 31 * result + (rootBean != null ? rootBean.hashCode() : 0);
-        result = 31 * result + (rootBeanClass != null ? rootBeanClass.hashCode() : 0);
-        result = 31 * result + (leafBean != null ? leafBean.hashCode() : 0);
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        result = 31 * result + (propertyPath != null ? propertyPath.hashCode() : 0);
-        result = 31 * result + (elementType != null ? elementType.hashCode() : 0);
-        result = 31 * result + (constraintDescriptor != null ? constraintDescriptor.hashCode() : 0);
-        result = 31 * result + (returnValue != null ? returnValue.hashCode() : 0);
-        result = 31 * result + (parameters != null ? Arrays.hashCode(parameters) : 0);
+    private int computeHashCode() {
+        int result = Objects.hash(messageTemplate, message, rootBean, rootBeanClass, leafBean, value, propertyPath,
+            elementType, constraintDescriptor, returnValue);
+        result = 31 * result + (parameters == null ? 0 : Arrays.hashCode(parameters));
         return result;
     }
 }

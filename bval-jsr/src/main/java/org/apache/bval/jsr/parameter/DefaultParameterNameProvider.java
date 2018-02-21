@@ -18,30 +18,29 @@
  */
 package org.apache.bval.jsr.parameter;
 
-import javax.validation.ParameterNameProvider;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.lang.reflect.Parameter;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.validation.ParameterNameProvider;
 
 public class DefaultParameterNameProvider implements ParameterNameProvider {
-    private static final String ARG = "arg";
+
+    private static List<String> parameterNames(Executable exe) {
+        return Stream.of(exe.getParameters()).map(Parameter::getName).collect(Collectors.toList());
+    }
 
     @Override
     public List<String> getParameterNames(Constructor<?> constructor) {
-        return names(constructor.getParameterTypes().length);
+        return parameterNames(constructor);
     }
 
     @Override
     public List<String> getParameterNames(Method method) {
-        return names(method.getParameterTypes().length);
-    }
-
-    private static List<String> names(final int length) {
-        final List<String> list = new ArrayList<String>();
-        for (int i = 0; i < length; i++) {
-            list.add(ARG + i);
-        }
-        return list;
+        return parameterNames(method);
     }
 }

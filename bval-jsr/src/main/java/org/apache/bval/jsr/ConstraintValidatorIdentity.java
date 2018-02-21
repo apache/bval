@@ -19,6 +19,8 @@
 
 package org.apache.bval.jsr;
 
+import java.util.Objects;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.Path;
 
@@ -120,12 +122,7 @@ final class ConstraintValidatorIdentity {
      */
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((this.bean == null) ? 0 : this.bean.hashCode());
-        result = prime * result + ((this.path == null) ? 0 : this.path.hashCode());
-        result = prime * result + ((this.constraintValidator == null) ? 0 : this.constraintValidator.hashCode());
-        return result;
+        return Objects.hash(bean, path, constraintValidator);
     }
 
 }

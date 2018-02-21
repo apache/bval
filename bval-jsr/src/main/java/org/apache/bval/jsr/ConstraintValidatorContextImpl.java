@@ -25,6 +25,7 @@ import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.model.ValidationListener;
 
+import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Path;
@@ -38,7 +39,10 @@ import java.util.List;
  * Description: Short-lived {@link ConstraintValidatorContext} implementation passed by
  * a {@link ConstraintValidation} to its adapted {@link ConstraintValidator}. <br/>
  */
-public class ConstraintValidatorContextImpl implements ConstraintValidatorContext {
+@Deprecated
+public class ConstraintValidatorContextImpl
+    extends org.apache.bval.jsr.job.ConstraintValidatorContextImpl<Object>
+    implements ConstraintValidatorContext {
     private final List<ValidationListener.Error> errorMessages = new LinkedList<ValidationListener.Error>();
 
     private final ConstraintValidation<?> constraintDescriptor;
@@ -53,6 +57,7 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
      */
     public ConstraintValidatorContextImpl(GroupValidationContext<?> validationContext,
         ConstraintValidation<?> aConstraintValidation) {
+        super();
         this.validationContext = validationContext;
         this.constraintDescriptor = aConstraintValidation;
     }
@@ -154,6 +159,13 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
             parent.addError(messageTemplate, propertyPath);
             return parent;
         }
+
+        @Override
+        public ContainerElementNodeBuilderCustomizableContext addContainerElementNode(
+            String arg0, Class<?> arg1, Integer arg2) {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     /**
@@ -189,5 +201,11 @@ public class ConstraintValidatorContextImpl implements ConstraintValidatorContex
      */
     public void addError(String messageTemplate, Path propertyPath) {
         errorMessages.add(new ValidationListener.Error(messageTemplate, propertyPath, null));
+    }
+
+    @Override
+    public ClockProvider getClockProvider() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

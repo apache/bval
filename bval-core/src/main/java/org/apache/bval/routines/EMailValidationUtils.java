@@ -29,12 +29,11 @@ public class EMailValidationUtils {
     private static String ATOM = "[^\\x00-\\x1F\\(\\)\\<\\>\\@\\,\\;\\:\\\\\\\"\\.\\[\\]\\s]";
     private static String DOMAIN = "(" + ATOM + "+(\\." + ATOM + "+)*";
     private static String IP_DOMAIN = "\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\]";
-    public static final java.util.regex.Pattern DEFAULT_EMAIL_PATTERN;
+    public static final Pattern DEFAULT_EMAIL_PATTERN;
 
     static {
-        DEFAULT_EMAIL_PATTERN =
-            java.util.regex.Pattern.compile("^" + ATOM + "+(\\." + ATOM + "+)*@" + DOMAIN + "|" + IP_DOMAIN + ")$",
-                java.util.regex.Pattern.CASE_INSENSITIVE);
+        DEFAULT_EMAIL_PATTERN = Pattern.compile("^" + ATOM + "+(\\." + ATOM + "+)*@" + DOMAIN + "|" + IP_DOMAIN + ")$",
+            Pattern.CASE_INSENSITIVE);
     }
 
     /**

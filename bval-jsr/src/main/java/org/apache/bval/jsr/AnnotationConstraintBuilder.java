@@ -72,7 +72,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         final boolean reportFromComposite =
             annotation != null && annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
         constraintValidation =
-            new ConstraintValidation<A>(validatorClasses, annotation, owner, access, reportFromComposite, target);
+            new ConstraintValidation<>(validatorClasses, annotation, owner, access, reportFromComposite, target);
         buildFromAnnotation();
     }
 
@@ -139,7 +139,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         if (!foundGroups) {
             throw new ConstraintDefinitionException("Annotation " + annotationType.getName() + " has no groups method");
         }
-        if (validationAppliesTo != null && !ConstraintTarget.IMPLICIT.equals(validationAppliesTo.getDefaultValue())) {
+        if (validationAppliesTo != null && ConstraintTarget.IMPLICIT != validationAppliesTo.getDefaultValue()) {
             throw new ConstraintDefinitionException("validationAppliesTo default value should be IMPLICIT");
         }
 
@@ -257,9 +257,9 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
 
         final Set<Class<? extends Payload>> payloadSet;
         if (payload_raw == null) {
-            payloadSet = Collections.<Class<? extends Payload>> emptySet();
+            payloadSet = Collections.emptySet();
         } else {
-            payloadSet = new HashSet<Class<? extends Payload>>(payload_raw.length);
+            payloadSet = new HashSet<>(payload_raw.length);
             Collections.addAll(payloadSet, payload_raw);
         }
         constraintValidation.setPayload(payloadSet);
@@ -323,18 +323,13 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
      * @return An integer index always >= 0
      */
     private int computeIndex(ConstraintValidation<?> composite) {
-        int idx = 0;
-        for (ConstraintValidation<?> each : constraintValidation.getComposingValidations()) {
-            if (each.getAnnotation().annotationType() == composite.getAnnotation().annotationType()) {
-                idx++;
-            }
-        }
-        return idx;
+        return (int) constraintValidation.getComposingValidations().stream()
+            .filter(v -> v.getAnnotation().annotationType().equals(composite.getAnnotation().annotationType())).count();
     }
 
     /** read overridesAttributes from constraintValidation.annotation */
     private void buildOverridesAttributes() {
-        overrides = new LinkedList<ConstraintOverrides>();
+        overrides = new LinkedList<>();
         for (Method method : constraintValidation.getAnnotation().annotationType().getDeclaredMethods()) {
             final OverridesAttribute.List overridesAttributeList = method.getAnnotation(OverridesAttribute.List.class);
             if (overridesAttributeList != null) {
@@ -359,12 +354,9 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
     }
 
     private ConstraintOverrides findOverride(Class<? extends Annotation> constraint, int constraintIndex) {
-        for (ConstraintOverrides each : overrides) {
-            if (each.constraintType == constraint && each.constraintIndex == constraintIndex) {
-                return each;
-            }
-        }
-        return null;
+        return overrides.stream()
+            .filter(ov -> ov.constraintType.equals(constraint) && ov.constraintIndex == constraintIndex).findFirst()
+            .orElse(null);
     }
 
     /**
@@ -381,7 +373,7 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
         private ConstraintOverrides(Class<? extends Annotation> constraintType, int constraintIndex) {
             this.constraintType = constraintType;
             this.constraintIndex = constraintIndex;
-            values = new HashMap<String, Object>();
+            values = new HashMap<>();
         }
 
         @SuppressWarnings("unchecked")
@@ -392,11 +384,9 @@ final class AnnotationConstraintBuilder<A extends Annotation> {
             // And the annotation
             final Annotation originalAnnot = composite.getAnnotation();
             final AnnotationProxyBuilder<Annotation> apb = new AnnotationProxyBuilder<Annotation>(originalAnnot);
-            for (String key : values.keySet()) {
-                apb.putValue(key, values.get(key));
-            }
-            final Annotation newAnnot = apb.createAnnotation();
-            ((ConstraintValidation<Annotation>) composite).setAnnotation(newAnnot);
+            values.forEach(apb::putValue);
+
+            ((ConstraintValidation<Annotation>) composite).setAnnotation(apb.createAnnotation());
         }
     }
 

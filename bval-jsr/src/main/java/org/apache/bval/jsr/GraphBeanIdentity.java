@@ -18,6 +18,8 @@
  */
 package org.apache.bval.jsr;
 
+import java.util.Objects;
+
 /**
  * Class that stores the needed properties to avoid circular paths when
  * validating an object graph.
@@ -80,32 +82,16 @@ public class GraphBeanIdentity {
      */
     @Override
     public boolean equals(Object obj) {
-
         if (this == obj) {
             return true;
         }
-
-        if (obj == null) {
-            return false;
-        }
-
         if (!(obj instanceof GraphBeanIdentity)) {
             return false;
         }
-
         GraphBeanIdentity other = (GraphBeanIdentity) obj;
 
-        // Bean ref must be the same
-        if (this.bean != other.bean) {
-            return false;
-        }
-
-        // Group ref must be the same
-        if (this.group != other.group) {
-            return false;
-        }
-
-        return true;
+        // Bean ref must be the same; Group ref must be the same
+        return bean == other.bean && group == other.group;
     }
 
     /**
@@ -113,11 +99,7 @@ public class GraphBeanIdentity {
      */
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((this.bean == null) ? 0 : this.bean.hashCode());
-        result = prime * result + ((this.group == null) ? 0 : this.group.hashCode());
-        return result;
+        return Objects.hash(bean, group);
     }
 
 }

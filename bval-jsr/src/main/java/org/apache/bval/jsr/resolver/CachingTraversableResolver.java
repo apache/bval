@@ -21,6 +21,7 @@ import javax.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Cache results of a delegated traversable resovler to optimize calls
@@ -34,7 +35,7 @@ import java.util.Map;
  */
 public class CachingTraversableResolver implements TraversableResolver, CachingRelevant {
     private TraversableResolver delegate;
-    private Map<CacheEntry, CacheEntry> cache = new HashMap<CacheEntry, CacheEntry>();
+    private Map<CacheEntry, CacheEntry> cache = new HashMap<>();
 
     /**
      * Convenience method to check whether caching is necessary on a given {@link TraversableResolver}.
@@ -61,11 +62,8 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
      * @see #needsCaching(TraversableResolver)
      */
     public static TraversableResolver cacheFor(TraversableResolver traversableResolver) {
-        if (needsCaching(traversableResolver)) {
-            return new CachingTraversableResolver(traversableResolver);
-        } else {
-            return traversableResolver;
-        }
+        return needsCaching(traversableResolver) ? new CachingTraversableResolver(traversableResolver)
+            : traversableResolver;
     }
 
     /**
@@ -158,15 +156,14 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
             if (this == o) {
                 return true;
             }
-            if (o == null || getClass() != o.getClass()) {
+            if (o == null || !getClass().equals(o.getClass())) {
                 return false;
             }
 
             CacheEntry that = (CacheEntry) o;
 
-            return elementType == that.elementType && path.equals(that.path) && type.equals(that.type)
-                && !(object != null ? !object.equals(that.object) : that.object != null) && node.equals(that.node);
-
+            return elementType == that.elementType && Objects.equals(path, that.path) && Objects.equals(type, that.type)
+                && Objects.equals(object, that.object) && Objects.equals(node, that.node);
         }
 
         /**
@@ -178,12 +175,7 @@ public class CachingTraversableResolver implements TraversableResolver, CachingR
         }
 
         private int buildHashCode() {
-            int result = object != null ? object.hashCode() : 0;
-            result = 31 * result + node.hashCode();
-            result = 31 * result + type.hashCode();
-            result = 31 * result + path.hashCode();
-            result = 31 * result + elementType.hashCode();
-            return result;
+            return Objects.hash(object, node, type, path, elementType);
         }
     }
 }

@@ -21,6 +21,7 @@ import org.apache.bval.jsr.groups.GroupConversionDescriptorImpl;
 import org.apache.bval.model.MetaBean;
 import org.apache.bval.model.Validation;
 
+import javax.validation.metadata.ContainerElementTypeDescriptor;
 import javax.validation.metadata.GroupConversionDescriptor;
 import javax.validation.metadata.ParameterDescriptor;
 import java.util.Set;
@@ -85,5 +86,11 @@ public class ParameterDescriptorImpl extends ElementDescriptorImpl implements Pa
     public void addGroupMapping(final Group from, final Group to) {
         groupConversions.add(new GroupConversionDescriptorImpl(from, to));
         super.addGroupMapping(from, to);
+    }
+
+    @Override
+    public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

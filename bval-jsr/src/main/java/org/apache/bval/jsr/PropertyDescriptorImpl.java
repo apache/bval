@@ -21,6 +21,9 @@ package org.apache.bval.jsr;
 import org.apache.bval.model.Features;
 import org.apache.bval.model.MetaProperty;
 
+import java.util.Set;
+
+import javax.validation.metadata.ContainerElementTypeDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 
 /**
@@ -66,5 +69,11 @@ class PropertyDescriptorImpl extends ElementDescriptorImpl implements PropertyDe
     public String toString() {
         return "PropertyDescriptorImpl{" + "returnType=" + elementClass + ", propertyPath='" + propertyPath + '\''
             + '}';
+    }
+
+    @Override
+    public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

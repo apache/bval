@@ -38,6 +38,11 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
     //TODO - Spec recommends caching per classloader
     private static final String SPI_CFG = "META-INF/services/javax.validation.spi.ValidationProvider";
 
+    private static ClassLoader getCurrentClassLoader() {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        return cl == null ? DefaultValidationProviderResolver.class.getClassLoader() : cl;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -46,43 +51,28 @@ public class DefaultValidationProviderResolver implements ValidationProviderReso
         List<ValidationProvider<?>> providers = new ArrayList<ValidationProvider<?>>();
         try {
             // get our classloader
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            if (cl == null)
-                cl = DefaultValidationProviderResolver.class.getClassLoader();
+            ClassLoader cl = getCurrentClassLoader();
             // find all service provider cfgs
             Enumeration<URL> cfgs = cl.getResources(SPI_CFG);
             while (cfgs.hasMoreElements()) {
                 final URL url = cfgs.nextElement();
-                BufferedReader br = null;
-                try {
-                    br = new BufferedReader(new InputStreamReader(url.openStream()), 256);
-                    String line = br.readLine();
-                    // cfgs may contain multiple providers and/or comments
-                    while (line != null) {
-                        line = line.trim();
-                        if (!line.startsWith("#")) {
-                            try {
-                                // try loading the specified class
-                                @SuppressWarnings("rawtypes")
-                                final Class<? extends ValidationProvider> providerType =
-                                    cl.loadClass(line).asSubclass(ValidationProvider.class);
-                                // create an instance to return
-                                providers
-                                    .add(Reflection.newInstance(providerType.asSubclass(ValidationProvider.class)));
-
-                            } catch (ClassNotFoundException e) {
-                                throw new ValidationException(
-                                    "Failed to load provider " + line + " configured in file " + url, e);
-                            }
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()), 256)) {
+                    br.lines().filter(s -> s.charAt(0) != '#').map(String::trim).forEach(line -> {
+                        // cfgs may contain multiple providers and/or comments
+                        try {
+                            // try loading the specified class
+                            @SuppressWarnings("rawtypes")
+                            final Class<? extends ValidationProvider> providerType =
+                                cl.loadClass(line).asSubclass(ValidationProvider.class);
+                            // create an instance to return
+                            providers.add(Reflection.newInstance(providerType));
+                        } catch (ClassNotFoundException e) {
+                            throw new ValidationException(
+                                "Failed to load provider " + line + " configured in file " + url, e);
                         }
-                        line = br.readLine();
-                    }
+                    });
                 } catch (IOException e) {
                     throw new ValidationException("Error trying to read " + url, e);
-                } finally {
-                    if (br != null) {
-                        br.close();
-                    }
                 }
             }
         } catch (IOException e) {

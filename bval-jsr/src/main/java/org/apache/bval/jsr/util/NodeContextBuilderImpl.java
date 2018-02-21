@@ -18,18 +18,19 @@
  */
 package org.apache.bval.jsr.util;
 
-import org.apache.bval.jsr.ConstraintValidatorContextImpl;
+import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.ContainerElementNodeBuilderCustomizableContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder;
 
 /**
  * Description: Implementation of {@link NodeContextBuilder}.<br/>
  */
-final class NodeContextBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
-    private final ConstraintValidatorContextImpl parent;
-    private final String messageTemplate;
-    private final PathImpl propertyPath;
+public final class NodeContextBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder {
+    private final ConstraintValidatorContextImpl<?> context;
+    private final String template;
+    private final PathImpl path;
     // The name of the last "added" node, it will only be added if it has a non-null name
     // The actual incorporation in the path will take place when the definition of the current leaf node is complete
     private final NodeImpl node;
@@ -40,10 +41,10 @@ final class NodeContextBuilderImpl implements ConstraintValidatorContext.Constra
      * @param template
      * @param path
      */
-    NodeContextBuilderImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path, NodeImpl node) {
-        parent = contextImpl;
-        messageTemplate = template;
-        propertyPath = path;
+    NodeContextBuilderImpl(ConstraintValidatorContextImpl<?> contextImpl, String template, PathImpl path, NodeImpl node) {
+        this.context = contextImpl;
+        this.template = template;
+        this.path = path;
         this.node = node;
     }
 
@@ -53,8 +54,8 @@ final class NodeContextBuilderImpl implements ConstraintValidatorContext.Constra
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(Object key) {
         node.setKey(key);
-        propertyPath.addNode(node);
-        return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
+        path.addNode(node);
+        return new NodeBuilderDefinedContextImpl(context, template, path);
     }
 
     /**
@@ -63,8 +64,8 @@ final class NodeContextBuilderImpl implements ConstraintValidatorContext.Constra
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(Integer index) {
         node.setIndex(index);
-        propertyPath.addNode(node);
-        return new NodeBuilderDefinedContextImpl(parent, messageTemplate, propertyPath);
+        path.addNode(node);
+        return new NodeBuilderDefinedContextImpl(context, template, path);
     }
 
     /**
@@ -78,14 +79,14 @@ final class NodeContextBuilderImpl implements ConstraintValidatorContext.Constra
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(
         String name) {
-        propertyPath.addNode(node);
-        return new NodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath, name);
+        path.addNode(node);
+        return new NodeBuilderCustomizableContextImpl(context, template, path, name);
     }
 
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
-        propertyPath.addNode(node);
-        return new LeafNodeBuilderCustomizableContextImpl(parent, messageTemplate, propertyPath);
+        path.addNode(node);
+        return new LeafNodeBuilderCustomizableContextImpl(context, template, path);
     }
 
     /**
@@ -93,9 +94,18 @@ final class NodeContextBuilderImpl implements ConstraintValidatorContext.Constra
      */
     @Override
     public ConstraintValidatorContext addConstraintViolation() {
-        propertyPath.addNode(node);
-        parent.addError(messageTemplate, propertyPath);
-        return parent;
+        path.addNode(node);
+        context.addError(template, path);
+        return context;
+    }
+
+    @Override
+    public ContainerElementNodeBuilderCustomizableContext addContainerElementNode(String name, Class<?> containerType,
+        Integer typeArgumentIndex) {
+        final NodeImpl node = new NodeImpl.ContainerElementNodeImpl(name, containerType, typeArgumentIndex);
+        path.addNode(node);
+        return new ContainerElementNodeBuilderCustomizableContextImpl(context, template, path, name, containerType,
+            typeArgumentIndex);
     }
 
 }

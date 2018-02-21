@@ -16,9 +16,10 @@
  */
 package org.apache.bval.util;
 
+import java.util.function.Function;
+
 /**
- * Some used Validate from commons.
- *
+ * Some used validations from commons.
  */
 public final class Validate {
     private Validate() {
@@ -29,16 +30,30 @@ public final class Validate {
     }
 
     public static <T> T notNull(final T object, final String message, final Object... values) {
-        if (object == null) {
-            throw new NullPointerException(String.format(message, values));
-        }
+        return notNull(object, NullPointerException::new, message, values);
+    }
+
+    public static <E extends Exception, T> T notNull(final T object, Function<? super String, ? extends E> fn,
+        final String message, final Object... values) throws E {
+        Exceptions.raiseIf(object == null, fn, message, values);
         return object;
     }
 
     public static void isTrue(final boolean expression, final String message, final Object... values) {
-        if (expression == false) {
-            throw new IllegalArgumentException(String.format(message, values));
-        }
+        Exceptions.raiseUnless(expression, IllegalArgumentException::new, message, values);
     }
 
+    public static <T> T[] noNullElements(final T[] array, final String message, final Object... values) {
+        Validate.notNull(array);
+
+        for (int i = 0; i < array.length; i++) {
+            Exceptions.raiseIf(array[i] == null, IllegalArgumentException::new, message,
+                ObjectUtils.arrayAdd(values, Integer.valueOf(i)));
+        }
+        return array;
+    }
+
+    public static void validState(final boolean expression, final String message, final Object... values) {
+        Exceptions.raiseUnless(expression, IllegalStateException::new, message, values);
+    }
 }

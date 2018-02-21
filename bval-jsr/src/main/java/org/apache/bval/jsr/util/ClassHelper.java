@@ -20,7 +20,11 @@ package org.apache.bval.jsr.util;
 
 import java.io.Serializable;
 import java.security.AccessController;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Common operations on classes that do not require an {@link AccessController}.
@@ -28,6 +32,7 @@ import java.util.List;
  * @author Carlos Vara
  */
 public class ClassHelper {
+    private static final Set<Class<?>> IGNORED_TYPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(null,Object.class,Serializable.class,Cloneable.class)));
 
     private ClassHelper() {
         // No instances please
@@ -42,10 +47,7 @@ public class ClassHelper {
      * @param clazz
      */
     public static List<Class<?>> fillFullClassHierarchyAsList(List<Class<?>> allClasses, Class<?> clazz) {
-        if (clazz == null || clazz == Object.class || clazz == Serializable.class || clazz == Cloneable.class) {
-            return allClasses;
-        }
-        if (allClasses.contains(clazz)) {
+        if (IGNORED_TYPES.contains(clazz) || allClasses.contains(clazz)) {
             return allClasses;
         }
         allClasses.add(clazz);

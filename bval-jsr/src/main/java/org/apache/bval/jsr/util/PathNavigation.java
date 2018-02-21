@@ -18,12 +18,17 @@ package org.apache.bval.jsr.util;
 
 import javax.validation.ValidationException;
 
+import org.apache.bval.util.Exceptions;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.Validate;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.text.ParsePosition;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -67,13 +72,13 @@ public class PathNavigation {
     /**
      * Callback "procedure" that always returns null.
      */
-    public static abstract class CallbackProcedure implements Callback<Object> {
+    public static abstract class CallbackProcedure implements Callback<Void> {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public final Object result() {
+        public final Void result() {
             complete();
             return null;
         }
@@ -82,6 +87,34 @@ public class PathNavigation {
          * Complete this CallbackProcedure. Default implementation is noop.
          */
         protected void complete() {
+        }
+    }
+
+    public static class CompositeCallbackProcedure extends CallbackProcedure {
+        private final List<Callback<?>> delegates;
+
+        public CompositeCallbackProcedure(Callback<?>... delegates) {
+            this(new ArrayList<>(Arrays.asList(delegates)));
+        }
+
+        public CompositeCallbackProcedure(List<Callback<?>> delegates) {
+            super();
+            this.delegates = Validate.notNull(delegates);
+        }
+
+        @Override
+        public void handleProperty(String name) {
+            delegates.forEach(d -> d.handleProperty(name));
+        }
+
+        @Override
+        public void handleIndexOrKey(String value) {
+            delegates.forEach(d -> d.handleIndexOrKey(value));
+        }
+
+        @Override
+        public void handleGenericInIterable() {
+            delegates.forEach(Callback::handleGenericInIterable);
         }
     }
 
@@ -118,8 +151,7 @@ public class PathNavigation {
 
         @Override
         protected void handleNextChar(CharSequence path, PathPosition pos, Writer target) throws IOException {
-            final int 
-                codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, pos.getIndex(), target);
+            final int codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, pos.getIndex(), target);
             if (codePoints == 0) {
                 super.handleNextChar(path, pos, target);
             } else {
@@ -128,13 +160,12 @@ public class PathNavigation {
                 }
             }
         }
-
     }
 
     private static final Logger LOG = Logger.getLogger(PathNavigation.class.getName());
 
     private static final QuotedStringParser QUOTED_STRING_PARSER;
-    
+
     static {
         QuotedStringParser quotedStringParser;
         try {
@@ -164,10 +195,10 @@ public class PathNavigation {
     public static <T> T navigateAndReturn(CharSequence propertyPath, Callback<? extends T> callback) {
         try {
             parse(propertyPath == null ? "" : propertyPath, new PathPosition(callback));
-        } catch (ValidationException ex) {
+        } catch (ValidationException | IllegalArgumentException ex) {
             throw ex;
-        } catch (Exception ex) {
-            throw new ValidationException(String.format("invalid property: %s", propertyPath), ex);
+        } catch (Exception e) {
+            Exceptions.raise(ValidationException::new, e, "invalid property: %s", propertyPath);
         }
         return callback.result();
     }
@@ -190,23 +221,21 @@ public class PathNavigation {
             char c = path.charAt(here);
             switch (c) {
             case ']':
-                throw new IllegalStateException(String.format("Position %s: unexpected '%s'", here, c));
+                Exceptions.raise(IllegalStateException::new, "Position %s: unexpected '%s'", here, c);
             case '[':
                 handleIndex(path, pos.next());
                 break;
             case '.':
-                if (sep) {
-                    throw new IllegalStateException(
-                        String.format("Position %s: expected property, index/key, or end of expression", here));
-                }
+                Exceptions.raiseIf(sep, IllegalStateException::new,
+                    "Position %s: expected property, index/key, or end of expression", here);
+
                 sep = true;
                 pos.next();
                 // fall through:
             default:
-                if (!sep) {
-                    throw new IllegalStateException(String.format(
-                        "Position %s: expected property path separator, index/key, or end of expression", here));
-                }
+                Exceptions.raiseUnless(sep, IllegalStateException::new,
+                    "Position %s: expected property path separator, index/key, or end of expression", here);
+
                 pos.handleProperty(parseProperty(path, pos));
             }
             sep = false;
@@ -214,8 +243,8 @@ public class PathNavigation {
     }
 
     private static String parseProperty(CharSequence path, PathPosition pos) throws Exception {
-        int len = path.length();
-        int start = pos.getIndex();
+        final int len = path.length();
+        final int start = pos.getIndex();
         loop: while (pos.getIndex() < len) {
             switch (path.charAt(pos.getIndex())) {
             case '[':
@@ -225,27 +254,28 @@ public class PathNavigation {
             }
             pos.next();
         }
-        if (pos.getIndex() > start) {
-            return path.subSequence(start, pos.getIndex()).toString();
-        }
-        throw new IllegalStateException(String.format("Position %s: expected property", start));
+        Exceptions.raiseIf(pos.getIndex() == start, IllegalStateException::new, "Position %s: expected property",
+            start);
+
+        return path.subSequence(start, pos.getIndex()).toString();
     }
 
     /**
      * Handles an index/key. If the text contained between [] is surrounded by a pair of " or ', it will be treated as a
-     * string which may contain Java escape sequences. This function is only available if commons-lang3 is available on the classpath!
+     * string which may contain Java escape sequences. This function is only available if commons-lang3 is available on
+     * the classpath!
      * 
      * @param path
      * @param pos
      * @throws Exception
      */
     private static void handleIndex(CharSequence path, PathPosition pos) throws Exception {
-        int len = path.length();
-        int start = pos.getIndex();
+        final int len = path.length();
+        final int start = pos.getIndex();
         if (start < len) {
-            char first = path.charAt(pos.getIndex());
+            final char first = path.charAt(pos.getIndex());
             if (first == '"' || first == '\'') {
-                String s = QUOTED_STRING_PARSER.parseQuotedString(path, pos);
+                final String s = QUOTED_STRING_PARSER.parseQuotedString(path, pos);
                 if (s != null && path.charAt(pos.getIndex()) == ']') {
                     pos.handleIndexOrKey(s);
                     pos.next();
@@ -254,7 +284,7 @@ public class PathNavigation {
             }
             // no quoted string; match ] greedily
             while (pos.getIndex() < len) {
-                int here = pos.getIndex();
+                final int here = pos.getIndex();
                 try {
                     if (path.charAt(here) == ']') {
                         if (here == start) {
@@ -269,13 +299,13 @@ public class PathNavigation {
                 }
             }
         }
-        throw new IllegalStateException(String.format("Position %s: unparsable index", start));
+        Exceptions.raise(IllegalStateException::new, "Position %s: unparsable index", start);
     }
 
     /**
      * ParsePosition/Callback
      */
-    private static class PathPosition extends ParsePosition implements Callback<Object> {
+    private static class PathPosition extends ParsePosition implements Callback<Void> {
         final Callback<?> delegate;
 
         /**
@@ -336,7 +366,7 @@ public class PathNavigation {
          * {@inheritDoc}
          */
         @Override
-        public Object result() {
+        public Void result() {
             return null;
         }
 
@@ -344,9 +374,8 @@ public class PathNavigation {
          * {@inheritDoc}
          */
         /*
-         * Override equals to make findbugs happy;
-         * would simply ignore but doesn't seem to be possible at the inner class level
-         * without attaching the filter to the containing class.
+         * Override equals to make findbugs happy; would simply ignore but doesn't seem to be possible at the inner
+         * class level without attaching the filter to the containing class.
          */
         @Override
         public boolean equals(Object obj) {
@@ -364,5 +393,4 @@ public class PathNavigation {
             return super.hashCode();
         }
     }
-
 }

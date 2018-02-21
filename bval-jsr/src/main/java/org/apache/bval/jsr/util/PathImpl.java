@@ -18,16 +18,19 @@
  */
 package org.apache.bval.jsr.util;
 
-import javax.validation.Path;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+
+import javax.validation.Path;
+
+import org.apache.bval.util.Exceptions;
 
 /**
- * Description: object holding the property path as a list of nodes.
- * (Implementation partially based on reference implementation)
- * <br/>
+ * Description: object holding the property path as a list of nodes. (Implementation partially based on reference
+ * implementation) <br/>
  * This class is not synchronized.
  * 
  * @version $Rev: 1498347 $ $Date: 2013-07-01 12:06:18 +0200 (lun., 01 juil. 2013) $
@@ -41,8 +44,8 @@ public class PathImpl implements Path, Serializable {
     /**
      * Builds non-root paths from expressions.
      */
-    private static class PathImplBuilder implements PathNavigation.Callback<PathImpl> {
-        PathImpl result = new PathImpl();
+    public static class Builder implements PathNavigation.Callback<PathImpl> {
+        private final PathImpl result = PathImpl.create();
 
         /**
          * {@inheritDoc}
@@ -72,9 +75,6 @@ public class PathImpl implements Path, Serializable {
          */
         @Override
         public PathImpl result() {
-            if (result.nodeList.isEmpty()) {
-                throw new IllegalStateException();
-            }
             return result;
         }
 
@@ -85,10 +85,7 @@ public class PathImpl implements Path, Serializable {
         public void handleGenericInIterable() {
             result.addNode(NodeImpl.atIndex(null));
         }
-
     }
-
-    private final List<NodeImpl> nodeList;
 
     /**
      * Returns a {@code Path} instance representing the path described by the given string. To create a root node the
@@ -102,7 +99,7 @@ public class PathImpl implements Path, Serializable {
         if (propertyPath == null || propertyPath.isEmpty()) {
             return create();
         }
-        return PathNavigation.navigateAndReturn(propertyPath, new PathImplBuilder());
+        return PathNavigation.navigateAndReturn(propertyPath, new Builder());
     }
 
     /**
@@ -127,6 +124,10 @@ public class PathImpl implements Path, Serializable {
         return path == null ? null : new PathImpl(path);
     }
 
+    public static PathImpl of(Path path) {
+        return path instanceof PathImpl ? (PathImpl) path : copy(path);
+    }
+
     private static NodeImpl newNode(final Node cast) {
         if (PropertyNode.class.isInstance(cast)) {
             return new NodeImpl.PropertyNodeImpl(cast);
@@ -140,9 +141,6 @@ public class PathImpl implements Path, Serializable {
         if (ConstructorNode.class.isInstance(cast)) {
             return new NodeImpl.ConstructorNodeImpl(cast);
         }
-        if (ConstructorNode.class.isInstance(cast)) {
-            return new NodeImpl.ConstructorNodeImpl(cast);
-        }
         if (ReturnValueNode.class.isInstance(cast)) {
             return new NodeImpl.ReturnValueNodeImpl(cast);
         }
@@ -152,18 +150,19 @@ public class PathImpl implements Path, Serializable {
         if (CrossParameterNode.class.isInstance(cast)) {
             return new NodeImpl.CrossParameterNodeImpl(cast);
         }
+        if (ContainerElementNode.class.isInstance(cast)) {
+            return new NodeImpl.ContainerElementNodeImpl(cast);
+        }
         return new NodeImpl(cast);
     }
 
+    private final LinkedList<NodeImpl> nodeList = new LinkedList<>();
+
     private PathImpl() {
-        nodeList = new ArrayList<NodeImpl>();
     }
 
-    private PathImpl(Iterable<Node> path) {
-        this();
-        for (final Node node : path) {
-            nodeList.add(newNode(node));
-        }
+    private PathImpl(Iterable<? extends Node> nodes) {
+        nodes.forEach(n -> nodeList.add(newNode(n)));
     }
 
     /**
@@ -176,7 +175,7 @@ public class PathImpl implements Path, Serializable {
         if (nodeList.size() != 1) {
             return false;
         }
-        Path.Node first = nodeList.get(0);
+        final Path.Node first = nodeList.peekFirst();
         return !first.isInIterable() && first.getName() == null;
     }
 
@@ -186,13 +185,10 @@ public class PathImpl implements Path, Serializable {
      * @return PathImpl
      */
     public PathImpl getPathWithoutLeafNode() {
-        List<Node> nodes = new ArrayList<Node>(nodeList);
-        PathImpl path = null;
-        if (nodes.size() > 1) {
-            nodes.remove(nodes.size() - 1);
-            path = new PathImpl(nodes);
+        if (nodeList.size() < 2) {
+            return null;
         }
-        return path;
+        return new PathImpl(nodeList.subList(0, nodeList.size() - 1));
     }
 
     /**
@@ -202,12 +198,11 @@ public class PathImpl implements Path, Serializable {
      *            to add
      */
     public void addNode(Node node) {
-        NodeImpl impl = node instanceof NodeImpl ? (NodeImpl) node : newNode(node);
+        final NodeImpl impl = node instanceof NodeImpl ? (NodeImpl) node : newNode(node);
         if (isRootPath()) {
-            nodeList.set(0, impl);
-        } else {
-            nodeList.add(impl);
+            nodeList.pop();
         }
+        nodeList.add(impl);
     }
 
     /**
@@ -229,7 +224,6 @@ public class PathImpl implements Path, Serializable {
                 return;
             }
         }
-
         final NodeImpl node;
         if ("<cross-parameter>".equals(name)) {
             node = new NodeImpl.CrossParameterNodeImpl();
@@ -237,7 +231,6 @@ public class PathImpl implements Path, Serializable {
             node = new NodeImpl.PropertyNodeImpl(name);
         }
         addNode(node);
-
     }
 
     /**
@@ -248,11 +241,10 @@ public class PathImpl implements Path, Serializable {
      *             if no nodes are found
      */
     public NodeImpl removeLeafNode() {
-        if (isRootPath() || nodeList.isEmpty()) {
-            throw new IllegalStateException("No nodes in path!");
-        }
+        Exceptions.raiseIf(isRootPath() || nodeList.isEmpty(), IllegalStateException::new, "No nodes in path!");
+
         try {
-            return nodeList.remove(nodeList.size() - 1);
+            return nodeList.removeLast();
         } finally {
             if (nodeList.isEmpty()) {
                 nodeList.add(new NodeImpl((String) null));
@@ -269,7 +261,7 @@ public class PathImpl implements Path, Serializable {
         if (nodeList.isEmpty()) {
             return null;
         }
-        return (NodeImpl) nodeList.get(nodeList.size() - 1);
+        return nodeList.peekLast();
     }
 
     /**
@@ -292,14 +284,14 @@ public class PathImpl implements Path, Serializable {
         if (path instanceof PathImpl && ((PathImpl) path).isRootPath()) {
             return true;
         }
-        Iterator<Node> pathIter = path.iterator();
-        Iterator<Node> thisIter = iterator();
+        final Iterator<Node> pathIter = path.iterator();
+        final Iterator<Node> thisIter = iterator();
         while (pathIter.hasNext()) {
-            Node pathNode = pathIter.next();
+            final Node pathNode = pathIter.next();
             if (!thisIter.hasNext()) {
                 return false;
             }
-            Node thisNode = thisIter.next();
+            final Node thisNode = thisIter.next();
             if (pathNode.isInIterable()) {
                 if (!thisNode.isInIterable()) {
                     return false;
@@ -328,7 +320,7 @@ public class PathImpl implements Path, Serializable {
      */
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
         for (Path.Node node : this) {
             NodeImpl.appendNode(node, builder);
         }
@@ -346,9 +338,7 @@ public class PathImpl implements Path, Serializable {
         if (o == null || !getClass().equals(o.getClass())) {
             return false;
         }
-
-        PathImpl path = (PathImpl) o;
-        return nodeList == path.nodeList || nodeList != null && nodeList.equals(path.nodeList);
+        return Objects.equals(nodeList, ((PathImpl) o).nodeList);
     }
 
     /**
@@ -356,7 +346,6 @@ public class PathImpl implements Path, Serializable {
      */
     @Override
     public int hashCode() {
-        return nodeList == null ? 0 : nodeList.hashCode();
+        return Objects.hashCode(nodeList);
     }
-
 }

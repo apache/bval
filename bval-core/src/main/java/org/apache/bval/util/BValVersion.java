@@ -54,21 +54,17 @@ public class BValVersion {
 
     static {
         Properties revisionProps = new Properties();
-        try {
-            InputStream in = BValVersion.class.getResourceAsStream("/META-INF/org.apache.bval.revision.properties");
+        try (InputStream in = BValVersion.class.getResourceAsStream("/META-INF/org.apache.bval.revision.properties")) {
             if (in != null) {
-                try {
-                    revisionProps.load(in);
-                } finally {
-                    in.close();
-                }
+                revisionProps.load(in);
             }
         } catch (IOException ioe) {
         }
 
         String vers = revisionProps.getProperty("project.version");
-        if (vers == null || "".equals(vers.trim()))
+        if (vers == null || "".equals(vers.trim())) {
             vers = "0.0.0";
+        }
         VERSION_NUMBER = vers;
 
         StringTokenizer tok = new StringTokenizer(VERSION_NUMBER, ".-");

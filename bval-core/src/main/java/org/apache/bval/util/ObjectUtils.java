@@ -18,6 +18,8 @@ package org.apache.bval.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public final class ObjectUtils {
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -44,7 +46,7 @@ public final class ObjectUtils {
      * @return {@code object} if it is not {@code null}, defaultValue otherwise
      */
     public static <T> T defaultIfNull(final T object, final T defaultValue) {
-        return object != null ? object : defaultValue;
+        return object == null ? defaultValue : object;
     }
 
     public static <T> boolean isNotEmpty(final T[] array) {
@@ -68,29 +70,19 @@ public final class ObjectUtils {
         if (array == null) {
             return false;
         }
-        for (Object o : array) {
-            if (o.equals(objectToFind)) {
-                return true;
-            }
-        }
-        return false;
+        return Stream.of(array).anyMatch(Predicate.isEqual(objectToFind));
     }
 
     public static <T> T[] arrayAdd(T[] array, T objectToAdd) {
-        Class<?> type;
-        if (array != null) {
-            type = array.getClass().getComponentType();
-        } else if (objectToAdd != null) {
-            type = objectToAdd.getClass();
-        } else {
+        if (array == null && objectToAdd == null) {
             throw new IllegalArgumentException("Arguments cannot both be null");
         }
         final int arrayLength = Array.getLength(array);
+        @SuppressWarnings("unchecked")
         T[] newArray = (T[]) Array.newInstance(array.getClass().getComponentType(), arrayLength + 1);
         System.arraycopy(array, 0, newArray, 0, arrayLength);
         newArray[newArray.length - 1] = objectToAdd;
 
         return newArray;
-
     }
 }

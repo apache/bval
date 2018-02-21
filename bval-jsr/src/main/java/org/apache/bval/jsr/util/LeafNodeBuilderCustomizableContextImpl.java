@@ -18,9 +18,10 @@
  */
 package org.apache.bval.jsr.util;
 
-import org.apache.bval.jsr.ConstraintValidatorContextImpl;
+import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderDefinedContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeContextBuilder;
 
@@ -43,8 +44,7 @@ public class LeafNodeBuilderCustomizableContextImpl
         }
 
         @Override
-        public LeafNodeBuilderDefinedContext atIndex(
-            Integer index) {
+        public LeafNodeBuilderDefinedContext atIndex(Integer index) {
             node.setIndex(index);
             return definedContext;
         }
@@ -55,16 +55,16 @@ public class LeafNodeBuilderCustomizableContextImpl
         }
     }
 
-    private final ConstraintValidatorContextImpl context;
+    private final ConstraintValidatorContextImpl<?> context;
     private final PathImpl path;
     private final String template;
     private final NodeImpl node;
 
-    public LeafNodeBuilderCustomizableContextImpl(final ConstraintValidatorContextImpl parent, String messageTemplate,
-        PathImpl propertyPath) {
-        context = parent;
-        template = messageTemplate;
-        path = propertyPath;
+    public LeafNodeBuilderCustomizableContextImpl(final ConstraintValidatorContextImpl<?> context, String template,
+        PathImpl path) {
+        this.context = context;
+        this.template = template;
+        this.path = path;
         node = new NodeImpl.BeanNodeImpl();
     }
 
@@ -81,4 +81,9 @@ public class LeafNodeBuilderCustomizableContextImpl
         return context;
     }
 
+    @Override
+    public LeafNodeBuilderCustomizableContext inContainer(Class<?> containerType, Integer typeArgumentIndex) {
+        node.inContainer(containerType, typeArgumentIndex);
+        return this;
+    }
 }

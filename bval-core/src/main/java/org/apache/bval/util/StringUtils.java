@@ -17,8 +17,6 @@
 package org.apache.bval.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 public final class StringUtils {
@@ -93,49 +91,24 @@ public final class StringUtils {
         return true;
     }
 
-    public static String join(Collection<?> values, String joinToken) {
-        if (values == null) {
-            return null;
-        }
-        if (values.size() == 0) {
-            return "";
-        }
-        if (values.size() == 1) {
-            return values.iterator().next().toString();
-        }
-        if (joinToken == null) {
-            joinToken = "null"; // backward compat with commons-lang StringUtils...
-        }
-
-        StringBuilder sb = new StringBuilder(values.size() * (16 + joinToken.length()));
-        Iterator<?> it = values.iterator();
-        sb.append(it.next());
-        while (it.hasNext()) {
-            sb.append(joinToken).append(it.next());
-        }
-        return sb.toString();
-    }
-
-    public static String joinArray(Object[] values, String joinToken) {
-        if (values == null) {
-            return null;
-        }
-        if (values.length == 0) {
-            return "";
-        }
-        if (values.length == 1) {
-            return values[0].toString();
-        }
-        if (joinToken == null) {
-            joinToken = "null"; // backward compat with commons-lang StringUtils...
-        }
-
-        StringBuilder sb = new StringBuilder(values.length * (16 + joinToken.length()));
-        sb.append(values[0]);
-        for (int i = 1; i < values.length; i++) {
-            sb.append(joinToken).append(values[i]);
-        }
-        return sb.toString();
+    /**
+     * Taken from commons-lang3.
+     * <p>Checks if a CharSequence is not empty (""), not null and not whitespace only.</p>
+     *
+     * <pre>
+     * StringUtils.isNotBlank(null)      = false
+     * StringUtils.isNotBlank("")        = false
+     * StringUtils.isNotBlank(" ")       = false
+     * StringUtils.isNotBlank("bob")     = true
+     * StringUtils.isNotBlank("  bob  ") = true
+     * </pre>
+     *
+     * @param cs  the CharSequence to check, may be null
+     * @return {@code true} if the CharSequence is
+     *  not empty and not null and not whitespace
+     */
+    public static boolean isNotBlank(final CharSequence cs) {
+        return !isBlank(cs);
     }
 
     /**
@@ -149,12 +122,12 @@ public final class StringUtils {
      * <p>Splits the provided text into an array, separator is whitespace.
      */
     public static String[] split(String str, Character token) {
-        if (str == null || str.length() == 0) {
+        if (str == null || str.isEmpty()) {
             return ObjectUtils.EMPTY_STRING_ARRAY;
         }
 
         // split on token
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
         StringBuilder sb = new StringBuilder(str.length());
         for (int pos = 0; pos < str.length(); pos++) {
             char c = str.charAt(pos);

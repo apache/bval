@@ -20,6 +20,7 @@ package org.apache.bval.jsr;
 
 import static org.hamcrest.CoreMatchers.isA;
 
+import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidatorFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.ParameterNameProvider;
@@ -92,6 +93,11 @@ public class CustomValidatorFactoryTest {
 
         @Override
         public ValidatorContext usingContext() {
+            return null;
+        }
+
+        @Override
+        public ClockProvider getClockProvider() {
             return null;
         }
 

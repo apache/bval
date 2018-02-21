@@ -59,6 +59,7 @@ import org.apache.bval.jsr.example.Last;
 import org.apache.bval.jsr.example.RecursiveFoo;
 import org.apache.bval.jsr.util.TestUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -73,6 +74,7 @@ public class ValidationTest extends ValidationTestBase {
     }
 
     @Test
+    @Ignore // per spec, fields should after all be validated on subclasses
     public void testAccessStrategies_field_method() {
         AccessTestBusinessObject o1 = new AccessTestBusinessObject("1");
         assertTrue(validator.validate(o1).isEmpty());

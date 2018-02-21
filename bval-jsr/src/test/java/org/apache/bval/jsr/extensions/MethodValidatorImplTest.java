@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
 import javax.validation.executable.ExecutableValidator;
 
 import org.apache.bval.jsr.ApacheValidationProvider;
-import org.apache.bval.jsr.ClassValidator;
+import org.apache.bval.jsr.ValidatorImpl;
 import org.apache.bval.jsr.extensions.ExampleMethodService.Person;
 import org.junit.Ignore;
 
@@ -53,7 +53,7 @@ public class MethodValidatorImplTest extends TestCase {
 
     public void testUnwrap() {
         Validator v = getValidator();
-        ClassValidator cv = v.unwrap(ClassValidator.class);
+        ValidatorImpl cv = v.unwrap(ValidatorImpl.class);
         assertSame(v, cv);
         assertSame(v, v.unwrap(Validator.class));
         assertNotNull(v.forExecutables());

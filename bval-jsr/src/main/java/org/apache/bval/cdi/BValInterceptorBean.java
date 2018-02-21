@@ -43,12 +43,12 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
     private final InjectionTarget<BValInterceptor> injectionTarget;
 
     public BValInterceptorBean(final BeanManager bm) {
-        final Set<Type> t = new HashSet<Type>();
+        final Set<Type> t = new HashSet<>();
         t.add(BValInterceptor.class);
         t.add(Object.class);
         types = Collections.unmodifiableSet(t);
 
-        final Set<Annotation> q = new HashSet<Annotation>();
+        final Set<Annotation> q = new HashSet<>();
         q.add(DefaultLiteral.INSTANCE);
         q.add(AnyLiteral.INSTANCE);
         qualifiers = Collections.unmodifiableSet(q);
@@ -120,7 +120,7 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
 
     @Override
     public String getId() {
-        return "BValInterceptor-" + hashCode();
+        return String.format("%s-%d",BValInterceptor.class.getSimpleName(), hashCode());
     }
 
     private static class BValInterceptorInjectionPoint implements InjectionPoint {

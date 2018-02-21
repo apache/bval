@@ -41,12 +41,12 @@ public class ValidatorFactoryBean implements Bean<ValidatorFactory>, Passivation
     public ValidatorFactoryBean(final ValidatorFactory validatorFactory) {
         this.instance = validatorFactory;
 
-        final Set<Type> t = new HashSet<Type>();
+        final Set<Type> t = new HashSet<>();
         t.add(ValidatorFactory.class);
         t.add(Object.class);
         types = Collections.unmodifiableSet(t);
 
-        final Set<Annotation> q = new HashSet<Annotation>();
+        final Set<Annotation> q = new HashSet<>();
         q.add(DefaultLiteral.INSTANCE);
         q.add(AnyLiteral.INSTANCE);
         qualifiers = Collections.unmodifiableSet(q);
@@ -109,6 +109,6 @@ public class ValidatorFactoryBean implements Bean<ValidatorFactory>, Passivation
 
     @Override
     public String getId() {
-        return "BValValidatorFactory-" + hashCode();
+        return String.format("BVal%s-%d", ValidatorFactory.class.getSimpleName(), hashCode());
     }
 }

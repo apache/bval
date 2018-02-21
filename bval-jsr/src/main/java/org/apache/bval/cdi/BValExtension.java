@@ -59,13 +59,7 @@ import org.apache.bval.util.Validate;
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
-    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER = new AnnotatedTypeFilter() {
-
-        @Override
-        public boolean accept(AnnotatedType<?> annotatedType) {
-            return !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
-        }
-    };
+    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER = annotatedType -> !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
 
     private static AnnotatedTypeFilter annotatedTypeFilter = DEFAULT_ANNOTATED_TYPE_FILTER;
 
@@ -183,8 +177,7 @@ public class BValExtension implements Extension {
                                 && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty()
                             || validGetterMethods
                                 && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
-                        final BValAnnotatedType<A> bValAnnotatedType = new BValAnnotatedType<A>(annotatedType);
-                        pat.setAnnotatedType(bValAnnotatedType);
+                        pat.setAnnotatedType(new BValAnnotatedType<A>(annotatedType));
                     }
                 } catch (final NoClassDefFoundError ncdfe) {
                     // skip
@@ -199,12 +192,7 @@ public class BValExtension implements Extension {
 
     private static <A> boolean hasValidationAnnotation(
         final Collection<? extends AnnotatedCallable<? super A>> methods) {
-        for (final AnnotatedCallable<? super A> m : methods) {
-            if (m.isAnnotationPresent(ValidateOnExecution.class)) {
-                return true;
-            }
-        }
-        return false;
+        return methods.stream().anyMatch(m -> m.isAnnotationPresent(ValidateOnExecution.class));
     }
 
     public <A> void processBean(final @Observes ProcessBean<A> processBeanEvent) {

@@ -19,7 +19,6 @@
 package org.apache.bval.cdi;
 
 import javax.enterprise.inject.Default;
-import javax.enterprise.util.AnnotationLiteral;
 
 public class DefaultLiteral extends EmptyAnnotationLiteral<Default> implements Default {
     private static final long serialVersionUID = 1L;
@@ -28,6 +27,6 @@ public class DefaultLiteral extends EmptyAnnotationLiteral<Default> implements D
 
     @Override
     public String toString() {
-        return "@javax.enterprise.inject.Default()";
+        return String.format("@%s()", Default.class.getName());
     }
 }

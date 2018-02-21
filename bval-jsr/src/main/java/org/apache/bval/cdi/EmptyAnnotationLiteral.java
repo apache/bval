@@ -29,6 +29,7 @@ import javax.enterprise.util.AnnotationLiteral;
  * Taken from Apache OpenWebBeans.
  * @param <T>
  */
+@SuppressWarnings("serial")
 public abstract class EmptyAnnotationLiteral<T extends Annotation> extends AnnotationLiteral<T> {
     private Class<T> annotationType;
 
@@ -77,11 +78,10 @@ public abstract class EmptyAnnotationLiteral<T extends Annotation> extends Annot
     private Class<T> getAnnotationType(Class<?> definedClazz) {
         Type superClazz = definedClazz.getGenericSuperclass();
 
-        Class<T> clazz = null;
-
-        if (superClazz.equals(Object.class)) {
-            throw new RuntimeException("Super class must be parametrized type!");
-        } else if (superClazz instanceof ParameterizedType) {
+        if (Object.class.equals(superClazz)) {
+            throw new RuntimeException("Super class must be parameterized type!");
+        }
+        if (superClazz instanceof ParameterizedType) {
             ParameterizedType paramType = (ParameterizedType) superClazz;
             Type[] actualArgs = paramType.getActualTypeArguments();
 
@@ -89,17 +89,15 @@ public abstract class EmptyAnnotationLiteral<T extends Annotation> extends Annot
                 //Actual annotation type
                 Type type = actualArgs[0];
 
-                if (type instanceof Class) {
-                    clazz = (Class<T>) type;
+                if (type instanceof Class<?>) {
+                    @SuppressWarnings("unchecked")
+                    Class<T> clazz = (Class<T>) type;
                     return clazz;
-                } else {
-                    throw new RuntimeException("Not class type!");
                 }
-            } else {
-                throw new RuntimeException("More than one parametric type!");
+                throw new RuntimeException("Not class type!");
             }
-        } else {
-            return getAnnotationType((Class<?>) superClazz);
+            throw new RuntimeException("More than one parametric type!");
         }
+        return getAnnotationType((Class<?>) superClazz);
     }
 }

@@ -18,16 +18,15 @@
  */
 package org.apache.bval.cdi;
 
-import javax.enterprise.inject.spi.AnnotatedConstructor;
-import javax.enterprise.inject.spi.AnnotatedField;
-import javax.enterprise.inject.spi.AnnotatedMethod;
-import javax.enterprise.inject.spi.AnnotatedType;
-import javax.enterprise.util.AnnotationLiteral;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.enterprise.inject.spi.AnnotatedConstructor;
+import javax.enterprise.inject.spi.AnnotatedField;
+import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.enterprise.inject.spi.AnnotatedType;
 
 public class BValAnnotatedType<A> implements AnnotatedType<A> {
     private final AnnotatedType<A> delegate;
@@ -36,8 +35,7 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
     public BValAnnotatedType(final AnnotatedType<A> annotatedType) {
         delegate = annotatedType;
 
-        annotations = new HashSet<Annotation>(annotatedType.getAnnotations().size());
-        annotations.addAll(annotatedType.getAnnotations());
+        annotations = new HashSet<>(annotatedType.getAnnotations());
         annotations.add(BValBindingLiteral.INSTANCE);
     }
 
@@ -73,14 +71,8 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
 
     @Override
     public <T extends Annotation> T getAnnotation(final Class<T> annotationType) {
-        for (final Annotation ann : annotations) {
-            if (ann.annotationType().equals(annotationType)) {
-                @SuppressWarnings("unchecked")
-                final T result = (T) ann;
-                return result;
-            }
-        }
-        return null;
+        return annotations.stream().filter(ann -> ann.annotationType().equals(annotationType)).map(annotationType::cast)
+            .findFirst().orElse(null);
     }
 
     @Override
@@ -90,12 +82,7 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
 
     @Override
     public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
-        for (final Annotation ann : annotations) {
-            if (ann.annotationType().equals(annotationType)) {
-                return true;
-            }
-        }
-        return false;
+        return annotations.stream().anyMatch(ann -> ann.annotationType().equals(annotationType));
     }
 
     public static class BValBindingLiteral extends EmptyAnnotationLiteral<BValBinding> implements BValBinding {
@@ -105,7 +92,7 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
 
         @Override
         public String toString() {
-            return "@org.apache.bval.cdi.BValBinding()";
+            return String.format("@%s()", BValBinding.class.getName());
         }
 
     }

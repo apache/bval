@@ -18,8 +18,7 @@
  */
 package org.apache.bval.cdi;
 
-import org.apache.bval.jsr.util.ClassHelper;
-import org.apache.bval.jsr.util.Proxies;
+import static java.util.Arrays.asList;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -33,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.annotation.Priority;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedMethod;
@@ -53,18 +53,20 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.ConstructorDescriptor;
 import javax.validation.metadata.MethodDescriptor;
 
-import static java.util.Arrays.asList;
+import org.apache.bval.jsr.util.ClassHelper;
+import org.apache.bval.jsr.util.Proxies;
 
 /**
  * Interceptor class for the {@link BValBinding} {@link InterceptorBinding}.
  */
+@SuppressWarnings("serial")
 @Interceptor
 @BValBinding
 @Priority(4800)
 // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to
 // generate another one for CDI 1.1 impl
 public class BValInterceptor implements Serializable {
-    private transient volatile Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
+    private transient volatile Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<>();
     private transient volatile Set<ExecutableType> classConfiguration;
     private transient volatile Boolean constructorValidated;
 
@@ -204,7 +206,7 @@ public class BValInterceptor implements Serializable {
                 methodConfig = methodConfiguration.get(method);
                 if (methodConfig == null) {
                     final List<Class<?>> classHierarchy =
-                        ClassHelper.fillFullClassHierarchyAsList(new LinkedList<Class<?>>(), targetClass);
+                        ClassHelper.fillFullClassHierarchyAsList(new LinkedList<>(), targetClass);
                     Collections.reverse(classHierarchy);
 
                     // search on method @ValidateOnExecution
@@ -213,19 +215,19 @@ public class BValInterceptor implements Serializable {
                     for (final Class<?> c : classHierarchy) {
                         final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(c);
                         AnnotatedMethod<?> annotatedMethod = null;
+
                         for (final AnnotatedMethod<?> m : annotatedType.getMethods()) {
-                            if (!m.getJavaMember().getName().equals(method.getName())
-                                || !asList(method.getGenericParameterTypes())
+                            if (m.getJavaMember().getName().equals(method.getName())
+                                && asList(method.getGenericParameterTypes())
                                     .equals(asList(m.getJavaMember().getGenericParameterTypes()))) {
-                                continue;
+                                annotatedMethod = m;
+                                break;
                             }
-                            annotatedMethod = m;
-                            break;
+                        }
+                        if (annotatedMethod == null) {
+                            continue;
                         }
                         try {
-                            if (annotatedMethod == null) {
-                                continue;
-                            }
                             if (validateOnExecutionType == null) {
                                 final ValidateOnExecution vat = annotatedType.getAnnotation(ValidateOnExecution.class);
                                 if (vat != null) {

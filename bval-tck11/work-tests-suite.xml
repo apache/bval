@@ -21,7 +21,7 @@ think to add -Dvalidation.provider=org.apache.bval.jsr303.ApacheValidationProvid
 <suite name="tmp" verbose="1">
   <test name="tmp">
     <classes>
-      <class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.global.ExecutableValidationBasedOnGlobalConfigurationTest">
+      <class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.priority.ValidationInterceptorPriorityTest">
       </class>
     </classes>
   </test>

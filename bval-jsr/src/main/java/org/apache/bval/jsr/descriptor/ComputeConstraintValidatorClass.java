@@ -21,6 +21,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -98,15 +99,16 @@ class ComputeConstraintValidatorClass<A extends Annotation>
 
     private final ApacheValidatorFactory validatorFactory;
     private final Class<?> validatedType;
-    private final ValidationTarget validationTarget;
+    private final Collection<ValidationTarget> validationTargets;
     private final A constraint;
     private final boolean composed;
 
-    ComputeConstraintValidatorClass(ApacheValidatorFactory validatorFactory, ValidationTarget validationTarget,
+    ComputeConstraintValidatorClass(ApacheValidatorFactory validatorFactory,
+                                    Collection<ValidationTarget> validationTargets,
         A constraint, Class<?> validatedType) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
-        this.validationTarget = Validate.notNull(validationTarget, "validationTarget");
+        this.validationTargets = Validate.notNull(validationTargets, "validationTargets");
         this.constraint = Validate.notNull(constraint, "constraint");
         this.validatedType = Validate.notNull(validatedType, "validatedType");
         this.composed = validatorFactory.getAnnotationsManager().isComposed(constraint);
@@ -120,14 +122,24 @@ class ComputeConstraintValidatorClass<A extends Annotation>
     }
 
     private Class<? extends ConstraintValidator<A, ?>> findValidator(Set<ConstraintValidatorInfo<A>> infos) {
-        switch (validationTarget) {
-        case PARAMETERS:
-            return findCrossParameterValidator(infos);
-        case ANNOTATED_ELEMENT:
-            return findAnnotatedElementValidator(infos);
-        default:
-            return null;
+        RuntimeException error = null;
+        for (ValidationTarget vt : validationTargets) { // TODO: to rework, perf are not correct
+            try {
+                switch (vt) {
+                    case PARAMETERS:
+                        return findCrossParameterValidator(infos);
+                    case ANNOTATED_ELEMENT:
+                        return findAnnotatedElementValidator(infos);
+                    default:
+                }
+            } catch (final RuntimeException re) {
+                error = re;
+            }
         }
+        if (error != null) {
+            throw error;
+        }
+        return null;
     }
 
     private Class<? extends ConstraintValidator<A, ?>> findCrossParameterValidator(

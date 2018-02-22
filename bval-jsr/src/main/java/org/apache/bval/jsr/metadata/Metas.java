@@ -18,6 +18,9 @@
  */
 package org.apache.bval.jsr.metadata;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.AnnotatedElement;
@@ -29,6 +32,8 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 
 import javax.validation.constraintvalidation.ValidationTarget;
@@ -208,6 +213,11 @@ public abstract class Metas<E extends AnnotatedElement> {
         }
 
         @Override
+        public Collection<ValidationTarget> getValidationTargets() {
+            return asList(ValidationTarget.values());
+        }
+
+        @Override
         public Type getType() {
             return getHost().getType();
         }
@@ -292,6 +302,11 @@ public abstract class Metas<E extends AnnotatedElement> {
     public abstract AnnotatedType getAnnotatedType();
 
     public abstract String getName();
+
+    public Collection<ValidationTarget> getValidationTargets() {
+        // todo: cache for perf?
+        return singleton(getValidationTarget());
+    }
 
     public ValidationTarget getValidationTarget() {
         return ValidationTarget.ANNOTATED_ELEMENT;

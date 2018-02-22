@@ -890,10 +890,8 @@ public class BeanDescriptorImpl extends ElementDescriptorImpl implements BeanDes
                     final Object value = worker.read(annotation);
                     if (Annotation[].class.isInstance(value)) {
                         final Annotation[] children = Annotation[].class.cast(value);
-                        if (children != null) {
-                            for (Annotation child : children) {
-                                processAnnotation(child, desc, access, validations); // recursion
-                            }
+                        for (Annotation child : children) {
+                            processAnnotation(child, desc, access, validations); // recursion
                         }
                     }
                 }

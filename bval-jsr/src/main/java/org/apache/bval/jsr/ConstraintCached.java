@@ -124,7 +124,7 @@ public class ConstraintCached {
             return;
         }
         Validate.notNull(annotationClass, "annotationClass");
-        Stream.of(definitionClasses).map(t -> new ConstraintValidatorInfo<>(t))
+        Stream.of(definitionClasses).map(ConstraintValidatorInfo::new)
             .forEach(constraintValidatorInfo.computeIfAbsent(annotationClass, k -> new HashSet<>())::add);
     }
 

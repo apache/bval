@@ -101,7 +101,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         constraintValidatorClasses = new Lazy<>(computeConstraintValidatorClasses(validatorFactory));
 
         final Supplier<Class<? extends ConstraintValidator<A, ?>>> computeConstraintValidatorClass =
-            new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTarget(), annotation,
+            new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTargets(), annotation,
                 validatedType);
 
         constraintValidatorClass = new Lazy<>(computeConstraintValidatorClass);

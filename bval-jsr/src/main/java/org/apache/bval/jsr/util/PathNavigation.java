@@ -19,8 +19,8 @@ package org.apache.bval.jsr.util;
 import javax.validation.ValidationException;
 
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.Validate;
 
 import java.io.IOException;
 import java.io.StringWriter;

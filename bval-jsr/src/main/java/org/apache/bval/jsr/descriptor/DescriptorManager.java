@@ -68,7 +68,13 @@ public class DescriptorManager {
         final List<MetadataBuilder.ForBean> customBuilders =
             validatorFactory.getMetadataBuilders().getCustomBuilders(beanClass);
 
-        return customBuilders.isEmpty() ? null : customBuilders.stream()
+        if (customBuilders.isEmpty()) {
+            return null;
+        }
+        if (customBuilders.size() == 1) {
+            return customBuilders.get(0);
+        }
+        return customBuilders.stream()
             .collect(CompositeBuilder.with(AnnotationBehaviorMergeStrategy.consensus()).compose());
     }
 }

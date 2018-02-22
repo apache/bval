@@ -139,7 +139,7 @@ public class XmlBuilder {
                 .map(ParameterType::getType).map(XmlBuilder.this::resolveClass).toArray(Class[]::new);
 
             final Function<ConstructorType, Signature> signature =
-                ct -> new Signature(meta.getHost().getSimpleName(), params.apply(ct));
+                ct -> new Signature(meta.getHost().getName(), params.apply(ct));
 
             return descriptor.getConstructor().stream()
                 .collect(Collectors.toMap(signature, XmlBuilder.ForConstructor::new));
@@ -218,7 +218,7 @@ public class XmlBuilder {
 
         ForClass(ClassType descriptor) {
             super(descriptor);
-            this.withGetConstraintTypes(ct -> ct.getConstraint());
+            this.withGetConstraintTypes(ClassType::getConstraint);
         }
 
         @Override
@@ -441,7 +441,9 @@ public class XmlBuilder {
             super(descriptor);
             this.withGetDeclaredConstraints(d -> d.getConstraint().stream()
                 .map(ct -> createConstraint(ct, ConstraintTarget.RETURN_VALUE)).toArray(Annotation[]::new))
-                .withGetContainerElementTypes(d -> d.getContainerElementType());
+                .withGetIgnoreAnnotations(ReturnValueType::getIgnoreAnnotations).withGetValid(ReturnValueType::getValid)
+                .withGetGroupConversions(ReturnValueType::getConvertGroup)
+                .withGetContainerElementTypes(ReturnValueType::getContainerElementType);
         }
     }
 

@@ -26,8 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for InetAddressValidator.
- *
- * @version $Revision: 1766546 $
  */
 public class InetAddressValidatorTest {
 

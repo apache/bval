@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -49,6 +50,7 @@ import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
 import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr.util.IOs;
 import org.apache.bval.jsr.xml.ValidationParser;
+import org.apache.bval.util.Exceptions;
 import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
@@ -422,12 +424,17 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (providerClass == null) {
             return providerResolver.getValidationProviders().get(0);
         }
-        for (ValidationProvider<?> provider : providerResolver.getValidationProviders()) {
-            if (providerClass.isAssignableFrom(provider.getClass())) {
-                return provider;
-            }
+        final Optional<ValidationProvider<?>> knownProvider =
+            providerResolver.getValidationProviders().stream().filter(providerClass::isInstance).findFirst();
+        if (knownProvider.isPresent()) {
+            return knownProvider.get();
         }
-        throw new ValidationException("Unable to find suitable provider: " + providerClass);
+        try {
+            return providerClass.newInstance();
+        } catch (Exception e) {
+            throw Exceptions.create(ValidationException::new, "Unable to find/create %s of type %s",
+                ValidationProvider.class.getSimpleName(), providerClass);
+        }
     }
 
     /**

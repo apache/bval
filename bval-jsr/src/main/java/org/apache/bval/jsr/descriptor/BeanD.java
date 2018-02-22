@@ -93,8 +93,9 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
     @SuppressWarnings("unlikely-arg-type")
     @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
-        return methods.get().values().stream().filter(EnumSet.of(methodType, methodTypes)::contains)
-            .collect(ToUnmodifiable.set());
+        EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);
+        return methods.get().values().stream().filter(m -> filter.contains(m.getMethodType()))
+                      .collect(ToUnmodifiable.set());
     }
 
     @Override

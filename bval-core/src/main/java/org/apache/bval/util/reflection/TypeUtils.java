@@ -975,7 +975,7 @@ public class TypeUtils {
             return false;
         }
 
-        return value == null ? !(type instanceof Class<?>) || !((Class<?>) type).isPrimitive()
+        return value == null ? !(type instanceof Class<?>) || type == void.class || !((Class<?>) type).isPrimitive()
                 : isAssignable(value.getClass(), type, null);
     }
 

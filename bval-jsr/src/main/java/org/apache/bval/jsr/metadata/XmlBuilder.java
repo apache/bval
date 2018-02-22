@@ -527,10 +527,8 @@ public class XmlBuilder {
         return createConstraint(constraint, ConstraintTarget.IMPLICIT);
     }
 
-    @SuppressWarnings("unchecked")
     private <A extends Annotation, T> A createConstraint(final ConstraintType constraint, ConstraintTarget target) {
-
-        final Class<A> annotationClass = (Class<A>) loadClass(toQualifiedClassName(constraint.getAnnotation()));
+        final Class<A> annotationClass = this.<A> loadClass(toQualifiedClassName(constraint.getAnnotation()));
         final AnnotationProxyBuilder<A> annoBuilder = new AnnotationProxyBuilder<A>(annotationClass);
 
         if (constraint.getMessage() != null) {

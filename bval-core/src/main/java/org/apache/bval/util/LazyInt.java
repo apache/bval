@@ -24,7 +24,7 @@ import java.util.function.IntSupplier;
  */
 public class LazyInt implements IntSupplier {
     private int value;
-    private IntSupplier init;
+    private volatile IntSupplier init;
 
     public LazyInt(IntSupplier init) {
         this.init = Validate.notNull(init);

@@ -105,14 +105,13 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
             return new GraphContext(validatorContext, PathImpl.create(), rootBean).child(path, value.get());
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public ValidationJob<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path) {
+        public ValidateProperty<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path) {
             if (job.descriptor instanceof BeanDescriptor) {
                 return job.new LeafFrame(leafContext.get());
             }
-            return job.new PropertyFrame(job.new BeanFrame(leafContext.get()), job.descriptor,
-                leafContext.get().child(path, value.get()));
+            return job.new PropertyFrame<PropertyD<?>>(job.new BeanFrame(leafContext.get()),
+                (PropertyD<?>) job.descriptor, leafContext.get().child(path, value.get()));
         }
     }
 
@@ -124,14 +123,13 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
             this.value = value;
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public ValidationJob<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path) {
+        public ValidateProperty<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path) {
             final GraphContext context = new GraphContext(job.validatorContext, path, value);
             if (job.descriptor instanceof BeanDescriptor) {
                 return job.new LeafFrame(context);
             }
-            return job.new PropertyFrame(null, job.descriptor, context);
+            return job.new PropertyFrame<PropertyD<?>>(null, (PropertyD<?>) job.descriptor, context);
         }
     }
 

@@ -133,8 +133,8 @@ public enum ConstraintAnnotationAttributes {
 
     public <C extends Annotation> Worker<C> analyze(final Class<C> clazz) {
         if (clazz.getName().startsWith("javax.validation.constraint.")) { // cache only APIs classes to avoid memory leaks
-            @SuppressWarnings("unchecked")
-            final Worker<C> w = (Worker<C>) WORKER_CACHE.computeIfAbsent((Class<?>) clazz, Worker::new);
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            final Worker<C> w = (Worker<C>) WORKER_CACHE.computeIfAbsent(clazz, c -> new Worker((c)));
             return w;
         }
         return new Worker<C>(clazz);

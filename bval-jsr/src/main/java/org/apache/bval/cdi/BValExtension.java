@@ -241,8 +241,10 @@ public class BValExtension implements Extension {
                 if (validatorFactoryFound) {
                     factory = config.buildValidatorFactory();
                 } // else fresh factory already created in previous if
-                afterBeanDiscovery.addBean(new ValidatorBean(factory, factory.getValidator()));
-                validatorFound = true;
+                if (factory != null) { // happens in TCKS
+                    afterBeanDiscovery.addBean(new ValidatorBean(factory, factory.getValidator()));
+                    validatorFound = true;
+                }
             } catch (final Exception e) { // getValidator can throw an exception with custom providers
                 afterBeanDiscovery.addBean(new ValidatorBean(factory, null));
                 validatorFound = true;

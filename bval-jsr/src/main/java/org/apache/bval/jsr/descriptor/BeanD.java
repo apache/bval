@@ -85,7 +85,9 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
 
     @Override
     public MethodDescriptor getConstraintsForMethod(String methodName, Class<?>... parameterTypes) {
-        return methods.get().get(new Signature(methodName, parameterTypes));
+        final Map<Signature, MethodD> methods = this.methods.get();
+        final Signature key = new Signature(methodName, parameterTypes);
+        return methods.get(key);
     }
 
     @SuppressWarnings("unlikely-arg-type")

@@ -35,7 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -110,7 +109,8 @@ public class ReflectionBuilder {
             if (declaredMethods.length == 0) {
                 return Collections.emptyMap();
             }
-            return Stream.of(declaredMethods).filter(((Predicate<Method>) Methods::isGetter).negate()).collect(
+            // we can't filter the getters since they can be validated, todo: read the config to know if we need or not
+            return Stream.of(declaredMethods).collect(
                 Collectors.toMap(Signature::of, m -> new ReflectionBuilder.ForExecutable<>(new Metas.ForMethod(m),
                     validatorFactory.getParameterNameProvider()::getParameterNames)));
         }

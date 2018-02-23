@@ -333,7 +333,7 @@ public class Reflection {
      */
     public static <T> T newInstance(final Class<T> cls) {
         try {
-            return cls.newInstance();
+            return cls.getConstructor().newInstance();
         } catch (final Exception ex) {
             throw new RuntimeException("Cannot instantiate : " + cls, ex);
         }

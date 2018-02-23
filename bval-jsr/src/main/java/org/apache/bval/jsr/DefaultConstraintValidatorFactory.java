@@ -69,7 +69,7 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
                 } catch (Exception | NoClassDefFoundError e) {
                 }
             }
-            return constraintClass.newInstance();
+            return constraintClass.getConstructor().newInstance();
         } catch (final Exception ex) {
             throw new ValidationException("Cannot instantiate : " + constraintClass, ex);
         }

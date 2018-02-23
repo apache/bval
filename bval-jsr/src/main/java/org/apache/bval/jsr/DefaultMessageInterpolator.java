@@ -86,7 +86,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         MessageEvaluator ev;
         try {
             ev = MessageEvaluator.class
-                .cast(getClass().getClassLoader().loadClass("org.apache.bval.el.ELFacade").newInstance());
+                .cast(getClass().getClassLoader().loadClass("org.apache.bval.el.ELFacade")
+                                .getConstructor().newInstance());
         } catch (final Throwable e) { // can be exception or error
             ev = null;
         }

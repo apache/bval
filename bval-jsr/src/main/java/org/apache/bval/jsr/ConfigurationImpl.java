@@ -430,7 +430,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             return knownProvider.get();
         }
         try {
-            return providerClass.newInstance();
+            return providerClass.getConstructor().newInstance();
         } catch (Exception e) {
             throw Exceptions.create(ValidationException::new, "Unable to find/create %s of type %s",
                 ValidationProvider.class.getSimpleName(), providerClass);
@@ -471,7 +471,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         } catch (Exception | NoClassDefFoundError e) {
         }
         try {
-            return cls.newInstance();
+            return cls.getConstructor().newInstance();
         } catch (final Exception e) {
             throw new ValidationException(e.getMessage(), e);
         }

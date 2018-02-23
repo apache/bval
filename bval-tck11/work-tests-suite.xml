@@ -16,13 +16,15 @@
 -->
 <!--
 JUST HERE TO BE ABLE TO RUN TCK ONE BY ONE WHEN DEVELOPING
-think to add -Dvalidation.provider=org.apache.bval.jsr303.ApacheValidationProvider to your runner config
+think to add -Dvalidation.provider=org.apache.bval.jsr.ApacheValidationProvider to your runner config
 -->
 <suite name="tmp" verbose="1">
   <test name="tmp">
     <classes>
-      <class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.executable.priority.ValidationInterceptorPriorityTest">
-      </class>
+      <class name="org.hibernate.beanvalidation.tck.tests.xmlconfiguration.groupconversion.containerelement.XmlBasedContainerElementGroupConversionValidationTest"/>
+<!--
+      <class name="org.hibernate.beanvalidation.tck.tests.util.ConstraintViolationAssertTest"/>
+-->
     </classes>
   </test>
 </suite>

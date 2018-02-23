@@ -32,7 +32,7 @@ public class EJBEnricher implements TestEnricher {
         for (final Field field : testCase.getClass().getDeclaredFields()) {
             if (field.getAnnotation(EJB.class) != null) {
                 try {
-                    final Object instance = field.getType().newInstance();
+                    final Object instance = field.getType().getConstructor().newInstance();
                     for (final Field f : field.getType().getDeclaredFields()) {
                         if (f.getAnnotation(Resource.class) != null) {
                             if (f.getType().equals(Validator.class)) {

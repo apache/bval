@@ -17,6 +17,7 @@
 package org.apache.bval.jsr.valueextraction;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
@@ -95,9 +96,11 @@ public class ValueExtractors {
 
     private static <T> T newInstance(Class<T> t) {
         try {
-            return t.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            return t.getConstructor().newInstance();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException(e.getTargetException());
         }
     }
 

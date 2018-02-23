@@ -89,7 +89,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
             Class<? extends TraversableResolver> jpaAwareResolverClass =
                 (Class<? extends TraversableResolver>) Reflection.toClass(JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME,
                     classLoader);
-            jpaTR = jpaAwareResolverClass.newInstance();
+            jpaTR = jpaAwareResolverClass.getConstructor().newInstance();
             if (LOG_FINEST) {
                 log.log(Level.FINEST,
                     String.format("Instantiated an instance of %s.", JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME));

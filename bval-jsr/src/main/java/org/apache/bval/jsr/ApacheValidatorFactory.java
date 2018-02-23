@@ -554,7 +554,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             if (c != null) {
                 return c.newInstance(this);
             }
-            return cls.newInstance();
+            return cls.getConstructor().newInstance();
         } catch (Exception e) {
             throw new ValidationException(e);
         }

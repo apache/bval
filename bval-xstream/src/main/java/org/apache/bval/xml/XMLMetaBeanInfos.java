@@ -108,7 +108,8 @@ public class XMLMetaBeanInfos {
         final HashMap<String, XMLMetaValidator> map = new HashMap<String, XMLMetaValidator>(validators.size());
         for (XMLMetaValidator xv : validators) {
             if (xv.getJava() != null) {
-                Validation validation = (Validation) Reflection.toClass(xv.getJava()).newInstance();
+                Validation validation = (Validation) Reflection.toClass(xv.getJava())
+                                                               .getConstructor().newInstance();
                 xv.setValidation(validation);
                 map.put(xv.getId(), xv);
             }

@@ -26,8 +26,8 @@ under the License.
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>bval-tck11-runner</artifactId>
-    <name>Apache BVal :: bval-tck11 (TCK Runner)</name>
+    <artifactId>bval-tck-runner</artifactId>
+    <name>Apache BVal :: bval-tck (TCK Runner)</name>
     <description>Aggregates dependencies and runs the JSR-349 TCK</description>
 
     <properties>
@@ -164,7 +164,7 @@ under the License.
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
-                    <name>tck11</name>
+                    <name>tck</name>
                 </property>
             </activation>
             <build>

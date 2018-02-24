@@ -17,6 +17,7 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -52,7 +53,13 @@ public class DescriptorManager {
 
     public BeanDescriptor getBeanDescriptor(Class<?> beanClass) {
         Validate.notNull(beanClass, IllegalArgumentException::new, "beanClass");
-        return beanDescriptors.computeIfAbsent(beanClass, k -> new BeanD(metadataReader.forBean(k, builder(k))));
+
+        // cannot use computeIfAbsent due to likely recursion:
+        if (beanDescriptors.containsKey(beanClass)) {
+            return beanDescriptors.get(beanClass);
+        }
+        final BeanD beanD = new BeanD(metadataReader.forBean(beanClass, builder(beanClass)));
+        return Optional.ofNullable(beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
     }
 
     private MetadataBuilder.ForBean builder(Class<?> beanClass) {

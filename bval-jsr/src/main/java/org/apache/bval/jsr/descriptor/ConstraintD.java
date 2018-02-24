@@ -57,11 +57,18 @@ import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A> {
+    private enum Optionality {
+        OPTIONAL, REQUIRED;
+
+        public boolean isOptional() {
+            return this == Optionality.OPTIONAL;
+        }
+    }
+
     private static <T> Set<T> set(Supplier<T[]> array) {
         return Stream.of(array.get()).collect(ToUnmodifiable.set());
     }
@@ -69,42 +76,37 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     private final A annotation;
     private final Scope scope;
     private final Metas<?> meta;
-    private final Class<?> validatedType;
-
-    private final Lazy<Set<Class<?>>> groups = new Lazy<>(this::computeGroups);
 
     private final Set<Class<? extends Payload>> payload;
+    private final Class<?> validatedType;
 
-    private final Lazy<Boolean> reportAsSingle =
-        new Lazy<>(() -> getAnnotation().annotationType().isAnnotationPresent(ReportAsSingleViolation.class));
+    private final Set<Class<?>> groups;
+    private final boolean reportAsSingle;
+    private final ValidateUnwrappedValue valueUnwrapping;
+    private final Map<String, Object> attributes;
 
-    private final Lazy<ValidateUnwrappedValue> valueUnwrapping = new Lazy<>(this::computeValidateUnwrappedValue);
-
-    private final Lazy<Map<String, Object>> attributes;
-    private final Lazy<Set<ConstraintDescriptor<?>>> composingConstraints;
-    private final Lazy<List<Class<? extends ConstraintValidator<A, ?>>>> constraintValidatorClasses;
-    private final Lazy<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClass;
+    private final Set<ConstraintDescriptor<?>> composingConstraints;
+    private final List<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClasses;
+    private final Class<? extends ConstraintValidator<A, ?>> constraintValidatorClass;
 
     public ConstraintD(A annotation, Scope scope, Metas<?> meta, ApacheValidatorFactory validatorFactory) {
         this.annotation = Validate.notNull(annotation, "annotation");
         this.scope = Validate.notNull(scope, "scope");
         this.meta = Validate.notNull(meta, "meta");
-        this.payload = computePayload();
-        this.validatedType = computeValidatedType(validatorFactory);
 
-        attributes = new Lazy<>(() -> AnnotationsManager.readAttributes(annotation));
+        payload = computePayload();
+        validatedType = computeValidatedType(validatorFactory);
 
-        // retain no references to the validatorFactory; only wrap it in lazy
-        // suppliers
+        groups = computeGroups();
+        reportAsSingle = annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
+        valueUnwrapping = computeValidateUnwrappedValue();
+        attributes = AnnotationsManager.readAttributes(annotation);
+
         Validate.notNull(validatorFactory, "validatorFactory");
-        composingConstraints = new Lazy<>(computeComposingConstraints(validatorFactory));
-        constraintValidatorClasses = new Lazy<>(computeConstraintValidatorClasses(validatorFactory));
-
-        final Supplier<Class<? extends ConstraintValidator<A, ?>>> computeConstraintValidatorClass =
-            new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTargets(), annotation,
-                validatedType);
-
-        constraintValidatorClass = new Lazy<>(computeConstraintValidatorClass);
+        composingConstraints = computeComposingConstraints(validatorFactory);
+        constraintValidatorClasses = computeConstraintValidatorClasses(validatorFactory);
+        constraintValidatorClass = new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTargets(),
+            annotation, validatedType).get();
     }
 
     @Override
@@ -114,7 +116,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     @Override
     public Set<Class<?>> getGroups() {
-        return groups.get();
+        return groups;
     }
 
     @Override
@@ -124,28 +126,27 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     @Override
     public List<Class<? extends ConstraintValidator<A, ?>>> getConstraintValidatorClasses() {
-        return constraintValidatorClasses.get();
+        return constraintValidatorClasses;
     }
 
     @Override
     public Map<String, Object> getAttributes() {
-        return attributes.get();
+        return attributes;
     }
 
     @Override
     public Set<ConstraintDescriptor<?>> getComposingConstraints() {
-        return composingConstraints.get();
+        return composingConstraints;
     }
 
     @Override
     public boolean isReportAsSingleViolation() {
-        return reportAsSingle.get().booleanValue();
+        return reportAsSingle;
     }
 
     @Override
     public String getMessageTemplate() {
-        final boolean required = true;
-        return read(ConstraintAnnotationAttributes.MESSAGE, required);
+        return read(ConstraintAnnotationAttributes.MESSAGE, Optionality.REQUIRED);
     }
 
     @Override
@@ -155,7 +156,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     @Override
     public ValidateUnwrappedValue getValueUnwrapping() {
-        return valueUnwrapping.get();
+        return valueUnwrapping;
     }
 
     @Override
@@ -184,35 +185,34 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     }
 
     public Class<? extends ConstraintValidator<A, ?>> getConstraintValidatorClass() {
-        return constraintValidatorClass.get();
+        return constraintValidatorClass;
     }
 
     private <T> T read(ConstraintAnnotationAttributes attr) {
-        return read(attr, false);
+        return read(attr, Optionality.OPTIONAL);
     }
 
-    private <T> T read(ConstraintAnnotationAttributes attr, boolean required) {
+    private <T> T read(ConstraintAnnotationAttributes attr, Optionality optionality) {
         final Class<? extends Annotation> constraintType = annotation.annotationType();
         final Optional<T> result =
             Optional.of(constraintType).map(attr::analyze).filter(Worker::isValid).map(w -> w.<T> read(annotation));
 
-        Exceptions.raiseIf(required && !result.isPresent(), ConstraintDefinitionException::new,
+        Exceptions.raiseUnless(optionality.isOptional() || result.isPresent(), ConstraintDefinitionException::new,
             "Required attribute %s missing from constraint type %s", attr.getAttributeName(), constraintType);
 
         return result.orElse(null);
     }
 
-    private Supplier<Set<ConstraintDescriptor<?>>> computeComposingConstraints(
-        ApacheValidatorFactory validatorFactory) {
-        return () -> Stream.of(validatorFactory.getAnnotationsManager().getComposingConstraints(annotation))
+    private Set<ConstraintDescriptor<?>> computeComposingConstraints(ApacheValidatorFactory validatorFactory) {
+        return Stream.of(validatorFactory.getAnnotationsManager().getComposingConstraints(annotation))
             .map(c -> new ConstraintD<>(c, scope, meta, validatorFactory))
             .collect(ToUnmodifiable.set(LinkedHashSet::new));
     }
 
     @SuppressWarnings("unchecked")
-    private Supplier<List<Class<? extends ConstraintValidator<A, ?>>>> computeConstraintValidatorClasses(
+    private List<Class<? extends ConstraintValidator<A, ?>>> computeConstraintValidatorClasses(
         ApacheValidatorFactory validatorFactory) {
-        return () -> validatorFactory.getConstraintsCache()
+        return validatorFactory.getConstraintsCache()
             .getConstraintValidatorClasses((Class<A>) annotation.annotationType());
     }
 
@@ -229,8 +229,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     }
 
     private Set<Class<?>> computeGroups() {
-        final boolean required = true;
-        final Class<?>[] groups = read(ConstraintAnnotationAttributes.GROUPS, required);
+        final Class<?>[] groups = read(ConstraintAnnotationAttributes.GROUPS, Optionality.REQUIRED);
         if (groups.length == 0) {
             return Collections.singleton(Default.class);
         }
@@ -238,8 +237,8 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     }
 
     private Set<Class<? extends Payload>> computePayload() {
-        final boolean required = true;
-        final Set<Class<? extends Payload>> result = set(() -> read(ConstraintAnnotationAttributes.PAYLOAD, required));
+        final Set<Class<? extends Payload>> result =
+            set(() -> read(ConstraintAnnotationAttributes.PAYLOAD, Optionality.REQUIRED));
         Exceptions.raiseIf(result.containsAll(Arrays.asList(Unwrapping.Unwrap.class, Unwrapping.Skip.class)),
             ConstraintDeclarationException::new,
             "Constraint %s declared at %s specifies conflicting value unwrapping hints", annotation, meta.getHost());

@@ -30,7 +30,6 @@ import javax.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.ToUnmodifiable;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -39,13 +38,13 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     private final boolean cascaded;
     private final Set<GroupConversion> groupConversions;
-    private final Lazy<Set<ContainerElementTypeD>> containerElementTypes;
+    private final Set<ContainerElementTypeD> containerElementTypes;
 
     protected CascadableContainerD(MetadataReader.ForContainer<E> reader, P parent) {
         super(reader, parent);
         cascaded = reader.isCascaded();
         groupConversions = reader.getGroupConversions();
-        containerElementTypes = new Lazy<>(() -> reader.getContainerElementTypes(this));
+        containerElementTypes = reader.getContainerElementTypes(this);
     }
 
     @Override
@@ -66,7 +65,7 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     @Override
     public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
-        return containerElementTypes.get().stream().filter(DescriptorManager::isConstrained)
+        return containerElementTypes.stream().filter(DescriptorManager::isConstrained)
             .collect(ToUnmodifiable.set());
     }
 

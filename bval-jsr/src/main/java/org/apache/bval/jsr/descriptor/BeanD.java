@@ -34,33 +34,26 @@ import javax.validation.metadata.PropertyDescriptor;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.StringUtils;
 
 public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements BeanDescriptor {
 
-    private static boolean constrainedProperty(PropertyDescriptor pd) {
-        return pd.hasConstraints() || pd.isCascaded();
-    }
-
     private final Class<?> beanClass;
-
-    private final Lazy<List<Class<?>>> groupSequence;
-    private final Lazy<Map<String, PropertyDescriptor>> propertiesMap;
-    private final Lazy<Set<PropertyDescriptor>> properties;
-    private final Lazy<Map<Signature, ConstructorD>> constructors;
-    private final Lazy<Map<Signature, MethodD>> methods;
+    private final List<Class<?>> groupSequence;
+    private final Map<String, PropertyDescriptor> propertiesMap;
+    private final Set<PropertyDescriptor> properties;
+    private final Map<Signature, ConstructorD> constructors;
+    private final Map<Signature, MethodD> methods;
 
     BeanD(MetadataReader.ForBean reader) {
         super(reader);
         this.beanClass = reader.meta.getHost();
 
-        groupSequence = new Lazy<>(reader::getGroupSequence);
-        propertiesMap = new Lazy<>(() -> reader.getProperties(this));
-        properties = new Lazy<>(() -> propertiesMap.get().values().stream().filter(BeanD::constrainedProperty)
-            .collect(ToUnmodifiable.set()));
-        constructors = new Lazy<>(() -> reader.getConstructors(this));
-        methods = new Lazy<>(() -> reader.getMethods(this));
+        groupSequence = reader.getGroupSequence();
+        propertiesMap = reader.getProperties(this);
+        properties = propertiesMap.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
+        constructors = reader.getConstructors(this);
+        methods = reader.getMethods(this);
     }
 
     @Override
@@ -70,22 +63,21 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
 
     @Override
     public boolean isBeanConstrained() {
-        return hasConstraints() || properties.get().stream().anyMatch(DescriptorManager::isConstrained);
+        return hasConstraints() || properties.stream().anyMatch(DescriptorManager::isConstrained);
     }
 
     @Override
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
-        return Optional.ofNullable(getProperty(propertyName)).filter(BeanD::constrainedProperty).orElse(null);
+        return Optional.ofNullable(getProperty(propertyName)).filter(DescriptorManager::isConstrained).orElse(null);
     }
 
     @Override
     public Set<PropertyDescriptor> getConstrainedProperties() {
-        return properties.get();
+        return properties;
     }
 
     @Override
     public MethodDescriptor getConstraintsForMethod(String methodName, Class<?>... parameterTypes) {
-        final Map<Signature, MethodD> methods = this.methods.get();
         final Signature key = new Signature(methodName, parameterTypes);
         return methods.get(key);
     }
@@ -93,26 +85,26 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
     @SuppressWarnings("unlikely-arg-type")
     @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
-        EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);
-        return methods.get().values().stream().filter(m -> filter.contains(m.getMethodType()))
+        final EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);
+        return methods.values().stream().filter(m -> filter.contains(m.getMethodType()))
                       .collect(ToUnmodifiable.set());
     }
 
     @Override
     public ConstructorDescriptor getConstraintsForConstructor(Class<?>... parameterTypes) {
-        return constructors.get().get(new Signature(beanClass.getName(), parameterTypes));
+        return constructors.get(new Signature(beanClass.getName(), parameterTypes));
     }
 
     @Override
     public Set<ConstructorDescriptor> getConstrainedConstructors() {
-        return constructors.get().values().stream().collect(ToUnmodifiable.set());
+        return constructors.values().stream().collect(ToUnmodifiable.set());
     }
 
     public PropertyDescriptor getProperty(String propertyName) {
         Exceptions.raiseIf(StringUtils.isBlank(propertyName), IllegalArgumentException::new,
             "propertyName was null/empty/blank");
 
-        return propertiesMap.get().get(propertyName);
+        return propertiesMap.get(propertyName);
     }
 
     @Override
@@ -122,7 +114,7 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
 
     @Override
     public List<Class<?>> getGroupSequence() {
-        return groupSequence.get();
+        return groupSequence;
     }
 
     public final Type getGenericType() {

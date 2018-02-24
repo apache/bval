@@ -175,14 +175,15 @@ class MetadataReader {
                     }
                 }
             }
-            if (result != null) {
-                Exceptions.raiseUnless(result.contains(meta.getHost()), GroupDefinitionException::new,
-                    "@%s for %s must contain %<s", GroupSequence.class.getSimpleName(), meta.getHost());
-                Exceptions.raiseIf(result.contains(Default.class), GroupDefinitionException::new,
-                    "@%s for %s must not contain %s", GroupSequence.class.getSimpleName(), meta.getHost(),
-                    Default.class.getName());
+            if (result == null) {
+                return null;
             }
-            return result;
+            Exceptions.raiseUnless(result.contains(meta.getHost()), GroupDefinitionException::new,
+                "@%s for %s must contain %<s", GroupSequence.class.getSimpleName(), meta.getHost());
+            Exceptions.raiseIf(result.contains(Default.class), GroupDefinitionException::new,
+                "@%s for %s must not contain %s", GroupSequence.class.getSimpleName(), meta.getHost(),
+                Default.class.getName());
+            return Collections.unmodifiableList(result);
         }
     }
 

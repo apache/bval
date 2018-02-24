@@ -72,9 +72,12 @@ public class HierarchyBuilder extends CompositeBuilder {
                 return delegate.getGetters(hierarchyType);
             }
 
+            @SuppressWarnings("unlikely-arg-type")
             @Override
             public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta) {
-                return delegate.getConstructors(hierarchyType);
+                // suppress hierarchical ctors:
+                return hierarchyType.equals(meta.getHost()) ? delegate.getConstructors(hierarchyType)
+                    : Collections.emptyMap();
             }
 
             @Override

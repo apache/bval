@@ -184,8 +184,10 @@ public class CompositeBuilder {
             final Set<Integer> parameterCounts = parameterLists.stream().map(List::size).collect(Collectors.toSet());
             Validate.validState(parameterCounts.size() == 1, "Mismatched parameter counts: %s", parameterCounts);
 
-            return IntStream.range(0, parameterCounts.iterator().next().intValue())
-                .mapToObj(n -> new CompositeBuilder.ForContainer<>(parameterLists.get(n)))
+            final int parameterCount = parameterCounts.iterator().next().intValue();
+            return IntStream.range(0, parameterCount)
+                .mapToObj(n -> new CompositeBuilder.ForContainer<>(
+                    parameterLists.stream().map(l -> l.get(n)).collect(Collectors.toList())))
                 .collect(ToUnmodifiable.list());
         }
 

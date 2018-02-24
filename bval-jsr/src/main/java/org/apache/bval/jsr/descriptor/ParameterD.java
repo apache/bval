@@ -33,7 +33,7 @@ public class ParameterD<P extends ExecutableD<?, ?, P>> extends CascadableContai
     private final String name;
     private final Class<?> type;
 
-    protected ParameterD(Metas.ForParameter meta, int index, MetadataReader.ForContainer<Parameter> reader, P parent) {
+    ParameterD(Metas.ForParameter meta, int index, MetadataReader.ForContainer<Parameter> reader, P parent) {
         super(reader, parent);
 
         Validate.isTrue(index >= 0 && index < meta.getHost().getDeclaringExecutable().getParameterCount(),

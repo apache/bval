@@ -39,11 +39,6 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.bval</groupId>
             <artifactId>bval-jsr</artifactId>
             <version>${project.version}</version>
         </dependency>

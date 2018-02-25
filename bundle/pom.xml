@@ -42,12 +42,6 @@
         <!-- JARs to include in aggregate JAR via maven-shade-plugin -->
         <dependency>
             <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.bval</groupId>
             <artifactId>bval-jsr</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>

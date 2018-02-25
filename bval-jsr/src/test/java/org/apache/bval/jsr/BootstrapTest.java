@@ -83,9 +83,6 @@ public class BootstrapTest {
         builder.messageInterpolator(interpolator);
         ApacheValidatorFactory factory = (ApacheValidatorFactory) builder.buildValidatorFactory();
 
-        // ALTERNATIVE:
-        // you could do it without modifying the builder or reusing it,
-        // but then you need to use bval-core proprietary APIs:
         ((DefaultMessageInterpolator) factory.getMessageInterpolator()).setLocale(Locale.ENGLISH);
         // now factory's message resolver is using the english locale
     }

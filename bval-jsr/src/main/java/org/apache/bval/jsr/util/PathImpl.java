@@ -129,9 +129,6 @@ public class PathImpl implements Path, Serializable {
     }
 
     private static NodeImpl newNode(final Node cast) {
-        if (PropertyNode.class.isInstance(cast)) {
-            return new NodeImpl.PropertyNodeImpl(cast);
-        }
         if (BeanNode.class.isInstance(cast)) {
             return new NodeImpl.BeanNodeImpl(cast);
         }
@@ -153,7 +150,7 @@ public class PathImpl implements Path, Serializable {
         if (ContainerElementNode.class.isInstance(cast)) {
             return new NodeImpl.ContainerElementNodeImpl(cast);
         }
-        return new NodeImpl(cast);
+        return new NodeImpl.PropertyNodeImpl(cast);
     }
 
     private final LinkedList<NodeImpl> nodeList = new LinkedList<>();
@@ -247,7 +244,7 @@ public class PathImpl implements Path, Serializable {
             return nodeList.removeLast();
         } finally {
             if (nodeList.isEmpty()) {
-                nodeList.add(new NodeImpl((String) null));
+                nodeList.add(new NodeImpl.BeanNodeImpl());
             }
         }
     }

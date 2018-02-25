@@ -18,6 +18,7 @@ package org.apache.bval.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -71,6 +72,15 @@ public final class ObjectUtils {
             return false;
         }
         return Stream.of(array).anyMatch(Predicate.isEqual(objectToFind));
+    }
+
+    public static int indexOf(final Object[] array, final Object objectToFind) {
+        for (int i = 0; i < array.length; i++) {
+            if (Objects.equals(array[i], objectToFind)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static <T> T[] arrayAdd(T[] array, T objectToAdd) {

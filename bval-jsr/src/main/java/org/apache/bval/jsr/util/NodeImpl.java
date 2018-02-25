@@ -31,7 +31,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class NodeImpl implements Path.Node, Serializable {
+public abstract class NodeImpl implements Path.Node, Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final String INDEX_OPEN = "[";
@@ -72,7 +72,7 @@ public class NodeImpl implements Path.Node, Serializable {
      * @return NodeImpl
      */
     public static NodeImpl atIndex(Integer index) {
-        final NodeImpl result = new NodeImpl();
+        final NodeImpl result = new NodeImpl.PropertyNodeImpl((String) null);
         result.setIndex(index);
         return result;
     }
@@ -83,7 +83,7 @@ public class NodeImpl implements Path.Node, Serializable {
      * @return NodeImpl
      */
     public static NodeImpl atKey(Object key) {
-        final NodeImpl result = new NodeImpl();
+        final NodeImpl result = new NodeImpl.PropertyNodeImpl((String) null);
         result.setKey(key);
         return result;
     }
@@ -93,7 +93,6 @@ public class NodeImpl implements Path.Node, Serializable {
     private Integer index;
     private int parameterIndex;
     private Object key;
-    private ElementKind kind;
     private List<Class<?>> parameterTypes;
     private Class<?> containerType;
     private Integer typeArgumentIndex;
@@ -102,7 +101,7 @@ public class NodeImpl implements Path.Node, Serializable {
      * Create a new NodeImpl instance.
      * @param name
      */
-    public NodeImpl(String name) {
+    private NodeImpl(String name) {
         this.name = name;
     }
 
@@ -115,7 +114,6 @@ public class NodeImpl implements Path.Node, Serializable {
         this.inIterable = node.isInIterable();
         this.index = node.getIndex();
         this.key = node.getKey();
-        this.kind = node.getKind();
     }
 
     <T extends Path.Node> NodeImpl(Path.Node node, Class<T> nodeType, Consumer<T> handler) {
@@ -198,17 +196,9 @@ public class NodeImpl implements Path.Node, Serializable {
     }
 
     @Override
-    public ElementKind getKind() {
-        return kind;
-    }
-
-    public void setKind(ElementKind kind) {
-        this.kind = kind;
-    }
-
-    @Override
     public <T extends Node> T as(final Class<T> nodeType) {
-        Exceptions.raiseUnless(nodeType.isInstance(this), ClassCastException::new, "Type %s not supported", nodeType);
+        Exceptions.raiseUnless(nodeType.isInstance(this), ClassCastException::new, "Type %s not supported by %s",
+            nodeType, getClass());
         return nodeType.cast(this);
     }
 
@@ -234,7 +224,7 @@ public class NodeImpl implements Path.Node, Serializable {
         final NodeImpl node = (NodeImpl) o;
 
         return inIterable == node.inIterable && Objects.equals(index, node.index) && Objects.equals(key, node.key)
-            && Objects.equals(name, node.name) && kind == node.kind;
+            && Objects.equals(name, node.name);
     }
 
     /**
@@ -242,7 +232,7 @@ public class NodeImpl implements Path.Node, Serializable {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(name, Boolean.valueOf(inIterable), index, key, kind);
+        return Objects.hash(name, Boolean.valueOf(inIterable), index, key, getKind());
     }
 
     public int getParameterIndex() {
@@ -265,9 +255,10 @@ public class NodeImpl implements Path.Node, Serializable {
         return typeArgumentIndex;
     }
 
-    public void inContainer(Class<?> containerType, Integer typeArgumentIndex) {
+    public NodeImpl inContainer(Class<?> containerType, Integer typeArgumentIndex) {
         this.containerType = containerType;
         this.typeArgumentIndex = typeArgumentIndex;
+        return this;
     }
 
     @SuppressWarnings("serial")

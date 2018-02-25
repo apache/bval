@@ -64,7 +64,7 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
                 p.getLeafNode().setName(name);
             } else {
                 p = PathImpl.copy(path);
-                p.addNode(new NodeImpl(name));
+                p.addNode(new NodeImpl.PropertyNodeImpl(name));
             }
             return new NodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl.this, template, p);
         }

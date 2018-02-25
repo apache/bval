@@ -166,13 +166,13 @@ public class PathImplTest {
     @Test
     public void testToString() {
         PathImpl path = PathImpl.create();
-        path.addNode(new NodeImpl("firstName"));
+        path.addNode(new NodeImpl.PropertyNodeImpl("firstName"));
         assertEquals("firstName", path.toString());
 
         path = PathImpl.create();
         path.getLeafNode().setIndex(2);
         assertEquals("[2]", path.toString());
-        path.addNode(new NodeImpl("firstName"));
+        path.addNode(new NodeImpl.PropertyNodeImpl("firstName"));
         assertEquals("[2].firstName", path.toString());
     }
 
@@ -181,7 +181,7 @@ public class PathImplTest {
         PathImpl path = PathImpl.createPathFromString("");
         assertTrue(path.isRootPath());
         assertEquals(1, countNodes(path));
-        path.addNode(new NodeImpl("foo"));
+        path.addNode(new NodeImpl.PropertyNodeImpl("foo"));
         assertFalse(path.isRootPath());
         assertEquals(1, countNodes(path));
         path.removeLeafNode();

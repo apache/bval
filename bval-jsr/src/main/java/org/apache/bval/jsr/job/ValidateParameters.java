@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -29,6 +30,7 @@ import java.util.stream.IntStream;
 import javax.validation.ConstraintViolation;
 import javax.validation.ParameterNameProvider;
 import javax.validation.Path;
+import javax.validation.Path.Node;
 import javax.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
@@ -77,6 +79,11 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         protected T getRootBean() {
             return object;
         }
+
+        @Override
+        protected Node executableNode() {
+            return new NodeImpl.MethodNodeImpl(executable.getName(), Arrays.asList(executable.getParameterTypes()));
+        }
     }
 
     public static class ForConstructor<T> extends ValidateParameters<Constructor<? extends T>, T> {
@@ -106,6 +113,12 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         @Override
         protected T getRootBean() {
             return null;
+        }
+
+        @Override
+        protected Node executableNode() {
+            return new NodeImpl.ConstructorNodeImpl(executable.getDeclaringClass().getSimpleName(),
+                Arrays.asList(executable.getParameterTypes()));
         }
     }
 
@@ -159,11 +172,14 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
     @Override
     protected Frame<?> computeBaseFrame() {
         final PathImpl cp = PathImpl.create();
+        cp.addNode(executableNode());
         cp.addNode(new NodeImpl.CrossParameterNodeImpl());
         return new ParametersFrame(describe(), new GraphContext(validatorContext, cp, parameterValues));
     }
 
     protected abstract ExecutableDescriptor describe();
+
+    protected abstract Path.Node executableNode();
 
     protected abstract List<String> getParameterNames(ParameterNameProvider parameterNameProvider);
 

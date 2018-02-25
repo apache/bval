@@ -58,27 +58,27 @@ public class EmptyBuilder {
         private final Lazy<EmptyBuilder.ForClass> forClass = new Lazy<>(EmptyBuilder.ForClass::new);
 
         @Override
-        public MetadataBuilder.ForClass getClass(Metas<Class<?>> meta) {
+        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
             return forClass.get();
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
             return Collections.emptyMap();
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
             return Collections.emptyMap();
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
             return Collections.emptyMap();
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
             return Collections.emptyMap();
         }
 
@@ -91,7 +91,7 @@ public class EmptyBuilder {
     private class ForElement<E extends AnnotatedElement> extends Level implements MetadataBuilder.ForElement<E> {
 
         @Override
-        public final Annotation[] getDeclaredConstraints(Metas<E> meta) {
+        public final Annotation[] getDeclaredConstraints(Meta<E> meta) {
             return ObjectUtils.EMPTY_ANNOTATION_ARRAY;
         }
     }
@@ -99,7 +99,7 @@ public class EmptyBuilder {
     private class ForClass extends ForElement<Class<?>> implements MetadataBuilder.ForClass {
 
         @Override
-        public List<Class<?>> getGroupSequence(Metas<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
             return null;
         }
     }
@@ -108,18 +108,18 @@ public class EmptyBuilder {
         implements MetadataBuilder.ForContainer<E> {
 
         @Override
-        public boolean isCascade(Metas<E> meta) {
+        public boolean isCascade(Meta<E> meta) {
             return false;
         }
 
         @Override
-        public Set<GroupConversion> getGroupConversions(Metas<E> meta) {
+        public Set<GroupConversion> getGroupConversions(Meta<E> meta) {
             return Collections.emptySet();
         }
 
         @Override
         public Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-            Metas<E> meta) {
+            Meta<E> meta) {
             return Collections.emptyMap();
         }
     }
@@ -128,18 +128,18 @@ public class EmptyBuilder {
 
         @SuppressWarnings("unchecked")
         @Override
-        public MetadataBuilder.ForElement<E> getCrossParameter(Metas<E> meta) {
+        public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta) {
             return forElement.get();
         }
 
         @Override
-        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Metas<E> meta) {
+        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<E> meta) {
             return Collections.emptyList();
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public MetadataBuilder.ForContainer<E> getReturnValue(Metas<E> meta) {
+        public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
             return forContainer.get();
         }
     }

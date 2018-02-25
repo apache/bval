@@ -53,7 +53,7 @@ import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.Groups;
 import org.apache.bval.jsr.groups.GroupsComputer;
-import org.apache.bval.jsr.metadata.Metas;
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
@@ -239,7 +239,7 @@ public class AnnotationsManager {
      * @param meta
      * @return Annotation[]
      */
-    public static Annotation[] getDeclaredConstraints(Metas<?> meta) {
+    public static Annotation[] getDeclaredConstraints(Meta<?> meta) {
         final Annotation[] result = getDeclaredConstraints(meta.getHost());
         final Class<?> dc = meta.getDeclaringClass();
         if (dc.isInterface()) {

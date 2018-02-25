@@ -44,10 +44,9 @@ import org.apache.bval.util.Validate;
  *
  * @param <E>
  */
-// TODO rename to Meta; delete old type of that name
-public abstract class Metas<E extends AnnotatedElement> {
+public abstract class Meta<E extends AnnotatedElement> {
 
-    public static class ForClass extends Metas<Class<?>> {
+    public static class ForClass extends Meta<Class<?>> {
 
         public ForClass(Class<?> host) {
             super(host, ElementType.TYPE);
@@ -95,7 +94,7 @@ public abstract class Metas<E extends AnnotatedElement> {
         }
     }
 
-    public static abstract class ForMember<M extends Member & AnnotatedElement> extends Metas<M> {
+    public static abstract class ForMember<M extends Member & AnnotatedElement> extends Meta<M> {
 
         protected ForMember(M host, ElementType elementType) {
             super(host, elementType);
@@ -175,9 +174,9 @@ public abstract class Metas<E extends AnnotatedElement> {
         }
     }
 
-    public static class ForCrossParameter<E extends Executable> extends Metas.ForExecutable<E> {
+    public static class ForCrossParameter<E extends Executable> extends Meta.ForExecutable<E> {
 
-        public ForCrossParameter(Metas<E> parent) {
+        public ForCrossParameter(Meta<E> parent) {
             super(parent.getHost(), parent.getElementType());
         }
 
@@ -202,7 +201,7 @@ public abstract class Metas<E extends AnnotatedElement> {
         }
     }
 
-    public static class ForParameter extends Metas<Parameter> {
+    public static class ForParameter extends Meta<Parameter> {
 
         private final String name;
 
@@ -236,12 +235,12 @@ public abstract class Metas<E extends AnnotatedElement> {
         }
     }
 
-    public static class ForContainerElement extends Metas<AnnotatedType> {
+    public static class ForContainerElement extends Meta<AnnotatedType> {
 
-        private final Metas<?> parent;
+        private final Meta<?> parent;
         private final ContainerElementKey key;
 
-        public ForContainerElement(Metas<?> parent, ContainerElementKey key) {
+        public ForContainerElement(Meta<?> parent, ContainerElementKey key) {
             super(key.getAnnotatedType(), ElementType.TYPE_USE);
             this.parent = Validate.notNull(parent, "parent");
             this.key = Validate.notNull(key, "key");
@@ -280,7 +279,7 @@ public abstract class Metas<E extends AnnotatedElement> {
     private final E host;
     private final ElementType elementType;
 
-    protected Metas(E host, ElementType elementType) {
+    protected Meta(E host, ElementType elementType) {
         super();
         this.host = Validate.notNull(host, "host");
         this.elementType = Validate.notNull(elementType, "elementType");
@@ -317,7 +316,7 @@ public abstract class Metas<E extends AnnotatedElement> {
     }
 
     protected String getStringPrefix() {
-        return Metas.class.getSimpleName() + '.' + getClass().getSimpleName();
+        return Meta.class.getSimpleName() + '.' + getClass().getSimpleName();
     }
 
     @Override
@@ -328,7 +327,7 @@ public abstract class Metas<E extends AnnotatedElement> {
         if (!obj.getClass().equals(getClass())) {
             return false;
         }
-        return Objects.equals(((Metas<?>) obj).getHost(), getHost());
+        return Objects.equals(((Meta<?>) obj).getHost(), getHost());
     }
 
     @Override

@@ -114,30 +114,30 @@ public class DualBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Metas<Class<?>> meta) {
+        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
             return new DualBuilder.ForClass(this, primaryDelegate.getClass(meta), customDelegate.getClass(meta));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
             return merge(b -> b.getFields(meta), (t, u) -> new DualBuilder.ForContainer<>(this, t, u),
                 EmptyBuilder.instance()::forContainer);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
             return merge(b -> b.getGetters(meta), (t, u) -> new DualBuilder.ForContainer<>(this, t, u),
                 EmptyBuilder.instance()::forContainer);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
             return merge(b -> b.getConstructors(meta), (t, u) -> new DualBuilder.ForExecutable<>(this, t, u),
                 EmptyBuilder.instance()::forExecutable);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
             return merge(b -> b.getMethods(meta), (t, u) -> new DualBuilder.ForExecutable<>(this, t, u),
                 EmptyBuilder.instance()::forExecutable);
         }
@@ -151,7 +151,7 @@ public class DualBuilder {
         }
 
         @Override
-        public final Annotation[] getDeclaredConstraints(Metas<E> meta) {
+        public final Annotation[] getDeclaredConstraints(Meta<E> meta) {
             return activeDelegates().map(d -> d.getDeclaredConstraints(meta)).flatMap(Stream::of)
                 .toArray(Annotation[]::new);
         }
@@ -166,7 +166,7 @@ public class DualBuilder {
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Metas<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
             final List<Class<?>> customGroupSequence = customDelegate.getGroupSequence(meta);
             if (customGroupSequence != null) {
                 return customGroupSequence;
@@ -184,19 +184,19 @@ public class DualBuilder {
         }
 
         @Override
-        public final boolean isCascade(Metas<E> meta) {
+        public final boolean isCascade(Meta<E> meta) {
             return activeDelegates().anyMatch(d -> d.isCascade(meta));
         }
 
         @Override
-        public final Set<GroupConversion> getGroupConversions(Metas<E> meta) {
+        public final Set<GroupConversion> getGroupConversions(Meta<E> meta) {
             return activeDelegates().map(d -> d.getGroupConversions(meta)).flatMap(Collection::stream)
                 .collect(ToUnmodifiable.set());
         }
 
         @Override
         public final Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-            Metas<E> meta) {
+            Meta<E> meta) {
             return merge(b -> b.getContainerElementTypes(meta), (t, u) -> new DualBuilder.ForContainer<>(this, t, u),
                 EmptyBuilder.instance()::forContainer);
         }
@@ -210,13 +210,13 @@ public class DualBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForContainer<E> getReturnValue(Metas<E> meta) {
+        public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
             return new DualBuilder.ForContainer<>(this, primaryDelegate.getReturnValue(meta),
                 customDelegate.getReturnValue(meta));
         }
 
         @Override
-        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Metas<E> meta) {
+        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<E> meta) {
 
             final List<MetadataBuilder.ForContainer<Parameter>> primaries = primaryDelegate.getParameters(meta);
             final List<MetadataBuilder.ForContainer<Parameter>> customs = customDelegate.getParameters(meta);
@@ -230,7 +230,7 @@ public class DualBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForElement<E> getCrossParameter(Metas<E> meta) {
+        public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta) {
             return new DualBuilder.ForElement<MetadataBuilder.ForElement<E>, E>(this,
                 primaryDelegate.getCrossParameter(meta), customDelegate.getCrossParameter(meta));
         }

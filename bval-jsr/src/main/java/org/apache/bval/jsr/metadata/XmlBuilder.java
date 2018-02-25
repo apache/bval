@@ -112,26 +112,26 @@ public class XmlBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Metas<Class<?>> meta) {
+        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
             final ClassType classType = descriptor.getClassType();
             return classType == null ? EmptyBuilder.instance().forBean().getClass(meta)
                 : new XmlBuilder.ForClass(classType);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
             return descriptor.getField().stream()
                 .collect(ToUnmodifiable.map(FieldType::getName, XmlBuilder.ForField::new));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
             return descriptor.getGetter().stream()
                 .collect(ToUnmodifiable.map(GetterType::getName, XmlBuilder.ForGetter::new));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
             if (!atLeast(Version.v11)) {
                 return Collections.emptyMap();
             }
@@ -146,7 +146,7 @@ public class XmlBuilder {
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
             if (!atLeast(Version.v11)) {
                 return Collections.emptyMap();
             }
@@ -198,7 +198,7 @@ public class XmlBuilder {
         }
 
         @Override
-        public final Annotation[] getDeclaredConstraints(Metas<E> meta) {
+        public final Annotation[] getDeclaredConstraints(Meta<E> meta) {
             return lazy(getDeclaredConstraints, "getDeclaredConstraints");
         }
 
@@ -222,7 +222,7 @@ public class XmlBuilder {
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Metas<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
             final GroupSequenceType groupSequence = descriptor.getGroupSequence();
             return groupSequence == null ? null
                 : groupSequence.getValue().stream().map(XmlBuilder.this::resolveClass).collect(ToUnmodifiable.list());
@@ -241,18 +241,18 @@ public class XmlBuilder {
         }
 
         @Override
-        public boolean isCascade(Metas<E> meta) {
+        public boolean isCascade(Meta<E> meta) {
             return lazy(isCascade, "isCascade").booleanValue();
         }
 
         @Override
-        public Set<GroupConversion> getGroupConversions(Metas<E> meta) {
+        public Set<GroupConversion> getGroupConversions(Meta<E> meta) {
             return lazy(getGroupConversions, "getGroupConversions");
         }
 
         @Override
         public Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-            Metas<E> meta) {
+            Meta<E> meta) {
             if (!atLeast(Version.v20)) {
                 return Collections.emptyMap();
             }
@@ -355,17 +355,17 @@ public class XmlBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForElement<E> getCrossParameter(Metas<E> meta) {
+        public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta) {
             return new XmlBuilder.ForCrossParameter<>(lazy(getCrossParameter, "getCrossParameter"));
         }
 
         @Override
-        public MetadataBuilder.ForContainer<E> getReturnValue(Metas<E> meta) {
+        public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
             return new XmlBuilder.ForReturnValue<>(lazy(getReturnValue, "getReturnValue"));
         }
 
         @Override
-        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Metas<E> meta) {
+        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<E> meta) {
             return lazy(getParameters, "getParameters").stream().map(XmlBuilder.ForParameter::new)
                 .collect(Collectors.toList());
         }

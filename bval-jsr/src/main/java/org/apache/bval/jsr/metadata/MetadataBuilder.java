@@ -40,9 +40,9 @@ import org.apache.bval.jsr.groups.GroupConversion;
 public final class MetadataBuilder {
 
     public interface ForBean extends HasAnnotationBehavior {
-        MetadataBuilder.ForClass getClass(Metas<Class<?>> meta);
+        MetadataBuilder.ForClass getClass(Meta<Class<?>> meta);
 
-        Map<String, ForContainer<Field>> getFields(Metas<Class<?>> meta);
+        Map<String, ForContainer<Field>> getFields(Meta<Class<?>> meta);
 
         /**
          * Returned keys are property names per XML mapping spec.
@@ -50,11 +50,11 @@ public final class MetadataBuilder {
          * @param meta
          * @return {@link Map}
          */
-        Map<String, ForContainer<Method>> getGetters(Metas<Class<?>> meta);
+        Map<String, ForContainer<Method>> getGetters(Meta<Class<?>> meta);
 
-        Map<Signature, ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta);
+        Map<Signature, ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta);
 
-        Map<Signature, ForExecutable<Method>> getMethods(Metas<Class<?>> meta);
+        Map<Signature, ForExecutable<Method>> getMethods(Meta<Class<?>> meta);
 
         default boolean isEmpty() {
             return false;
@@ -63,34 +63,34 @@ public final class MetadataBuilder {
 
     public interface ForElement<E extends AnnotatedElement> extends HasAnnotationBehavior {
 
-        Annotation[] getDeclaredConstraints(Metas<E> meta);
+        Annotation[] getDeclaredConstraints(Meta<E> meta);
 
-        default Map<Scope, Annotation[]> getConstraintsByScope(Metas<E> meta) {
+        default Map<Scope, Annotation[]> getConstraintsByScope(Meta<E> meta) {
             return Collections.singletonMap(Scope.LOCAL_ELEMENT, getDeclaredConstraints(meta));
         }
     }
 
     public interface ForClass extends ForElement<Class<?>> {
 
-        List<Class<?>> getGroupSequence(Metas<Class<?>> meta);
+        List<Class<?>> getGroupSequence(Meta<Class<?>> meta);
     }
 
     public interface ForContainer<E extends AnnotatedElement> extends MetadataBuilder.ForElement<E> {
 
-        boolean isCascade(Metas<E> meta);
+        boolean isCascade(Meta<E> meta);
 
-        Set<GroupConversion> getGroupConversions(Metas<E> meta);
+        Set<GroupConversion> getGroupConversions(Meta<E> meta);
 
-        Map<ContainerElementKey, ForContainer<AnnotatedType>> getContainerElementTypes(Metas<E> meta);
+        Map<ContainerElementKey, ForContainer<AnnotatedType>> getContainerElementTypes(Meta<E> meta);
     }
 
     public interface ForExecutable<E extends Executable> extends HasAnnotationBehavior {
 
-        MetadataBuilder.ForContainer<E> getReturnValue(Metas<E> meta);
+        MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta);
 
-        MetadataBuilder.ForElement<E> getCrossParameter(Metas<E> meta);
+        MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta);
 
-        List<ForContainer<Parameter>> getParameters(Metas<E> meta);
+        List<ForContainer<Parameter>> getParameters(Meta<E> meta);
     }
 
     private MetadataBuilder() {

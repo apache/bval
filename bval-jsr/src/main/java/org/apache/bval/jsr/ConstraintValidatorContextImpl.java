@@ -123,7 +123,7 @@ public class ConstraintValidatorContextImpl
                 path.getLeafNode().setName(name);
             } else {
                 path = PathImpl.copy(propertyPath);
-                path.addNode(new NodeImpl(name));
+                path.addNode(new NodeImpl.PropertyNodeImpl(name));
             }
             return new NodeBuilderDefinedContextImpl(parent, messageTemplate, path);
         }

@@ -127,7 +127,6 @@ final class GroupValidationContextImpl<T> extends BeanValidationContext<Constrai
 
     @Override
     public void setKind(final ElementKind type) {
-        path.getLeafNode().setKind(type);
     }
 
     /**

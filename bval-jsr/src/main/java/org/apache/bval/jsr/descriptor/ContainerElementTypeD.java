@@ -37,7 +37,7 @@ import org.apache.bval.util.Validate;
 public class ContainerElementTypeD extends CascadableContainerD<CascadableContainerD<?, ?>, AnnotatedType>
     implements ContainerElementTypeDescriptor {
 
-    private static class Receiver implements ValueExtractor.ValueReceiver {
+    private class Receiver implements ValueExtractor.ValueReceiver {
         private final GraphContext context;
         private Lazy<List<GraphContext>> result = new Lazy<>(ArrayList::new);
 
@@ -73,7 +73,8 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
         }
 
         private void addChild(NodeImpl node, Object value) {
-            result.get().add(context.child(node, value));
+            result.get()
+                .add(context.child(node.inContainer(key.getContainerClass(), key.getTypeArgumentIndex()), value));
         }
     }
 

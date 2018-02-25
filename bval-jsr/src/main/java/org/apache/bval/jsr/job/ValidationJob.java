@@ -19,6 +19,8 @@
 package org.apache.bval.jsr.job;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -64,7 +66,9 @@ import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
+import org.apache.bval.util.reflection.TypeUtils;
 
 public abstract class ValidationJob<T> {
 
@@ -287,24 +291,51 @@ public abstract class ValidationJob<T> {
             if (value == null) {
                 return Stream.empty();
             }
+            if (value.getClass().isArray()) {
+                // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
+                final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
+                return IntStream.range(0, Array.getLength(value)).mapToObj(i -> context
+                    .child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+            }
             if (Map.class.isInstance(value)) {
                 return ((Map<?, ?>) value).entrySet().stream()
-                    .map(e -> context.child(NodeImpl.atKey(e.getKey()), e.getValue()));
-            }
-            if (value.getClass().isArray()) {
-                return IntStream.range(0, Array.getLength(value))
-                    .mapToObj(i -> context.child(NodeImpl.atIndex(i), Array.get(value, i)));
+                    .map(e -> context.child(
+                        setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
+                        e.getValue()));
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
-                return IntStream.range(0, l.size()).mapToObj(i -> context.child(NodeImpl.atIndex(i), l.get(i)));
+                return IntStream.range(0, l.size())
+                    .mapToObj(i -> context.child(
+                        setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
+                        l.get(i)));
             }
             if (Iterable.class.isInstance(value)) {
                 final Stream.Builder<Object> b = Stream.builder();
                 ((Iterable<?>) value).forEach(b);
-                return b.build().map(o -> context.child(NodeImpl.atIndex(null), o));
+                return b.build()
+                    .map(o -> context.child(
+                        setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
+                        o));
             }
             return Stream.of(context);
+        }
+
+        // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type
+        // variable if present. not sure I agree, FWIW
+        private NodeImpl setContainerInformation(NodeImpl node, TypeVariable<?> originalTypeVariable,
+            Class<?> containerType) {
+            final TypeVariable<?> tv;
+            if (containerType.equals(originalTypeVariable.getGenericDeclaration())) {
+                tv = originalTypeVariable;
+            } else {
+                final Type assignedType =
+                    TypeUtils.getTypeArguments(containerType, (Class<?>) originalTypeVariable.getGenericDeclaration())
+                        .get(originalTypeVariable);
+                tv = assignedType instanceof TypeVariable<?> ? (TypeVariable<?>) assignedType : null;
+            }
+            final int i = tv == null ? -1 : ObjectUtils.indexOf(containerType.getTypeParameters(), tv);
+            return node.inContainer(containerType, i < 0 ? null : Integer.valueOf(i));
         }
 
         @Override
@@ -314,6 +345,9 @@ public abstract class ValidationJob<T> {
     }
 
     private static final Comparator<Path> COMPARE_TO_STRING = Comparator.comparing(Object::toString);
+
+    protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
+    protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
 
     protected final ApacheFactoryContext validatorContext;
 
@@ -377,8 +411,8 @@ public abstract class ValidationJob<T> {
         return createViolation(messageTemplate, interpolate(messageTemplate, context), context, propertyPath);
     }
 
-    abstract ConstraintViolationImpl<T> createViolation(String messageTemplate,
-        String message, ConstraintValidatorContextImpl<T> context, Path propertyPath);
+    abstract ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
+        ConstraintValidatorContextImpl<T> context, Path propertyPath);
 
     protected abstract Frame<?> computeBaseFrame();
 

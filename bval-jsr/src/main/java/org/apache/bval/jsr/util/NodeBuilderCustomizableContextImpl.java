@@ -21,7 +21,6 @@ package org.apache.bval.jsr.util;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.ContainerElementNodeBuilderCustomizableContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext;
-import javax.validation.ElementKind;
 
 import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
@@ -48,12 +47,11 @@ public final class NodeBuilderCustomizableContextImpl
         this.template = template;
         this.path = path;
 
-        if (path.isRootPath() || path.getLeafNode().getKind() != null) {
+        if (path.isRootPath() || path.getLeafNode().getName() != null) {
             node = new NodeImpl.PropertyNodeImpl(name);
         } else {
-            node = path.removeLeafNode();
+            node = new NodeImpl.PropertyNodeImpl(path.removeLeafNode());
             node.setName(name);
-            node.setKind(ElementKind.PROPERTY); // enforce it
         }
     }
 
@@ -101,7 +99,7 @@ public final class NodeBuilderCustomizableContextImpl
 
     @Override
     public NodeBuilderCustomizableContext inContainer(Class<?> containerClass, Integer typeArgumentIndex) {
-        path.getLeafNode().inContainer(containerClass, typeArgumentIndex);
+        node.inContainer(containerClass, typeArgumentIndex);
         return this;
     }
 

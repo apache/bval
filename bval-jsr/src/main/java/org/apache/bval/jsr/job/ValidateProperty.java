@@ -20,7 +20,6 @@ package org.apache.bval.jsr.job;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -436,9 +435,6 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
             }
         }
     }
-
-    private static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
-    private static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
 
     private final Strategy<T> strategy;
     private final Class<T> rootBeanClass;

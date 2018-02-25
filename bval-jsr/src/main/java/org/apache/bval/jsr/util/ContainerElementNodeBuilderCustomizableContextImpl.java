@@ -70,6 +70,7 @@ public class ContainerElementNodeBuilderCustomizableContextImpl
 
     @Override
     public ConstraintValidatorContext addConstraintViolation() {
+        path.addNode(node);
         context.addError(template, path);
         return context;
     }

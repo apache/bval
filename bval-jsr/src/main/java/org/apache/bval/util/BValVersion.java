@@ -62,7 +62,7 @@ public class BValVersion {
         }
 
         String vers = revisionProps.getProperty("project.version");
-        if (vers == null || "".equals(vers.trim())) {
+        if (StringUtils.isBlank(vers)) {
             vers = "0.0.0";
         }
         VERSION_NUMBER = vers;

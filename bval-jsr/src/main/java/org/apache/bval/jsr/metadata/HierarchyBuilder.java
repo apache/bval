@@ -50,38 +50,38 @@ public class HierarchyBuilder extends CompositeBuilder {
         }
 
         static class ForBean extends HierarchyDelegate<MetadataBuilder.ForBean> implements MetadataBuilder.ForBean {
-            final Metas<Class<?>> hierarchyType;
+            final Meta<Class<?>> hierarchyType;
 
             ForBean(MetadataBuilder.ForBean delegate, Class<?> hierarchyType) {
                 super(delegate);
-                this.hierarchyType = new Metas.ForClass(hierarchyType);
+                this.hierarchyType = new Meta.ForClass(hierarchyType);
             }
 
             @Override
-            public MetadataBuilder.ForClass getClass(Metas<Class<?>> meta) {
+            public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
                 return new HierarchyDelegate.ForClass(delegate.getClass(hierarchyType), hierarchyType);
             }
 
             @Override
-            public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Metas<Class<?>> meta) {
+            public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
                 return delegate.getFields(hierarchyType);
             }
 
             @Override
-            public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Metas<Class<?>> meta) {
+            public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
                 return delegate.getGetters(hierarchyType);
             }
 
             @SuppressWarnings("unlikely-arg-type")
             @Override
-            public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta) {
+            public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
                 // suppress hierarchical ctors:
                 return hierarchyType.equals(meta.getHost()) ? delegate.getConstructors(hierarchyType)
                     : Collections.emptyMap();
             }
 
             @Override
-            public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Metas<Class<?>> meta) {
+            public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
                 final Map<Signature, MetadataBuilder.ForExecutable<Method>> m = delegate.getMethods(hierarchyType);
 
                 return m;
@@ -90,20 +90,20 @@ public class HierarchyBuilder extends CompositeBuilder {
 
         static class ForClass extends HierarchyDelegate<MetadataBuilder.ForClass> implements MetadataBuilder.ForClass {
 
-            final Metas<Class<?>> hierarchyType;
+            final Meta<Class<?>> hierarchyType;
 
-            ForClass(MetadataBuilder.ForClass delegate, Metas<Class<?>> hierarchyType) {
+            ForClass(MetadataBuilder.ForClass delegate, Meta<Class<?>> hierarchyType) {
                 super(delegate);
                 this.hierarchyType = hierarchyType;
             }
 
             @Override
-            public Annotation[] getDeclaredConstraints(Metas<Class<?>> meta) {
+            public Annotation[] getDeclaredConstraints(Meta<Class<?>> meta) {
                 return delegate.getDeclaredConstraints(hierarchyType);
             }
 
             @Override
-            public List<Class<?>> getGroupSequence(Metas<Class<?>> meta) {
+            public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
                 return delegate.getGroupSequence(hierarchyType);
             }
         }
@@ -147,7 +147,7 @@ public class HierarchyBuilder extends CompositeBuilder {
 
     @Override
     protected <E extends AnnotatedElement> Map<Scope, Annotation[]> getConstraintsByScope(
-        CompositeBuilder.ForElement<? extends MetadataBuilder.ForElement<E>, E> composite, Metas<E> meta) {
+        CompositeBuilder.ForElement<? extends MetadataBuilder.ForElement<E>, E> composite, Meta<E> meta) {
 
         final Iterator<? extends MetadataBuilder.ForElement<E>> iter = composite.delegates.iterator();
 
@@ -163,7 +163,7 @@ public class HierarchyBuilder extends CompositeBuilder {
     }
 
     @Override
-    protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Metas<Class<?>> meta) {
+    protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Meta<Class<?>> meta) {
         return composite.delegates.get(0).getGroupSequence(meta);
     }
 }

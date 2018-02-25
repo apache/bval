@@ -22,7 +22,7 @@ import java.lang.reflect.Parameter;
 
 import javax.validation.metadata.ParameterDescriptor;
 
-import org.apache.bval.jsr.metadata.Metas;
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -33,7 +33,7 @@ public class ParameterD<P extends ExecutableD<?, ?, P>> extends CascadableContai
     private final String name;
     private final Class<?> type;
 
-    ParameterD(Metas.ForParameter meta, int index, MetadataReader.ForContainer<Parameter> reader, P parent) {
+    ParameterD(Meta.ForParameter meta, int index, MetadataReader.ForContainer<Parameter> reader, P parent) {
         super(reader, parent);
 
         Validate.isTrue(index >= 0 && index < meta.getHost().getDeclaringExecutable().getParameterCount(),

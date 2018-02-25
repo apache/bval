@@ -29,7 +29,7 @@ import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.ExecutableD;
 import org.apache.bval.jsr.descriptor.ReturnValueD;
-import org.apache.bval.jsr.metadata.Metas;
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
@@ -43,7 +43,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         ForMethod(ApacheFactoryContext validatorContext, T object, Method method, Object returnValue,
             Class<?>[] groups) {
             super(validatorContext,
-                new Metas.ForMethod(Validate.notNull(method, IllegalArgumentException::new, "method")), returnValue,
+                new Meta.ForMethod(Validate.notNull(method, IllegalArgumentException::new, "method")), returnValue,
                 groups);
             this.object = Validate.notNull(object, IllegalArgumentException::new, "object");
         }
@@ -73,7 +73,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         ForConstructor(ApacheFactoryContext validatorContext, Constructor<? extends T> ctor, Object returnValue,
             Class<?>[] groups) {
             super(validatorContext,
-                new Metas.ForConstructor(Validate.notNull(ctor, IllegalArgumentException::new, "ctor")), returnValue,
+                new Meta.ForConstructor(Validate.notNull(ctor, IllegalArgumentException::new, "ctor")), returnValue,
                 groups);
         }
 
@@ -100,7 +100,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
     protected final E executable;
     private final Object returnValue;
 
-    ValidateReturnValue(ApacheFactoryContext validatorContext, Metas<E> meta, Object returnValue, Class<?>[] groups) {
+    ValidateReturnValue(ApacheFactoryContext validatorContext, Meta<E> meta, Object returnValue, Class<?>[] groups) {
         super(validatorContext, groups);
 
         final Type type = Validate.notNull(meta, "meta").getType();

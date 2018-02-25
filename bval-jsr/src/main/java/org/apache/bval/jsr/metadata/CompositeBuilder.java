@@ -81,28 +81,28 @@ public class CompositeBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Metas<Class<?>> meta) {
+        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
             return new CompositeBuilder.ForClass(
                 delegates.stream().map(d -> d.getClass(meta)).collect(Collectors.toList()));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
             return merge(b -> b.getFields(meta), CompositeBuilder.ForContainer::new);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Metas<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
             return merge(b -> b.getGetters(meta), CompositeBuilder.ForContainer::new);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
             return merge(b -> b.getConstructors(meta), CompositeBuilder.ForExecutable::new);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Metas<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
             return merge(b -> b.getMethods(meta), CompositeBuilder.ForExecutable::new);
         }
     }
@@ -115,12 +115,12 @@ public class CompositeBuilder {
         }
 
         @Override
-        public Map<Scope, Annotation[]> getConstraintsByScope(Metas<E> meta) {
+        public Map<Scope, Annotation[]> getConstraintsByScope(Meta<E> meta) {
             return CompositeBuilder.this.getConstraintsByScope(this, meta);
         }
 
         @Override
-        public final Annotation[] getDeclaredConstraints(Metas<E> meta) {
+        public final Annotation[] getDeclaredConstraints(Meta<E> meta) {
             return delegates.stream().map(d -> d.getDeclaredConstraints(meta)).flatMap(Stream::of)
                 .toArray(Annotation[]::new);
         }
@@ -133,7 +133,7 @@ public class CompositeBuilder {
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Metas<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
             return CompositeBuilder.this.getGroupSequence(this, meta);
         }
     }
@@ -146,19 +146,19 @@ public class CompositeBuilder {
         }
 
         @Override
-        public final boolean isCascade(Metas<E> meta) {
+        public final boolean isCascade(Meta<E> meta) {
             return delegates.stream().anyMatch(d -> d.isCascade(meta));
         }
 
         @Override
-        public final Set<GroupConversion> getGroupConversions(Metas<E> meta) {
+        public final Set<GroupConversion> getGroupConversions(Meta<E> meta) {
             return delegates.stream().map(d -> d.getGroupConversions(meta)).flatMap(Collection::stream)
                 .collect(ToUnmodifiable.set());
         }
 
         @Override
         public final Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-            Metas<E> meta) {
+            Meta<E> meta) {
             return merge(b -> b.getContainerElementTypes(meta), CompositeBuilder.ForContainer::new);
         }
     }
@@ -171,13 +171,13 @@ public class CompositeBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForContainer<E> getReturnValue(Metas<E> meta) {
+        public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
             return new CompositeBuilder.ForContainer<>(
                 delegates.stream().map(d -> d.getReturnValue(meta)).collect(Collectors.toList()));
         }
 
         @Override
-        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Metas<E> meta) {
+        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<E> meta) {
             final List<List<MetadataBuilder.ForContainer<Parameter>>> parameterLists =
                 delegates.stream().map(d -> d.getParameters(meta)).collect(Collectors.toList());
 
@@ -192,7 +192,7 @@ public class CompositeBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForElement<E> getCrossParameter(Metas<E> meta) {
+        public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta) {
             return new CompositeBuilder.ForElement<MetadataBuilder.ForElement<E>, E>(
                 delegates.stream().map(d -> d.getCrossParameter(meta)).collect(Collectors.toList()));
         }
@@ -215,11 +215,11 @@ public class CompositeBuilder {
     }
 
     protected <E extends AnnotatedElement> Map<Scope, Annotation[]> getConstraintsByScope(
-        CompositeBuilder.ForElement<? extends MetadataBuilder.ForElement<E>, E> composite, Metas<E> meta) {
+        CompositeBuilder.ForElement<? extends MetadataBuilder.ForElement<E>, E> composite, Meta<E> meta) {
         return Collections.singletonMap(Scope.LOCAL_ELEMENT, composite.getDeclaredConstraints(meta));
     }
 
-    protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Metas<Class<?>> meta) {
+    protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Meta<Class<?>> meta) {
         final List<List<Class<?>>> groupSequence =
             composite.delegates.stream().map(d -> d.getGroupSequence(meta)).collect(Collectors.toList());
         Validate.validState(groupSequence.size() <= 1,

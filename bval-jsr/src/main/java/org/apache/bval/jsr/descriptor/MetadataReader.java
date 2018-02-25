@@ -51,7 +51,7 @@ import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
-import org.apache.bval.jsr.metadata.Metas;
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
@@ -62,10 +62,10 @@ import org.apache.bval.util.reflection.Reflection;
 class MetadataReader {
 
     class ForElement<E extends AnnotatedElement, B extends MetadataBuilder.ForElement<E>> {
-        final Metas<E> meta;
+        final Meta<E> meta;
         protected final B builder;
 
-        ForElement(Metas<E> meta, B builder) {
+        ForElement(Meta<E> meta, B builder) {
             super();
             this.meta = Validate.notNull(meta, "meta");
             this.builder = Validate.notNull(builder, "builder");
@@ -76,7 +76,7 @@ class MetadataReader {
                 .flatMap(e -> describe(e.getValue(), e.getKey(), meta)).collect(ToUnmodifiable.set());
         }
 
-        private Stream<ConstraintD<?>> describe(Annotation[] constraints, Scope scope, Metas<?> meta) {
+        private Stream<ConstraintD<?>> describe(Annotation[] constraints, Scope scope, Meta<?> meta) {
             return Stream.of(constraints).map(c -> new ConstraintD<>(c, scope, meta, validatorFactory));
         }
     }
@@ -84,7 +84,7 @@ class MetadataReader {
     class ForBean extends MetadataReader.ForElement<Class<?>, MetadataBuilder.ForClass> {
         private final MetadataBuilder.ForBean beanBuilder;
 
-        ForBean(Metas<Class<?>> meta, MetadataBuilder.ForBean builder) {
+        ForBean(Meta<Class<?>> meta, MetadataBuilder.ForBean builder) {
             super(meta, Validate.notNull(builder, "builder").getClass(meta));
             this.beanBuilder = builder;
         }
@@ -96,7 +96,7 @@ class MetadataReader {
             beanBuilder.getFields(meta).forEach((f, builder) -> {
                 final Field fld = Reflection.find(meta.getHost(), t -> Reflection.getDeclaredField(t, f));
                 properties.computeIfAbsent(f, descriptorList).add(new PropertyD.ForField(
-                    new MetadataReader.ForContainer<>(new Metas.ForField(fld), builder), parent));
+                    new MetadataReader.ForContainer<>(new Meta.ForField(fld), builder), parent));
             });
 
             beanBuilder.getGetters(meta).forEach((g, builder) -> {
@@ -108,7 +108,7 @@ class MetadataReader {
                     "Getter method for property %s not found", g);
 
                 properties.computeIfAbsent(g, descriptorList).add(new PropertyD.ForMethod(
-                    new MetadataReader.ForContainer<>(new Metas.ForMethod(getter), builder), parent));
+                    new MetadataReader.ForContainer<>(new Meta.ForMethod(getter), builder), parent));
             });
             return properties.entrySet().stream().collect(ToUnmodifiable.map(Map.Entry::getKey, e -> {
                 final List<PropertyD<?>> delegates = e.getValue();
@@ -139,7 +139,7 @@ class MetadataReader {
                 final Method m = Reflection.find(meta.getHost(),
                     t -> Reflection.getDeclaredMethod(t, sig.getName(), sig.getParameterTypes()));
 
-                result.put(sig, new MethodD(new MetadataReader.ForMethod(new Metas.ForMethod(m), builder), parent));
+                result.put(sig, new MethodD(new MetadataReader.ForMethod(new Meta.ForMethod(m), builder), parent));
             });
             return Collections.unmodifiableMap(result);
         }
@@ -156,7 +156,7 @@ class MetadataReader {
             ctorBuilders.forEach((sig, builder) -> {
                 final Constructor<?> c = Reflection.getDeclaredConstructor(meta.getHost(), sig.getParameterTypes());
                 result.put(sig,
-                    new ConstructorD(new MetadataReader.ForConstructor(new Metas.ForConstructor(c), builder), parent));
+                    new ConstructorD(new MetadataReader.ForConstructor(new Meta.ForConstructor(c), builder), parent));
             });
             return Collections.unmodifiableMap(result);
         }
@@ -190,7 +190,7 @@ class MetadataReader {
 
     class ForContainer<E extends AnnotatedElement> extends ForElement<E, MetadataBuilder.ForContainer<E>> {
 
-        ForContainer(Metas<E> meta, MetadataBuilder.ForContainer<E> builder) {
+        ForContainer(Meta<E> meta, MetadataBuilder.ForContainer<E> builder) {
             super(meta, builder);
         }
 
@@ -214,7 +214,7 @@ class MetadataReader {
 
             containerElementTypes.forEach((k, builder) -> {
                 result.add(new ContainerElementTypeD(k,
-                    new MetadataReader.ForContainer<>(new Metas.ForContainerElement(meta, k), builder), parent));
+                    new MetadataReader.ForContainer<>(new Meta.ForContainerElement(meta, k), builder), parent));
             });
             return Collections.unmodifiableSet(result);
         }
@@ -224,7 +224,7 @@ class MetadataReader {
         extends ForElement<E, MetadataBuilder.ForElement<E>> {
         private final MetadataBuilder.ForExecutable<E> executableBuilder;
 
-        ForExecutable(Metas<E> meta, MetadataBuilder.ForExecutable<E> executableBuilder) {
+        ForExecutable(Meta<E> meta, MetadataBuilder.ForExecutable<E> executableBuilder) {
             super(meta, EmptyBuilder.instance().forElement());
             this.executableBuilder = Validate.notNull(executableBuilder, "executableBuilder");
         }
@@ -238,13 +238,13 @@ class MetadataReader {
             final List<MetadataBuilder.ForContainer<Parameter>> builders = executableBuilder.getParameters(meta);
 
             return IntStream.range(0, parameters.length).mapToObj(i -> {
-                final Metas.ForParameter param = new Metas.ForParameter(parameters[i], parameterNames.get(i));
+                final Meta.ForParameter param = new Meta.ForParameter(parameters[i], parameterNames.get(i));
                 return new ParameterD<>(param, i, new MetadataReader.ForContainer<>(param, builders.get(i)), parent);
             }).collect(ToUnmodifiable.list());
         }
 
         <X extends ExecutableD<E, SELF, X>> CrossParameterD<X, E> getCrossParameterDescriptor(X parent) {
-            final Metas.ForCrossParameter<E> cp = new Metas.ForCrossParameter<>(meta);
+            final Meta.ForCrossParameter<E> cp = new Meta.ForCrossParameter<>(meta);
             return new CrossParameterD<>(new MetadataReader.ForElement<>(cp, executableBuilder.getCrossParameter(cp)),
                 parent);
         }
@@ -258,7 +258,7 @@ class MetadataReader {
     }
 
     class ForMethod extends ForExecutable<Method, ForMethod> {
-        ForMethod(Metas<Method> meta, MetadataBuilder.ForExecutable<Method> builder) {
+        ForMethod(Meta<Method> meta, MetadataBuilder.ForExecutable<Method> builder) {
             super(meta, builder);
         }
 
@@ -270,7 +270,7 @@ class MetadataReader {
 
     class ForConstructor extends ForExecutable<Constructor<?>, ForConstructor> {
 
-        ForConstructor(Metas<Constructor<?>> meta, MetadataBuilder.ForExecutable<Constructor<?>> builder) {
+        ForConstructor(Meta<Constructor<?>> meta, MetadataBuilder.ForExecutable<Constructor<?>> builder) {
             super(meta, builder);
         }
 
@@ -288,6 +288,6 @@ class MetadataReader {
     }
 
     MetadataReader.ForBean forBean(Class<?> beanClass, MetadataBuilder.ForBean builder) {
-        return new MetadataReader.ForBean(new Metas.ForClass(beanClass), builder);
+        return new MetadataReader.ForBean(new Meta.ForClass(beanClass), builder);
     }
 }

@@ -52,7 +52,7 @@ import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
-import org.apache.bval.jsr.metadata.Metas;
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
@@ -75,7 +75,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     private final A annotation;
     private final Scope scope;
-    private final Metas<?> meta;
+    private final Meta<?> meta;
 
     private final Set<Class<? extends Payload>> payload;
     private final Class<?> validatedType;
@@ -89,7 +89,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     private final List<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClasses;
     private final Class<? extends ConstraintValidator<A, ?>> constraintValidatorClass;
 
-    public ConstraintD(A annotation, Scope scope, Metas<?> meta, ApacheValidatorFactory validatorFactory) {
+    public ConstraintD(A annotation, Scope scope, Meta<?> meta, ApacheValidatorFactory validatorFactory) {
         this.annotation = Validate.notNull(annotation, "annotation");
         this.scope = Validate.notNull(scope, "scope");
         this.meta = Validate.notNull(meta, "meta");

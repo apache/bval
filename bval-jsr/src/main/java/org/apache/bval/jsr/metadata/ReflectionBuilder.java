@@ -63,81 +63,81 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 public class ReflectionBuilder {
 
     private class ForBean implements MetadataBuilder.ForBean {
-        private final Metas<Class<?>> meta;
+        private final Meta<Class<?>> meta;
 
-        ForBean(Metas<Class<?>> meta) {
+        ForBean(Meta<Class<?>> meta) {
             super();
             this.meta = Validate.notNull(meta, "meta");
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Metas<Class<?>> ignored) {
+        public MetadataBuilder.ForClass getClass(Meta<Class<?>> ignored) {
             return new ReflectionBuilder.ForClass(meta);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Metas<Class<?>> ignored) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> ignored) {
             final Field[] declaredFields = Reflection.getDeclaredFields(meta.getHost());
             if (declaredFields.length == 0) {
                 return Collections.emptyMap();
             }
             return Stream.of(declaredFields).collect(
-                Collectors.toMap(Field::getName, f -> new ReflectionBuilder.ForContainer<>(new Metas.ForField(f))));
+                Collectors.toMap(Field::getName, f -> new ReflectionBuilder.ForContainer<>(new Meta.ForField(f))));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Metas<Class<?>> ignored) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> ignored) {
             return Stream.of(Reflection.getDeclaredMethods(meta.getHost())).filter(Methods::isGetter)
                 .collect(ToUnmodifiable.map(Methods::propertyName,
-                    g -> new ReflectionBuilder.ForContainer<>(new Metas.ForMethod(g))));
+                    g -> new ReflectionBuilder.ForContainer<>(new Meta.ForMethod(g))));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Metas<Class<?>> ignored) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> ignored) {
             final Constructor<?>[] declaredConstructors = Reflection.getDeclaredConstructors(meta.getHost());
             if (declaredConstructors.length == 0) {
                 return Collections.emptyMap();
             }
             return Stream.of(declaredConstructors).collect(
-                Collectors.toMap(Signature::of, c -> new ReflectionBuilder.ForExecutable<>(new Metas.ForConstructor(c),
+                Collectors.toMap(Signature::of, c -> new ReflectionBuilder.ForExecutable<>(new Meta.ForConstructor(c),
                     validatorFactory.getParameterNameProvider()::getParameterNames)));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Metas<Class<?>> ignored) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> ignored) {
             final Method[] declaredMethods = Reflection.getDeclaredMethods(meta.getHost());
             if (declaredMethods.length == 0) {
                 return Collections.emptyMap();
             }
             // we can't filter the getters since they can be validated, todo: read the config to know if we need or not
             return Stream.of(declaredMethods).collect(
-                Collectors.toMap(Signature::of, m -> new ReflectionBuilder.ForExecutable<>(new Metas.ForMethod(m),
+                Collectors.toMap(Signature::of, m -> new ReflectionBuilder.ForExecutable<>(new Meta.ForMethod(m),
                     validatorFactory.getParameterNameProvider()::getParameterNames)));
         }
     }
 
     private abstract class ForElement<E extends AnnotatedElement> implements MetadataBuilder.ForElement<E> {
-        final Metas<E> meta;
+        final Meta<E> meta;
 
-        ForElement(Metas<E> meta) {
+        ForElement(Meta<E> meta) {
             super();
             this.meta = Validate.notNull(meta, "meta");
         }
 
         @Override
-        public Annotation[] getDeclaredConstraints(Metas<E> ignored) {
+        public Annotation[] getDeclaredConstraints(Meta<E> ignored) {
             return AnnotationsManager.getDeclaredConstraints(meta);
         }
     }
 
     private class ForClass extends ForElement<Class<?>> implements MetadataBuilder.ForClass {
 
-        ForClass(Metas<Class<?>> meta) {
+        ForClass(Meta<Class<?>> meta) {
             super(meta);
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Metas<Class<?>> ignored) {
+        public List<Class<?>> getGroupSequence(Meta<Class<?>> ignored) {
             final GroupSequence groupSequence = meta.getHost().getAnnotation(GroupSequence.class);
             return groupSequence == null ? null : Collections.unmodifiableList(Arrays.asList(groupSequence.value()));
         }
@@ -146,13 +146,13 @@ public class ReflectionBuilder {
     private class ForContainer<E extends AnnotatedElement> extends ReflectionBuilder.ForElement<E>
         implements MetadataBuilder.ForContainer<E> {
 
-        ForContainer(Metas<E> meta) {
+        ForContainer(Meta<E> meta) {
             super(meta);
         }
 
         @Override
         public Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-            Metas<E> ignored) {
+            Meta<E> ignored) {
             final AnnotatedType annotatedType = meta.getAnnotatedType();
             if (annotatedType instanceof AnnotatedParameterizedType) {
 
@@ -163,7 +163,7 @@ public class ReflectionBuilder {
                 final AnnotatedType[] typeArgs = container.getAnnotatedActualTypeArguments();
                 for (int i = 0; i < typeArgs.length; i++) {
                     ContainerElementKey key = new ContainerElementKey(container, i);
-                    result.put(key, new ReflectionBuilder.ForContainer<>(new Metas.ForContainerElement(meta, key)));
+                    result.put(key, new ReflectionBuilder.ForContainer<>(new Meta.ForContainerElement(meta, key)));
                 }
                 return result;
             }
@@ -171,12 +171,12 @@ public class ReflectionBuilder {
         }
 
         @Override
-        public boolean isCascade(Metas<E> ignored) {
+        public boolean isCascade(Meta<E> ignored) {
             return meta.getHost().isAnnotationPresent(Valid.class);
         }
 
         @Override
-        public Set<GroupConversion> getGroupConversions(Metas<E> ignored) {
+        public Set<GroupConversion> getGroupConversions(Meta<E> ignored) {
             return Stream.of(meta.getHost().getDeclaredAnnotationsByType(ConvertGroup.class))
                 .map(cg -> GroupConversion.from(cg.from()).to(cg.to())).collect(ToUnmodifiable.set());
         }
@@ -184,17 +184,17 @@ public class ReflectionBuilder {
 
     private class ForExecutable<E extends Executable> implements MetadataBuilder.ForExecutable<E> {
 
-        final Metas<E> meta;
+        final Meta<E> meta;
         final Function<E, List<String>> getParameterNames;
 
-        ForExecutable(Metas<E> meta, Function<E, List<String>> getParameterNames) {
+        ForExecutable(Meta<E> meta, Function<E, List<String>> getParameterNames) {
             super();
             this.meta = Validate.notNull(meta, "meta");
             this.getParameterNames = Validate.notNull(getParameterNames, "getParameterNames");
         }
 
         @Override
-        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Metas<E> ignored) {
+        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<E> ignored) {
             final Parameter[] parameters = meta.getHost().getParameters();
             if (parameters.length == 0) {
                 return Collections.emptyList();
@@ -202,26 +202,26 @@ public class ReflectionBuilder {
             final List<String> parameterNames = getParameterNames.apply(meta.getHost());
 
             return IntStream.range(0, parameters.length).mapToObj(
-                n -> new ReflectionBuilder.ForContainer<>(new Metas.ForParameter(parameters[n], parameterNames.get(n))))
+                n -> new ReflectionBuilder.ForContainer<>(new Meta.ForParameter(parameters[n], parameterNames.get(n))))
                 .collect(ToUnmodifiable.list());
         }
 
         @Override
-        public ForContainer<E> getReturnValue(Metas<E> ignored) {
+        public ForContainer<E> getReturnValue(Meta<E> ignored) {
             return new ReflectionBuilder.ForContainer<E>(meta) {
 
                 @Override
-                public Annotation[] getDeclaredConstraints(Metas<E> meta) {
+                public Annotation[] getDeclaredConstraints(Meta<E> meta) {
                     return getConstraints(ConstraintTarget.RETURN_VALUE);
                 }
             };
         }
 
         @Override
-        public MetadataBuilder.ForElement<E> getCrossParameter(Metas<E> ignored) {
+        public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> ignored) {
             return new ReflectionBuilder.ForElement<E>(meta) {
                 @Override
-                public Annotation[] getDeclaredConstraints(Metas<E> meta) {
+                public Annotation[] getDeclaredConstraints(Meta<E> meta) {
                     return getConstraints(ConstraintTarget.PARAMETERS);
                 }
             };
@@ -299,6 +299,6 @@ public class ReflectionBuilder {
     }
 
     public <T> MetadataBuilder.ForBean forBean(Class<?> beanClass) {
-        return new ReflectionBuilder.ForBean(new Metas.ForClass(beanClass));
+        return new ReflectionBuilder.ForBean(new Meta.ForClass(beanClass));
     }
 }

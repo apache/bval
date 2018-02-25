@@ -151,15 +151,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils-core</artifactId>
             <optional>true</optional>
@@ -174,6 +165,18 @@
             <artifactId>bval-xstream</artifactId>
             <version>${project.version}</version>
             <!-- don't pull into OSGi bundle -->
+            <scope>provided</scope>
+            <optional>true</optional>
+            <exclusions>
+            <exclusion>
+          <groupId>org.apache.bval</groupId>
+          <artifactId>bval-core</artifactId>
+        </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -270,10 +273,28 @@
                 </configuration>
             </plugin>
 
+            <!-- create mainClass attribute -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                   <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                   <mainClass>org.apache.bval.util.BValVersion</mainClass>
+                                </manifest>
+                                <manifestEntries>
+                                    <Implementation-Build>${buildNumber}</Implementation-Build>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>test-jar</id>
                         <phase>package</phase>
@@ -297,6 +318,36 @@
             <plugin>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-weaver-maven-plugin</artifactId>
+            </plugin>
+            <!--
+                get the project version
+                and set it in a properties file for later retrieval
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>set version info</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <target>
+                                <echo>Version: ${project.version}</echo>
+                                <echo>Date: ${timestamp}</echo>
+                                <mkdir dir="${project.build.outputDirectory}/META-INF" />
+                                <echo file="${project.build.outputDirectory}/META-INF/org.apache.bval.revision.properties">
+# Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
+project.name=Apache BVal
+project.version=${project.version}
+build.timestamp=${timestamp}
+                                </echo>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

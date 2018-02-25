@@ -52,9 +52,9 @@
     <url>http://bval.apache.org/</url>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/bval/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/bval/trunk/</developerConnection>
-        <url>http://svn.apache.org/repos/asf/bval/trunk/</url>
+        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/bval</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/bval</developerConnection>
+        <url>http://git-wip-us.apache.org/repos/asf/bval</url>
     </scm>
 
     <mailingLists>
@@ -577,7 +577,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>1.2</version>
+                    <version>1.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -660,6 +660,7 @@
                 <configuration>
                     <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
                     <revisionOnScmFailure>offline</revisionOnScmFailure>
+                    <shortRevisionLength>10</shortRevisionLength>
                 </configuration>
                 <executions>
                     <execution>
@@ -692,10 +693,7 @@
     </build>
 
     <modules>
-        <module>bval-core</module>
-        <module>bval-xstream</module>
         <module>bval-jsr</module>
-        <module>bval-json</module>
         <module>bval-extras</module>
         <module>bval-tck</module>
         <module>bundle</module>

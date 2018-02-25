@@ -28,7 +28,7 @@ import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
  */
 public final class NodeBuilderDefinedContextImpl
     implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext {
-    private final ConstraintValidatorContextImpl context;
+    private final ConstraintValidatorContextImpl<?> context;
     private final String template;
     private final PathImpl path;
 
@@ -38,7 +38,7 @@ public final class NodeBuilderDefinedContextImpl
      * @param template
      * @param path
      */
-    public NodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl contextImpl, String template, PathImpl path) {
+    public NodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl<?> contextImpl, String template, PathImpl path) {
         this.context = contextImpl;
         this.template = template;
         this.path = path;

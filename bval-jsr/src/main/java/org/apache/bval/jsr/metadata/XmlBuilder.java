@@ -48,7 +48,7 @@ import javax.validation.ValidationException;
 import javax.xml.bind.JAXBElement;
 
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
-import org.apache.bval.jsr.descriptor.GroupConversion;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;

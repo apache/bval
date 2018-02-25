@@ -48,7 +48,7 @@ import javax.validation.groups.ConvertGroup;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
-import org.apache.bval.jsr.descriptor.GroupConversion;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;

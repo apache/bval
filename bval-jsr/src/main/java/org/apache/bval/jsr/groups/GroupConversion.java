@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.bval.jsr.descriptor;
+package org.apache.bval.jsr.groups;
 
 import java.util.Objects;
 import java.util.Optional;

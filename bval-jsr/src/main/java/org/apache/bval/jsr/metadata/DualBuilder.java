@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.apache.bval.jsr.descriptor.GroupConversion;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Validate;
 

@@ -47,6 +47,7 @@ import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder;

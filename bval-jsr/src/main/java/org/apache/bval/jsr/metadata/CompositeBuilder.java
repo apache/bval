@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 
 import javax.validation.metadata.Scope;
 
-import org.apache.bval.jsr.descriptor.GroupConversion;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Validate;
 

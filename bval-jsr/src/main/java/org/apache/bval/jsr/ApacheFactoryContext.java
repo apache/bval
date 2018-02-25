@@ -27,7 +27,6 @@ import javax.validation.Validator;
 import javax.validation.ValidatorContext;
 import javax.validation.valueextraction.ValueExtractor;
 
-import org.apache.bval.MetaBeanFinder;
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
@@ -44,7 +43,6 @@ public class ApacheFactoryContext implements ValidatorContext {
     private final Lazy<GroupsComputer> groupsComputer = new Lazy<>(GroupsComputer::new);
     private final ApacheValidatorFactory factory;
     private final ValueExtractors valueExtractors;
-    private volatile MetaBeanFinder metaBeanFinder;
 
     private MessageInterpolator messageInterpolator;
     private TraversableResolver traversableResolver;
@@ -60,9 +58,8 @@ public class ApacheFactoryContext implements ValidatorContext {
      * @param metaBeanFinder
      *            meta finder
      */
-    public ApacheFactoryContext(ApacheValidatorFactory factory, MetaBeanFinder metaBeanFinder) {
+    public ApacheFactoryContext(ApacheValidatorFactory factory) {
         this.factory = factory;
-        this.metaBeanFinder = metaBeanFinder;
         valueExtractors = factory.getValueExtractors().createChild();
     }
 
@@ -76,15 +73,6 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     /**
-     * Get the metaBeanFinder.
-     * 
-     * @return {@link MetaBeanFinder}
-     */
-    public final MetaBeanFinder getMetaBeanFinder() {
-        return metaBeanFinder;
-    }
-
-    /**
      * Discard cached metadata. Calling this method unnecessarily has the effect of severly limiting performance,
      * therefore only do so when changes have been made that affect validation metadata, i.e. particularly NOT in
      * response to:
@@ -95,7 +83,7 @@ public class ApacheFactoryContext implements ValidatorContext {
      * </ul>
      */
     private synchronized void resetMeta() {
-        metaBeanFinder = factory.buildMetaBeanFinder();
+        getDescriptorManager().clear();
     }
 
     /**

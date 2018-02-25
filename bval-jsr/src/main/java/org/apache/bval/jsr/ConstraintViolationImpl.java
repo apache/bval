@@ -83,7 +83,8 @@ public class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Seria
         this.elementType = elementType;
         this.returnValue = returnValue;
         this.parameters = parameters;
-        this.hashCode = computeHashCode();
+        this.hashCode = Arrays.deepHashCode(new Object[] { messageTemplate, message, rootBean, rootBeanClass, leafBean,
+            value, propertyPath, elementType, constraintDescriptor, returnValue, parameters });
     }
 
     /**
@@ -207,12 +208,5 @@ public class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Seria
     @Override
     public int hashCode() {
         return hashCode;
-    }
-
-    private int computeHashCode() {
-        int result = Objects.hash(messageTemplate, message, rootBean, rootBeanClass, leafBean, value, propertyPath,
-            elementType, constraintDescriptor, returnValue);
-        result = 31 * result + (parameters == null ? 0 : Arrays.hashCode(parameters));
-        return result;
     }
 }

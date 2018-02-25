@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.bval.jsr.descriptor.GroupConversion;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;

@@ -21,7 +21,8 @@ think to add -Dvalidation.provider=org.apache.bval.jsr.ApacheValidationProvider 
 <suite name="tmp" verbose="1">
   <test name="tmp">
     <classes>
-      <class name="org.hibernate.beanvalidation.tck.tests.xmlconfiguration.groupconversion.containerelement.XmlBasedContainerElementGroupConversionValidationTest"/>
+<!--       <class name="org.hibernate.beanvalidation.tck.tests.xmlconfiguration.groupconversion.containerelement.XmlBasedContainerElementGroupConversionValidationTest"/> -->
+      <class name="org.hibernate.beanvalidation.tck.tests.validation.CustomPropertyPathTest"/>
 <!--
       <class name="org.hibernate.beanvalidation.tck.tests.util.ConstraintViolationAssertTest"/>
 -->

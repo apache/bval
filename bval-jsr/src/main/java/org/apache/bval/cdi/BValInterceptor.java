@@ -25,13 +25,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import javax.annotation.Priority;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
@@ -53,8 +51,10 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.ConstructorDescriptor;
 import javax.validation.metadata.MethodDescriptor;
 
-import org.apache.bval.jsr.util.ClassHelper;
+import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.Proxies;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.util.reflection.Reflection.Interfaces;
 
 /**
  * Interceptor class for the {@link BValBinding} {@link InterceptorBinding}.
@@ -205,14 +205,10 @@ public class BValInterceptor implements Serializable {
             synchronized (this) {
                 methodConfig = methodConfiguration.get(method);
                 if (methodConfig == null) {
-                    final List<Class<?>> classHierarchy =
-                        ClassHelper.fillFullClassHierarchyAsList(new LinkedList<>(), targetClass);
-                    Collections.reverse(classHierarchy);
-
                     // search on method @ValidateOnExecution
                     ValidateOnExecution validateOnExecution = null;
                     ValidateOnExecution validateOnExecutionType = null;
-                    for (final Class<?> c : classHierarchy) {
+                    for (final Class<?> c : reverseHierarchy(targetClass)) {
                         final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(c);
                         AnnotatedMethod<?> annotatedMethod = null;
 
@@ -328,13 +324,13 @@ public class BValInterceptor implements Serializable {
     }
 
     private static boolean doValidMethod(final Method method, final Set<ExecutableType> config) {
-        return isGetter(method) ? config.contains(ExecutableType.GETTER_METHODS)
-            : config.contains(ExecutableType.NON_GETTER_METHODS);
+        return config
+            .contains(Methods.isGetter(method) ? ExecutableType.GETTER_METHODS : ExecutableType.NON_GETTER_METHODS);
     }
 
-    private static boolean isGetter(final Method method) {
-        final String name = method.getName();
-        return method.getParameterTypes().length == 0 && !Void.TYPE.equals(method.getReturnType())
-            && (name.startsWith("get") || name.startsWith("is") && boolean.class.equals(method.getReturnType()));
+    private static Iterable<Class<?>> reverseHierarchy(Class<?> t) {
+        final Stream.Builder<Class<?>> builder = Stream.builder();
+        Reflection.hierarchy(t, Interfaces.INCLUDE).forEach(builder);
+        return builder.build()::iterator;
     }
 }

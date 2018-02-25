@@ -31,7 +31,7 @@ import java.util.Set;
 
 import javax.validation.metadata.Scope;
 
-import org.apache.bval.jsr.descriptor.GroupConversion;
+import org.apache.bval.jsr.groups.GroupConversion;
 
 /**
  * Common interface for populating the Bean Validation descriptors from various sources. Most implementations should

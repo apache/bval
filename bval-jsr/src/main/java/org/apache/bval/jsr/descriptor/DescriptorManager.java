@@ -62,6 +62,10 @@ public class DescriptorManager {
         return Optional.ofNullable(beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
     }
 
+    public void clear() {
+        beanDescriptors.clear();
+    }
+
     private MetadataBuilder.ForBean builder(Class<?> beanClass) {
         final MetadataBuilder.ForBean primaryBuilder =
             new HierarchyBuilder(reflectionBuilder::forBean).forBean(beanClass);

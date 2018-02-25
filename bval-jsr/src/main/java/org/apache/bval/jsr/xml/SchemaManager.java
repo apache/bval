@@ -276,7 +276,6 @@ public class SchemaManager {
         schemaRewriter.setContentHandler(unmarshallerHandler);
 
         xmlReader.parse(input);
-
         schemaValidator.validate();
 
         @SuppressWarnings("unchecked")

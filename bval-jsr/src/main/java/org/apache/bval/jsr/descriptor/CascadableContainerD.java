@@ -29,6 +29,7 @@ import javax.validation.metadata.ContainerElementTypeDescriptor;
 import javax.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
+import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;

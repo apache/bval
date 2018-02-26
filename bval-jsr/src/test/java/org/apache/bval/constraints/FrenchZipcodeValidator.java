@@ -26,11 +26,6 @@ import javax.validation.ConstraintValidatorContext;
  */
 public class FrenchZipcodeValidator implements ConstraintValidator<FrenchZipCode, Object> {
     @Override
-    public void initialize(FrenchZipCode constraintAnnotation) {
-        // do nothing
-    }
-
-    @Override
     public boolean isValid(Object object, ConstraintValidatorContext validationContext) {
         return null != object;
     }

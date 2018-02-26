@@ -212,10 +212,8 @@ public class Reflection {
         if (loader == null) {
             loader = Thread.currentThread().getContextClassLoader();
         }
-
         return Class.forName(className, resolve, loader);
     }
-
 
     /**
      * Convenient point for {@link Privilizing} {@link System#getProperty(String)}.

@@ -116,6 +116,7 @@ class Liskov {
         case PROPERTY:
             break;
         case RETURN_VALUE:
+            noStrengtheningOfPreconditions(delegates, detectGroupConversion());
             noRedeclarationOfReturnValueCascading(delegates);
             break;
         case PARAMETER:

@@ -39,7 +39,7 @@ import org.apache.bval.jsr.metadata.HierarchyBuilder.ContainerDelegate;
 import org.apache.bval.jsr.metadata.HierarchyBuilder.HierarchyDelegate;
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ElementDelegate;
 import org.apache.bval.util.Exceptions;
-import org.apache.commons.lang3.Validate;
+import org.apache.bval.util.Validate;
 
 class Liskov {
     //@formatter:off

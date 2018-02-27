@@ -196,8 +196,8 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
 
         @Override
-        public String toString() {
-            return String.format("%s(%s of %s)", getStringPrefix(), getName(), getHost());
+        public String describeHost() {
+            return String.format("%s of %s", getName(), getHost());
         }
     }
 
@@ -232,6 +232,11 @@ public abstract class Meta<E extends AnnotatedElement> {
 
         public String getName() {
             return name;
+        }
+
+        @Override
+        public String describeHost() {
+            return String.format("%s of %s", getName(), getHost().getDeclaringExecutable());
         }
     }
 
@@ -271,8 +276,12 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
 
         @Override
-        public String toString() {
-            return String.format("%s(%s of %s)", getStringPrefix(), key, getHost());
+        public String describeHost() {
+            return String.format("%s of %s", key, parent);
+        }
+
+        public Meta<?> getParent() {
+            return parent;
         }
     }
 
@@ -311,12 +320,12 @@ public abstract class Meta<E extends AnnotatedElement> {
     }
 
     @Override
-    public String toString() {
-        return String.format("%s(%s)", getStringPrefix(), host);
+    public final String toString() {
+        return String.format("%s.%s(%s)", Meta.class.getSimpleName(), getClass().getSimpleName(), describeHost());
     }
 
-    protected String getStringPrefix() {
-        return Meta.class.getSimpleName() + '.' + getClass().getSimpleName();
+    public String describeHost() {
+        return host.toString();
     }
 
     @Override

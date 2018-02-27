@@ -68,9 +68,10 @@ public class DescriptorManager {
 
     private MetadataBuilder.ForBean builder(Class<?> beanClass) {
         final MetadataBuilder.ForBean primaryBuilder =
-            new HierarchyBuilder(reflectionBuilder::forBean).forBean(beanClass);
+            new HierarchyBuilder(validatorFactory, reflectionBuilder::forBean).forBean(beanClass);
 
-        final MetadataBuilder.ForBean customBuilder = new HierarchyBuilder(this::customBuilder).forBean(beanClass);
+        final MetadataBuilder.ForBean customBuilder =
+            new HierarchyBuilder(validatorFactory, this::customBuilder).forBean(beanClass);
 
         return customBuilder.isEmpty() ? primaryBuilder : DualBuilder.forBean(primaryBuilder, customBuilder);
     }
@@ -86,6 +87,6 @@ public class DescriptorManager {
             return customBuilders.get(0);
         }
         return customBuilders.stream()
-            .collect(CompositeBuilder.with(AnnotationBehaviorMergeStrategy.consensus()).compose());
+            .collect(CompositeBuilder.with(validatorFactory, AnnotationBehaviorMergeStrategy.consensus()).compose());
     }
 }

@@ -18,21 +18,35 @@ package org.apache.bval.jsr.metadata;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import javax.validation.ElementKind;
+import javax.validation.ParameterNameProvider;
 import javax.validation.metadata.Scope;
 
+import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.groups.GroupConversion;
+import org.apache.bval.jsr.util.Methods;
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
@@ -41,78 +55,217 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 @Privilizing(@CallTo(Reflection.class))
 public class HierarchyBuilder extends CompositeBuilder {
-    private static abstract class HierarchyDelegate<T> {
+    static abstract class HierarchyDelegate<E extends AnnotatedElement, T> {
         final T delegate;
+        final Meta<E> hierarchyElement;
 
-        HierarchyDelegate(T delegate) {
+        HierarchyDelegate(T delegate, Meta<E> hierarchyElement) {
             super();
             this.delegate = Validate.notNull(delegate, "delegate");
+            this.hierarchyElement = Validate.notNull(hierarchyElement, "hierarchyElement");
         }
 
-        static class ForBean extends HierarchyDelegate<MetadataBuilder.ForBean> implements MetadataBuilder.ForBean {
-            final Meta<Class<?>> hierarchyType;
+        Meta<E> getHierarchyElement() {
+            return hierarchyElement;
+        }
+    }
 
-            ForBean(MetadataBuilder.ForBean delegate, Class<?> hierarchyType) {
-                super(delegate);
-                this.hierarchyType = new Meta.ForClass(hierarchyType);
-            }
+    static abstract class ElementDelegate<E extends AnnotatedElement, T extends MetadataBuilder.ForElement<E>>
+        extends HierarchyDelegate<E, T> implements MetadataBuilder.ForElement<E> {
 
-            @Override
-            public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
-                return new HierarchyDelegate.ForClass(delegate.getClass(hierarchyType), hierarchyType);
-            }
-
-            @Override
-            public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
-                return delegate.getFields(hierarchyType);
-            }
-
-            @Override
-            public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
-                return delegate.getGetters(hierarchyType);
-            }
-
-            @SuppressWarnings("unlikely-arg-type")
-            @Override
-            public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
-                // suppress hierarchical ctors:
-                return hierarchyType.equals(meta.getHost()) ? delegate.getConstructors(hierarchyType)
-                    : Collections.emptyMap();
-            }
-
-            @Override
-            public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
-                final Map<Signature, MetadataBuilder.ForExecutable<Method>> m = delegate.getMethods(hierarchyType);
-
-                return m;
-            }
+        ElementDelegate(T delegate, Meta<E> hierarchyElement) {
+            super(delegate, hierarchyElement);
+        }
+        
+        Annotation[] getDeclaredConstraints() {
+            return delegate.getDeclaredConstraints(hierarchyElement);
         }
 
-        static class ForClass extends HierarchyDelegate<MetadataBuilder.ForClass> implements MetadataBuilder.ForClass {
+        @Override
+        public final Annotation[] getDeclaredConstraints(Meta<E> meta) {
+            return getDeclaredConstraints();
+        }
+    }
 
-            final Meta<Class<?>> hierarchyType;
+    private class BeanDelegate extends HierarchyDelegate<Class<?>, MetadataBuilder.ForBean>
+        implements MetadataBuilder.ForBean {
 
-            ForClass(MetadataBuilder.ForClass delegate, Meta<Class<?>> hierarchyType) {
-                super(delegate);
-                this.hierarchyType = hierarchyType;
+        BeanDelegate(MetadataBuilder.ForBean delegate, Class<?> hierarchyType) {
+            super(delegate, new Meta.ForClass(hierarchyType));
+        }
+
+        @Override
+        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
+            return new ClassDelegate(delegate.getClass(hierarchyElement), hierarchyElement);
+        }
+
+        @Override
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
+            return delegate.getFields(hierarchyElement);
+        }
+
+        @Override
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
+            // ignore hierarchical ctors:
+            return hierarchyElement.equals(meta) ? delegate.getConstructors(hierarchyElement) : Collections.emptyMap();
+        }
+
+        @Override
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
+            final Map<String, MetadataBuilder.ForContainer<Method>> getters = delegate.getGetters(hierarchyElement);
+            final Map<String, MetadataBuilder.ForContainer<Method>> result = new LinkedHashMap<>();
+
+            getters.forEach((k, v) -> {
+                final Method getter = Methods.getter(hierarchyElement.getHost(), k);
+
+                Exceptions.raiseIf(getter == null, IllegalStateException::new,
+                    "delegate builder specified unknown getter");
+
+                result.put(k, new ContainerDelegate<Method>(v, new Meta.ForMethod(getter)));
+            });
+            return result;
+        }
+
+        @Override
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
+            final Map<Signature, MetadataBuilder.ForExecutable<Method>> methods = delegate.getMethods(hierarchyElement);
+            if (methods.isEmpty()) {
+                return methods;
             }
+            final Map<Signature, MetadataBuilder.ForExecutable<Method>> result = new LinkedHashMap<>();
+            methods
+                .forEach((k, v) -> result.put(k,
+                    new ExecutableDelegate<>(v, new Meta.ForMethod(
+                        Reflection.getDeclaredMethod(hierarchyElement.getHost(), k.getName(), k.getParameterTypes())),
+                        ParameterNameProvider::getParameterNames)));
+            return result;
+        }
+    }
 
-            @Override
-            public Annotation[] getDeclaredConstraints(Meta<Class<?>> meta) {
-                return delegate.getDeclaredConstraints(hierarchyType);
-            }
+    private class ClassDelegate extends ElementDelegate<Class<?>, MetadataBuilder.ForClass>
+        implements MetadataBuilder.ForClass {
 
-            @Override
-            public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
-                return delegate.getGroupSequence(hierarchyType);
+        ClassDelegate(MetadataBuilder.ForClass delegate, Meta<Class<?>> hierarchyType) {
+            super(delegate, hierarchyType);
+        }
+
+        @Override
+        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
+            return delegate.getGroupSequence(hierarchyElement);
+        }
+    }
+
+    class ContainerDelegate<E extends AnnotatedElement> extends ElementDelegate<E, MetadataBuilder.ForContainer<E>>
+        implements MetadataBuilder.ForContainer<E> {
+
+        ContainerDelegate(MetadataBuilder.ForContainer<E> delegate, Meta<E> hierarchyElement) {
+            super(delegate, hierarchyElement);
+        }
+        
+        boolean isCascade() {
+            return delegate.isCascade(hierarchyElement);
+        }
+
+        @Override
+        public final boolean isCascade(Meta<E> meta) {
+            return isCascade();
+        }
+
+        Set<GroupConversion> getGroupConversions() {
+            return delegate.getGroupConversions(hierarchyElement);
+        }
+
+        @Override
+        public final Set<GroupConversion> getGroupConversions(Meta<E> meta) {
+            return getGroupConversions();
+        }
+
+        @Override
+        public Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
+            Meta<E> meta) {
+            final Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> containerElementTypes =
+                delegate.getContainerElementTypes(hierarchyElement);
+
+            final Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> result = new LinkedHashMap<>();
+
+            containerElementTypes.forEach((k, v) -> {
+                result.put(k, new ContainerDelegate<>(v, new Meta.ForContainerElement(hierarchyElement, k)));
+            });
+            return result;
+        }
+    }
+
+    private class ExecutableDelegate<E extends Executable>
+        extends HierarchyDelegate<E, MetadataBuilder.ForExecutable<E>> implements MetadataBuilder.ForExecutable<E> {
+
+        final BiFunction<ParameterNameProvider, E, List<String>> getParameterNames;
+
+        ExecutableDelegate(MetadataBuilder.ForExecutable<E> delegate, Meta<E> hierarchyElement,
+            BiFunction<ParameterNameProvider, E, List<String>> getParameterNames) {
+            super(delegate, hierarchyElement);
+            this.getParameterNames = Validate.notNull(getParameterNames, "getParameterNames");
+        }
+
+        @Override
+        public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
+            return new ContainerDelegate<>(delegate.getReturnValue(hierarchyElement), hierarchyElement);
+        }
+
+        @Override
+        public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta) {
+            return new CrossParameterDelegate<>(delegate.getCrossParameter(hierarchyElement), hierarchyElement);
+        }
+
+        @Override
+        public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<E> meta) {
+            final List<MetadataBuilder.ForContainer<Parameter>> parameterDelegates =
+                delegate.getParameters(hierarchyElement);
+
+            if (parameterDelegates.isEmpty()) {
+                return parameterDelegates;
             }
+            final List<Meta<Parameter>> metaParameters = getMetaParameters(hierarchyElement, getParameterNames);
+
+            Exceptions.raiseUnless(metaParameters.size() == parameterDelegates.size(), IllegalStateException::new,
+                "Got wrong number of parameter delegates for %s", meta.getHost());
+
+            return IntStream.range(0, parameterDelegates.size())
+                .mapToObj(n -> new ContainerDelegate<>(parameterDelegates.get(n), metaParameters.get(n)))
+                .collect(Collectors.toList());
+        }
+    }
+
+    private class CrossParameterDelegate<E extends Executable>
+        extends ElementDelegate<E, MetadataBuilder.ForElement<E>> implements MetadataBuilder.ForElement<E> {
+
+        CrossParameterDelegate(MetadataBuilder.ForElement<E> delegate, Meta<E> hierarchyElement) {
+            super(delegate, hierarchyElement);
+        }
+    }
+
+    private class ForCrossParameter<E extends Executable>
+        extends CompositeBuilder.ForElement<CrossParameterDelegate<E>, E> {
+
+        ForCrossParameter(List<CrossParameterDelegate<E>> delegates) {
+            super(delegates);
+            Liskov.validateCrossParameterHierarchy(delegates);
+        }
+    }
+
+    private class ForContainer<E extends AnnotatedElement>
+        extends CompositeBuilder.ForContainer<ContainerDelegate<E>, E> {
+
+        ForContainer(List<ContainerDelegate<E>> delegates, ElementKind elementKind) {
+            super(delegates);
+            Liskov.validateContainerHierarchy(delegates, Validate.notNull(elementKind, "elementKind"));
         }
     }
 
     private final Function<Class<?>, MetadataBuilder.ForBean> getBeanBuilder;
 
-    public HierarchyBuilder(Function<Class<?>, MetadataBuilder.ForBean> getBeanBuilder) {
-        super(AnnotationBehaviorMergeStrategy.first());
+    public HierarchyBuilder(ApacheValidatorFactory validatorFactory,
+        Function<Class<?>, MetadataBuilder.ForBean> getBeanBuilder) {
+        super(validatorFactory, AnnotationBehaviorMergeStrategy.first());
         this.getBeanBuilder = Validate.notNull(getBeanBuilder, "getBeanBuilder function was null");
     }
 
@@ -126,16 +279,13 @@ public class HierarchyBuilder extends CompositeBuilder {
          */
         delegates.add(Optional.of(beanClass).map(getBeanBuilder).orElseGet(() -> EmptyBuilder.instance().forBean()));
 
-        // iterate the hierarchy, skipping the first (i.e. beanClass handled
-        // above)
+        // iterate the hierarchy, skipping the first (i.e. beanClass handled above)
         final Iterator<Class<?>> hierarchy = Reflection.hierarchy(beanClass, Interfaces.INCLUDE).iterator();
         hierarchy.next();
 
-        // skip Object.class; skip null/empty hierarchy builders, mapping others
-        // to HierarchyDelegate
-        hierarchy
-            .forEachRemaining(t -> Optional.of(t).filter(Predicate.isEqual(Object.class).negate()).map(getBeanBuilder)
-                .filter(b -> !b.isEmpty()).map(b -> new HierarchyDelegate.ForBean(b, t)).ifPresent(delegates::add));
+        // skip Object.class; skip null/empty hierarchy builders, mapping others to BeanDelegate
+        hierarchy.forEachRemaining(t -> Optional.of(t).filter(Predicate.isEqual(Object.class).negate())
+            .map(getBeanBuilder).filter(b -> !b.isEmpty()).map(b -> new BeanDelegate(b, t)).ifPresent(delegates::add));
 
         // if we have nothing but empty builders (which should only happen for
         // absent custom metadata), return empty:
@@ -165,5 +315,40 @@ public class HierarchyBuilder extends CompositeBuilder {
     @Override
     protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Meta<Class<?>> meta) {
         return composite.delegates.get(0).getGroupSequence(meta);
+    }
+
+    @Override
+    protected <DELEGATE extends MetadataBuilder.ForContainer<E>, E extends AnnotatedElement> MetadataBuilder.ForContainer<E> forContainer(
+        List<DELEGATE> delegates, Meta<E> meta, ElementKind elementKind) {
+
+        if (delegates.isEmpty()) {
+            return super.forContainer(delegates, meta, elementKind);
+        }
+        final List<ContainerDelegate<E>> hierarchyDelegates = delegates.stream()
+            .<ContainerDelegate<E>> map(
+                d -> d instanceof ContainerDelegate<?> ? (ContainerDelegate<E>) d : new ContainerDelegate<>(d, meta))
+            .collect(Collectors.toList());
+
+        @SuppressWarnings("unchecked")
+        final CompositeBuilder.ForContainer<DELEGATE, E> result =
+            (CompositeBuilder.ForContainer<DELEGATE, E>) new HierarchyBuilder.ForContainer<E>(hierarchyDelegates,
+                elementKind);
+
+        return result;
+    }
+
+    @Override
+    protected <DELEGATE extends MetadataBuilder.ForElement<E>, E extends Executable> MetadataBuilder.ForElement<E> forCrossParameter(
+        List<DELEGATE> delegates, Meta<E> meta) {
+
+        if (delegates.isEmpty()) {
+            return super.forCrossParameter(delegates, meta);
+        }
+        final List<CrossParameterDelegate<E>> hierarchyDelegates =
+            delegates.stream()
+                .<CrossParameterDelegate<E>> map(d -> d instanceof CrossParameterDelegate<?>
+                    ? (CrossParameterDelegate<E>) d : new CrossParameterDelegate<>(d, meta))
+                .collect(Collectors.toList());
+        return new HierarchyBuilder.ForCrossParameter<>(hierarchyDelegates);
     }
 }

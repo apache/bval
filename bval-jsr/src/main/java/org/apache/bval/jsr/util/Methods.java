@@ -18,9 +18,14 @@ package org.apache.bval.jsr.util;
 
 import java.beans.Introspector;
 import java.lang.reflect.Method;
+import java.util.stream.Stream;
 
 import org.apache.bval.util.Validate;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
+@Privilizing(@CallTo(Reflection.class))
 public final class Methods {
     public static boolean isGetter(Method m) {
         if (m.getParameterCount() > 0) {
@@ -38,6 +43,11 @@ public final class Methods {
         final String name = getter.getName();
         final String suffix = name.startsWith("is") ? name.substring(2) : name.substring(3);
         return Introspector.decapitalize(suffix);
+    }
+
+    public static Method getter(Class<?> clazz, String property) {
+        return Reflection.find(clazz, t -> Stream.of(Reflection.getDeclaredMethods(t)).filter(Methods::isGetter)
+            .filter(m -> property.equals(Methods.propertyName(m))).findFirst().orElse(null));
     }
 
     private Methods() {

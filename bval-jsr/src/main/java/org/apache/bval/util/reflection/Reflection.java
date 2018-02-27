@@ -379,10 +379,7 @@ public class Reflection {
             @Override
             public Iterator<Class<?>> iterator() {
                 return new Iterator<Class<?>>() {
-                    Optional<Class<?>> next;
-                    {
-                        next = Optional.of(type);
-                    }
+                    Optional<Class<?>> next = Optional.of(type);
 
                     @Override
                     public boolean hasNext() {
@@ -412,7 +409,7 @@ public class Reflection {
             public Iterator<Class<?>> iterator() {
                 final Set<Class<?>> seenInterfaces = new HashSet<Class<?>>();
                 final Iterator<Class<?>> wrapped = classes.iterator();
-    
+
                 return new Iterator<Class<?>>() {
                     Iterator<Class<?>> interfaces = Collections.emptyIterator();
 

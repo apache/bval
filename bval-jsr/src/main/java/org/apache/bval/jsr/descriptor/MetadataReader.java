@@ -39,9 +39,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.ParameterNameProvider;
+import javax.validation.Valid;
+import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
 import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.Scope;
@@ -100,10 +103,8 @@ class MetadataReader {
             });
 
             beanBuilder.getGetters(meta).forEach((g, builder) -> {
-                final Method getter = Reflection.find(meta.getHost(), t -> {
-                    return Stream.of(Reflection.getDeclaredMethods(t)).filter(Methods::isGetter)
-                        .filter(m -> g.equals(Methods.propertyName(m))).findFirst().orElse(null);
-                });
+                final Method getter = Methods.getter(meta.getHost(), g);
+
                 Exceptions.raiseIf(getter == null, IllegalStateException::new,
                     "Getter method for property %s not found", g);
 
@@ -199,7 +200,21 @@ class MetadataReader {
         }
 
         Set<GroupConversion> getGroupConversions() {
-            return builder.getGroupConversions(meta);
+            final Set<GroupConversion> groupConversions = builder.getGroupConversions(meta);
+            Exceptions.raiseUnless(groupConversions.isEmpty() || isCascaded(), ConstraintDeclarationException::new,
+                "@%s declared without @%s on %s", ConvertGroup.class.getSimpleName(), Valid.class.getSimpleName(),
+                meta.describeHost());
+
+            Exceptions.raiseIf(
+                groupConversions.stream().map(GroupConversion::getFrom).distinct().count() < groupConversions.size(),
+                ConstraintDeclarationException::new, "%s has duplicate 'from' group conversions", meta.describeHost());
+
+            groupConversions.stream().map(GroupConversion::getFrom)
+                .forEach(f -> Exceptions.raiseIf(f.isAnnotationPresent(GroupSequence.class),
+                    ConstraintDeclarationException::new,
+                    "Invalid group conversion declared on %s from group sequence %s", meta.describeHost(), f));
+
+            return groupConversions;
         }
 
         Set<ContainerElementTypeD> getContainerElementTypes(CascadableContainerD<?, ?> parent) {

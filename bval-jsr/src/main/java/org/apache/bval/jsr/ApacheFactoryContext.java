@@ -64,15 +64,6 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     /**
-     * Get the {@link ApacheValidatorFactory} used by this {@link ApacheFactoryContext}.
-     * 
-     * @return {@link ApacheValidatorFactory}
-     */
-    public ApacheValidatorFactory getFactory() {
-        return factory;
-    }
-
-    /**
      * Discard cached metadata. Calling this method unnecessarily has the effect of severly limiting performance,
      * therefore only do so when changes have been made that affect validation metadata, i.e. particularly NOT in
      * response to:
@@ -187,10 +178,5 @@ public class ApacheFactoryContext implements ValidatorContext {
 
     public GroupsComputer getGroupsComputer() {
         return groupsComputer.get();
-    }
-
-    boolean isTreatMapsLikeBeans() {
-        return Boolean
-            .parseBoolean(factory.getProperties().get(ApacheValidatorConfiguration.Properties.TREAT_MAPS_LIKE_BEANS));
     }
 }

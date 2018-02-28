@@ -55,11 +55,11 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 @Privilizing(@CallTo(Reflection.class))
 public class HierarchyBuilder extends CompositeBuilder {
-    static abstract class HierarchyDelegate<E extends AnnotatedElement, T> {
-        final T delegate;
+    static abstract class HierarchyDelegate<E extends AnnotatedElement, D extends HasAnnotationBehavior> {
+        final D delegate;
         final Meta<E> hierarchyElement;
 
-        HierarchyDelegate(T delegate, Meta<E> hierarchyElement) {
+        HierarchyDelegate(D delegate, Meta<E> hierarchyElement) {
             super();
             this.delegate = Validate.notNull(delegate, "delegate");
             this.hierarchyElement = Validate.notNull(hierarchyElement, "hierarchyElement");

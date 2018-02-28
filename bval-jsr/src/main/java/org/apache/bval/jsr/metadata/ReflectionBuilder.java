@@ -162,7 +162,7 @@ public class ReflectionBuilder {
 
                 final AnnotatedType[] typeArgs = container.getAnnotatedActualTypeArguments();
                 for (int i = 0; i < typeArgs.length; i++) {
-                    ContainerElementKey key = new ContainerElementKey(container, i);
+                    final ContainerElementKey key = new ContainerElementKey(container, i);
                     result.put(key, new ReflectionBuilder.ForContainer<>(new Meta.ForContainerElement(meta, key)));
                 }
                 return result;

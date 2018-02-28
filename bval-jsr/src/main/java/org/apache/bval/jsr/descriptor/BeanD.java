@@ -82,7 +82,6 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
         return methods.get(key);
     }
 
-    @SuppressWarnings("unlikely-arg-type")
     @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
         final EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);

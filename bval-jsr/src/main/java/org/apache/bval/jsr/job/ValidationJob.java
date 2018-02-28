@@ -64,6 +64,7 @@ import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.Groups;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
+import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
@@ -402,8 +403,8 @@ public abstract class ValidationJob<T> {
     }
 
     private BeanD getBeanDescriptor(Object bean) {
-        return (BeanD) validatorContext.getFactory().getDescriptorManager()
-            .getBeanDescriptor(Validate.notNull(bean, "bean").getClass());
+        final Class<? extends Object> t = Proxies.classFor(Validate.notNull(bean, "bean").getClass());
+        return (BeanD) validatorContext.getDescriptorManager().getBeanDescriptor(t);
     }
 
     final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,

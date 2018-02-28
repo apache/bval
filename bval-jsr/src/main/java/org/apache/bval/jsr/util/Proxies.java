@@ -42,7 +42,7 @@ public final class Proxies {
         return clazz;
     }
 
-    private static boolean isProxyClass(Class<?> clazz) {
+    public static boolean isProxyClass(Class<?> clazz) {
         if (KNOWN_PROXY_CLASSNAMES.contains(clazz.getName())) {
             return true;
         }

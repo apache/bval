@@ -45,6 +45,7 @@ import javax.validation.metadata.Scope;
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.Methods;
+import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
@@ -282,9 +283,9 @@ public class HierarchyBuilder extends CompositeBuilder {
         final Iterator<Class<?>> hierarchy = Reflection.hierarchy(beanClass, Interfaces.INCLUDE).iterator();
         hierarchy.next();
 
-        // skip core JDK; skip null/empty hierarchy builders, mapping others to BeanDelegate
-        hierarchy.forEachRemaining(t -> Optional.of(t).filter(clazz -> !clazz.getName().startsWith("java."))
-            .map(getBeanBuilder).filter(b -> !b.isEmpty()).map(b -> new BeanDelegate(b, t)).ifPresent(delegates::add));
+        // filter; map; skip null/empty hierarchy builders, mapping others to BeanDelegate
+        hierarchy.forEachRemaining(t -> Optional.of(t).filter(this::canValidate).map(getBeanBuilder)
+            .filter(b -> !b.isEmpty()).map(b -> new BeanDelegate(b, t)).ifPresent(delegates::add));
 
         // if we have nothing but empty builders (which should only happen for
         // absent custom metadata), return empty:
@@ -349,5 +350,9 @@ public class HierarchyBuilder extends CompositeBuilder {
                     ? (CrossParameterDelegate<E>) d : new CrossParameterDelegate<>(d, meta))
                 .collect(Collectors.toList());
         return new HierarchyBuilder.ForCrossParameter<>(hierarchyDelegates);
+    }
+
+    private boolean canValidate(Class<?> t) {
+        return !(t.getName().startsWith("java.") || Proxies.isProxyClass(t));
     }
 }

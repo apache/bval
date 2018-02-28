@@ -89,8 +89,9 @@ class Liskov {
 
         Supplier<String> messageFor(Map<Meta<?>, Set<ValidationElement>> detectedValidationElements) {
             return () -> {
-                final Set<ValidationElement> validationElements = detectedValidationElements.values().stream()
-                    .flatMap(Collection::stream).collect(Collectors.toSet());
+                final Set<ValidationElement> validationElements =
+                    detectedValidationElements.values().stream().flatMap(Collection::stream)
+                        .collect(Collectors.toCollection(() -> EnumSet.noneOf(ValidationElement.class)));
 
                 final String describeHierarchy = detectedValidationElements.keySet().stream().map(Meta::describeHost)
                     .collect(Collectors.joining(", ", "[", "]"));

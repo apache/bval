@@ -152,7 +152,7 @@ class Liskov {
             .map(HierarchyDelegate::getHierarchyElement).collect(Collectors.toCollection(LinkedHashSet::new));
 
         Exceptions.raiseIf(markedForCascade.size() > 1, ConstraintDeclarationException::new,
-            "Multiple return values marked @%s in same hierarchy: %s", Valid.class.getSimpleName(), markedForCascade);
+            "Multiple method return values marked @%s in hierarchy %s", Valid.class.getSimpleName(), markedForCascade);
     }
 
     @SafeVarargs

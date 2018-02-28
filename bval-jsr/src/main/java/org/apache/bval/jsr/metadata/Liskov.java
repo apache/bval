@@ -113,8 +113,6 @@ class Liskov {
             elementKind = getContainer(delegates.get(0).getHierarchyElement());
         }
         switch (elementKind) {
-        case PROPERTY:
-            break;
         case RETURN_VALUE:
             noStrengtheningOfPreconditions(delegates, detectGroupConversion());
             noRedeclarationOfReturnValueCascading(delegates);
@@ -123,8 +121,7 @@ class Liskov {
             noStrengtheningOfPreconditions(delegates, detectConstraints(), detectCascading(), detectGroupConversion());
             break;
         default:
-            Exceptions.raise(IllegalArgumentException::new, "Cannot validate %s.%s as %s",
-                ElementKind.class.getSimpleName(), elementKind, ContainerDelegate.class.getSimpleName());
+            break;
         }
     }
 

@@ -109,10 +109,10 @@ class Liskov {
         if (Validate.notNull(delegates, "delegates").isEmpty()) {
             return;
         }
-        if (elementKind == ElementKind.CONTAINER_ELEMENT) {
+        if (Validate.notNull(elementKind, "elementKind") == ElementKind.CONTAINER_ELEMENT) {
             elementKind = getContainer(delegates.get(0).getHierarchyElement());
         }
-        switch (Validate.notNull(elementKind, "elementKind")) {
+        switch (elementKind) {
         case PROPERTY:
             break;
         case RETURN_VALUE:

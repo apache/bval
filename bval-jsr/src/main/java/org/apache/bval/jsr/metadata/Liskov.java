@@ -138,7 +138,7 @@ class Liskov {
     private static ElementKind getContainer(Meta<?> meta) {
         Meta<?> m = meta;
         while (m.getElementType() == ElementType.TYPE_USE) {
-            m = ((Meta.ForContainerElement) m).getParent();
+            m = m.getParent();
         }
         switch (m.getElementType()) {
         case METHOD:

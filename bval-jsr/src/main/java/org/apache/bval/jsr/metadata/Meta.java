@@ -18,9 +18,6 @@
  */
 package org.apache.bval.jsr.metadata;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.AnnotatedElement;
@@ -32,11 +29,14 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 import javax.validation.constraintvalidation.ValidationTarget;
 
+import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
 /**
@@ -92,9 +92,15 @@ public abstract class Meta<E extends AnnotatedElement> {
         public String getName() {
             return getHost().getName();
         }
+
+        @Override
+        public Meta<?> getParent() {
+            return null;
+        }
     }
 
     public static abstract class ForMember<M extends Member & AnnotatedElement> extends Meta<M> {
+        private final Lazy<Meta<Class<?>>> parent = new Lazy<>(() -> new Meta.ForClass(getDeclaringClass()));
 
         protected ForMember(M host, ElementType elementType) {
             super(host, elementType);
@@ -103,6 +109,11 @@ public abstract class Meta<E extends AnnotatedElement> {
         @Override
         public Class<?> getDeclaringClass() {
             return getHost().getDeclaringClass();
+        }
+
+        @Override
+        public Meta<Class<?>> getParent() {
+            return parent.get();
         }
     }
 
@@ -174,10 +185,13 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
     }
 
-    public static class ForCrossParameter<E extends Executable> extends Meta.ForExecutable<E> {
+    public static class ForCrossParameter<E extends Executable> extends Meta<E> {
+
+        private final Meta<E> parent;
 
         public ForCrossParameter(Meta<E> parent) {
             super(parent.getHost(), parent.getElementType());
+            this.parent = parent;
         }
 
         @Override
@@ -199,11 +213,27 @@ public abstract class Meta<E extends AnnotatedElement> {
         public String describeHost() {
             return String.format("%s of %s", getName(), getHost());
         }
+
+        @Override
+        public Meta<E> getParent() {
+            return parent;
+        }
+
+        @Override
+        public Class<?> getDeclaringClass() {
+            return getHost().getDeclaringClass();
+        }
+
+        @Override
+        public AnnotatedType getAnnotatedType() {
+            return getHost().getAnnotatedReturnType();
+        }
     }
 
     public static class ForParameter extends Meta<Parameter> {
 
         private final String name;
+        private final Lazy<Meta<? extends Executable>> parent = new Lazy<>(this::computeParent);
 
         public ForParameter(Parameter host, String name) {
             super(host, ElementType.PARAMETER);
@@ -212,7 +242,7 @@ public abstract class Meta<E extends AnnotatedElement> {
 
         @Override
         public Collection<ValidationTarget> getValidationTargets() {
-            return asList(ValidationTarget.values());
+            return Arrays.asList(ValidationTarget.values());
         }
 
         @Override
@@ -237,6 +267,17 @@ public abstract class Meta<E extends AnnotatedElement> {
         @Override
         public String describeHost() {
             return String.format("%s of %s", getName(), getHost().getDeclaringExecutable());
+        }
+
+        @Override
+        public Meta<? extends Executable> getParent() {
+            return parent.get();
+        }
+
+        private Meta<? extends Executable> computeParent() {
+            final Executable exe = getHost().getDeclaringExecutable();
+            return exe instanceof Method ? new Meta.ForMethod((Method) exe)
+                : new Meta.ForConstructor((Constructor<?>) exe);
         }
     }
 
@@ -280,6 +321,7 @@ public abstract class Meta<E extends AnnotatedElement> {
             return String.format("%s of %s", key, parent);
         }
 
+        @Override
         public Meta<?> getParent() {
             return parent;
         }
@@ -309,10 +351,12 @@ public abstract class Meta<E extends AnnotatedElement> {
     public abstract AnnotatedType getAnnotatedType();
 
     public abstract String getName();
+    
+    public abstract Meta<?> getParent();
 
     public Collection<ValidationTarget> getValidationTargets() {
         // todo: cache for perf?
-        return singleton(getValidationTarget());
+        return Collections.singleton(getValidationTarget());
     }
 
     public ValidationTarget getValidationTarget() {

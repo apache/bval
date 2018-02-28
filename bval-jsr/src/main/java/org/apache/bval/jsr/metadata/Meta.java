@@ -29,9 +29,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 
 import javax.validation.constraintvalidation.ValidationTarget;
@@ -241,11 +238,6 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
 
         @Override
-        public Collection<ValidationTarget> getValidationTargets() {
-            return Arrays.asList(ValidationTarget.values());
-        }
-
-        @Override
         public Type getType() {
             return getHost().getType();
         }
@@ -351,13 +343,8 @@ public abstract class Meta<E extends AnnotatedElement> {
     public abstract AnnotatedType getAnnotatedType();
 
     public abstract String getName();
-    
-    public abstract Meta<?> getParent();
 
-    public Collection<ValidationTarget> getValidationTargets() {
-        // todo: cache for perf?
-        return Collections.singleton(getValidationTarget());
-    }
+    public abstract Meta<?> getParent();
 
     public ValidationTarget getValidationTarget() {
         return ValidationTarget.ANNOTATED_ELEMENT;

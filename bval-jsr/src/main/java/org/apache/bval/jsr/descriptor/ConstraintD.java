@@ -105,7 +105,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         Validate.notNull(validatorFactory, "validatorFactory");
         composingConstraints = computeComposingConstraints(validatorFactory);
         constraintValidatorClasses = computeConstraintValidatorClasses(validatorFactory);
-        constraintValidatorClass = new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTargets(),
+        constraintValidatorClass = new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTarget(),
             annotation, validatedType).get();
     }
 

@@ -186,35 +186,6 @@ public class CompositeBuilder {
         }
     }
 
-    class ForReturnValue<E extends Executable> implements MetadataBuilder.ForContainer<E> {
-        private final MetadataBuilder.ForContainer<E> delegate;
-
-        ForReturnValue(MetadataBuilder.ForContainer<E> delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public Annotation[] getDeclaredConstraints(Meta<E> meta) {
-            return delegate.getDeclaredConstraints(meta);
-        }
-
-        @Override
-        public boolean isCascade(Meta<E> meta) {
-            return delegate.isCascade(meta);
-        }
-
-        @Override
-        public Set<GroupConversion> getGroupConversions(Meta<E> meta) {
-            return delegate.getGroupConversions(meta);
-        }
-
-        @Override
-        public Map<ContainerElementKey, MetadataBuilder.ForContainer<AnnotatedType>> getContainerElementTypes(
-            Meta<E> meta) {
-            return delegate.getContainerElementTypes(meta);
-        }
-    }
-
     class ForExecutable<DELEGATE extends MetadataBuilder.ForExecutable<E>, E extends Executable>
         extends Delegator<DELEGATE> implements MetadataBuilder.ForExecutable<E> {
 
@@ -226,10 +197,10 @@ public class CompositeBuilder {
         }
 
         @Override
-        public ForReturnValue<E> getReturnValue(Meta<E> meta) {
-            return new ForReturnValue<>(CompositeBuilder.this.forContainer(
+        public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
+            return CompositeBuilder.this.forContainer(
                 delegates.stream().map(d -> d.getReturnValue(meta)).collect(Collectors.toList()), meta,
-                ElementKind.RETURN_VALUE));
+                ElementKind.RETURN_VALUE);
         }
 
         @Override

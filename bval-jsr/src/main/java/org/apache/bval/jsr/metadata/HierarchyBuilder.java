@@ -283,16 +283,11 @@ public class HierarchyBuilder extends CompositeBuilder {
         final Iterator<Class<?>> hierarchy = Reflection.hierarchy(beanClass, Interfaces.INCLUDE).iterator();
         hierarchy.next();
 
-        // filter; map; skip null/empty hierarchy builders, mapping others to BeanDelegate
+        // filter; map; skip empty hierarchy builders, mapping others to BeanDelegate
         hierarchy.forEachRemaining(t -> Optional.of(t).filter(this::canValidate).map(getBeanBuilder)
             .filter(b -> !b.isEmpty()).map(b -> new BeanDelegate(b, t)).ifPresent(delegates::add));
 
-        // if we have nothing but empty builders (which should only happen for
-        // absent custom metadata), return empty:
-        if (delegates.stream().allMatch(MetadataBuilder.ForBean::isEmpty)) {
-            return EmptyBuilder.instance().forBean();
-        }
-        return delegates.stream().collect(compose());
+        return delegates.size() == 1 ? delegates.get(0) : delegates.stream().collect(compose());
     }
 
     @Override

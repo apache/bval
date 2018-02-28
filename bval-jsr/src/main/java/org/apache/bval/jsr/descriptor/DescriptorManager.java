@@ -54,7 +54,7 @@ public class DescriptorManager {
     public BeanDescriptor getBeanDescriptor(Class<?> beanClass) {
         Validate.notNull(beanClass, IllegalArgumentException::new, "beanClass");
 
-        // cannot use computeIfAbsent due to likely recursion:
+        // cannot use computeIfAbsent due to recursion being the usual case:
         if (beanDescriptors.containsKey(beanClass)) {
             return beanDescriptors.get(beanClass);
         }

@@ -34,7 +34,7 @@ public class ToUnmodifiable {
     public static <T> Collector<T, ?, Set<T>> set(Supplier<Set<T>> set) {
         return Collectors.collectingAndThen(Collectors.toCollection(set), Collections::unmodifiableSet);
     }
-    
+
     public static <T> Collector<T, ?, Set<T>> set() {
         return Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), Collections::unmodifiableSet);
     }

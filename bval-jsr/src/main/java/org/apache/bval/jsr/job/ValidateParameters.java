@@ -22,7 +22,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -30,7 +29,6 @@ import java.util.stream.IntStream;
 import javax.validation.ConstraintViolation;
 import javax.validation.ParameterNameProvider;
 import javax.validation.Path;
-import javax.validation.Path.Node;
 import javax.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
@@ -39,6 +37,7 @@ import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.CrossParameterD;
 import org.apache.bval.jsr.descriptor.ParameterD;
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
@@ -46,7 +45,7 @@ import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
-public abstract class ValidateParameters<E extends Executable, T> extends ValidationJob<T> {
+public abstract class ValidateParameters<E extends Executable, T> extends ValidateExecutable<E, T> {
 
     public static class ForMethod<T> extends ValidateParameters<Method, T> {
 
@@ -54,7 +53,7 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
         ForMethod(ApacheFactoryContext validatorContext, T object, Method executable, Object[] parameterValues,
             Class<?>[] groups) {
-            super(validatorContext, object, executable, parameterValues, groups);
+            super(validatorContext, object, executable, parameterValues, groups, new Meta.ForMethod(executable));
             this.object = Validate.notNull(object, IllegalArgumentException::new, "object");
         }
 
@@ -79,18 +78,13 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         protected T getRootBean() {
             return object;
         }
-
-        @Override
-        protected Node executableNode() {
-            return new NodeImpl.MethodNodeImpl(executable.getName(), Arrays.asList(executable.getParameterTypes()));
-        }
     }
 
     public static class ForConstructor<T> extends ValidateParameters<Constructor<? extends T>, T> {
 
         ForConstructor(ApacheFactoryContext validatorContext, Constructor<? extends T> executable,
             Object[] parameterValues, Class<?>[] groups) {
-            super(validatorContext, null, executable, parameterValues, groups);
+            super(validatorContext, null, executable, parameterValues, groups, new Meta.ForConstructor<>(executable));
         }
 
         @Override
@@ -113,12 +107,6 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         @Override
         protected T getRootBean() {
             return null;
-        }
-
-        @Override
-        protected Node executableNode() {
-            return new NodeImpl.ConstructorNodeImpl(executable.getDeclaringClass().getSimpleName(),
-                Arrays.asList(executable.getParameterTypes()));
         }
     }
 
@@ -147,17 +135,15 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
     private static final String PARAMETERS_DO_NOT_MATCH = "Parameters do not match";
 
     protected final T object;
-    protected final E executable;
     protected final Lazy<List<String>> parameterNames =
         new Lazy<>(() -> getParameterNames(validatorContext.getParameterNameProvider()));
 
     private final Object[] parameterValues;
 
     ValidateParameters(ApacheFactoryContext validatorContext, T object, E executable, Object[] parameterValues,
-        Class<?>[] groups) {
-        super(validatorContext, groups);
+        Class<?>[] groups, Meta<E> meta) {
+        super(validatorContext, groups, meta);
         this.object = object;
-        this.executable = Validate.notNull(executable, IllegalArgumentException::new, "executable");
         this.parameterValues =
             Validate.notNull(parameterValues, IllegalArgumentException::new, "parameterValues").clone();
 
@@ -171,15 +157,12 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     @Override
     protected Frame<?> computeBaseFrame() {
-        final PathImpl cp = PathImpl.create();
-        cp.addNode(executableNode());
+        final PathImpl cp = createBasePath();
         cp.addNode(new NodeImpl.CrossParameterNodeImpl());
         return new ParametersFrame(describe(), new GraphContext(validatorContext, cp, parameterValues));
     }
 
     protected abstract ExecutableDescriptor describe();
-
-    protected abstract Path.Node executableNode();
 
     protected abstract List<String> getParameterNames(ParameterNameProvider parameterNameProvider);
 
@@ -194,7 +177,7 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
     }
 
     private GraphContext parameter(int i) {
-        final PathImpl path = PathImpl.create();
+        final PathImpl path = createBasePath();
         path.addNode(new NodeImpl.ParameterNodeImpl(parameterNames.get().get(i), i));
         return new GraphContext(validatorContext, path, parameterValues[i]);
     }

@@ -27,7 +27,7 @@ import javax.validation.metadata.ParameterDescriptor;
 import javax.validation.metadata.ReturnValueDescriptor;
 
 public abstract class ExecutableD<E extends Executable, R extends MetadataReader.ForExecutable<E, R>, SELF extends ExecutableD<E, R, SELF>>
-    extends ElementD.NonRoot<BeanD, E, R> implements ExecutableDescriptor {
+    extends ElementD.NonRoot<BeanD<?>, E, R> implements ExecutableDescriptor {
 
     private final String name;
     private final ReturnValueD<SELF, E> returnValue;
@@ -35,7 +35,7 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
     private final CrossParameterD<SELF, E> crossParameter;
 
     @SuppressWarnings("unchecked")
-    protected ExecutableD(R reader, BeanD parent) {
+    protected ExecutableD(R reader, BeanD<?> parent) {
         super(reader, parent);
 
         name = reader.meta.getName();

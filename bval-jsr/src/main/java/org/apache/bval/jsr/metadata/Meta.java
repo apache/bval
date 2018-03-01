@@ -43,14 +43,14 @@ import org.apache.bval.util.Validate;
  */
 public abstract class Meta<E extends AnnotatedElement> {
 
-    public static class ForClass extends Meta<Class<?>> {
+    public static class ForClass<T> extends Meta<Class<T>> {
 
-        public ForClass(Class<?> host) {
+        public ForClass(Class<T> host) {
             super(host, ElementType.TYPE);
         }
 
         @Override
-        public final Class<?> getDeclaringClass() {
+        public final Class<T> getDeclaringClass() {
             return getHost();
         }
 
@@ -74,7 +74,7 @@ public abstract class Meta<E extends AnnotatedElement> {
                 }
 
                 @Override
-                public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+                public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
                     return getHost().getAnnotation(annotationClass);
                 }
 
@@ -97,6 +97,7 @@ public abstract class Meta<E extends AnnotatedElement> {
     }
 
     public static abstract class ForMember<M extends Member & AnnotatedElement> extends Meta<M> {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         private final Lazy<Meta<Class<?>>> parent = new Lazy<>(() -> new Meta.ForClass(getDeclaringClass()));
 
         protected ForMember(M host, ElementType elementType) {
@@ -148,9 +149,9 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
     }
 
-    public static class ForConstructor extends ForExecutable<Constructor<?>> {
+    public static class ForConstructor<T> extends ForExecutable<Constructor<? extends T>> {
 
-        public ForConstructor(Constructor<?> host) {
+        public ForConstructor(Constructor<? extends T> host) {
             super(host, ElementType.CONSTRUCTOR);
         }
 
@@ -269,7 +270,7 @@ public abstract class Meta<E extends AnnotatedElement> {
         private Meta<? extends Executable> computeParent() {
             final Executable exe = getHost().getDeclaringExecutable();
             return exe instanceof Method ? new Meta.ForMethod((Method) exe)
-                : new Meta.ForConstructor((Constructor<?>) exe);
+                : new Meta.ForConstructor<>((Constructor<?>) exe);
         }
     }
 

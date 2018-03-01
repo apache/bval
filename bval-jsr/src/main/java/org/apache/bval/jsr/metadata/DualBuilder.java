@@ -106,38 +106,38 @@ public class DualBuilder {
         }
     }
 
-    private static class ForBean extends DualBuilder.Delegator<MetadataBuilder.ForBean>
-        implements MetadataBuilder.ForBean {
+    private static class ForBean<T> extends DualBuilder.Delegator<MetadataBuilder.ForBean<T>>
+        implements MetadataBuilder.ForBean<T> {
 
-        ForBean(MetadataBuilder.ForBean primaryDelegate, MetadataBuilder.ForBean customDelegate) {
+        ForBean(MetadataBuilder.ForBean<T> primaryDelegate, MetadataBuilder.ForBean<T> customDelegate) {
             super(null, primaryDelegate, customDelegate);
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
-            return new DualBuilder.ForClass(this, primaryDelegate.getClass(meta), customDelegate.getClass(meta));
+        public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta) {
+            return new DualBuilder.ForClass<>(this, primaryDelegate.getClass(meta), customDelegate.getClass(meta));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
             return merge(b -> b.getFields(meta), (t, u) -> new DualBuilder.ForContainer<>(this, t, u),
                 EmptyBuilder.instance()::forContainer);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             return merge(b -> b.getGetters(meta), (t, u) -> new DualBuilder.ForContainer<>(this, t, u),
                 EmptyBuilder.instance()::forContainer);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> meta) {
             return merge(b -> b.getConstructors(meta), (t, u) -> new DualBuilder.ForExecutable<>(this, t, u),
                 EmptyBuilder.instance()::forExecutable);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> meta) {
             return merge(b -> b.getMethods(meta), (t, u) -> new DualBuilder.ForExecutable<>(this, t, u),
                 EmptyBuilder.instance()::forExecutable);
         }
@@ -157,16 +157,16 @@ public class DualBuilder {
         }
     }
 
-    private static class ForClass extends ForElement<MetadataBuilder.ForClass, Class<?>>
-        implements MetadataBuilder.ForClass {
+    private static class ForClass<T> extends ForElement<MetadataBuilder.ForClass<T>, Class<T>>
+        implements MetadataBuilder.ForClass<T> {
 
-        ForClass(Delegator<?> parent, MetadataBuilder.ForClass primaryDelegate,
-            MetadataBuilder.ForClass customDelegate) {
+        ForClass(Delegator<?> parent, MetadataBuilder.ForClass<T> primaryDelegate,
+            MetadataBuilder.ForClass<T> customDelegate) {
             super(parent, primaryDelegate, customDelegate);
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<T>> meta) {
             final List<Class<?>> customGroupSequence = customDelegate.getGroupSequence(meta);
             if (customGroupSequence != null) {
                 return customGroupSequence;
@@ -236,8 +236,8 @@ public class DualBuilder {
         }
     }
 
-    public static MetadataBuilder.ForBean forBean(MetadataBuilder.ForBean primaryDelegate,
-        MetadataBuilder.ForBean customDelegate) {
-        return new DualBuilder.ForBean(primaryDelegate, customDelegate);
+    public static <T> MetadataBuilder.ForBean<T> forBean(MetadataBuilder.ForBean<T> primaryDelegate,
+        MetadataBuilder.ForBean<T> customDelegate) {
+        return new DualBuilder.ForBean<>(primaryDelegate, customDelegate);
     }
 }

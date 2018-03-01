@@ -33,12 +33,12 @@ import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 @Privilizing(@CallTo(Reflection.class))
-public abstract class PropertyD<E extends AnnotatedElement> extends CascadableContainerD<BeanD, E>
+public abstract class PropertyD<E extends AnnotatedElement> extends CascadableContainerD<BeanD<?>, E>
     implements PropertyDescriptor {
 
     static class ForField extends PropertyD<Field> {
 
-        ForField(MetadataReader.ForContainer<Field> reader, BeanD parent) {
+        ForField(MetadataReader.ForContainer<Field> reader, BeanD<?> parent) {
             super(reader, parent);
         }
 
@@ -64,7 +64,7 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
     static class ForMethod extends PropertyD<Method> {
 
-        ForMethod(MetadataReader.ForContainer<Method> reader, BeanD parent) {
+        ForMethod(MetadataReader.ForContainer<Method> reader, BeanD<?> parent) {
             super(reader, parent);
         }
 
@@ -90,7 +90,7 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
     protected final E host;
 
-    protected PropertyD(MetadataReader.ForContainer<E> reader, BeanD parent) {
+    protected PropertyD(MetadataReader.ForContainer<E> reader, BeanD<?> parent) {
         super(reader, parent);
         this.host = reader.meta.getHost();
     }

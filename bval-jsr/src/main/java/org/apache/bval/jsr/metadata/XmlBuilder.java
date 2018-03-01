@@ -98,7 +98,7 @@ public class XmlBuilder {
     }
     //@formatter:on
 
-    private class ForBean implements MetadataBuilder.ForBean {
+    private class ForBean<T> implements MetadataBuilder.ForBean<T> {
 
         private final BeanType descriptor;
 
@@ -112,26 +112,26 @@ public class XmlBuilder {
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
+        public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta) {
             final ClassType classType = descriptor.getClassType();
-            return classType == null ? EmptyBuilder.instance().forBean().getClass(meta)
-                : new XmlBuilder.ForClass(classType);
+            return classType == null ? EmptyBuilder.instance().<T> forBean().getClass(meta)
+                : new XmlBuilder.ForClass<T>(classType);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
             return descriptor.getField().stream()
                 .collect(ToUnmodifiable.map(FieldType::getName, XmlBuilder.ForField::new));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             return descriptor.getGetter().stream()
                 .collect(ToUnmodifiable.map(GetterType::getName, XmlBuilder.ForGetter::new));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> meta) {
             if (!atLeast(Version.v11)) {
                 return Collections.emptyMap();
             }
@@ -146,7 +146,7 @@ public class XmlBuilder {
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> meta) {
             if (!atLeast(Version.v11)) {
                 return Collections.emptyMap();
             }
@@ -214,7 +214,7 @@ public class XmlBuilder {
         }
     }
 
-    private class ForClass extends ForElement<ForClass, Class<?>, ClassType> implements MetadataBuilder.ForClass {
+    private class ForClass<T> extends ForElement<ForClass<T>, Class<T>, ClassType> implements MetadataBuilder.ForClass<T> {
 
         ForClass(ClassType descriptor) {
             super(descriptor);
@@ -222,7 +222,7 @@ public class XmlBuilder {
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<T>> meta) {
             final GroupSequenceType groupSequence = descriptor.getGroupSequence();
             return groupSequence == null ? null
                 : groupSequence.getValue().stream().map(XmlBuilder.this::resolveClass).collect(ToUnmodifiable.list());
@@ -392,7 +392,7 @@ public class XmlBuilder {
         }
     }
 
-    private class ForConstructor extends ForExecutable<ForConstructor, Constructor<?>, ConstructorType> {
+    private class ForConstructor<T> extends ForExecutable<ForConstructor<T>, Constructor<? extends T>, ConstructorType> {
 
         ForConstructor(ConstructorType descriptor) {
             super(descriptor);
@@ -473,7 +473,7 @@ public class XmlBuilder {
         this.version = v;
     }
 
-    public Map<Class<?>, MetadataBuilder.ForBean> forBeans() {
+    public Map<Class<?>, MetadataBuilder.ForBean<?>> forBeans() {
         return constraintMappings.getBean().stream().map(XmlBuilder.ForBean::new)
             .collect(ToUnmodifiable.map(XmlBuilder.ForBean::getBeanClass, Function.identity()));
     }

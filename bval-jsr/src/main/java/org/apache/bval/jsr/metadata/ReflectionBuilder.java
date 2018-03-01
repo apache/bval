@@ -62,21 +62,21 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 @Privilizing(@CallTo(Reflection.class))
 public class ReflectionBuilder {
 
-    private class ForBean implements MetadataBuilder.ForBean {
-        private final Meta<Class<?>> meta;
+    private class ForBean<T> implements MetadataBuilder.ForBean<T> {
+        private final Meta<Class<T>> meta;
 
-        ForBean(Meta<Class<?>> meta) {
+        ForBean(Meta<Class<T>> meta) {
             super();
             this.meta = Validate.notNull(meta, "meta");
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Meta<Class<?>> ignored) {
-            return new ReflectionBuilder.ForClass(meta);
+        public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> ignored) {
+            return new ReflectionBuilder.ForClass<>(meta);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> ignored) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> ignored) {
             final Field[] declaredFields = Reflection.getDeclaredFields(meta.getHost());
             if (declaredFields.length == 0) {
                 return Collections.emptyMap();
@@ -86,25 +86,25 @@ public class ReflectionBuilder {
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> ignored) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> ignored) {
             return Stream.of(Reflection.getDeclaredMethods(meta.getHost())).filter(Methods::isGetter)
                 .collect(ToUnmodifiable.map(Methods::propertyName,
                     g -> new ReflectionBuilder.ForContainer<>(new Meta.ForMethod(g))));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> ignored) {
-            final Constructor<?>[] declaredConstructors = Reflection.getDeclaredConstructors(meta.getHost());
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> ignored) {
+            final Constructor<? extends T>[] declaredConstructors = Reflection.getDeclaredConstructors(meta.getHost());
             if (declaredConstructors.length == 0) {
                 return Collections.emptyMap();
             }
             return Stream.of(declaredConstructors).collect(
-                Collectors.toMap(Signature::of, c -> new ReflectionBuilder.ForExecutable<>(new Meta.ForConstructor(c),
+                Collectors.toMap(Signature::of, c -> new ReflectionBuilder.ForExecutable<>(new Meta.ForConstructor<>(c),
                     validatorFactory.getParameterNameProvider()::getParameterNames)));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> ignored) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> ignored) {
             final Method[] declaredMethods = Reflection.getDeclaredMethods(meta.getHost());
             if (declaredMethods.length == 0) {
                 return Collections.emptyMap();
@@ -130,14 +130,14 @@ public class ReflectionBuilder {
         }
     }
 
-    private class ForClass extends ForElement<Class<?>> implements MetadataBuilder.ForClass {
+    private class ForClass<T> extends ForElement<Class<T>> implements MetadataBuilder.ForClass<T> {
 
-        ForClass(Meta<Class<?>> meta) {
+        ForClass(Meta<Class<T>> meta) {
             super(meta);
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Meta<Class<?>> ignored) {
+        public List<Class<?>> getGroupSequence(Meta<Class<T>> ignored) {
             final GroupSequence groupSequence = meta.getHost().getAnnotation(GroupSequence.class);
             return groupSequence == null ? null : Collections.unmodifiableList(Arrays.asList(groupSequence.value()));
         }
@@ -298,7 +298,7 @@ public class ReflectionBuilder {
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
     }
 
-    public <T> MetadataBuilder.ForBean forBean(Class<?> beanClass) {
-        return new ReflectionBuilder.ForBean(new Meta.ForClass(beanClass));
+    public <T> MetadataBuilder.ForBean<T> forBean(Class<T> beanClass) {
+        return new ReflectionBuilder.ForBean<>(new Meta.ForClass<T>(beanClass));
     }
 }

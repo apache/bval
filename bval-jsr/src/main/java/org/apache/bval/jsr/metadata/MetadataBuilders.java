@@ -26,16 +26,17 @@ import org.apache.bval.util.Validate;
 
 public class MetadataBuilders {
 
-    private final Map<Class<?>, List<MetadataBuilder.ForBean>> beanBuilders = new ConcurrentHashMap<>();
+    private final Map<Class<?>, List<MetadataBuilder.ForBean<?>>> beanBuilders = new ConcurrentHashMap<>();
 
-    public <T> void registerCustomBuilder(Class<?> bean, MetadataBuilder.ForBean builder) {
+    public <T> void registerCustomBuilder(Class<T> bean, MetadataBuilder.ForBean<T> builder) {
         Validate.notNull(bean, "bean");
         Validate.notNull(builder, "builder");
         beanBuilders.computeIfAbsent(bean, c -> new ArrayList<>()).add(builder);
     }
 
-    public List<MetadataBuilder.ForBean> getCustomBuilders(Class<?> bean) {
-        final List<MetadataBuilder.ForBean> list = beanBuilders.get(bean);
+    public <T> List<MetadataBuilder.ForBean<T>> getCustomBuilders(Class<T> bean) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        final List<MetadataBuilder.ForBean<T>> list = (List) beanBuilders.get(bean);
         return list == null ? Collections.emptyList() : Collections.unmodifiableList(list);
     }
 }

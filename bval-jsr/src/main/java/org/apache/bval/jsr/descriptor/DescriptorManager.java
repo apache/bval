@@ -40,7 +40,7 @@ public class DescriptorManager {
     }
 
     private final ApacheValidatorFactory validatorFactory;
-    private final ConcurrentMap<Class<?>, BeanD> beanDescriptors = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
     private final ReflectionBuilder reflectionBuilder;
     private final MetadataReader metadataReader;
 
@@ -51,33 +51,36 @@ public class DescriptorManager {
         this.metadataReader = new MetadataReader(validatorFactory);
     }
 
-    public BeanDescriptor getBeanDescriptor(Class<?> beanClass) {
+    public <T> BeanDescriptor getBeanDescriptor(Class<T> beanClass) {
         Validate.notNull(beanClass, IllegalArgumentException::new, "beanClass");
 
         // cannot use computeIfAbsent due to recursion being the usual case:
         if (beanDescriptors.containsKey(beanClass)) {
             return beanDescriptors.get(beanClass);
         }
-        final BeanD beanD = new BeanD(metadataReader.forBean(beanClass, builder(beanClass)));
-        return Optional.ofNullable(beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
+        final BeanD<T> beanD = new BeanD<>(metadataReader.forBean(beanClass, builder(beanClass)));
+        @SuppressWarnings("unchecked")
+        final BeanD<T> result =
+            Optional.ofNullable((BeanD<T>) beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
+        return result;
     }
 
     public void clear() {
         beanDescriptors.clear();
     }
 
-    private MetadataBuilder.ForBean builder(Class<?> beanClass) {
-        final MetadataBuilder.ForBean primaryBuilder =
+    private <T> MetadataBuilder.ForBean<T> builder(Class<T> beanClass) {
+        final MetadataBuilder.ForBean<T> primaryBuilder =
             new HierarchyBuilder(validatorFactory, reflectionBuilder::forBean).forBean(beanClass);
 
-        final MetadataBuilder.ForBean customBuilder =
+        final MetadataBuilder.ForBean<T> customBuilder =
             new HierarchyBuilder(validatorFactory, this::customBuilder).forBean(beanClass);
 
         return customBuilder.isEmpty() ? primaryBuilder : DualBuilder.forBean(primaryBuilder, customBuilder);
     }
 
-    private MetadataBuilder.ForBean customBuilder(Class<?> beanClass) {
-        final List<MetadataBuilder.ForBean> customBuilders =
+    private <T> MetadataBuilder.ForBean<T> customBuilder(Class<T> beanClass) {
+        final List<MetadataBuilder.ForBean<T>> customBuilders =
             validatorFactory.getMetadataBuilders().getCustomBuilders(beanClass);
 
         if (customBuilders.isEmpty()) {

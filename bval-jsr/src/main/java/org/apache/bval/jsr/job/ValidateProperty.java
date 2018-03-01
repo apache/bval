@@ -107,9 +107,9 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         @Override
         public ValidateProperty<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path) {
             if (job.descriptor instanceof BeanDescriptor) {
-                return job.new LeafFrame(leafContext.get());
+                return job.new LeafFrame<>(leafContext.get());
             }
-            return job.new PropertyFrame<PropertyD<?>>(job.new BeanFrame(leafContext.get()),
+            return job.new PropertyFrame<PropertyD<?>>(job.new BeanFrame<>(leafContext.get()),
                 (PropertyD<?>) job.descriptor, leafContext.get().child(path, value.get()));
         }
     }
@@ -126,7 +126,7 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         public ValidateProperty<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path) {
             final GraphContext context = new GraphContext(job.validatorContext, path, value);
             if (job.descriptor instanceof BeanDescriptor) {
-                return job.new LeafFrame(context);
+                return job.new LeafFrame<>(context);
             }
             return job.new PropertyFrame<PropertyD<?>>(null, (PropertyD<?>) job.descriptor, context);
         }
@@ -176,7 +176,7 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         public ElementD<?, ?> element() {
             final Class<?> beanClass = TypeUtils.getRawType(type, null);
             return beanClass == null ? null
-                : (BeanD) validatorContext.getDescriptorManager().getBeanDescriptor(beanClass);
+                : (BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(beanClass);
         }
     }
 
@@ -192,11 +192,11 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         @Override
         public void handleProperty(String name) {
             final ElementDescriptor element = current.element();
-            final BeanD bean;
-            if (element instanceof BeanD) {
-                bean = (BeanD) element;
+            final BeanD<?> bean;
+            if (element instanceof BeanD<?>) {
+                bean = (BeanD<?>) element;
             } else {
-                bean = (BeanD) validatorContext.getDescriptorManager().getBeanDescriptor(element.getElementClass());
+                bean = (BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(element.getElementClass());
             }
             final PropertyDescriptor property = bean.getProperty(name);
             Exceptions.raiseIf(property == null, IllegalArgumentException::new, "Unknown property %s of %s", name,
@@ -410,7 +410,7 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         }
     }
 
-    class LeafFrame extends BeanFrame {
+    class LeafFrame<L> extends BeanFrame<L> {
 
         LeafFrame(GraphContext context) {
             super(context);
@@ -468,8 +468,14 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         this(new ForPropertyValue<>(value), validatorContext, rootBeanClass, property, groups);
         if (descriptor == null) {
             // should only occur when the root class is raw
-            descriptor = (ElementD<?, ?>) validatorContext.getDescriptorManager()
-                .getBeanDescriptor(value == null ? Object.class : value.getClass());
+
+            final Class<?> t;
+            if (value == null) {
+                t = Object.class;
+            } else {
+                t = value.getClass();
+            }
+            descriptor = (ElementD<?, ?>) validatorContext.getDescriptorManager().getBeanDescriptor(t);
         } else {
             final Class<?> propertyType = descriptor.getElementClass();
             Exceptions.raiseUnless(TypeUtils.isInstance(value, propertyType), IllegalArgumentException::new,

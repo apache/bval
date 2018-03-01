@@ -22,10 +22,10 @@ import java.lang.reflect.Constructor;
 
 import javax.validation.metadata.ConstructorDescriptor;
 
-public class ConstructorD extends ExecutableD<Constructor<?>, MetadataReader.ForConstructor, ConstructorD>
+public class ConstructorD<T> extends ExecutableD<Constructor<? extends T>, MetadataReader.ForConstructor<T>, ConstructorD<T>>
     implements ConstructorDescriptor {
 
-    ConstructorD(MetadataReader.ForConstructor reader, BeanD parent) {
+    ConstructorD(MetadataReader.ForConstructor<T> reader, BeanD<T> parent) {
         super(reader, parent);
     }
 
@@ -35,7 +35,7 @@ public class ConstructorD extends ExecutableD<Constructor<?>, MetadataReader.For
     }
 
     @Override
-    protected String nameOf(Constructor<?> e) {
+    protected String nameOf(Constructor<? extends T> e) {
         return e.getDeclaringClass().getSimpleName();
     }
 }

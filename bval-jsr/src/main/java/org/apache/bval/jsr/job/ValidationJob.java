@@ -203,7 +203,7 @@ public abstract class ValidationJob<T> {
         }
     }
 
-    public class BeanFrame extends Frame<BeanD> {
+    public class BeanFrame<B> extends Frame<BeanD<B>> {
 
         BeanFrame(GraphContext context) {
             this(null, context);
@@ -283,7 +283,7 @@ public abstract class ValidationJob<T> {
                     return;
                 }
             }
-            multiplex().filter(context -> context.getValue() != null).map(context -> new BeanFrame(this, context))
+            multiplex().filter(context -> context.getValue() != null).map(context -> new BeanFrame<>(this, context))
                 .forEach(b -> b.process(group, sink));
         }
 
@@ -402,9 +402,10 @@ public abstract class ValidationJob<T> {
         return true;
     }
 
-    private BeanD getBeanDescriptor(Object bean) {
+    @SuppressWarnings("unchecked")
+    private <O> BeanD<O> getBeanDescriptor(Object bean) {
         final Class<? extends Object> t = Proxies.classFor(Validate.notNull(bean, "bean").getClass());
-        return (BeanD) validatorContext.getDescriptorManager().getBeanDescriptor(t);
+        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(t);
     }
 
     final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,

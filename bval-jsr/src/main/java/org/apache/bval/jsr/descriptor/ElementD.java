@@ -60,7 +60,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         }
 
         @Override
-        final protected BeanD getBean() {
+        final protected BeanD<?> getBean() {
             return parent.getBean();
         }
 
@@ -113,7 +113,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     public abstract List<Class<?>> getGroupSequence();
 
-    protected abstract BeanD getBean();
+    protected abstract BeanD<?> getBean();
 
     @Override
     public String toString() {

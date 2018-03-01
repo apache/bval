@@ -53,8 +53,8 @@ import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.metadata.EmptyBuilder;
-import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.Meta;
+import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
@@ -84,15 +84,15 @@ class MetadataReader {
         }
     }
 
-    class ForBean extends MetadataReader.ForElement<Class<?>, MetadataBuilder.ForClass> {
-        private final MetadataBuilder.ForBean beanBuilder;
+    class ForBean<T> extends MetadataReader.ForElement<Class<T>, MetadataBuilder.ForClass<T>> {
+        private final MetadataBuilder.ForBean<T> beanBuilder;
 
-        ForBean(Meta<Class<?>> meta, MetadataBuilder.ForBean builder) {
+        ForBean(Meta<Class<T>> meta, MetadataBuilder.ForBean<T> builder) {
             super(meta, Validate.notNull(builder, "builder").getClass(meta));
             this.beanBuilder = builder;
         }
 
-        Map<String, PropertyDescriptor> getProperties(BeanD parent) {
+        Map<String, PropertyDescriptor> getProperties(BeanD<T> parent) {
             final Map<String, List<PropertyD<?>>> properties = new LinkedHashMap<>();
             final Function<? super String, ? extends List<PropertyD<?>>> descriptorList = k -> new ArrayList<>();
 
@@ -129,7 +129,7 @@ class MetadataReader {
             }));
         }
 
-        Map<Signature, MethodD> getMethods(BeanD parent) {
+        Map<Signature, MethodD> getMethods(BeanD<T> parent) {
             final Map<Signature, MetadataBuilder.ForExecutable<Method>> methodBuilders = beanBuilder.getMethods(meta);
             if (methodBuilders.isEmpty()) {
                 return Collections.emptyMap();
@@ -145,19 +145,20 @@ class MetadataReader {
             return Collections.unmodifiableMap(result);
         }
 
-        Map<Signature, ConstructorD> getConstructors(BeanD parent) {
-            final Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> ctorBuilders =
+        Map<Signature, ConstructorD<T>> getConstructors(BeanD<T> parent) {
+            final Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> ctorBuilders =
                 beanBuilder.getConstructors(meta);
 
             if (ctorBuilders.isEmpty()) {
                 return Collections.emptyMap();
             }
-            final Map<Signature, ConstructorD> result = new LinkedHashMap<>();
+            final Map<Signature, ConstructorD<T>> result = new LinkedHashMap<>();
 
             ctorBuilders.forEach((sig, builder) -> {
                 final Constructor<?> c = Reflection.getDeclaredConstructor(meta.getHost(), sig.getParameterTypes());
-                result.put(sig,
-                    new ConstructorD(new MetadataReader.ForConstructor(new Meta.ForConstructor(c), builder), parent));
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+                final Meta.ForConstructor<T> metaCtor = (Meta.ForConstructor) new Meta.ForConstructor<>(c);
+                result.put(sig, new ConstructorD<>(new MetadataReader.ForConstructor<T>(metaCtor, builder), parent));
             });
             return Collections.unmodifiableMap(result);
         }
@@ -283,14 +284,14 @@ class MetadataReader {
         }
     }
 
-    class ForConstructor extends ForExecutable<Constructor<?>, ForConstructor> {
+    class ForConstructor<T> extends ForExecutable<Constructor<? extends T>, ForConstructor<T>> {
 
-        ForConstructor(Meta<Constructor<?>> meta, MetadataBuilder.ForExecutable<Constructor<?>> builder) {
+        ForConstructor(Meta<Constructor<? extends T>> meta, MetadataBuilder.ForExecutable<Constructor<? extends T>> builder) {
             super(meta, builder);
         }
 
         @Override
-        List<String> getParameterNames(ParameterNameProvider parameterNameProvider, Constructor<?> host) {
+        List<String> getParameterNames(ParameterNameProvider parameterNameProvider, Constructor<? extends T> host) {
             return parameterNameProvider.getParameterNames(host);
         }
     }
@@ -302,7 +303,7 @@ class MetadataReader {
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
     }
 
-    MetadataReader.ForBean forBean(Class<?> beanClass, MetadataBuilder.ForBean builder) {
-        return new MetadataReader.ForBean(new Meta.ForClass(beanClass), builder);
+    <T> MetadataReader.ForBean<T> forBean(Class<T> beanClass, MetadataBuilder.ForBean<T> builder) {
+        return new MetadataReader.ForBean<>(new Meta.ForClass<>(beanClass), builder);
     }
 }

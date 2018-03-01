@@ -48,7 +48,7 @@ public class GroupSequenceTest extends ValidationTestBase {
 
     @Test
     public void testGroupSequence1() {
-        BeanD bean = (BeanD) ApacheValidatorFactory.getDefault().usingContext().getValidator()
+        BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
             .getConstraintsForClass(GInterface1.class);
 
         assertEquals(Collections.singletonList(GInterface1.class), bean.getGroupSequence());
@@ -56,7 +56,7 @@ public class GroupSequenceTest extends ValidationTestBase {
 
     @Test
     public void testGroupSequence2() {
-        BeanD bean = (BeanD) ApacheValidatorFactory.getDefault().usingContext().getValidator()
+        BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
             .getConstraintsForClass(GClass1.class);
 
         assertNull(bean.getGroupSequence());
@@ -64,7 +64,7 @@ public class GroupSequenceTest extends ValidationTestBase {
 
     @Test
     public void testGroupSequence3() {
-        BeanD bean = (BeanD) ApacheValidatorFactory.getDefault().usingContext().getValidator()
+        BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
                 .getConstraintsForClass(GClass2.class);
 
         assertEquals(Arrays.asList(GClass1.class, GClass2.class), bean.getGroupSequence());
@@ -72,7 +72,7 @@ public class GroupSequenceTest extends ValidationTestBase {
 
     @Test
     public void testGroupSequence4() {
-        BeanD bean = (BeanD) ApacheValidatorFactory.getDefault().usingContext().getValidator()
+        BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
                 .getConstraintsForClass(GClass3.class);
 
         assertEquals(Arrays.asList(GClass3.class, GClass1.class), bean.getGroupSequence());

@@ -54,31 +54,33 @@ public class EmptyBuilder {
         }
     }
 
-    private class ForBean extends Level implements MetadataBuilder.ForBean {
+    private class ForBean<T> extends Level implements MetadataBuilder.ForBean<T> {
+        @SuppressWarnings("rawtypes")
         private final Lazy<EmptyBuilder.ForClass> forClass = new Lazy<>(EmptyBuilder.ForClass::new);
 
+        @SuppressWarnings("unchecked")
         @Override
-        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
+        public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta) {
             return forClass.get();
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
             return Collections.emptyMap();
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             return Collections.emptyMap();
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> meta) {
             return Collections.emptyMap();
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> meta) {
             return Collections.emptyMap();
         }
 
@@ -96,10 +98,10 @@ public class EmptyBuilder {
         }
     }
 
-    private class ForClass extends ForElement<Class<?>> implements MetadataBuilder.ForClass {
+    private class ForClass<T> extends ForElement<Class<T>> implements MetadataBuilder.ForClass<T> {
 
         @Override
-        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<T>> meta) {
             return null;
         }
     }
@@ -145,6 +147,7 @@ public class EmptyBuilder {
     }
 
     private final AnnotationBehavior annotationBehavior;
+    @SuppressWarnings("rawtypes")
     private final Lazy<EmptyBuilder.ForBean> forBean;
     @SuppressWarnings("rawtypes")
     private final Lazy<EmptyBuilder.ForContainer> forContainer;
@@ -162,7 +165,8 @@ public class EmptyBuilder {
         forElement = new Lazy<>(EmptyBuilder.ForElement::new);
     }
 
-    public MetadataBuilder.ForBean forBean() {
+    @SuppressWarnings("unchecked")
+    public <T> MetadataBuilder.ForBean<T> forBean() {
         return forBean.get();
     }
 

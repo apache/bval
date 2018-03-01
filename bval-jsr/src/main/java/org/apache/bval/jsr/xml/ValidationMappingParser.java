@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.validation.ValidationException;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.XmlBuilder;
 import org.apache.bval.jsr.metadata.XmlValidationMappingProvider;
 import org.apache.bval.util.Exceptions;
@@ -63,11 +64,13 @@ public class ValidationMappingParser {
      * @param xmlStreams
      *            - one or more contraints.xml file streams to parse
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void processMappingConfig(Set<InputStream> xmlStreams) throws ValidationException {
         for (final InputStream xmlStream : xmlStreams) {
             final ConstraintMappingsType mapping = parseXmlMappings(xmlStream);
             processConstraintDefinitions(mapping.getConstraintDefinition(), mapping.getDefaultPackage());
-            new XmlBuilder(mapping).forBeans().forEach(factory.getMetadataBuilders()::registerCustomBuilder);
+            new XmlBuilder(mapping).forBeans().forEach(
+                (k, v) -> factory.getMetadataBuilders().registerCustomBuilder((Class) k, (MetadataBuilder.ForBean) v));
         }
     }
 

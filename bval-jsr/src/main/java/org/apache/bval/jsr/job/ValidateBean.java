@@ -38,8 +38,8 @@ public final class ValidateBean<T> extends ValidationJob<T> {
     }
 
     @Override
-    protected Frame<BeanD> computeBaseFrame() {
-        return new BeanFrame(new GraphContext(validatorContext, PathImpl.create(), bean));
+    protected Frame<BeanD<T>> computeBaseFrame() {
+        return new BeanFrame<T>(new GraphContext(validatorContext, PathImpl.create(), bean));
     }
 
     @SuppressWarnings("unchecked")

@@ -71,47 +71,48 @@ public class HierarchyBuilder extends CompositeBuilder {
     }
 
     static abstract class ElementDelegate<E extends AnnotatedElement, T extends MetadataBuilder.ForElement<E>>
-        extends HierarchyDelegate<E, T> implements MetadataBuilder.ForElement<E> {
+        extends HierarchyDelegate<E, T> {
 
         ElementDelegate(T delegate, Meta<E> hierarchyElement) {
             super(delegate, hierarchyElement);
         }
-        
+
         Annotation[] getDeclaredConstraints() {
             return delegate.getDeclaredConstraints(hierarchyElement);
         }
-
-        @Override
-        public final Annotation[] getDeclaredConstraints(Meta<E> meta) {
-            return getDeclaredConstraints();
-        }
     }
 
-    private class BeanDelegate extends HierarchyDelegate<Class<?>, MetadataBuilder.ForBean>
-        implements MetadataBuilder.ForBean {
+    private class BeanDelegate<H, T extends H> extends HierarchyDelegate<Class<H>, MetadataBuilder.ForBean<H>>
+        implements MetadataBuilder.ForBean<T> {
 
-        BeanDelegate(MetadataBuilder.ForBean delegate, Class<?> hierarchyType) {
-            super(delegate, new Meta.ForClass(hierarchyType));
+        BeanDelegate(MetadataBuilder.ForBean<H> delegate, Class<H> hierarchyType) {
+            super(delegate, new Meta.ForClass<H>(hierarchyType));
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
-            return new ClassDelegate(delegate.getClass(hierarchyElement), hierarchyElement);
+        public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta) {
+            return new ClassDelegate<>(delegate.getClass(hierarchyElement), hierarchyElement);
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
             return delegate.getFields(hierarchyElement);
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> meta) {
+            if (hierarchyElement.equals(meta)) {
+                @SuppressWarnings("unchecked")
+                final Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> result =
+                    ((MetadataBuilder.ForBean<T>) delegate).getConstructors(meta);
+                return result;
+            }
             // ignore hierarchical ctors:
-            return hierarchyElement.equals(meta) ? delegate.getConstructors(hierarchyElement) : Collections.emptyMap();
+            return Collections.emptyMap();
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             final Map<String, MetadataBuilder.ForContainer<Method>> getters = delegate.getGetters(hierarchyElement);
             final Map<String, MetadataBuilder.ForContainer<Method>> result = new LinkedHashMap<>();
 
@@ -127,7 +128,7 @@ public class HierarchyBuilder extends CompositeBuilder {
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> meta) {
             final Map<Signature, MetadataBuilder.ForExecutable<Method>> methods = delegate.getMethods(hierarchyElement);
             if (methods.isEmpty()) {
                 return methods;
@@ -142,16 +143,21 @@ public class HierarchyBuilder extends CompositeBuilder {
         }
     }
 
-    private class ClassDelegate extends ElementDelegate<Class<?>, MetadataBuilder.ForClass>
-        implements MetadataBuilder.ForClass {
+    private class ClassDelegate<H, T extends H> extends ElementDelegate<Class<H>, MetadataBuilder.ForClass<H>>
+        implements MetadataBuilder.ForClass<T> {
 
-        ClassDelegate(MetadataBuilder.ForClass delegate, Meta<Class<?>> hierarchyType) {
+        ClassDelegate(MetadataBuilder.ForClass<H> delegate, Meta<Class<H>> hierarchyType) {
             super(delegate, hierarchyType);
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<T>> meta) {
             return delegate.getGroupSequence(hierarchyElement);
+        }
+
+        @Override
+        public Annotation[] getDeclaredConstraints(Meta<Class<T>> meta) {
+            return getDeclaredConstraints();
         }
     }
 
@@ -192,6 +198,11 @@ public class HierarchyBuilder extends CompositeBuilder {
                 result.put(k, new ContainerDelegate<>(v, new Meta.ForContainerElement(hierarchyElement, k)));
             });
             return result;
+        }
+
+        @Override
+        public Annotation[] getDeclaredConstraints(Meta<E> meta) {
+            return getDeclaredConstraints();
         }
     }
 
@@ -241,6 +252,11 @@ public class HierarchyBuilder extends CompositeBuilder {
         CrossParameterDelegate(MetadataBuilder.ForElement<E> delegate, Meta<E> hierarchyElement) {
             super(delegate, hierarchyElement);
         }
+
+        @Override
+        public Annotation[] getDeclaredConstraints(Meta<E> meta) {
+            return getDeclaredConstraints();
+        }
     }
 
     private class ForCrossParameter<E extends Executable>
@@ -261,16 +277,17 @@ public class HierarchyBuilder extends CompositeBuilder {
         }
     }
 
-    private final Function<Class<?>, MetadataBuilder.ForBean> getBeanBuilder;
+    private final Function<Class<?>, MetadataBuilder.ForBean<?>> getBeanBuilder;
 
     public HierarchyBuilder(ApacheValidatorFactory validatorFactory,
-        Function<Class<?>, MetadataBuilder.ForBean> getBeanBuilder) {
+        Function<Class<?>, MetadataBuilder.ForBean<?>> getBeanBuilder) {
         super(validatorFactory, AnnotationBehaviorMergeStrategy.first());
         this.getBeanBuilder = Validate.notNull(getBeanBuilder, "getBeanBuilder function was null");
     }
 
-    public MetadataBuilder.ForBean forBean(Class<?> beanClass) {
-        final List<MetadataBuilder.ForBean> delegates = new ArrayList<>();
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <T> MetadataBuilder.ForBean<T> forBean(Class<T> beanClass) {
+        final List<MetadataBuilder.ForBean<?>> delegates = new ArrayList<>();
 
         /*
          * First add the delegate for the requested bean class, forcing to empty if absent. This is important for the
@@ -287,7 +304,12 @@ public class HierarchyBuilder extends CompositeBuilder {
         hierarchy.forEachRemaining(t -> Optional.of(t).filter(this::canValidate).map(getBeanBuilder)
             .filter(b -> !b.isEmpty()).map(b -> new BeanDelegate(b, t)).ifPresent(delegates::add));
 
-        return delegates.size() == 1 ? delegates.get(0) : delegates.stream().collect(compose());
+        if (delegates.size() == 1) {
+            return (MetadataBuilder.ForBean<T>) delegates.get(0);
+        }
+        // pretend:
+        return delegates.stream().<MetadataBuilder.ForBean<T>> map(MetadataBuilder.ForBean.class::cast)
+            .collect(compose());
     }
 
     @Override
@@ -308,7 +330,7 @@ public class HierarchyBuilder extends CompositeBuilder {
     }
 
     @Override
-    protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Meta<Class<?>> meta) {
+    protected <T> List<Class<?>> getGroupSequence(CompositeBuilder.ForClass<T> composite, Meta<Class<T>> meta) {
         return composite.delegates.get(0).getGroupSequence(meta);
     }
 

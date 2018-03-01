@@ -36,7 +36,7 @@ import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
-public abstract class ValidateReturnValue<E extends Executable, T> extends ValidationJob<T> {
+public abstract class ValidateReturnValue<E extends Executable, T> extends ValidateExecutable<E, T> {
     public static class ForMethod<T> extends ValidateReturnValue<Method, T> {
         private final T object;
 
@@ -73,7 +73,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         ForConstructor(ApacheFactoryContext validatorContext, Constructor<? extends T> ctor, Object returnValue,
             Class<?>[] groups) {
             super(validatorContext,
-                new Meta.ForConstructor(Validate.notNull(ctor, IllegalArgumentException::new, "ctor")), returnValue,
+                new Meta.ForConstructor<>(Validate.notNull(ctor, IllegalArgumentException::new, "ctor")), returnValue,
                 groups);
         }
 
@@ -97,17 +97,15 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         }
     }
 
-    protected final E executable;
     private final Object returnValue;
 
     ValidateReturnValue(ApacheFactoryContext validatorContext, Meta<E> meta, Object returnValue, Class<?>[] groups) {
-        super(validatorContext, groups);
+        super(validatorContext, groups, meta);
 
-        final Type type = Validate.notNull(meta, "meta").getType();
+        final Type type = Validate.notNull(meta, IllegalArgumentException::new, "meta").getType();
         Exceptions.raiseUnless(TypeUtils.isInstance(returnValue, type), IllegalArgumentException::new,
             "%s is not an instance of %s", returnValue, type);
 
-        this.executable = meta.getHost();
         this.returnValue = returnValue;
     }
 

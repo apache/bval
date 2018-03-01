@@ -83,21 +83,21 @@ public class CompositeBuilder {
         }
     }
 
-    private class ForBean extends CompositeBuilder.Delegator<MetadataBuilder.ForBean>
-        implements MetadataBuilder.ForBean {
+    private class ForBean<T> extends CompositeBuilder.Delegator<MetadataBuilder.ForBean<T>>
+        implements MetadataBuilder.ForBean<T> {
 
-        ForBean(List<MetadataBuilder.ForBean> delegates) {
+        ForBean(List<MetadataBuilder.ForBean<T>> delegates) {
             super(delegates);
         }
 
         @Override
-        public MetadataBuilder.ForClass getClass(Meta<Class<?>> meta) {
-            return new CompositeBuilder.ForClass(
+        public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta) {
+            return new CompositeBuilder.ForClass<>(
                 delegates.stream().map(d -> d.getClass(meta)).collect(Collectors.toList()));
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
             return merge(b -> b.getFields(meta), (f, l) -> {
                 final Field fld = Reflection.find(meta.getHost(), t -> Reflection.getDeclaredField(t, f));
                 Exceptions.raiseIf(fld == null, IllegalStateException::new, "Could not find field %s of %s", f,
@@ -107,7 +107,7 @@ public class CompositeBuilder {
         }
 
         @Override
-        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<?>> meta) {
+        public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             return merge(b -> b.getGetters(meta), (g, l) -> {
                 final Method getter = Methods.getter(meta.getHost(), g);
                 Exceptions.raiseIf(getter == null, IllegalStateException::new,
@@ -117,13 +117,13 @@ public class CompositeBuilder {
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> meta) {
             return merge(b -> b.getConstructors(meta),
                 d -> new CompositeBuilder.ForExecutable<>(d, ParameterNameProvider::getParameterNames));
         }
 
         @Override
-        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<?>> meta) {
+        public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> meta) {
             return merge(b -> b.getMethods(meta),
                 d -> new CompositeBuilder.ForExecutable<>(d, ParameterNameProvider::getParameterNames));
         }
@@ -148,14 +148,14 @@ public class CompositeBuilder {
         }
     }
 
-    class ForClass extends ForElement<MetadataBuilder.ForClass, Class<?>> implements MetadataBuilder.ForClass {
+    class ForClass<T> extends ForElement<MetadataBuilder.ForClass<T>, Class<T>> implements MetadataBuilder.ForClass<T> {
 
-        ForClass(List<MetadataBuilder.ForClass> delegates) {
+        ForClass(List<MetadataBuilder.ForClass<T>> delegates) {
             super(delegates);
         }
 
         @Override
-        public List<Class<?>> getGroupSequence(Meta<Class<?>> meta) {
+        public List<Class<?>> getGroupSequence(Meta<Class<T>> meta) {
             return CompositeBuilder.this.getGroupSequence(this, meta);
         }
     }
@@ -242,7 +242,7 @@ public class CompositeBuilder {
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
     }
 
-    public Collector<MetadataBuilder.ForBean, ?, MetadataBuilder.ForBean> compose() {
+    public <T> Collector<MetadataBuilder.ForBean<T>, ?, MetadataBuilder.ForBean<T>> compose() {
         return Collectors.collectingAndThen(Collectors.toList(), CompositeBuilder.ForBean::new);
     }
 
@@ -264,7 +264,7 @@ public class CompositeBuilder {
         return Collections.singletonMap(Scope.LOCAL_ELEMENT, composite.getDeclaredConstraints(meta));
     }
 
-    protected List<Class<?>> getGroupSequence(CompositeBuilder.ForClass composite, Meta<Class<?>> meta) {
+    protected <T> List<Class<?>> getGroupSequence(CompositeBuilder.ForClass<T> composite, Meta<Class<T>> meta) {
         final List<List<Class<?>>> groupSequence =
             composite.delegates.stream().map(d -> d.getGroupSequence(meta)).collect(Collectors.toList());
         Validate.validState(groupSequence.size() <= 1,

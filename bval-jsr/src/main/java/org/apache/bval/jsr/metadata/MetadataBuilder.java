@@ -39,10 +39,10 @@ import org.apache.bval.jsr.groups.GroupConversion;
  */
 public final class MetadataBuilder {
 
-    public interface ForBean extends HasAnnotationBehavior {
-        MetadataBuilder.ForClass getClass(Meta<Class<?>> meta);
+    public interface ForBean<T> extends HasAnnotationBehavior {
+        MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta);
 
-        Map<String, ForContainer<Field>> getFields(Meta<Class<?>> meta);
+        Map<String, ForContainer<Field>> getFields(Meta<Class<T>> meta);
 
         /**
          * Returned keys are property names per XML mapping spec.
@@ -50,11 +50,11 @@ public final class MetadataBuilder {
          * @param meta
          * @return {@link Map}
          */
-        Map<String, ForContainer<Method>> getGetters(Meta<Class<?>> meta);
+        Map<String, ForContainer<Method>> getGetters(Meta<Class<T>> meta);
 
-        Map<Signature, ForExecutable<Constructor<?>>> getConstructors(Meta<Class<?>> meta);
+        Map<Signature, ForExecutable<Constructor<? extends T>>> getConstructors(Meta<Class<T>> meta);
 
-        Map<Signature, ForExecutable<Method>> getMethods(Meta<Class<?>> meta);
+        Map<Signature, ForExecutable<Method>> getMethods(Meta<Class<T>> meta);
 
         default boolean isEmpty() {
             return false;
@@ -70,9 +70,9 @@ public final class MetadataBuilder {
         }
     }
 
-    public interface ForClass extends ForElement<Class<?>> {
+    public interface ForClass<T> extends ForElement<Class<T>> {
 
-        List<Class<?>> getGroupSequence(Meta<Class<?>> meta);
+        List<Class<?>> getGroupSequence(Meta<Class<T>> meta);
     }
 
     public interface ForContainer<E extends AnnotatedElement> extends MetadataBuilder.ForElement<E> {

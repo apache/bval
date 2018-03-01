@@ -290,8 +290,9 @@ public class Reflection {
      * @param clazz
      * @return {@link Constructor} array
      */
-    public static Constructor<?>[] getDeclaredConstructors(final Class<?> clazz) {
-        return clazz.getDeclaredConstructors();
+    @SuppressWarnings("unchecked")
+    public static <T> Constructor<? extends T>[] getDeclaredConstructors(final Class<T> clazz) {
+        return (Constructor<? extends T>[]) clazz.getDeclaredConstructors();
     }
 
     /**

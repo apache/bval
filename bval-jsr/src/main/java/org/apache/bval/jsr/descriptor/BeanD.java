@@ -36,16 +36,16 @@ import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.StringUtils;
 
-public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements BeanDescriptor {
+public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> implements BeanDescriptor {
 
-    private final Class<?> beanClass;
+    private final Class<T> beanClass;
     private final List<Class<?>> groupSequence;
     private final Map<String, PropertyDescriptor> propertiesMap;
     private final Set<PropertyDescriptor> properties;
-    private final Map<Signature, ConstructorD> constructors;
+    private final Map<Signature, ConstructorD<T>> constructors;
     private final Map<Signature, MethodD> methods;
 
-    BeanD(MetadataReader.ForBean reader) {
+    BeanD(MetadataReader.ForBean<T> reader) {
         super(reader);
         this.beanClass = reader.meta.getHost();
 
@@ -107,7 +107,7 @@ public class BeanD extends ElementD<Class<?>, MetadataReader.ForBean> implements
     }
 
     @Override
-    protected BeanD getBean() {
+    protected BeanD<T> getBean() {
         return this;
     }
 

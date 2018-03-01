@@ -28,7 +28,7 @@ import org.apache.bval.jsr.util.Methods;
 class MethodD extends ExecutableD<Method, MetadataReader.ForMethod, MethodD> implements MethodDescriptor {
     private final MethodType methodType;
 
-    MethodD(MetadataReader.ForMethod reader, BeanD parent) {
+    MethodD(MetadataReader.ForMethod reader, BeanD<?> parent) {
         super(reader, parent);
         methodType = Methods.isGetter(reader.meta.getHost()) ? MethodType.GETTER : MethodType.NON_GETTER;
     }

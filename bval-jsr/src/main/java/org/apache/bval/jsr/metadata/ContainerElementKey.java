@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -143,30 +144,40 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
 
     public Set<ContainerElementKey> getAssignableKeys() {
         final Lazy<Set<ContainerElementKey>> result = new Lazy<>(LinkedHashSet::new);
-
-        if (typeArgumentIndex != null) {
-            final TypeVariable<?> var = containerClass.getTypeParameters()[typeArgumentIndex.intValue()];
-
-            Stream
-                .concat(Stream.of(containerClass.getAnnotatedSuperclass()),
-                    Stream.of(containerClass.getAnnotatedInterfaces()))
-                .filter(AnnotatedParameterizedType.class::isInstance).map(AnnotatedParameterizedType.class::cast)
-                .forEach(t -> {
-                    final AnnotatedType[] args = t.getAnnotatedActualTypeArguments();
-
-                    for (int i = 0; i < args.length; i++) {
-                        if (args[i].getType().equals(var)) {
-                            result.get().add(new ContainerElementKey(t, Integer.valueOf(i)));
-                        }
-                    }
-                });
-        }
+        hierarchy(result.consumer(Set::add));
         return result.optional().map(Collections::unmodifiableSet).orElseGet(Collections::emptySet);
     }
 
     public boolean represents(TypeVariable<?> var) {
-        return Optional.ofNullable(typeArgumentIndex)
-            .map(index -> getContainerClass().getTypeParameters()[index.intValue()]).filter(var::equals).isPresent();
+        return Stream.concat(Stream.of(this), getAssignableKeys().stream())
+            .anyMatch(cek -> cek.typeArgumentIndex != null
+                && cek.containerClass.getTypeParameters()[cek.typeArgumentIndex.intValue()].equals(var));
+    }
+
+    private void hierarchy(Consumer<ContainerElementKey> sink) {
+        if (typeArgumentIndex == null) {
+            return;
+        }
+        final TypeVariable<?> var = containerClass.getTypeParameters()[typeArgumentIndex.intValue()];
+
+        final Lazy<Set<ContainerElementKey>> round = new Lazy<>(LinkedHashSet::new);
+        Stream
+            .concat(Stream.of(containerClass.getAnnotatedSuperclass()),
+                Stream.of(containerClass.getAnnotatedInterfaces()))
+            .filter(AnnotatedParameterizedType.class::isInstance).map(AnnotatedParameterizedType.class::cast)
+            .forEach(t -> {
+                final AnnotatedType[] args = ((AnnotatedParameterizedType) t).getAnnotatedActualTypeArguments();
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i].getType().equals(var)) {
+                        round.get().add(new ContainerElementKey(t, Integer.valueOf(i)));
+                    }
+                }
+            });
+
+        round.optional().ifPresent(s -> {
+            s.forEach(sink);
+            s.forEach(k -> k.hierarchy(sink));
+        });
     }
 
     private String containerClassName() {

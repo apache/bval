@@ -20,14 +20,15 @@ package org.apache.bval.jsr.job;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
@@ -231,12 +232,11 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
             if (containerElements.size() == 1) {
                 element = containerElements.iterator().next();
             } else {
-                final Predicate<ContainerElementKey> wellKnown =
-                    k -> k.represents(MAP_VALUE) || k.represents(ITERABLE_ELEMENT);
+                final Collection<TypeVariable<?>> wellKnown = Arrays.asList(MAP_VALUE, ITERABLE_ELEMENT);
 
                 final Optional<ContainerElementTypeD> found =
-                    containerElements.stream().map(ContainerElementTypeD.class::cast)
-                        .filter(d -> d.getKey().getAssignableKeys().stream().anyMatch(wellKnown)).findFirst();
+                    containerElements.stream().<ContainerElementTypeD> map(ContainerElementTypeD.class::cast)
+                        .filter(d -> wellKnown.stream().anyMatch(d.getKey()::represents)).findFirst();
 
                 if (!found.isPresent()) {
                     return null;

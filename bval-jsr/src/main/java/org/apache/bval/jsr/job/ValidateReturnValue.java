@@ -111,7 +111,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     protected Frame<?> computeBaseFrame() {
-        final PathImpl path = PathImpl.create();
+        final PathImpl path = createBasePath();
         path.addNode(new NodeImpl.ReturnValueNodeImpl());
 
         return new SproutFrame<ReturnValueD<?, ?>>((ReturnValueD<?, ?>) describe().getReturnValueDescriptor(),

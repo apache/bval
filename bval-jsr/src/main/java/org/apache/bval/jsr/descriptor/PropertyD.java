@@ -20,14 +20,13 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;
-import org.apache.bval.jsr.util.NodeImpl;
+import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -97,9 +96,10 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
     @Override
     protected Stream<GraphContext> readImpl(GraphContext context) throws Exception {
-        final Supplier<NodeImpl> propertyNode = () -> new NodeImpl.PropertyNodeImpl(getPropertyName());
         final Object value = getValue(context.getValue());
-        return Stream.of(context.child(propertyNode.get(), value));
+        final PathImpl p = PathImpl.copy(context.getPath());
+        p.addProperty(getPropertyName());
+        return Stream.of(context.child(p, value));
     }
 
     public abstract Object getValue(Object parent) throws Exception;

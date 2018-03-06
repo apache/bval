@@ -21,6 +21,8 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -33,6 +35,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -55,9 +58,9 @@ import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.BeanD;
-import org.apache.bval.jsr.descriptor.CascadableContainerD;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
+import org.apache.bval.jsr.descriptor.ContainerElementTypeD;
 import org.apache.bval.jsr.descriptor.ElementD;
 import org.apache.bval.jsr.descriptor.PropertyD;
 import org.apache.bval.jsr.groups.Group;
@@ -68,6 +71,7 @@ import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.ObjectWrapper;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -239,9 +243,12 @@ public abstract class ValidationJob<T> {
             final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
 
             final Stream<PropertyD<?>> reachableProperties =
-                properties.filter(d -> traversableResolver.isReachable(context.getValue(),
-                    new NodeImpl.PropertyNodeImpl(d.getPropertyName()), getRootBeanClass(), context.getPath(),
-                    d.getElementType()));
+                    properties.filter(d -> {
+                        final PathImpl p = PathImpl.copy(context.getPath());
+                        p.addProperty(d.getPropertyName());
+                        return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                            p, d.getElementType());
+                    });
 
             return reachableProperties.flatMap(
                 d -> d.read(context).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)))
@@ -262,14 +269,32 @@ public abstract class ValidationJob<T> {
         @Override
         void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            final Stream<CascadableContainerD<?, ?>> containerElements =
-                descriptor.getConstrainedContainerElementTypes().stream()
-                    .flatMap(d -> ComposedD.unwrap(d, (Class) CascadableContainerD.class));
+            final Stream<ContainerElementTypeD> containerElements =
+            descriptor.getConstrainedContainerElementTypes().stream()
+                .flatMap(d -> ComposedD.unwrap(d, (Class) ContainerElementTypeD.class));
+            
+            final ObjectWrapper<Boolean> effectiveCascade =
+                new ObjectWrapper<>(Boolean.valueOf(descriptor.isCascaded()));
 
-            containerElements.flatMap(d -> d.read(context).map(child -> new SproutFrame<>(this, d, child)))
+            // cascade legacy containers the old way by filtering them out here:
+
+            final Collection<TypeVariable<?>> wellKnown = Arrays.asList(ITERABLE_ELEMENT, MAP_VALUE);
+
+            final Predicate<? super ContainerElementTypeD> isNotLegacyContainer = d -> {
+                final boolean cascadedLegacyContainer =
+                    d.isCascaded() && wellKnown.stream().anyMatch(d.getKey()::represents);
+
+                if (cascadedLegacyContainer) {
+                    effectiveCascade.accept(Boolean.TRUE);
+                }
+                return !cascadedLegacyContainer;
+            };
+
+            containerElements.filter(isNotLegacyContainer)
+                .flatMap(d -> d.read(context).map(child -> new SproutFrame<>(this, d, child)))
                 .forEach(f -> f.process(group, sink));
 
-            if (!descriptor.isCascaded()) {
+            if (!effectiveCascade.get().booleanValue()) {
                 return;
             }
             if (descriptor instanceof PropertyDescriptor) {

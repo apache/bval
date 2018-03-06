@@ -30,6 +30,7 @@ import javax.validation.valueextraction.ValueExtractor;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
+import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
@@ -48,33 +49,36 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
 
         @Override
         public void value(String nodeName, Object object) {
-            addChild(new NodeImpl.PropertyNodeImpl(nodeName), object);
+            addChild(new NodeImpl.ContainerElementNodeImpl(nodeName), object);
         }
 
         @Override
         public void iterableValue(String nodeName, Object object) {
-            final NodeImpl.PropertyNodeImpl node = new NodeImpl.PropertyNodeImpl(nodeName);
+            final NodeImpl node = new NodeImpl.ContainerElementNodeImpl(nodeName);
             node.setInIterable(true);
             addChild(node, object);
         }
 
         @Override
         public void indexedValue(String nodeName, int i, Object object) {
-            final NodeImpl.PropertyNodeImpl node = new NodeImpl.PropertyNodeImpl(nodeName);
+            final NodeImpl node = new NodeImpl.ContainerElementNodeImpl(nodeName);
             node.setIndex(Integer.valueOf(i));
             addChild(node, object);
         }
 
         @Override
         public void keyedValue(String nodeName, Object key, Object object) {
-            final NodeImpl.PropertyNodeImpl node = new NodeImpl.PropertyNodeImpl(nodeName);
+            final NodeImpl node = new NodeImpl.ContainerElementNodeImpl(nodeName);
             node.setKey(key);
             addChild(node, object);
         }
 
         private void addChild(NodeImpl node, Object value) {
-            result.get()
-                .add(context.child(node.inContainer(key.getContainerClass(), key.getTypeArgumentIndex()), value));
+            final PathImpl path = context.getPath();
+            if (node.getName() != null) {
+                path.addNode(node.inContainer(key.getContainerClass(), key.getTypeArgumentIndex()));
+            }
+            result.get().add(context.child(path, value));
         }
     }
 

@@ -23,20 +23,23 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.CascadableDescriptor;
+import javax.validation.metadata.ContainerDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.AnnotationBehaviorMergeStrategy;
 import org.apache.bval.jsr.metadata.CompositeBuilder;
+import org.apache.bval.jsr.metadata.DualBuilder;
 import org.apache.bval.jsr.metadata.HierarchyBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
-import org.apache.bval.jsr.metadata.DualBuilder;
 import org.apache.bval.jsr.metadata.ReflectionBuilder;
 import org.apache.bval.util.Validate;
 
 public class DescriptorManager {
-    public static <D extends ElementDescriptor & CascadableDescriptor> boolean isConstrained(D descriptor) {
-        return descriptor.hasConstraints() || descriptor.isCascaded();
+    public static <D extends ElementDescriptor & CascadableDescriptor & ContainerDescriptor> boolean isConstrained(
+        D descriptor) {
+        return descriptor.hasConstraints() || descriptor.isCascaded()
+            || !descriptor.getConstrainedContainerElementTypes().isEmpty();
     }
 
     private final ApacheValidatorFactory validatorFactory;

@@ -114,6 +114,14 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         this.inIterable = node.isInIterable();
         this.index = node.getIndex();
         this.key = node.getKey();
+
+        if (node instanceof NodeImpl) {
+            final NodeImpl n = (NodeImpl) node;
+            this.parameterIndex = n.parameterIndex;
+            this.parameterTypes = n.parameterTypes;
+            this.containerType = n.containerType;
+            this.typeArgumentIndex = n.typeArgumentIndex;
+        }
     }
 
     <T extends Path.Node> NodeImpl(Path.Node node, Class<T> nodeType, Consumer<T> handler) {
@@ -386,8 +394,12 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     @SuppressWarnings("serial")
     public static class ContainerElementNodeImpl extends NodeImpl implements Path.ContainerElementNode {
 
-        public ContainerElementNodeImpl(String name, Class<?> containerType, Integer typeArgumentIndex) {
+        public ContainerElementNodeImpl(String name) {
             super(name);
+        }
+
+        public ContainerElementNodeImpl(String name, Class<?> containerType, Integer typeArgumentIndex) {
+            this(name);
             inContainer(containerType, typeArgumentIndex);
         }
 

@@ -21,8 +21,6 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -35,7 +33,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -43,6 +40,7 @@ import java.util.stream.Stream;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintViolation;
+import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
@@ -65,13 +63,13 @@ import org.apache.bval.jsr.descriptor.ElementD;
 import org.apache.bval.jsr.descriptor.PropertyD;
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.Groups;
+import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
-import org.apache.bval.util.ObjectWrapper;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -269,32 +267,13 @@ public abstract class ValidationJob<T> {
         @Override
         void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            final Stream<ContainerElementTypeD> containerElements =
-            descriptor.getConstrainedContainerElementTypes().stream()
-                .flatMap(d -> ComposedD.unwrap(d, (Class) ContainerElementTypeD.class));
-            
-            final ObjectWrapper<Boolean> effectiveCascade =
-                new ObjectWrapper<>(Boolean.valueOf(descriptor.isCascaded()));
+            final Stream<ContainerElementTypeD> containerElements = descriptor.getConstrainedContainerElementTypes()
+                .stream().flatMap(d -> ComposedD.unwrap(d, (Class) ContainerElementTypeD.class));
 
-            // cascade legacy containers the old way by filtering them out here:
-
-            final Collection<TypeVariable<?>> wellKnown = Arrays.asList(ITERABLE_ELEMENT, MAP_VALUE);
-
-            final Predicate<? super ContainerElementTypeD> isNotLegacyContainer = d -> {
-                final boolean cascadedLegacyContainer =
-                    d.isCascaded() && wellKnown.stream().anyMatch(d.getKey()::represents);
-
-                if (cascadedLegacyContainer) {
-                    effectiveCascade.accept(Boolean.TRUE);
-                }
-                return !cascadedLegacyContainer;
-            };
-
-            containerElements.filter(isNotLegacyContainer)
-                .flatMap(d -> d.read(context).map(child -> new SproutFrame<>(this, d, child)))
+            containerElements.flatMap(d -> d.read(context).map(child -> new ContainerElementFrame(this, d, child)))
                 .forEach(f -> f.process(group, sink));
 
-            if (!effectiveCascade.get().booleanValue()) {
+            if (!descriptor.isCascaded()) {
                 return;
             }
             if (descriptor instanceof PropertyDescriptor) {
@@ -358,6 +337,7 @@ public abstract class ValidationJob<T> {
                 final Type assignedType =
                     TypeUtils.getTypeArguments(containerType, (Class<?>) originalTypeVariable.getGenericDeclaration())
                         .get(originalTypeVariable);
+
                 tv = assignedType instanceof TypeVariable<?> ? (TypeVariable<?>) assignedType : null;
             }
             final int i = tv == null ? -1 : ObjectUtils.indexOf(containerType.getTypeParameters(), tv);
@@ -367,6 +347,37 @@ public abstract class ValidationJob<T> {
         @Override
         Object getBean() {
             return Optional.ofNullable(parent).map(Frame::getBean).orElse(null);
+        }
+    }
+
+    private class ContainerElementFrame extends SproutFrame<ContainerElementTypeD> {
+
+        ContainerElementFrame(ValidationJob<T>.Frame<?> parent, ContainerElementTypeD descriptor,
+            GraphContext context) {
+            super(parent, descriptor, context);
+        }
+
+        @Override
+        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            final PathImpl path = context.getPath();
+            final NodeImpl leafNode = path.getLeafNode();
+
+            final NodeImpl newLeaf;
+
+            if (leafNode.getKind() == ElementKind.CONTAINER_ELEMENT) {
+                // recurse using elided path:
+                path.removeLeafNode();
+                newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
+                newLeaf.setName(null);
+            } else {
+                final ContainerElementKey key = descriptor.getKey();
+                newLeaf = new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
+                    key.getTypeArgumentIndex());
+            }
+            path.addNode(newLeaf);
+
+            new SproutFrame<>(parent, descriptor, context.getParent().child(path, context.getValue())).recurse(group,
+                sink);
         }
     }
 

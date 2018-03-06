@@ -153,6 +153,10 @@ public class PathImpl implements Path, Serializable {
         return new NodeImpl.PropertyNodeImpl(cast);
     }
 
+    private static boolean isAwaitingPropertyName(NodeImpl n) {
+        return n != null && n.getName() == null && (n.isInIterable() || n.getContainerClass() != null);
+    }
+
     private final LinkedList<NodeImpl> nodeList = new LinkedList<>();
 
     private PathImpl() {
@@ -210,7 +214,7 @@ public class PathImpl implements Path, Serializable {
     public void addProperty(String name) {
         if (!nodeList.isEmpty()) {
             NodeImpl leaf = getLeafNode();
-            if (leaf != null && leaf.isInIterable() && leaf.getName() == null) { // TODO: avoid to be here
+            if (isAwaitingPropertyName(leaf)) {
                 if (!PropertyNode.class.isInstance(leaf)) {
                     final NodeImpl tmp = new NodeImpl.PropertyNodeImpl(leaf);
                     removeLeafNode();
@@ -221,13 +225,7 @@ public class PathImpl implements Path, Serializable {
                 return;
             }
         }
-        final NodeImpl node;
-        if ("<cross-parameter>".equals(name)) {
-            node = new NodeImpl.CrossParameterNodeImpl();
-        } else {
-            node = new NodeImpl.PropertyNodeImpl(name);
-        }
-        addNode(node);
+        addNode(new NodeImpl.PropertyNodeImpl(name));
     }
 
     /**

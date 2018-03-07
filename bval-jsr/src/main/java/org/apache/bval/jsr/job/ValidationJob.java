@@ -135,8 +135,14 @@ public abstract class ValidationJob<T> {
                 // null validator without exception implies composition:
                 valid = true;
             } else {
-                constraintValidator.initialize(constraint.getAnnotation());
-                valid = constraintValidator.isValid(context.getValue(), constraintValidatorContext);
+                try {
+                    constraintValidator.initialize(constraint.getAnnotation());
+                    valid = constraintValidator.isValid(context.getValue(), constraintValidatorContext);
+                } catch (ValidationException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
+                }
             }
             if (!valid) {
                 constraintValidatorContext.getRequiredViolations().forEach(sink);

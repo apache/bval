@@ -18,24 +18,62 @@
  */
 package org.apache.bval.jsr.util;
 
-import javax.validation.ElementKind;
-import javax.validation.Path;
-import javax.validation.Path.Node;
-
-import org.apache.bval.util.Exceptions;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+
+import javax.validation.ElementKind;
+import javax.validation.Path;
+import javax.validation.Path.BeanNode;
+import javax.validation.Path.ConstructorNode;
+import javax.validation.Path.ContainerElementNode;
+import javax.validation.Path.MethodNode;
+import javax.validation.Path.Node;
+import javax.validation.Path.ParameterNode;
+import javax.validation.Path.PropertyNode;
+
+import org.apache.bval.util.Comparators;
+import org.apache.bval.util.Exceptions;
 
 public abstract class NodeImpl implements Path.Node, Serializable {
-
     private static final long serialVersionUID = 1L;
-    private static final String INDEX_OPEN = "[";
-    private static final String INDEX_CLOSE = "]";
+
+    /**
+     * Comparator for any path {@link Node}.
+     */
+    public static final Comparator<Path.Node> NODE_COMPARATOR =
+        nullsFirst(comparing(Node::getName, nullsFirst(naturalOrder())).thenComparing(NodeImpl::compareIterability)
+            .thenComparing(NodeImpl::compareSpecificNodeInfo));
+
+    private static final Comparator<Class<?>> CLASS_COMPARATOR = Comparator.nullsFirst(
+        Comparator.<Class<?>, Boolean> comparing(Class::isPrimitive).reversed().thenComparing(Class::getName));
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static final Comparator<Object> KEY_COMPARATOR = nullsFirst(((Comparator<Object>) (quid, quo) -> {
+        if (quid instanceof Comparable<?> && quo instanceof Comparable<?>) {
+            try {
+                return Comparator.<Comparable> naturalOrder().compare((Comparable) quid, (Comparable) quo);
+            } catch (Exception e) {
+                // apparently not mutually comparable
+            }
+        }
+        if (quid instanceof Class<?> && quo instanceof Class<?>) {
+            return CLASS_COMPARATOR.compare((Class<?>) quid, (Class<?>) quo);
+        }
+        return 0;
+    }).thenComparing((Function<Object, String>) Objects::toString));
+
+    private static final char INDEX_OPEN = '[';
+    private static final char INDEX_CLOSE = ']';
 
     private static <T extends Path.Node> Optional<T> optional(Class<T> type, Object o) {
         return Optional.ofNullable(o).filter(type::isInstance).map(type::cast);
@@ -43,6 +81,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Append a Node to the specified StringBuilder.
+     * 
      * @param node
      * @param to
      * @return to
@@ -68,6 +107,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Get a NodeImpl indexed from the preceding node (or root).
+     * 
      * @param index
      * @return NodeImpl
      */
@@ -79,6 +119,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Get a NodeImpl keyed from the preceding node (or root).
+     * 
      * @param key
      * @return NodeImpl
      */
@@ -86,6 +127,66 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         final NodeImpl result = new NodeImpl.PropertyNodeImpl((String) null);
         result.setKey(key);
         return result;
+    }
+
+    private static int compareIterability(Node quid, Node quo) {
+        if (quid.isInIterable()) {
+            if (quo.isInIterable()) {
+                if (quid.getKey() != null) {
+                    return Comparator.comparing(Node::getKey, KEY_COMPARATOR).compare(quid, quo);
+                }
+                if (quid.getIndex() == null) {
+                    // this method cannot consistently order iterables without key or index; the first argument is
+                    // always assumed to be less:
+                    return -1;
+                }
+                return quo.getIndex() == null ? 1 : quid.getIndex().compareTo(quo.getIndex());
+            }
+            return 1;
+        }
+        return quo.isInIterable() ? -1 : 0;
+    }
+
+    private static int compareSpecificNodeInfo(Node quid, Node quo) {
+        final ElementKind kind = quid.getKind();
+        final int k = kind.compareTo(quo.getKind());
+        if (k != 0) {
+            return k;
+        }
+        final Comparator<Node> cmp;
+        switch (kind) {
+        case BEAN:
+            cmp = comparing(to(BeanNode.class), comparing(BeanNode::getContainerClass, CLASS_COMPARATOR)
+                .thenComparing(BeanNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            break;
+        case PROPERTY:
+            cmp = comparing(to(PropertyNode.class), comparing(PropertyNode::getContainerClass, CLASS_COMPARATOR)
+                .thenComparing(PropertyNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            break;
+        case CONTAINER_ELEMENT:
+            cmp = comparing(to(ContainerElementNode.class),
+                comparing(ContainerElementNode::getContainerClass, CLASS_COMPARATOR)
+                    .thenComparing(ContainerElementNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            break;
+        case CONSTRUCTOR:
+            cmp = comparing(to(ConstructorNode.class).andThen(ConstructorNode::getParameterTypes),
+                Comparators.comparingIterables(CLASS_COMPARATOR));
+            break;
+        case METHOD:
+            cmp = comparing(to(MethodNode.class).andThen(MethodNode::getParameterTypes),
+                Comparators.comparingIterables(CLASS_COMPARATOR));
+            break;
+        case PARAMETER:
+            cmp = comparing(to(ParameterNode.class).andThen(ParameterNode::getParameterIndex));
+            break;
+        default:
+            return 0;
+        }
+        return cmp.compare(quid, quo);
+    }
+
+    private static <T> Function<Object, T> to(Class<T> type) {
+        return type::cast;
     }
 
     private String name;
@@ -99,6 +200,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Create a new NodeImpl instance.
+     * 
      * @param name
      */
     private NodeImpl(String name) {
@@ -107,6 +209,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Create a new NodeImpl instance.
+     * 
      * @param node
      */
     NodeImpl(Path.Node node) {
@@ -141,7 +244,8 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     }
 
     /**
-     * @param name the name to set
+     * @param name
+     *            the name to set
      */
     public void setName(String name) {
         this.name = name;
@@ -157,6 +261,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Set whether this node represents a contained value of an {@link Iterable} or {@link Map}.
+     * 
      * @param inIterable
      */
     public void setInIterable(boolean inIterable) {
@@ -173,6 +278,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Set the index of this node, implying <code>inIterable</code>.
+     * 
      * @param index
      */
     public void setIndex(Integer index) {
@@ -195,6 +301,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
     /**
      * Set the map key of this node, implying <code>inIterable</code>.
+     * 
      * @param key
      */
     public void setKey(Object key) {
@@ -229,10 +336,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         if (o == null || !getClass().equals(o.getClass())) {
             return false;
         }
-        final NodeImpl node = (NodeImpl) o;
-
-        return inIterable == node.inIterable && Objects.equals(index, node.index) && Objects.equals(key, node.key)
-            && Objects.equals(name, node.name);
+        return NODE_COMPARATOR.compare(this, (NodeImpl) o) == 0;
     }
 
     /**

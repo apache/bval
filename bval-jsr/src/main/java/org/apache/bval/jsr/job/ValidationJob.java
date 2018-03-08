@@ -22,7 +22,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +119,7 @@ public abstract class ValidationJob<T> {
         @SuppressWarnings({ "rawtypes", "unchecked" })
         private boolean validate(ConstraintD<?> constraint, Consumer<ConstraintViolation<T>> sink) {
             if (!validatedPathsByConstraint
-                .computeIfAbsent(constraint, k -> new ConcurrentSkipListSet<>(COMPARE_TO_STRING))
+                .computeIfAbsent(constraint, k -> new ConcurrentSkipListSet<>(PathImpl.PATH_COMPARATOR))
                 .add(context.getPath())) {
                 // seen, ignore:
                 return true;
@@ -293,8 +292,8 @@ public abstract class ValidationJob<T> {
                     return;
                 }
             }
-            multiplex().filter(context -> context.getValue() != null).map(context -> new BeanFrame<>(this, context))
-                .forEach(b -> b.process(group, sink));
+            multiplex().filter(context -> context.getValue() != null && !context.isRecursive())
+                .map(context -> new BeanFrame<>(this, context)).forEach(b -> b.process(group, sink));
         }
 
         private Stream<GraphContext> multiplex() {
@@ -386,8 +385,6 @@ public abstract class ValidationJob<T> {
                 sink);
         }
     }
-
-    private static final Comparator<Path> COMPARE_TO_STRING = Comparator.comparing(Object::toString);
 
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];

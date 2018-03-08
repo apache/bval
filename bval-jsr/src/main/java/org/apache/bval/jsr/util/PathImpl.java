@@ -19,6 +19,7 @@
 package org.apache.bval.jsr.util;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Objects;
 
 import javax.validation.Path;
 
+import org.apache.bval.util.Comparators;
 import org.apache.bval.util.Exceptions;
 
 /**
@@ -38,6 +40,8 @@ import org.apache.bval.util.Exceptions;
 public class PathImpl implements Path, Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public static final Comparator<Path> PATH_COMPARATOR = Comparators.comparingIterables(NodeImpl.NODE_COMPARATOR);
 
     static final String PROPERTY_PATH_SEPARATOR = ".";
 

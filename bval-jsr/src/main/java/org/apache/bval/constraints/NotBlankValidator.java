@@ -29,6 +29,6 @@ public class NotBlankValidator implements ConstraintValidator<NotBlank, CharSequ
 
     @Override
     public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-        return value == null || value.length() > 0 && !value.chars().allMatch(Character::isWhitespace);
+        return value != null && value.length() > 0 && !value.chars().allMatch(Character::isWhitespace);
     }
 }

@@ -67,9 +67,9 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
                     .map(AnnotatedParameterizedType::getAnnotatedActualTypeArguments).ifPresent(args -> {
                         IntStream.range(0, args.length).forEach(n -> {
                             if (args[n].isAnnotationPresent(ExtractedValue.class)) {
-                                if (void.class.equals(args[n].getAnnotation(ExtractedValue.class).type())) {
+                                if (!void.class.equals(args[n].getAnnotation(ExtractedValue.class).type())) {
                                     log.warning(String.format("Ignoring non-default %s type specified for %s by %s",
-                                        ExtractedValue.class.getSimpleName(), containerType, extractorType));
+                                        ExtractedValue.class.getSimpleName(), containerType.getType(), extractorType));
                                 }
                                 result.get().add(new ContainerElementKey(containerType, Integer.valueOf(n)));
                             }

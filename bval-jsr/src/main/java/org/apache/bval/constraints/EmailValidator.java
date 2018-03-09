@@ -18,18 +18,33 @@
  */
 package org.apache.bval.constraints;
 
-import org.apache.bval.routines.EMailValidationUtils;
-
-import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import javax.validation.constraints.Pattern.Flag;
+
+import org.apache.bval.routines.EMailValidationUtils;
 
 /**
  * Description: <br/>
  */
-public class EmailValidator implements ConstraintValidator<javax.validation.constraints.Email, CharSequence> {
+public class EmailValidator extends AbstractPatternValidator<javax.validation.constraints.Email, CharSequence> {
+
+    public EmailValidator() {
+        super(email -> new PatternDescriptor() {
+
+            @Override
+            public String regexp() {
+                return email.regexp();
+            }
+
+            @Override
+            public Flag[] flags() {
+                return email.flags();
+            }
+        });
+    }
 
     @Override
     public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-        return EMailValidationUtils.isValid(value);
+        return EMailValidationUtils.isValid(value) && super.isValid(value, context);
     }
 }

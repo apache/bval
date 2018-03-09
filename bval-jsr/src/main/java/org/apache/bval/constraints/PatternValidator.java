@@ -18,35 +18,25 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import javax.validation.constraints.Pattern;
-import java.util.regex.PatternSyntaxException;
+import javax.validation.constraints.Pattern.Flag;
 
 /**
- * validator using a regular expression,
- * based on the jsr Pattern constraint annotation.
+ * validator using a regular expression, based on the jsr Pattern constraint annotation.
  */
-public class PatternValidator implements ConstraintValidator<Pattern, CharSequence> {
-    protected java.util.regex.Pattern pattern;
+public class PatternValidator extends AbstractPatternValidator<Pattern, CharSequence> {
+    public PatternValidator() {
+        super(p -> new PatternDescriptor() {
 
-    @Override
-    public void initialize(Pattern annotation) {
-        final Pattern.Flag flags[] = annotation.flags();
-        int intFlag = 0;
-        for (Pattern.Flag flag : flags) {
-            intFlag = intFlag | flag.getValue();
-        }
+            @Override
+            public String regexp() {
+                return p.regexp();
+            }
 
-        try {
-            pattern = java.util.regex.Pattern.compile(annotation.regexp(), intFlag);
-        } catch (PatternSyntaxException e) {
-            throw new IllegalArgumentException("Invalid regular expression.", e);
-        }
-    }
-
-    @Override
-    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-        return value == null || pattern.matcher(value).matches();
+            @Override
+            public Flag[] flags() {
+                return p.flags();
+            }
+        });
     }
 }

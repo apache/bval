@@ -93,8 +93,10 @@ public abstract class ValidationJob<T> {
         final void process(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
 
-            each(expand(group), this::validateDescriptorConstraints, sink);
-            recurse(group, sink);
+            each(expand(group), (g, s) -> {
+                validateDescriptorConstraints(g, s);
+                recurse(g, s);
+            }, sink);
         }
 
         abstract void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink);
@@ -222,12 +224,7 @@ public abstract class ValidationJob<T> {
 
         @Override
         void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            // bean frame has to do some convoluted things to properly handle groups and recursion; skipping
-            // frame#process() on properties:
-            final List<Frame<?>> propertyFrames = propertyFrames();
-
-            each(expand(group), (g, s) -> propertyFrames.forEach(f -> f.validateDescriptorConstraints(g, s)), sink);
-            propertyFrames.forEach(f -> f.recurse(group, sink));
+            propertyFrames().forEach(f -> f.process(group, sink));
         }
 
         protected Frame<?> propertyFrame(PropertyD<?> d, GraphContext context) {
@@ -239,23 +236,20 @@ public abstract class ValidationJob<T> {
             return context.getValue();
         }
 
-        private List<Frame<?>> propertyFrames() {
+        private Stream<Frame<?>> propertyFrames() {
             final Stream<PropertyD<?>> properties = descriptor.getConstrainedProperties().stream()
                 .flatMap(d -> ComposedD.unwrap(d, PropertyD.class)).map(d -> (PropertyD<?>) d);
 
             final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
 
-            final Stream<PropertyD<?>> reachableProperties =
-                    properties.filter(d -> {
-                        final PathImpl p = PathImpl.copy(context.getPath());
-                        p.addProperty(d.getPropertyName());
-                        return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
-                            p, d.getElementType());
-                    });
-
+            final Stream<PropertyD<?>> reachableProperties = properties.filter(d -> {
+                final PathImpl p = PathImpl.copy(context.getPath());
+                p.addProperty(d.getPropertyName());
+                return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(), p,
+                    d.getElementType());
+            });
             return reachableProperties.flatMap(
-                d -> d.read(context).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)))
-                .collect(Collectors.toList());
+                d -> d.read(context).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)));
         }
     }
 
@@ -272,7 +266,8 @@ public abstract class ValidationJob<T> {
         @Override
         void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             final Groups convertedGroups =
-                validatorContext.getGroupsComputer().computeCascadingGroups(descriptor.getGroupConversions(), group);
+                validatorContext.getGroupsComputer().computeCascadingGroups(descriptor.getGroupConversions(),
+                    descriptor.getDeclaringClass().isAssignableFrom(group) ? Default.class : group);
 
             convertedGroups.getGroups().stream().map(Group::getGroup).forEach(g -> recurseSingleExpandedGroup(g, sink));
 

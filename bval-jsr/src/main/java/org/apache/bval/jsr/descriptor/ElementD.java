@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 
+import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -72,16 +73,14 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     protected final Type genericType;
 
-    private final E target;
-    private final ElementType elementType;
+    private final Meta<E> meta;
     private final Set<ConstraintD<?>> constraints;
 
     protected ElementD(R reader) {
         super();
         Validate.notNull(reader, "reader");
+        this.meta = reader.meta;
         this.genericType = reader.meta.getType();
-        this.target = reader.meta.getHost();
-        this.elementType = reader.meta.getElementType();
         this.constraints = reader.getConstraints();
     }
 
@@ -102,21 +101,25 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     }
 
     public final ElementType getElementType() {
-        return elementType;
+        return meta.getElementType();
     }
 
     public final E getTarget() {
-        return target;
+        return meta.getHost();
+    }
+
+    public final Class<?> getDeclaringClass() {
+        return meta.getDeclaringClass();
     }
 
     public abstract Type getGenericType();
 
     public abstract List<Class<?>> getGroupSequence();
 
-    protected abstract BeanD<?> getBean();
-
     @Override
     public String toString() {
-        return String.format("%s: %s", getClass().getSimpleName(), target);
+        return String.format("%s: %s", getClass().getSimpleName(), getTarget());
     }
+
+    protected abstract BeanD<?> getBean();
 }

@@ -27,11 +27,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.ValidationException;
 import javax.validation.groups.Default;
+import javax.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
@@ -69,6 +71,55 @@ public class GroupsComputer {
     public final Groups computeGroups(Class<?>... groups) {
         Exceptions.raiseIf(groups == null, IllegalArgumentException::new, "null validation groups specified");
         return computeGroups(Arrays.asList(groups));
+    }
+
+    /**
+     * Compute groups for a single cascading validation taking into account the specified set of
+     * {@link GroupConversionDescriptor}s.
+     * 
+     * @param groupConversions
+     * @param group
+     * @return {@link Groups}
+     */
+    public final Groups computeCascadingGroups(Set<GroupConversionDescriptor> groupConversions, Class<?> group) {
+        final Groups preliminaryResult = computeGroups(group);
+
+        final Map<Class<?>, Class<?>> gcMap = groupConversions.stream()
+            .collect(Collectors.toMap(GroupConversionDescriptor::getFrom, GroupConversionDescriptor::getTo));
+
+        final boolean simpleGroup = preliminaryResult.getSequences().isEmpty();
+
+        // conversion of a simple (non-sequence) group:
+        if (simpleGroup && gcMap.containsKey(group)) {
+            return computeGroups(gcMap.get(group));
+        }
+
+        final Groups result = new Groups();
+
+        if (simpleGroup) {
+            // ignore group inheritance from initial argument as that is handled elsewhere:
+            result.insertGroup(preliminaryResult.getGroups().get(0));
+        } else {
+            // expand group sequence conversions in place:
+
+            for (List<Group> seq : preliminaryResult.getSequences()) {
+                final List<Group> converted = new ArrayList<>();
+                for (Group gg : seq) {
+                    final Class<?> c = gg.getGroup();
+                    if (gcMap.containsKey(c)) {
+                        final Groups convertedGroupExpansion = computeGroups(gcMap.get(c));
+                        if (convertedGroupExpansion.getSequences().isEmpty()) {
+                            converted.add(gg);
+                        } else {
+                            convertedGroupExpansion.getSequences().stream().flatMap(Collection::stream)
+                                .forEach(converted::add);
+                        }
+                    }
+                }
+                result.insertSequence(converted);
+            }
+        }
+        return result;
     }
 
     /**

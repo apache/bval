@@ -18,6 +18,7 @@ package org.apache.bval.jsr.metadata;
 
 import java.lang.annotation.ElementType;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -115,8 +116,17 @@ class Liskov {
         }
         switch (elementKind) {
         case RETURN_VALUE:
-            noStrengtheningOfPreconditions(delegates, detectGroupConversion());
             noRedeclarationOfReturnValueCascading(delegates);
+
+            final Map<Meta<?>, Set<ValidationElement>> detectedValidationElements =
+                detectValidationElements(delegates, detectGroupConversion());
+
+            // pre-check return value overridden hierarchy:
+            Stream.of(StrengtheningIssue.values())
+                .filter((Predicate<? super StrengtheningIssue>) si -> !(si == StrengtheningIssue.overriddenHierarchy
+                    && detectedValidationElements.values().stream().filter(s -> !s.isEmpty()).count() < 2))
+                .forEach(si -> si.check(detectedValidationElements));
+
             break;
         case PARAMETER:
             noStrengtheningOfPreconditions(delegates, detectConstraints(), detectCascading(), detectGroupConversion());
@@ -160,6 +170,20 @@ class Liskov {
     private static <D extends ElementDelegate<?, ?>> void noStrengtheningOfPreconditions(List<? extends D> delegates,
         Function<? super D, ValidationElement>... detectors) {
 
+        final Map<Meta<?>, Set<ValidationElement>> detectedValidationElements = 
+                detectValidationElements(delegates, detectors);
+
+        if (detectedValidationElements.isEmpty()) {
+            return;
+        }
+        for (StrengtheningIssue s : StrengtheningIssue.values()) {
+            s.check(detectedValidationElements);
+        }
+    }
+
+    @SafeVarargs
+    private static <D extends ElementDelegate<?, ?>> Map<Meta<?>, Set<ValidationElement>> detectValidationElements(
+        List<? extends D> delegates, Function<? super D, ValidationElement>... detectors) {
         final Map<Meta<?>, Set<ValidationElement>> detectedValidationElements = new LinkedHashMap<>();
         delegates.forEach(d -> {
             detectedValidationElements.put(d.getHierarchyElement(),
@@ -168,11 +192,9 @@ class Liskov {
         });
         if (detectedValidationElements.values().stream().allMatch(Collection::isEmpty)) {
             // nothing declared
-            return;
+            return Collections.emptyMap();
         }
-        for (StrengtheningIssue s : StrengtheningIssue.values()) {
-            s.check(detectedValidationElements);
-        }
+        return detectedValidationElements;
     }
 
     private static boolean related(Class<?> c1, Class<?> c2) {

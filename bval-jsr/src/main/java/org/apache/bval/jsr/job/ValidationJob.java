@@ -271,6 +271,20 @@ public abstract class ValidationJob<T> {
 
         @Override
         void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            final Groups convertedGroups =
+                validatorContext.getGroupsComputer().computeCascadingGroups(descriptor.getGroupConversions(), group);
+
+            convertedGroups.getGroups().stream().map(Group::getGroup).forEach(g -> recurseSingleExpandedGroup(g, sink));
+
+            sequences: for (List<Group> seq : convertedGroups.getSequences()) {
+                final boolean proceed = each(seq.stream().map(Group::getGroup), this::recurseSingleExpandedGroup, sink);
+                if (!proceed) {
+                    break sequences;
+                }
+            }
+        }
+
+        protected void recurseSingleExpandedGroup(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             final Stream<ContainerElementTypeD> containerElements = descriptor.getConstrainedContainerElementTypes()
                 .stream().flatMap(d -> ComposedD.unwrap(d, (Class) ContainerElementTypeD.class));
@@ -363,7 +377,7 @@ public abstract class ValidationJob<T> {
         }
 
         @Override
-        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+        protected void recurseSingleExpandedGroup(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             final PathImpl path = context.getPath();
             final NodeImpl leafNode = path.getLeafNode();
 

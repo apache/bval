@@ -18,24 +18,50 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.BootstrapConfiguration;
-import javax.validation.executable.ExecutableType;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.validation.BootstrapConfiguration;
+import javax.validation.executable.ExecutableType;
+
 public class BootstrapConfigurationImpl implements BootstrapConfiguration {
-    private Map<String, String> properties;
-    private Set<ExecutableType> defaultValidatedExecutableTypes;
-    private boolean executableValidationEnabled;
-    private Set<String> constraintMappingResourcePaths;
+    public static final Set<ExecutableType> DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES =
+        Collections.unmodifiableSet(EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS));
+
+    public static final BootstrapConfigurationImpl DEFAULT = new BootstrapConfigurationImpl(Collections.emptySet(),
+        true, BootstrapConfigurationImpl.DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES, Collections.emptyMap(),
+        Collections.emptySet());
+
+    private static Set<ExecutableType> expandExecutableValidation(Set<ExecutableType> executableTypes) {
+        if (executableTypes == DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES) {
+            return executableTypes;
+        }
+        executableTypes = EnumSet.copyOf(executableTypes);
+        if (executableTypes.contains(ExecutableType.ALL)) {
+            executableTypes.clear();
+            executableTypes.add(ExecutableType.CONSTRUCTORS);
+            executableTypes.add(ExecutableType.NON_GETTER_METHODS);
+            executableTypes.add(ExecutableType.GETTER_METHODS);
+        } else if (executableTypes.contains(ExecutableType.NONE)) { // if both are present ALL trumps NONE
+            executableTypes.clear();
+        }
+        return Collections.unmodifiableSet(executableTypes);
+    }
+
+    private final Set<String> constraintMappingResourcePaths;
+    private final boolean executableValidationEnabled;
+    private final Set<ExecutableType> defaultValidatedExecutableTypes;
+    private final Map<String, String> properties;
+    private final Set<String> valueExtractorClassNames;
+
     private String parameterNameProviderClassName;
     private String traversableResolverClassName;
     private String messageInterpolatorClassName;
     private String constraintValidatorFactoryClassName;
     private String defaultProviderClassName;
     private String clockProviderClassName;
-    private Set<String> valueExtractorClassNames;
 
     public BootstrapConfigurationImpl(final String defaultProviderClassName,
         final String constraintValidatorFactoryClassName, final String messageInterpolatorClassName,
@@ -43,16 +69,27 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
         final Set<String> constraintMappingResourcePaths, final boolean executableValidationEnabled,
         final Set<ExecutableType> defaultValidatedExecutableTypes, final Map<String, String> properties,
         final String clockProviderClassName, final Set<String> valueExtractorClassNames) {
-        this.properties = Collections.unmodifiableMap(properties);
-        this.defaultValidatedExecutableTypes = Collections.unmodifiableSet(defaultValidatedExecutableTypes);
-        this.executableValidationEnabled = executableValidationEnabled;
-        this.constraintMappingResourcePaths = Collections.unmodifiableSet(constraintMappingResourcePaths);
+
+        this(Collections.unmodifiableSet(constraintMappingResourcePaths), executableValidationEnabled,
+            expandExecutableValidation(defaultValidatedExecutableTypes), Collections.unmodifiableMap(properties),
+            Collections.unmodifiableSet(valueExtractorClassNames));
+
         this.parameterNameProviderClassName = parameterNameProviderClassName;
         this.traversableResolverClassName = traversableResolverClassName;
         this.messageInterpolatorClassName = messageInterpolatorClassName;
         this.constraintValidatorFactoryClassName = constraintValidatorFactoryClassName;
         this.defaultProviderClassName = defaultProviderClassName;
         this.clockProviderClassName = clockProviderClassName;
+    }
+
+    private BootstrapConfigurationImpl(final Set<String> constraintMappingResourcePaths,
+        final boolean executableValidationEnabled, final Set<ExecutableType> defaultValidatedExecutableTypes,
+        final Map<String, String> properties, final Set<String> valueExtractorClassNames) {
+
+        this.constraintMappingResourcePaths = constraintMappingResourcePaths;
+        this.executableValidationEnabled = executableValidationEnabled;
+        this.defaultValidatedExecutableTypes = defaultValidatedExecutableTypes;
+        this.properties = properties;
         this.valueExtractorClassNames = valueExtractorClassNames;
     }
 

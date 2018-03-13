@@ -197,8 +197,7 @@ under the License.
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${project.build.directory}/dependency/beanvalidation-tck-tests-suite.xml
-                                </suiteXmlFile>
+                                <suiteXmlFile>${project.build.directory}/dependency/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                             <systemProperties>
                                 <property>
@@ -208,7 +207,6 @@ under the License.
                             </systemProperties>
                             <parallel>methods</parallel>
                             <threadCount>4</threadCount>
-
                         </configuration>
                     </plugin>
 

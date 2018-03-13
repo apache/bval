@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 import javax.validation.BootstrapConfiguration;
 import javax.validation.ClockProvider;
@@ -39,7 +40,6 @@ import javax.validation.TraversableResolver;
 import javax.validation.ValidationException;
 import javax.validation.ValidationProviderResolver;
 import javax.validation.ValidatorFactory;
-import javax.validation.executable.ExecutableType;
 import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
@@ -51,6 +51,7 @@ import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr.util.IOs;
 import org.apache.bval.jsr.xml.ValidationParser;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Lazy;
 import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
@@ -60,56 +61,79 @@ import org.apache.commons.weaver.privilizer.Privileged;
  * <br/>
  */
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
+
+    private class LazyParticipant<T> extends Lazy<T> {
+
+        private LazyParticipant(Supplier<T> init) {
+            super(init);
+        }
+
+        @Override
+        public Lazy<T> reset(Supplier<T> init) {
+            try {
+                return super.reset(init);
+            } finally {
+                ConfigurationImpl.this.prepared = false;
+            }
+        }
+
+        ConfigurationImpl override(T value) {
+            if (value != null) {
+                reset(() -> value);
+            }
+            return ConfigurationImpl.this;
+        }
+    }
+
     /**
      * Configured {@link ValidationProvider}
      */
     //couldn't this be parameterized <ApacheValidatorConfiguration> or <? super ApacheValidatorConfiguration>?
-    protected final ValidationProvider<?> provider;
+    private final ValidationProvider<ApacheValidatorConfiguration> provider;
 
     /**
      * Configured {@link ValidationProviderResolver}
      */
-    protected final ValidationProviderResolver providerResolver;
+    private final ValidationProviderResolver providerResolver;
 
     /**
      * Configured {@link ValidationProvider} class
      */
-    protected Class<? extends ValidationProvider<?>> providerClass;
+    private Class<? extends ValidationProvider<?>> providerClass;
 
-    /**
-     * Configured {@link MessageInterpolator}
-     */
-    protected MessageInterpolator defaultMessageInterpolator = new DefaultMessageInterpolator();
-    protected volatile MessageInterpolator messageInterpolator = defaultMessageInterpolator;
-    protected Class<? extends MessageInterpolator> messageInterpolatorClass;
+    private final MessageInterpolator defaultMessageInterpolator = new DefaultMessageInterpolator();
 
-    /**
-     * Configured {@link ConstraintValidatorFactory}
-     */
-    protected ConstraintValidatorFactory defaultConstraintValidatorFactory = new DefaultConstraintValidatorFactory();
-    protected volatile ConstraintValidatorFactory constraintValidatorFactory = defaultConstraintValidatorFactory;
-    protected Class<? extends ConstraintValidatorFactory> constraintValidatorFactoryClass;
+    private final LazyParticipant<MessageInterpolator> messageInterpolator =
+        new LazyParticipant<>(this::getDefaultMessageInterpolator);
 
-    protected TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
-    protected volatile TraversableResolver traversableResolver = defaultTraversableResolver;
-    protected Class<? extends TraversableResolver> traversableResolverClass;
+    private final ConstraintValidatorFactory defaultConstraintValidatorFactory =
+        new DefaultConstraintValidatorFactory();
 
-    protected ParameterNameProvider defaultParameterNameProvider = new DefaultParameterNameProvider();
-    protected volatile ParameterNameProvider parameterNameProvider = defaultParameterNameProvider;
-    protected Class<? extends ParameterNameProvider> parameterNameProviderClass;
+    private final LazyParticipant<ConstraintValidatorFactory> constraintValidatorFactory =
+        new LazyParticipant<>(this::getDefaultConstraintValidatorFactory);
 
-    protected BootstrapConfiguration bootstrapConfiguration;
+    private final TraversableResolver defaultTraversableResolver = new DefaultTraversableResolver();
 
-    protected Collection<ExecutableType> executableValidation;
+    private final LazyParticipant<TraversableResolver> traversableResolver =
+        new LazyParticipant<>(this::getDefaultTraversableResolver);
+
+    private final ParameterNameProvider defaultParameterNameProvider = new DefaultParameterNameProvider();
+
+    private final LazyParticipant<ParameterNameProvider> parameterNameProvider =
+        new LazyParticipant<>(this::getDefaultParameterNameProvider);
+
+    private final ClockProvider defaultClockProvider = Clock::systemDefaultZone;
+
+    private final LazyParticipant<ClockProvider> clockProvider = new LazyParticipant<>(this::getDefaultClockProvider);
+
+    private Lazy<BootstrapConfiguration> bootstrapConfiguration = new Lazy<>(this::createBootstrapConfiguration);
 
     private Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
-    protected ClockProvider defaultClockProvider = Clock::systemDefaultZone;
-    protected volatile ClockProvider clockProvider = defaultClockProvider;
-    protected Class<? extends ClockProvider> clockProviderClass;
 
-    protected Set<ValueExtractor<?>> valueExtractors = new HashSet<>();
+    private Set<ValueExtractor<?>> valueExtractors = new HashSet<>();
 
     private boolean beforeCdi = false;
+    private ClassLoader loader;
 
     // BEGIN DEFAULTS
     /**
@@ -118,22 +142,20 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private boolean prepared = false;
     // END DEFAULTS
 
-    private Set<InputStream> mappingStreams = new HashSet<>();
-    private Map<String, String> properties = new HashMap<>();
+    private final Set<InputStream> mappingStreams = new HashSet<>();
+    private final Map<String, String> properties = new HashMap<>();
     private boolean ignoreXmlConfiguration = false;
-
-    private volatile ValidationParser parser;
 
     /**
      * Create a new ConfigurationImpl instance.
      * @param aState bootstrap state
      * @param aProvider provider
      */
-    public ConfigurationImpl(BootstrapState aState, ValidationProvider<?> aProvider) {
-        if (aProvider != null) {
-            this.provider = aProvider;
-            this.providerResolver = null;
-        } else if (aState != null) {
+    public ConfigurationImpl(BootstrapState aState, ValidationProvider<ApacheValidatorConfiguration> aProvider) {
+        Exceptions.raiseIf(aProvider == null && aState == null, ValidationException::new,
+            "one of provider or state is required");
+
+        if (aProvider == null) {
             this.provider = null;
             if (aState.getValidationProviderResolver() == null) {
                 providerResolver = aState.getDefaultValidationProviderResolver();
@@ -141,22 +163,10 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
                 providerResolver = aState.getValidationProviderResolver();
             }
         } else {
-            throw new ValidationException("either provider or state are required");
+            this.provider = aProvider;
+            this.providerResolver = null;
         }
         initializePropertyDefaults();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
-        if (resolver != null) {
-            this.traversableResolverClass = null;
-            this.traversableResolver = resolver;
-            this.prepared = false;
-        }
-        return this;
     }
 
     /**
@@ -177,34 +187,33 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ConfigurationImpl messageInterpolator(MessageInterpolator resolver) {
-        if (resolver != null) {
-            this.messageInterpolatorClass = null;
-            this.messageInterpolator = resolver;
-            this.prepared = false;
-        }
-        return this;
+        return messageInterpolator.override(resolver);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigurationImpl constraintValidatorFactory(ConstraintValidatorFactory constraintFactory) {
-        if (constraintFactory != null) {
-            this.constraintValidatorFactoryClass = null;
-            this.constraintValidatorFactory = constraintFactory;
-            this.prepared = false;
-        }
-        return this;
+    public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
+        return traversableResolver.override(resolver);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConfigurationImpl constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
+        return this.constraintValidatorFactory.override(constraintValidatorFactory);
     }
 
     @Override
     public ApacheValidatorConfiguration parameterNameProvider(ParameterNameProvider parameterNameProvider) {
-        if (parameterNameProvider != null) {
-            this.parameterNameProviderClass = null;
-            this.parameterNameProvider = parameterNameProvider;
-        }
-        return this;
+        return this.parameterNameProvider.override(parameterNameProvider);
+    }
+
+    @Override
+    public ApacheValidatorConfiguration clockProvider(ClockProvider clockProvider) {
+        return this.clockProvider.override(clockProvider);
     }
 
     /**
@@ -232,11 +241,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ApacheValidatorConfiguration addProperty(String name, String value) {
-        if ("bval.before.cdi".equals(name)) {
-            beforeCdi = Boolean.parseBoolean(value);
-        } else {
-            properties.put(name, value);
-        }
+        properties.put(name, value);
         return this;
     }
 
@@ -258,6 +263,11 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     @Override
     public ParameterNameProvider getDefaultParameterNameProvider() {
         return defaultParameterNameProvider;
+    }
+
+    @Override
+    public ClockProvider getDefaultClockProvider() {
+        return defaultClockProvider;
     }
 
     /**
@@ -296,22 +306,12 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public MessageInterpolator getMessageInterpolator() {
-        if (beforeCdi) {
-            return defaultMessageInterpolator;
-        }
-        if (messageInterpolator == defaultMessageInterpolator && messageInterpolatorClass != null) {
-            synchronized (this) {
-                if (messageInterpolator == defaultMessageInterpolator && messageInterpolatorClass != null) {
-                    messageInterpolator = newInstance(messageInterpolatorClass);
-                }
-            }
-        }
-        return messageInterpolator;
+        return messageInterpolator.get();
     }
 
     @Override
     public BootstrapConfiguration getBootstrapConfiguration() {
-        return createBootstrapConfiguration();
+        return bootstrapConfiguration.get();
     }
 
     /**
@@ -325,58 +325,13 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         return doBuildValidatorFactory();
     }
 
-    @Privileged
-    private ValidatorFactory doBuildValidatorFactory() {
-        prepare();
-        parser.ensureValidatorFactoryCanBeBuilt();
-        final ValidationProvider<?> useProvider = provider == null ? findProvider() : provider;
-        return useProvider.buildValidatorFactory(this);
-    }
-
-    private ConfigurationImpl prepare() {
-        if (prepared) {
-            return this;
-        }
-        createBootstrapConfiguration();
-        parser.applyConfigWithInstantiation(this); // instantiate the config if needed
-
-        prepared = true;
-        return this;
-    }
-
-    private BootstrapConfiguration createBootstrapConfiguration() {
-        if (parser == null) {
-            parser = parseValidationXml(); // already done if BootstrapConfiguration already looked up
-            bootstrapConfiguration = parser.getBootstrap();
-        }
-        return bootstrapConfiguration;
-    }
-
-    /** Check whether a validation.xml file exists and parses it with JAXB */
-    private ValidationParser parseValidationXml() {
-        return ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this,
-            ignoreXmlConfiguration);
-    }
-
     /**
      * {@inheritDoc}
      * @return the constraint validator factory of this configuration.
      */
     @Override
     public ConstraintValidatorFactory getConstraintValidatorFactory() {
-        if (beforeCdi) {
-            return constraintValidatorFactory;
-        }
-        if (constraintValidatorFactory == defaultConstraintValidatorFactory
-            && constraintValidatorFactoryClass != null) {
-            synchronized (this) {
-                if (constraintValidatorFactory == defaultConstraintValidatorFactory
-                    && constraintValidatorFactoryClass != null) {
-                    constraintValidatorFactory = newInstance(constraintValidatorFactoryClass);
-                }
-            }
-        }
-        return constraintValidatorFactory;
+        return constraintValidatorFactory.get();
     }
 
     /**
@@ -384,40 +339,113 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public TraversableResolver getTraversableResolver() {
-        if (beforeCdi) {
-            return defaultTraversableResolver;
-        }
-        if (traversableResolver == defaultTraversableResolver && traversableResolverClass != null) {
-            synchronized (this) {
-                if (traversableResolver == defaultTraversableResolver && traversableResolverClass != null) {
-                    traversableResolver = newInstance(traversableResolverClass);
-                }
-            }
-        }
-        return traversableResolver;
+        return traversableResolver.get();
     }
 
     @Override
     public ParameterNameProvider getParameterNameProvider() {
-        if (beforeCdi) {
-            return defaultParameterNameProvider;
-        }
-        if (parameterNameProvider == defaultParameterNameProvider && parameterNameProviderClass != null) {
-            synchronized (this) {
-                if (parameterNameProvider == defaultParameterNameProvider && parameterNameProviderClass != null) {
-                    parameterNameProvider = newInstance(parameterNameProviderClass);
-                }
-            }
-        }
-        return parameterNameProvider;
+        return parameterNameProvider.get();
     }
 
-    /**
-     * Get the configured {@link ValidationProvider}.
-     * @return {@link ValidationProvider}
-     */
-    public ValidationProvider<?> getProvider() {
-        return provider;
+    @Override
+    public ClockProvider getClockProvider() {
+        return clockProvider.get();
+    }
+
+    @Override
+    public ApacheValidatorConfiguration addValueExtractor(ValueExtractor<?> extractor) {
+        valueExtractors.add(extractor);
+        return this;
+    }
+
+    @Override
+    public Set<ValueExtractor<?>> getValueExtractors() {
+        return Collections.unmodifiableSet(valueExtractors);
+    }
+
+    public void deferBootstrapOverrides() {
+        beforeCdi = true;
+    }
+
+    public void releaseDeferredBootstrapOverrides() {
+        if (beforeCdi) {
+            beforeCdi = false;
+            performBootstrapOverrides();
+        }
+    }
+
+    public Closeable getClosable() {
+        return () -> {
+            for (final BValExtension.Releasable<?> releasable : releasables) {
+                releasable.release();
+            }
+            releasables.clear();
+        };
+    }
+
+    @Privileged
+    private ValidatorFactory doBuildValidatorFactory() {
+        prepare();
+        return Optional.<ValidationProvider<?>> ofNullable(provider).orElseGet(this::findProvider)
+            .buildValidatorFactory(this);
+    }
+
+    private void prepare() {
+        if (!prepared) {
+            applyBootstrapConfiguration();
+            prepared = true;
+        }
+    }
+
+    private BootstrapConfiguration createBootstrapConfiguration() {
+        if (!ignoreXmlConfiguration) {
+            loader = ValidationParser.class.getClassLoader();
+            final BootstrapConfiguration xmlBootstrap =
+                ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
+            if (xmlBootstrap != null) {
+                return xmlBootstrap;
+            }
+        }
+        loader = ApacheValidatorFactory.class.getClassLoader();
+        return BootstrapConfigurationImpl.DEFAULT;
+    }
+
+    private void applyBootstrapConfiguration() {
+        final BootstrapConfiguration bootstrapConfig = bootstrapConfiguration.get();
+
+        if (bootstrapConfig.getDefaultProviderClassName() != null) {
+            this.providerClass = loadClass(bootstrapConfig.getDefaultProviderClassName());
+        }
+
+        bootstrapConfig.getProperties().forEach(this::addProperty);
+        bootstrapConfig.getConstraintMappingResourcePaths().stream().map(ValidationParser::open)
+            .forEach(this::addMapping);
+
+        if (!beforeCdi) {
+            performBootstrapOverrides();
+        }
+    }
+
+    private void performBootstrapOverrides() {
+        final BootstrapConfiguration bootstrapConfig = bootstrapConfiguration.get();
+        override(messageInterpolator, bootstrapConfig::getMessageInterpolatorClassName);
+        override(traversableResolver, bootstrapConfig::getTraversableResolverClassName);
+        override(constraintValidatorFactory, bootstrapConfig::getConstraintValidatorFactoryClassName);
+        override(parameterNameProvider, bootstrapConfig::getParameterNameProviderClassName);
+        override(clockProvider, bootstrapConfig::getClockProviderClassName);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Class<T> loadClass(final String className) {
+        try {
+            return (Class<T>) Class.forName(className, true, loader);
+        } catch (final ClassNotFoundException ex) {
+            throw new ValidationException(ex);
+        }
+    }
+
+    private void initializePropertyDefaults() {
+        properties.put(Properties.CONSTRAINTS_CACHE_SIZE, Integer.toString(50));
     }
 
     private ValidationProvider<?> findProvider() {
@@ -437,29 +465,12 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         }
     }
 
-    /**
-     * Set {@link ValidationProvider} class.
-     * @param providerClass the provider type
-     */
-    public void setProviderClass(Class<? extends ValidationProvider<?>> providerClass) {
-        this.providerClass = providerClass;
-    }
-
-    public void setExecutableValidation(final Collection<ExecutableType> executableValidation) {
-        this.executableValidation = executableValidation;
-    }
-
-    public Collection<ExecutableType> getExecutableValidation() {
-        return executableValidation;
-    }
-
-    public Closeable getClosable() {
-        return () -> {
-            for (final BValExtension.Releasable<?> releasable : releasables) {
-                releasable.release();
-            }
-            releasables.clear();
-        };
+    private <T> void override(LazyParticipant<T> participant, Supplier<String> getClassName) {
+        final String className = getClassName.get();
+        if (className != null) {
+            final Class<T> t = loadClass(className);
+            participant.reset(() -> newInstance(t));
+        }
     }
 
     @Privileged
@@ -475,62 +486,5 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         } catch (final Exception e) {
             throw new ValidationException(e.getMessage(), e);
         }
-    }
-
-    public void traversableResolverClass(final Class<TraversableResolver> clazz) {
-        traversableResolverClass = clazz;
-    }
-
-    public void constraintValidatorFactoryClass(final Class<ConstraintValidatorFactory> clazz) {
-        constraintValidatorFactoryClass = clazz;
-    }
-
-    public void messageInterpolatorClass(final Class<MessageInterpolator> clazz) {
-        messageInterpolatorClass = clazz;
-    }
-
-    public void parameterNameProviderClass(final Class<? extends ParameterNameProvider> clazz) {
-        parameterNameProviderClass = clazz;
-    }
-
-    @Override
-    public ApacheValidatorConfiguration clockProvider(ClockProvider clockProvider) {
-        this.clockProvider = clockProvider;
-        return this;
-    }
-
-    @Override
-    public ApacheValidatorConfiguration addValueExtractor(ValueExtractor<?> extractor) {
-        valueExtractors.add(extractor);
-        return this;
-    }
-
-    @Override
-    public ClockProvider getDefaultClockProvider() {
-        return defaultClockProvider;
-    }
-
-    @Override
-    public Set<ValueExtractor<?>> getValueExtractors() {
-        return Collections.unmodifiableSet(valueExtractors);
-    }
-
-    @Override
-    public ClockProvider getClockProvider() {
-        if (beforeCdi) {
-            return defaultClockProvider;
-        }
-        if (clockProvider == defaultClockProvider && clockProviderClass != null) {
-            synchronized (this) {
-                if (clockProvider == defaultClockProvider && clockProviderClass != null) {
-                    clockProvider = newInstance(clockProviderClass);
-                }
-            }
-        }
-        return clockProvider;
-    }
-
-    protected void initializePropertyDefaults() {
-        properties.put(Properties.CONSTRAINTS_CACHE_SIZE, Integer.toString(50));
     }
 }

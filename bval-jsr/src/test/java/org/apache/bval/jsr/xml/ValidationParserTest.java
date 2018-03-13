@@ -82,19 +82,19 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
     @Test
     public void testParse() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        ValidationParser.processValidationConfig("sample-validation.xml", config, false);
+        ValidationParser.processValidationConfig("sample-validation.xml", config);
     }
 
     @Test
     public void testParseV11() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        ValidationParser.processValidationConfig("sample-validation11.xml", config, false);
+        ValidationParser.processValidationConfig("sample-validation11.xml", config);
     }
 
     @Test
     public void testParseV20() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        ValidationParser.processValidationConfig("sample-validation2.xml", config, false);
+        ValidationParser.processValidationConfig("sample-validation2.xml", config);
     }
 
     @Test

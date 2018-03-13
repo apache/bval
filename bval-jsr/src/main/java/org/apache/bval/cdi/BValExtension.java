@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.util.Validate;
 
 /**
@@ -110,7 +111,10 @@ public class BValExtension implements Extension {
         if (validator != null) {
             return;
         }
-        config.addProperty("bval.before.cdi", "true"); // ignore parts of the config relying on CDI since we didn't start yet
+        if (config instanceof ConfigurationImpl) {
+            // ignore parts of the config relying on CDI since we didn't start yet
+            ((ConfigurationImpl) config).deferBootstrapOverrides();
+        }
         if (factory == null) {
             factory = config.buildValidatorFactory();
         }
@@ -218,17 +222,9 @@ public class BValExtension implements Extension {
         if (factory != null) { // cleanup cache used to discover ValidateOnException before factory is recreated
             factory.close();
         }
-
-        cdiIntegration(afterBeanDiscovery, beanManager);
-    }
-
-    private void cdiIntegration(final AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
-        try {
-            config.addProperty("bval.before.cdi", "false"); // now take into account all the config
-        } catch (final Exception e) {
-            // no-op: sadly tck does it
+        if (config instanceof ConfigurationImpl) {
+            ((ConfigurationImpl) config).releaseDeferredBootstrapOverrides();
         }
-
         if (!validatorFactoryFound) {
             try { // recreate the factory
                 afterBeanDiscovery.addBean(new ValidatorFactoryBean(factory = config.buildValidatorFactory()));
@@ -272,9 +268,7 @@ public class BValExtension implements Extension {
             it.postConstruct(instance);
 
             return new Releasable<T>(context, it, instance);
-        } catch (final Exception e) {
-            // no-op
-        } catch (final NoClassDefFoundError error) {
+        } catch (final Exception | NoClassDefFoundError error) {
             // no-op
         }
         return null;
@@ -305,9 +299,7 @@ public class BValExtension implements Extension {
                 injectionTarget.preDestroy(instance);
                 injectionTarget.dispose(instance);
                 context.release();
-            } catch (final Exception e) {
-                // no-op
-            } catch (final NoClassDefFoundError e) {
+            } catch (final Exception | NoClassDefFoundError e) {
                 // no-op
             }
         }

@@ -120,7 +120,7 @@ public class BValInterceptorBean implements Bean<BValInterceptor>, PassivationCa
 
     @Override
     public String getId() {
-        return String.format("%s-%d",BValInterceptor.class.getSimpleName(), hashCode());
+        return String.format("%s-%d", BValInterceptor.class.getSimpleName(), hashCode());
     }
 
     private static class BValInterceptorInjectionPoint implements InjectionPoint {

@@ -18,21 +18,20 @@
  */
 package org.apache.bval.cdi;
 
-import static java.util.Arrays.asList;
-
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
+import java.util.function.BiPredicate;
 
 import javax.annotation.Priority;
-import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.CDI;
@@ -51,10 +50,14 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.ConstructorDescriptor;
 import javax.validation.metadata.MethodDescriptor;
 
+import org.apache.bval.jsr.descriptor.DescriptorManager;
+import org.apache.bval.jsr.metadata.Signature;
+import org.apache.bval.jsr.util.ExecutableTypes;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
+import org.apache.bval.util.reflection.TypeUtils;
 
 /**
  * Interceptor class for the {@link BValBinding} {@link InterceptorBinding}.
@@ -66,9 +69,8 @@ import org.apache.bval.util.reflection.Reflection.Interfaces;
 // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to
 // generate another one for CDI 1.1 impl
 public class BValInterceptor implements Serializable {
-    private transient volatile Map<Method, Boolean> methodConfiguration = new ConcurrentHashMap<>();
     private transient volatile Set<ExecutableType> classConfiguration;
-    private transient volatile Boolean constructorValidated;
+    private transient volatile Map<Signature, Boolean> executableValidation;
 
     @Inject
     private Validator validator;
@@ -78,43 +80,37 @@ public class BValInterceptor implements Serializable {
 
     private transient volatile ExecutableValidator executableValidator;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @AroundConstruct // TODO: see previous one
     public Object construct(InvocationContext context) throws Exception {
-        @SuppressWarnings("rawtypes")
-        final Constructor constructor = context.getConstructor();
-        final Class<?> targetClass = constructor.getDeclaringClass();
-        if (!isConstructorValidated(targetClass, constructor)) {
+        final Constructor ctor = context.getConstructor();
+        if (!isConstructorValidated(ctor)) {
             return context.proceed();
         }
+        final ConstructorDescriptor constraints = validator.getConstraintsForClass(ctor.getDeclaringClass())
+            .getConstraintsForConstructor(ctor.getParameterTypes());
 
-        final ConstructorDescriptor constraints =
-            validator.getConstraintsForClass(targetClass).getConstraintsForConstructor(constructor.getParameterTypes());
-        if (constraints == null) { // surely implicit constructor
+        if (!DescriptorManager.isConstrained(constraints)) {
             return context.proceed();
         }
-
         initExecutableValidator();
 
-        {
-            @SuppressWarnings("unchecked")
+        if (constraints.hasConstrainedParameters()) {
             final Set<ConstraintViolation<?>> violations =
-                executableValidator.validateConstructorParameters(constructor, context.getParameters());
+                executableValidator.validateConstructorParameters(ctor, context.getParameters());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
         }
-
         final Object result = context.proceed();
 
-        {
-            @SuppressWarnings("unchecked")
+        if (constraints.hasConstrainedReturnValue()) {
             final Set<ConstraintViolation<?>> violations =
-                executableValidator.validateConstructorReturnValue(constructor, context.getTarget());
+                executableValidator.validateConstructorReturnValue(ctor, context.getTarget());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
         }
-
         return result;
     }
 
@@ -122,195 +118,134 @@ public class BValInterceptor implements Serializable {
     public Object invoke(final InvocationContext context) throws Exception {
         final Method method = context.getMethod();
         final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
-        if (!isMethodValidated(targetClass, method)) {
+
+        if (!isExecutableValidated(targetClass, method, this::computeIsMethodValidated)) {
             return context.proceed();
         }
 
         final MethodDescriptor constraintsForMethod = validator.getConstraintsForClass(targetClass)
             .getConstraintsForMethod(method.getName(), method.getParameterTypes());
-        if (constraintsForMethod == null) {
+
+        if (!DescriptorManager.isConstrained(constraintsForMethod)) {
             return context.proceed();
         }
-
         initExecutableValidator();
 
-        {
+        if (constraintsForMethod.hasConstrainedParameters()) {
             final Set<ConstraintViolation<Object>> violations =
                 executableValidator.validateParameters(context.getTarget(), method, context.getParameters());
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
         }
-
         final Object result = context.proceed();
 
-        {
+        if (constraintsForMethod.hasConstrainedReturnValue()) {
             final Set<ConstraintViolation<Object>> violations =
                 executableValidator.validateReturnValue(context.getTarget(), method, result);
             if (!violations.isEmpty()) {
                 throw new ConstraintViolationException(violations);
             }
         }
-
         return result;
     }
 
-    private boolean isConstructorValidated(final Class<?> targetClass, final Constructor<?> constructor)
-        throws NoSuchMethodException {
-        initClassConfig(targetClass);
-
-        if (constructorValidated == null) {
-            synchronized (this) {
-                if (constructorValidated == null) {
-                    final AnnotatedType<?> annotatedType =
-                        CDI.current().getBeanManager().createAnnotatedType(constructor.getDeclaringClass());
-                    AnnotatedConstructor<?> annotatedConstructor = null;
-                    for (final AnnotatedConstructor<?> ac : annotatedType.getConstructors()) {
-                        if (!constructor.equals(ac.getJavaMember())) {
-                            continue;
-                        }
-                        annotatedConstructor = ac;
-                        break;
-                    }
-                    final ValidateOnExecution annotation = annotatedConstructor != null
-                        ? annotatedConstructor.getAnnotation(ValidateOnExecution.class) : targetClass
-                            .getConstructor(constructor.getParameterTypes()).getAnnotation(ValidateOnExecution.class);
-                    if (annotation == null) {
-                        constructorValidated = classConfiguration.contains(ExecutableType.CONSTRUCTORS);
-                    } else {
-                        final Collection<ExecutableType> types = Arrays.asList(annotation.type());
-                        constructorValidated = types.contains(ExecutableType.CONSTRUCTORS)
-                            || types.contains(ExecutableType.IMPLICIT) || types.contains(ExecutableType.ALL);
-                    }
-                }
-            }
-        }
-
-        return constructorValidated;
+    private <T> boolean isConstructorValidated(final Constructor<T> constructor)
+        {
+        return isExecutableValidated(constructor.getDeclaringClass(), constructor, this::computeIsConstructorValidated);
     }
 
-    private boolean isMethodValidated(final Class<?> targetClass, final Method method) throws NoSuchMethodException {
+    private <T, E extends Executable> boolean isExecutableValidated(final Class<T> targetClass, final E executable,
+        BiPredicate<? super Class<T>, ? super E> compute) {
         initClassConfig(targetClass);
 
-        if (methodConfiguration == null) {
+        if (executableValidation == null) {
             synchronized (this) {
-                if (methodConfiguration == null) {
-                    methodConfiguration = new ConcurrentHashMap<Method, Boolean>();
+                if (executableValidation == null) {
+                    executableValidation = new ConcurrentHashMap<>();
                 }
             }
         }
-
-        Boolean methodConfig = methodConfiguration.get(method);
-        if (methodConfig == null) {
-            synchronized (this) {
-                methodConfig = methodConfiguration.get(method);
-                if (methodConfig == null) {
-                    // search on method @ValidateOnExecution
-                    ValidateOnExecution validateOnExecution = null;
-                    ValidateOnExecution validateOnExecutionType = null;
-                    for (final Class<?> c : reverseHierarchy(targetClass)) {
-                        final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(c);
-                        AnnotatedMethod<?> annotatedMethod = null;
-
-                        for (final AnnotatedMethod<?> m : annotatedType.getMethods()) {
-                            if (m.getJavaMember().getName().equals(method.getName())
-                                && asList(method.getGenericParameterTypes())
-                                    .equals(asList(m.getJavaMember().getGenericParameterTypes()))) {
-                                annotatedMethod = m;
-                                break;
-                            }
-                        }
-                        if (annotatedMethod == null) {
-                            continue;
-                        }
-                        try {
-                            if (validateOnExecutionType == null) {
-                                final ValidateOnExecution vat = annotatedType.getAnnotation(ValidateOnExecution.class);
-                                if (vat != null) {
-                                    validateOnExecutionType = vat;
-                                }
-                            }
-                            final ValidateOnExecution mvat = annotatedMethod.getAnnotation(ValidateOnExecution.class);
-                            if (mvat != null) {
-                                validateOnExecution = mvat;
-                            }
-                        } catch (final Throwable h) {
-                            // no-op
-                        }
-                    }
-
-                    // if not found look in the class declaring the method
-                    boolean classMeta = false;
-                    if (validateOnExecution == null) {
-                        validateOnExecution = validateOnExecutionType;
-                        classMeta = validateOnExecution != null;
-                    }
-
-                    if (validateOnExecution == null) {
-                        methodConfig = doValidMethod(method, classConfiguration);
-                    } else {
-                        final Set<ExecutableType> config = EnumSet.noneOf(ExecutableType.class);
-                        for (final ExecutableType type : validateOnExecution.type()) {
-                            if (ExecutableType.NONE == type) {
-                                continue;
-                            }
-                            if (ExecutableType.ALL == type) {
-                                config.add(ExecutableType.NON_GETTER_METHODS);
-                                config.add(ExecutableType.GETTER_METHODS);
-                                break;
-                            }
-                            if (ExecutableType.IMPLICIT == type) { // on method it just means validate, even on getters
-                                config.add(ExecutableType.NON_GETTER_METHODS);
-                                if (!classMeta) {
-                                    config.add(ExecutableType.GETTER_METHODS);
-                                } // else the annotation was not on the method so implicit doesn't mean getters
-                            } else {
-                                config.add(type);
-                            }
-                        }
-                        methodConfig = doValidMethod(method, config);
-                    }
-                }
-                methodConfiguration.put(method, methodConfig);
-            }
-        }
-
-        return methodConfig;
+        return executableValidation.computeIfAbsent(Signature.of(executable),
+            s -> compute.test(targetClass, executable));
     }
 
     private void initClassConfig(Class<?> targetClass) {
         if (classConfiguration == null) {
             synchronized (this) {
                 if (classConfiguration == null) {
-                    classConfiguration = EnumSet.noneOf(ExecutableType.class);
+                    final ValidateOnExecution annotation = CDI.current().getBeanManager()
+                        .createAnnotatedType(targetClass).getAnnotation(ValidateOnExecution.class);
 
-                    final AnnotatedType<?> annotatedType =
-                        CDI.current().getBeanManager().createAnnotatedType(targetClass);
-                    final ValidateOnExecution annotation = annotatedType.getAnnotation(ValidateOnExecution.class);
                     if (annotation == null) {
-                        classConfiguration.addAll(globalConfiguration.getGlobalExecutableTypes());
+                        classConfiguration = globalConfiguration.getGlobalExecutableTypes();
                     } else {
-                        for (final ExecutableType type : annotation.type()) {
-                            if (ExecutableType.NONE == type) {
-                                continue;
-                            }
-                            if (ExecutableType.ALL == type) {
-                                classConfiguration.add(ExecutableType.CONSTRUCTORS);
-                                classConfiguration.add(ExecutableType.NON_GETTER_METHODS);
-                                classConfiguration.add(ExecutableType.GETTER_METHODS);
-                                break;
-                            }
-                            if (ExecutableType.IMPLICIT == type) {
-                                classConfiguration.add(ExecutableType.CONSTRUCTORS);
-                                classConfiguration.add(ExecutableType.NON_GETTER_METHODS);
-                            } else {
-                                classConfiguration.add(type);
-                            }
-                        }
+                        classConfiguration = ExecutableTypes.interpret(annotation.type());
                     }
                 }
             }
         }
+    }
+
+    private <T> boolean computeIsConstructorValidated(Class<T> targetClass, Constructor<T> ctor) {
+        final AnnotatedType<T> annotatedType =
+            CDI.current().getBeanManager().createAnnotatedType(ctor.getDeclaringClass());
+
+        final ValidateOnExecution annotation =
+            annotatedType.getConstructors().stream().filter(ac -> ctor.equals(ac.getJavaMember())).findFirst()
+                .map(ac -> ac.getAnnotation(ValidateOnExecution.class))
+                .orElseGet(() -> ctor.getAnnotation(ValidateOnExecution.class));
+
+        final Set<ExecutableType> validatedExecutableTypes =
+            annotation == null ? classConfiguration : ExecutableTypes.interpret(annotation.type());
+
+        return validatedExecutableTypes.contains(ExecutableType.CONSTRUCTORS);
+    }
+
+    private <T> boolean computeIsMethodValidated(Class<T> targetClass, Method method) {
+        Collection<ExecutableType> declaredExecutableTypes = null;
+
+        for (final Class<?> c : Reflection.hierarchy(targetClass, Interfaces.INCLUDE)) {
+            final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(c);
+
+            final AnnotatedMethod<?> annotatedMethod = annotatedType.getMethods().stream()
+                .filter(am -> Signature.of(am.getJavaMember()).equals(Signature.of(method))).findFirst().orElse(null);
+
+            if (annotatedMethod == null) {
+                continue;
+            }
+            if (annotatedMethod.isAnnotationPresent(ValidateOnExecution.class)) {
+                final List<ExecutableType> validatedTypesOnMethod =
+                    Arrays.asList(annotatedMethod.getAnnotation(ValidateOnExecution.class).type());
+
+                // implicit directly on method -> early return:
+                if (validatedTypesOnMethod.contains(ExecutableType.IMPLICIT)) {
+                    return true;
+                }
+                declaredExecutableTypes = validatedTypesOnMethod;
+                // ignore the hierarchy once the lowest method is found:
+                break;
+            }
+            if (declaredExecutableTypes == null) {
+                if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)) {
+                    declaredExecutableTypes =
+                        Arrays.asList(annotatedType.getAnnotation(ValidateOnExecution.class).type());
+                } else {
+                    final Optional<Package> pkg = Optional.of(annotatedType).map(AnnotatedType::getBaseType)
+                        .map(t -> TypeUtils.getRawType(t, null)).map(Class::getPackage)
+                        .filter(p -> p.isAnnotationPresent(ValidateOnExecution.class));
+                    if (pkg.isPresent()) {
+                        declaredExecutableTypes =
+                            Arrays.asList(pkg.get().getAnnotation(ValidateOnExecution.class).type());
+                    }
+                }
+            }
+        }
+        final ExecutableType methodType =
+            Methods.isGetter(method) ? ExecutableType.GETTER_METHODS : ExecutableType.NON_GETTER_METHODS;
+
+        return Optional.ofNullable(declaredExecutableTypes).map(ExecutableTypes::interpret)
+            .orElse(globalConfiguration.getGlobalExecutableTypes()).contains(methodType);
     }
 
     private void initExecutableValidator() {
@@ -321,16 +256,5 @@ public class BValInterceptor implements Serializable {
                 }
             }
         }
-    }
-
-    private static boolean doValidMethod(final Method method, final Set<ExecutableType> config) {
-        return config
-            .contains(Methods.isGetter(method) ? ExecutableType.GETTER_METHODS : ExecutableType.NON_GETTER_METHODS);
-    }
-
-    private static Iterable<Class<?>> reverseHierarchy(Class<?> t) {
-        final Stream.Builder<Class<?>> builder = Stream.builder();
-        Reflection.hierarchy(t, Interfaces.INCLUDE).forEach(builder);
-        return builder.build()::iterator;
     }
 }

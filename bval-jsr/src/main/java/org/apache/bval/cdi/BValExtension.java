@@ -18,6 +18,14 @@
  */
 package org.apache.bval.cdi;
 
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -42,16 +50,8 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.MethodType;
 
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.bval.jsr.ConfigurationImpl;
+import org.apache.bval.jsr.util.ExecutableTypes;
 import org.apache.bval.util.Validate;
 
 /**
@@ -60,7 +60,8 @@ import org.apache.bval.util.Validate;
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
-    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER = annotatedType -> !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
+    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
+        annotatedType -> !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
 
     private static AnnotatedTypeFilter annotatedTypeFilter = DEFAULT_ANNOTATED_TYPE_FILTER;
 
@@ -70,11 +71,6 @@ public class BValExtension implements Extension {
 
     private boolean validatorFound = Boolean.getBoolean("bval.in-container");
     private boolean validatorFactoryFound = Boolean.getBoolean("bval.in-container");
-
-    private boolean validBean;
-    private boolean validConstructors;
-    private boolean validBusinessMethods;
-    private boolean validGetterMethods;
 
     private final Configuration<?> config;
     private ValidatorFactory factory;
@@ -88,16 +84,10 @@ public class BValExtension implements Extension {
         try {
             final BootstrapConfiguration bootstrap = config.getBootstrapConfiguration();
             globalExecutableTypes =
-                Collections.unmodifiableSet(convertToRuntimeTypes(bootstrap.getDefaultValidatedExecutableTypes()));
+                ExecutableTypes.interpret(bootstrap.getDefaultValidatedExecutableTypes());
+
             isExecutableValidationEnabled = bootstrap.isExecutableValidationEnabled();
 
-            // TODO we never contain IMPLICIT or ALL
-            validBean = globalExecutableTypes.contains(ExecutableType.IMPLICIT)
-                || globalExecutableTypes.contains(ExecutableType.ALL);
-            validConstructors = validBean || globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS);
-            validBusinessMethods = validBean || globalExecutableTypes.contains(ExecutableType.NON_GETTER_METHODS);
-            validGetterMethods = globalExecutableTypes.contains(ExecutableType.ALL)
-                || globalExecutableTypes.contains(ExecutableType.GETTER_METHODS);
         } catch (final Exception e) { // custom providers can throw an exception
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
 
@@ -121,29 +111,6 @@ public class BValExtension implements Extension {
         validator = factory.getValidator();
     }
 
-    private static Set<ExecutableType> convertToRuntimeTypes(
-        final Set<ExecutableType> defaultValidatedExecutableTypes) {
-        final Set<ExecutableType> types = EnumSet.noneOf(ExecutableType.class);
-        for (final ExecutableType type : defaultValidatedExecutableTypes) {
-            if (ExecutableType.NONE == type) {
-                continue;
-            }
-            if (ExecutableType.ALL == type) {
-                types.add(ExecutableType.CONSTRUCTORS);
-                types.add(ExecutableType.NON_GETTER_METHODS);
-                types.add(ExecutableType.GETTER_METHODS);
-                break;
-            }
-            if (ExecutableType.IMPLICIT == type) {
-                types.add(ExecutableType.CONSTRUCTORS);
-                types.add(ExecutableType.NON_GETTER_METHODS);
-            } else {
-                types.add(type);
-            }
-        }
-        return types;
-    }
-
     public Set<ExecutableType> getGlobalExecutableTypes() {
         return globalExecutableTypes;
     }
@@ -158,13 +125,11 @@ public class BValExtension implements Extension {
         if (!isExecutableValidationEnabled) {
             return;
         }
-
         final AnnotatedType<A> annotatedType = pat.getAnnotatedType();
 
         if (!annotatedTypeFilter.accept(annotatedType)) {
             return;
         }
-
         final Class<A> javaClass = annotatedType.getJavaClass();
         final int modifiers = javaClass.getModifiers();
         if (!javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
@@ -172,23 +137,28 @@ public class BValExtension implements Extension {
                 ensureFactoryValidator();
                 try {
                     final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
+
+                    final boolean validConstructors = globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS)
+                        && !classConstraints.getConstrainedConstructors().isEmpty();
+                    final boolean validBusinessMethods =
+                        globalExecutableTypes.contains(ExecutableType.NON_GETTER_METHODS)
+                            && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty();
+                    final boolean validGetterMethods = globalExecutableTypes.contains(ExecutableType.GETTER_METHODS)
+                        && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty();
+
                     if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
                         || hasValidationAnnotation(annotatedType.getMethods())
-                        || hasValidationAnnotation(annotatedType.getConstructors())
-                        || classConstraints != null && (validBean && classConstraints.isBeanConstrained()
-                            || validConstructors && !classConstraints.getConstrainedConstructors().isEmpty()
-                            || validBusinessMethods
-                                && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty()
-                            || validGetterMethods
-                                && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty())) {
-                        pat.setAnnotatedType(new BValAnnotatedType<A>(annotatedType));
+                        || hasValidationAnnotation(annotatedType.getConstructors()) || validConstructors
+                        || validBusinessMethods || validGetterMethods) {
+                        pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
                     }
                 } catch (final NoClassDefFoundError ncdfe) {
                     // skip
                 }
-            } catch (final ValidationException ve) {
-                LOGGER.log(Level.FINEST, ve.getMessage(), ve);
-            } catch (final Exception e) { // just info
+            } catch (final Exception e) {
+                if (e instanceof ValidationException) {
+                    throw e;
+                }
                 LOGGER.log(Level.INFO, e.getMessage());
             }
         }
@@ -229,6 +199,9 @@ public class BValExtension implements Extension {
             try { // recreate the factory
                 afterBeanDiscovery.addBean(new ValidatorFactoryBean(factory = config.buildValidatorFactory()));
             } catch (final Exception e) { // can throw an exception with custom providers
+                if (e instanceof ValidationException) {
+                    throw e;
+                }
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
@@ -242,6 +215,9 @@ public class BValExtension implements Extension {
                     validatorFound = true;
                 }
             } catch (final Exception e) { // getValidator can throw an exception with custom providers
+                if (e instanceof ValidationException) {
+                    throw e;
+                }
                 afterBeanDiscovery.addBean(new ValidatorBean(factory, null));
                 validatorFound = true;
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);

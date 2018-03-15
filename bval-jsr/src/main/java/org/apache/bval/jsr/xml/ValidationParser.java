@@ -79,7 +79,7 @@ public class ValidationParser {
         final Set<ExecutableType> defaultValidatedExecutableTypes;
 
         if (xmlConfig.getExecutableValidation() == null) {
-            defaultValidatedExecutableTypes = BootstrapConfigurationImpl.DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES;
+            defaultValidatedExecutableTypes = EnumSet.of(ExecutableType.IMPLICIT);
             executableValidationEnabled = true;
         } else {
             final Optional<ExecutableValidationType> executableValidation =
@@ -145,6 +145,5 @@ public class ValidationParser {
     }
 
     private ValidationParser() {
-        // no-op
     }
 }

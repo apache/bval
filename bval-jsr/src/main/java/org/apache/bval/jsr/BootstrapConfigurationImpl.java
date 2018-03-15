@@ -26,29 +26,11 @@ import java.util.Set;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.executable.ExecutableType;
 
+import org.apache.bval.jsr.util.ExecutableTypes;
+
 public class BootstrapConfigurationImpl implements BootstrapConfiguration {
-    public static final Set<ExecutableType> DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES =
-        Collections.unmodifiableSet(EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS));
-
     public static final BootstrapConfigurationImpl DEFAULT = new BootstrapConfigurationImpl(Collections.emptySet(),
-        true, BootstrapConfigurationImpl.DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES, Collections.emptyMap(),
-        Collections.emptySet());
-
-    private static Set<ExecutableType> expandExecutableValidation(Set<ExecutableType> executableTypes) {
-        if (executableTypes == DEFAULT_DEFAULT_VALIDATED_EXECUTABLE_TYPES) {
-            return executableTypes;
-        }
-        executableTypes = EnumSet.copyOf(executableTypes);
-        if (executableTypes.contains(ExecutableType.ALL)) {
-            executableTypes.clear();
-            executableTypes.add(ExecutableType.CONSTRUCTORS);
-            executableTypes.add(ExecutableType.NON_GETTER_METHODS);
-            executableTypes.add(ExecutableType.GETTER_METHODS);
-        } else if (executableTypes.contains(ExecutableType.NONE)) { // if both are present ALL trumps NONE
-            executableTypes.clear();
-        }
-        return Collections.unmodifiableSet(executableTypes);
-    }
+        true, EnumSet.of(ExecutableType.IMPLICIT), Collections.emptyMap(), Collections.emptySet());
 
     private final Set<String> constraintMappingResourcePaths;
     private final boolean executableValidationEnabled;
@@ -71,7 +53,7 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
         final String clockProviderClassName, final Set<String> valueExtractorClassNames) {
 
         this(Collections.unmodifiableSet(constraintMappingResourcePaths), executableValidationEnabled,
-            expandExecutableValidation(defaultValidatedExecutableTypes), Collections.unmodifiableMap(properties),
+            ExecutableTypes.interpret(defaultValidatedExecutableTypes), Collections.unmodifiableMap(properties),
             Collections.unmodifiableSet(valueExtractorClassNames));
 
         this.parameterNameProviderClassName = parameterNameProviderClassName;

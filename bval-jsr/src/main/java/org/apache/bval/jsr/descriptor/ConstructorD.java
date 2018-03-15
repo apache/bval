@@ -33,9 +33,4 @@ public class ConstructorD<T> extends ExecutableD<Constructor<? extends T>, Metad
     public Class<?> getElementClass() {
         return getParent().getElementClass();
     }
-
-    @Override
-    protected String nameOf(Constructor<? extends T> e) {
-        return e.getDeclaringClass().getSimpleName();
-    }
 }

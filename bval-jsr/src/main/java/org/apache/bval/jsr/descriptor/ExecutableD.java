@@ -68,17 +68,11 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
 
     @Override
     public final boolean hasConstrainedParameters() {
-        return parameters.stream().anyMatch(this::isConstrained);
+        return parameters.stream().anyMatch(DescriptorManager::isConstrained) || getCrossParameterDescriptor().hasConstraints();
     }
 
     @Override
     public final boolean hasConstrainedReturnValue() {
-        return isConstrained(returnValue);
-    }
-
-    protected abstract String nameOf(E e);
-
-    private boolean isConstrained(CascadableContainerD<?, ?> child) {
-        return child.isCascaded() || child.hasConstraints();
+        return DescriptorManager.isConstrained(returnValue);
     }
 }

@@ -47,7 +47,7 @@ public class ValidationMappingParser {
         .add(null, "http://jboss.org/xml/ns/javax/validation/mapping", "META-INF/validation-mapping-1.0.xsd")
         .add(XmlBuilder.Version.v11.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
             "META-INF/validation-mapping-1.1.xsd")
-        .add(XmlBuilder.Version.v20.getId(), "http://xmlns.jcp.org/xml/ns/javax/validation/mapping",
+        .add(XmlBuilder.Version.v20.getId(), "http://xmlns.jcp.org/xml/ns/validation/mapping",
             "META-INF/validation-mapping-2.0.xsd")
         .build();
 

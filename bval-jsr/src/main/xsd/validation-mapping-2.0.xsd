@@ -19,9 +19,9 @@
 -->
 <xs:schema attributeFormDefault="unqualified"
            elementFormDefault="qualified"
-           targetNamespace="http://xmlns.jcp.org/xml/ns/javax/validation/mapping"
+           targetNamespace="http://xmlns.jcp.org/xml/ns/validation/mapping"
            xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns:map="http://xmlns.jcp.org/xml/ns/javax/validation/mapping"
+           xmlns:map="http://xmlns.jcp.org/xml/ns/validation/mapping"
            version="2.0">
   <xs:element name="constraint-mappings" type="map:constraint-mappingsType" />
 

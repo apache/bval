@@ -25,6 +25,7 @@ import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
 import javax.validation.metadata.ElementDescriptor;
+import javax.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.AnnotationBehaviorMergeStrategy;
@@ -38,8 +39,12 @@ import org.apache.bval.util.Validate;
 public class DescriptorManager {
     public static <D extends ElementDescriptor & CascadableDescriptor & ContainerDescriptor> boolean isConstrained(
         D descriptor) {
-        return descriptor.hasConstraints() || descriptor.isCascaded()
-            || !descriptor.getConstrainedContainerElementTypes().isEmpty();
+        return descriptor != null && (descriptor.hasConstraints() || descriptor.isCascaded()
+            || !descriptor.getConstrainedContainerElementTypes().isEmpty());
+    }
+
+    public static <E extends ExecutableDescriptor> boolean isConstrained(E descriptor) {
+        return descriptor != null && (descriptor.hasConstrainedParameters() || descriptor.hasConstrainedReturnValue());
     }
 
     private final ApacheValidatorFactory validatorFactory;

@@ -41,9 +41,4 @@ class MethodD extends ExecutableD<Method, MetadataReader.ForMethod, MethodD> imp
     MethodType getMethodType() {
         return methodType;
     }
-
-    @Override
-    protected String nameOf(Method e) {
-        return e.getName();
-    }
 }

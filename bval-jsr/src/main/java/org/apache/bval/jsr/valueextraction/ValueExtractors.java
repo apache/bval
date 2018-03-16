@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.valueextraction.ValueExtractor;
 import javax.validation.valueextraction.ValueExtractorDeclarationException;
 import javax.validation.valueextraction.ValueExtractorDefinitionException;
@@ -166,11 +167,16 @@ public class ValueExtractors {
         // search for assignable ContainerElementKey:
         Set<ContainerElementKey> assignableKeys = key.getAssignableKeys();
         while (!assignableKeys.isEmpty()) {
-            final Optional<ValueExtractor<?>> found = assignableKeys.stream().filter(allValueExtractors::containsKey)
-                .<ValueExtractor<?>> map(allValueExtractors::get).findFirst();
-            if (found.isPresent()) {
-                return found.get();
+            final Set<ValueExtractor<?>> results = assignableKeys.stream().filter(allValueExtractors::containsKey)
+                .map(allValueExtractors::get).collect(Collectors.toSet());
+
+            final int rz = results.size();
+            if (rz == 1) {
+                return results.iterator().next();
             }
+            Exceptions.raiseIf(rz > 1, ConstraintDeclarationException::new, "%d maximally specific %ss found for %s",
+                rz, ValueExtractor.class.getSimpleName(), key);
+
             assignableKeys = assignableKeys.stream().map(ContainerElementKey::getAssignableKeys)
                 .flatMap(Collection::stream).collect(Collectors.toSet());
         }

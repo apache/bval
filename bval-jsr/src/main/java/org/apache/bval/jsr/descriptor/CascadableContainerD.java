@@ -78,7 +78,7 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
         try {
             return readImpl(context);
         } catch (Exception e) {
-            throw new ValidationException(e);
+            throw e instanceof ValidationException ? (ValidationException) e : new ValidationException(e);
         }
     }
 

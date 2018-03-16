@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.ValidationException;
 import javax.validation.metadata.ContainerElementTypeDescriptor;
 import javax.validation.valueextraction.ValueExtractor;
@@ -108,7 +109,7 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
     @Override
     protected Stream<GraphContext> readImpl(GraphContext context) throws Exception {
         final ValueExtractor valueExtractor = context.getValidatorContext().getValueExtractors().find(key);
-        Exceptions.raiseIf(valueExtractor == null, ValidationException::new, "No %s found for %s",
+        Exceptions.raiseIf(valueExtractor == null, ConstraintDeclarationException::new, "No %s found for %s",
             ValueExtractor.class.getSimpleName(), key);
 
         final Receiver receiver = new Receiver(context);

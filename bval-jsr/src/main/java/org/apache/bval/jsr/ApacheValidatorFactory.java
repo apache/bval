@@ -108,12 +108,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         if (ConfigurationImpl.class.isInstance(configuration)) {
             toClose.add(ConfigurationImpl.class.cast(configuration).getClosable());
         }
-
-        //TODO introduce service interface
-        new ValidationMappingParser(this).processMappingConfig(configuration.getMappingStreams());
-
         configuration.getValueExtractors().forEach(valueExtractors::add);
+
         annotationsManager = new AnnotationsManager(this);
+        loadAndVerifyUserCustomizations(configuration);
     }
 
     /**
@@ -336,5 +334,12 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     public MetadataBuilders getMetadataBuilders() {
         return metadataBuilders;
+    }
+
+    private void loadAndVerifyUserCustomizations(ConfigurationState configuration) {
+        //TODO introduce service interface
+        new ValidationMappingParser(this).processMappingConfig(configuration.getMappingStreams());
+
+        getMetadataBuilders().getCustomizedTypes().forEach(getDescriptorManager()::getBeanDescriptor);
     }
 }

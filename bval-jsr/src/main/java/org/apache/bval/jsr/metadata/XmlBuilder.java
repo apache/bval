@@ -242,7 +242,7 @@ public class XmlBuilder {
 
         @Override
         public boolean isCascade(Meta<E> meta) {
-            return lazy(isCascade, "isCascade").booleanValue();
+            return Boolean.TRUE.equals(lazy(isCascade, "isCascade"));
         }
 
         @Override
@@ -356,12 +356,20 @@ public class XmlBuilder {
 
         @Override
         public MetadataBuilder.ForElement<E> getCrossParameter(Meta<E> meta) {
-            return new XmlBuilder.ForCrossParameter<>(lazy(getCrossParameter, "getCrossParameter"));
+            final CrossParameterType cp = lazy(getCrossParameter, "getCrossParameter");
+            if (cp == null) {
+                return EmptyBuilder.instance().<E> forExecutable().getCrossParameter(meta);
+            }
+            return new XmlBuilder.ForCrossParameter<>(cp);
         }
 
         @Override
         public MetadataBuilder.ForContainer<E> getReturnValue(Meta<E> meta) {
-            return new XmlBuilder.ForReturnValue<>(lazy(getReturnValue, "getReturnValue"));
+            final ReturnValueType rv = lazy(getReturnValue, "getReturnValue");
+            if (rv == null) {
+                return EmptyBuilder.instance().<E> forExecutable().getReturnValue(meta);
+            }
+            return new XmlBuilder.ForReturnValue<>(rv);
         }
 
         @Override

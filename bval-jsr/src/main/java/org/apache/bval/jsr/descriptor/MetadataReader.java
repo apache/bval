@@ -255,7 +255,9 @@ class MetadataReader {
 
             return IntStream.range(0, parameters.length).mapToObj(i -> {
                 final Meta.ForParameter param = new Meta.ForParameter(parameters[i], parameterNames.get(i));
-                return new ParameterD<>(param, i, new MetadataReader.ForContainer<>(param, builders.get(i)), parent);
+                final MetadataBuilder.ForContainer<Parameter> parameterBuilder =
+                    builders.size() > i ? builders.get(i) : EmptyBuilder.instance().forContainer();
+                return new ParameterD<>(param, i, new MetadataReader.ForContainer<>(param, parameterBuilder), parent);
             }).collect(ToUnmodifiable.list());
         }
 

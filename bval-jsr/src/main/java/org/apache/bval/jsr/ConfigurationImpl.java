@@ -63,25 +63,34 @@ import org.apache.commons.weaver.privilizer.Privileged;
 public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
 
     private class LazyParticipant<T> extends Lazy<T> {
+        private boolean locked;
 
         private LazyParticipant(Supplier<T> init) {
             super(init);
         }
 
-        @Override
-        public Lazy<T> reset(Supplier<T> init) {
-            try {
-                return super.reset(init);
-            } finally {
-                ConfigurationImpl.this.prepared = false;
-            }
-        }
-
         ConfigurationImpl override(T value) {
             if (value != null) {
-                reset(() -> value);
+                synchronized (this) {
+                    if (!locked) {
+                        try {
+                            reset(() -> value);
+                        } finally {
+                            ConfigurationImpl.this.prepared = false;
+                        }
+                    }
+                }
             }
             return ConfigurationImpl.this;
+        }
+
+        synchronized ConfigurationImpl externalOverride(T value) {
+            locked = false;
+            try {
+                return override(value);
+            } finally {
+                locked = true;
+            }
         }
     }
 
@@ -187,7 +196,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ConfigurationImpl messageInterpolator(MessageInterpolator resolver) {
-        return messageInterpolator.override(resolver);
+        return messageInterpolator.externalOverride(resolver);
     }
 
     /**
@@ -195,7 +204,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ApacheValidatorConfiguration traversableResolver(TraversableResolver resolver) {
-        return traversableResolver.override(resolver);
+        return traversableResolver.externalOverride(resolver);
     }
 
     /**
@@ -203,17 +212,17 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
      */
     @Override
     public ConfigurationImpl constraintValidatorFactory(ConstraintValidatorFactory constraintValidatorFactory) {
-        return this.constraintValidatorFactory.override(constraintValidatorFactory);
+        return this.constraintValidatorFactory.externalOverride(constraintValidatorFactory);
     }
 
     @Override
     public ApacheValidatorConfiguration parameterNameProvider(ParameterNameProvider parameterNameProvider) {
-        return this.parameterNameProvider.override(parameterNameProvider);
+        return this.parameterNameProvider.externalOverride(parameterNameProvider);
     }
 
     @Override
     public ApacheValidatorConfiguration clockProvider(ClockProvider clockProvider) {
-        return this.clockProvider.override(clockProvider);
+        return this.clockProvider.externalOverride(clockProvider);
     }
 
     /**
@@ -469,7 +478,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         final String className = getClassName.get();
         if (className != null) {
             final Class<T> t = loadClass(className);
-            participant.reset(() -> newInstance(t));
+            participant.override(newInstance(t));
         }
     }
 

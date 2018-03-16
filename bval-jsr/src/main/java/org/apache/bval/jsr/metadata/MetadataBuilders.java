@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.bval.util.Validate;
@@ -38,5 +39,9 @@ public class MetadataBuilders {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         final List<MetadataBuilder.ForBean<T>> list = (List) beanBuilders.get(bean);
         return list == null ? Collections.emptyList() : Collections.unmodifiableList(list);
+    }
+
+    public Set<Class<?>> getCustomizedTypes() {
+        return beanBuilders.keySet();
     }
 }

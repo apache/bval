@@ -21,8 +21,8 @@ package org.apache.bval.jsr.util;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,7 +37,7 @@ public class ExecutableTypes {
 
     private static final Map<ExecutableType, Set<ExecutableType>> INTERPRETED_EXECUTABLE_TYPES;
     static {
-        final Map<ExecutableType, Set<ExecutableType>> m = new EnumMap<>(ExecutableType.class);
+        final Map<ExecutableType, Set<ExecutableType>> m = new LinkedHashMap<>();
 
         m.put(ExecutableType.ALL, Collections.unmodifiableSet(
             EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS, ExecutableType.GETTER_METHODS)));

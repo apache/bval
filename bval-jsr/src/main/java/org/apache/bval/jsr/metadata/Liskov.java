@@ -159,11 +159,16 @@ class Liskov {
     }
 
     private static void noRedeclarationOfReturnValueCascading(List<? extends ContainerDelegate<?>> delegates) {
-        final Set<Meta<?>> markedForCascade = delegates.stream().filter(ContainerDelegate::isCascade)
-            .map(HierarchyDelegate::getHierarchyElement).collect(Collectors.toCollection(LinkedHashSet::new));
+        final Map<Class<?>, Meta<?>> cascadedReturnValues =
+            delegates.stream().filter(ContainerDelegate::isCascade).map(HierarchyDelegate::getHierarchyElement)
+                .collect(Collectors.toMap(Meta::getDeclaringClass, Function.identity()));
 
-        Exceptions.raiseIf(markedForCascade.size() > 1, ConstraintDeclarationException::new,
-            "Multiple method return values marked @%s in hierarchy %s", Valid.class.getSimpleName(), markedForCascade);
+        final boolean anyRelated = cascadedReturnValues.keySet().stream().anyMatch(t -> cascadedReturnValues.keySet()
+            .stream().filter(Predicate.isEqual(t).negate()).anyMatch(t2 -> related(t, t2)));
+
+        Exceptions.raiseIf(anyRelated, ConstraintDeclarationException::new,
+            "Multiple method return values marked @%s in hierarchy %s", Valid.class.getSimpleName(),
+            cascadedReturnValues.values());
     }
 
     @SafeVarargs

@@ -18,16 +18,41 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.DecimalMax;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-/** Description: validate that number-value of passed object is <= maxvalue<br/> */
-public class DecimalMaxValidatorForNumber implements ConstraintValidator<DecimalMax, Number> {
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.constraints.DecimalMax;
+
+public abstract class DecimalMaxValidator<T> implements ConstraintValidator<DecimalMax, T> {
+    public static class ForString extends DecimalMaxValidator<String> {
+        @Override
+        public boolean isValid(String value, ConstraintValidatorContext context) {
+            return value == null || isValid(new BigDecimal(value));
+        }
+    }
+
+    public static class ForNumber extends DecimalMaxValidator<Number> {
+        @Override
+        public boolean isValid(Number value, ConstraintValidatorContext context) {
+            if (value == null) {
+                return true;
+            }
+            final BigDecimal bigValue;
+            if (value instanceof BigDecimal) {
+                bigValue = (BigDecimal) value;
+            } else if (value instanceof BigInteger) {
+                bigValue = new BigDecimal((BigInteger) value);
+            } else {
+                bigValue = new BigDecimal(value.doubleValue());
+            }
+            return isValid(bigValue);
+        }
+    }
 
     private BigDecimal maxValue;
+    private boolean inclusive;
 
     @Override
     public void initialize(DecimalMax annotation) {
@@ -36,21 +61,15 @@ public class DecimalMaxValidatorForNumber implements ConstraintValidator<Decimal
         } catch (NumberFormatException nfe) {
             throw new IllegalArgumentException(annotation.value() + " does not represent a valid BigDecimal format");
         }
+        this.inclusive = annotation.inclusive();
     }
 
-    @Override
-    public boolean isValid(Number value, ConstraintValidatorContext context) {
+    protected boolean isValid(BigDecimal value) {
+        // null values are valid
         if (value == null) {
             return true;
         }
-        BigDecimal bigValue;
-        if (value instanceof BigDecimal) {
-            bigValue = (BigDecimal) value;
-        } else if (value instanceof BigInteger) {
-            bigValue = new BigDecimal((BigInteger) value);
-        } else {
-            bigValue = new BigDecimal(value.doubleValue());
-        }
-        return bigValue.compareTo(maxValue) < 1;
+        final int comparison = value.compareTo(maxValue);
+        return comparison < 0 || inclusive && comparison == 0;
     }
 }

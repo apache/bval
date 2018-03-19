@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,8 +36,8 @@ import javax.validation.ElementKind;
 import javax.validation.Valid;
 
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ContainerDelegate;
-import org.apache.bval.jsr.metadata.HierarchyBuilder.HierarchyDelegate;
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ElementDelegate;
+import org.apache.bval.jsr.metadata.HierarchyBuilder.HierarchyDelegate;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 

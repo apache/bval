@@ -168,36 +168,10 @@ under the License.
 
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-tck-test-suite-file</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <configuration>
-                                    <stripVersion>true</stripVersion>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.hibernate.beanvalidation.tck</groupId>
-                                            <artifactId>beanvalidation-tck-tests</artifactId>
-                                            <type>xml</type>
-                                            <classifier>suite</classifier>
-                                            <overWrite>false</overWrite>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${project.build.directory}/dependency/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                             <systemProperties>
                                 <property>

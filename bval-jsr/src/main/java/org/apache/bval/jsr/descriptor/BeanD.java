@@ -85,8 +85,8 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
         final EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);
-        return methods.values().stream().filter(m -> filter.contains(m.getMethodType()))
-                      .collect(ToUnmodifiable.set());
+        return methods.values().stream().filter(DescriptorManager::isConstrained)
+            .filter(m -> filter.contains(m.getMethodType())).collect(ToUnmodifiable.set());
     }
 
     @Override
@@ -96,7 +96,7 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public Set<ConstructorDescriptor> getConstrainedConstructors() {
-        return constructors.values().stream().collect(ToUnmodifiable.set());
+        return constructors.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
     }
 
     public PropertyDescriptor getProperty(String propertyName) {

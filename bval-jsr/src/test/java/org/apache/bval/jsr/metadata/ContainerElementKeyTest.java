@@ -18,7 +18,9 @@
  */
 package org.apache.bval.jsr.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.TypeVariable;
@@ -32,6 +34,9 @@ import org.junit.Test;
 public class ContainerElementKeyTest {
     public static abstract class HasList {
         public List<String> strings;
+    }
+
+    public static abstract class BoundListType implements List<String> {
     }
 
     private Field stringsField;
@@ -63,6 +68,33 @@ public class ContainerElementKeyTest {
             assertEquals(Collection.class, assignableKey.getContainerClass());
             assertEquals(0, assignableKey.getTypeArgumentIndex().intValue());
             assertTrue(assignableKey.getAnnotatedType().getType() instanceof TypeVariable<?>);
+        }
+        {
+            assertTrue(iterator.hasNext());
+            final ContainerElementKey assignableKey = iterator.next();
+            assertEquals(Iterable.class, assignableKey.getContainerClass());
+            assertEquals(0, assignableKey.getTypeArgumentIndex().intValue());
+            assertTrue(assignableKey.getAnnotatedType().getType() instanceof TypeVariable<?>);
+        }
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testAssignableKeysWithExplicitBinding() {
+        final ContainerElementKey containerElementKey = new ContainerElementKey(BoundListType.class, null);
+
+        final Iterator<ContainerElementKey> iterator = containerElementKey.getAssignableKeys().iterator();
+        {
+            assertTrue(iterator.hasNext());
+            final ContainerElementKey assignableKey = iterator.next();
+            assertEquals(List.class, assignableKey.getContainerClass());
+            assertEquals(0, assignableKey.getTypeArgumentIndex().intValue());
+        }
+        {
+            assertTrue(iterator.hasNext());
+            final ContainerElementKey assignableKey = iterator.next();
+            assertEquals(Collection.class, assignableKey.getContainerClass());
+            assertEquals(0, assignableKey.getTypeArgumentIndex().intValue());
         }
         {
             assertTrue(iterator.hasNext());

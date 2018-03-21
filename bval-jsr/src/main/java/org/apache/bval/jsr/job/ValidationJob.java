@@ -22,6 +22,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintViolation;
 import javax.validation.ElementKind;
@@ -50,6 +53,8 @@ import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 import javax.validation.metadata.PropertyDescriptor;
+import javax.validation.metadata.ValidateUnwrappedValue;
+import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
@@ -66,6 +71,8 @@ import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.jsr.util.Proxies;
+import org.apache.bval.jsr.valueextraction.ExtractValues;
+import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
@@ -103,9 +110,52 @@ public abstract class ValidationJob<T> {
 
         abstract Object getBean();
 
-        protected void validateDescriptorConstraints(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+        void validateDescriptorConstraints(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             constraintsFrom(descriptor.findConstraints().unorderedAndMatchingGroups(group))
-                .forEach(c -> validate(c, sink));
+                .forEach(c -> expand(c.getValueUnwrapping()).forEach(f -> f.validate(c, sink)));
+        }
+
+        private Stream<Frame<D>> expand(ValidateUnwrappedValue valueUnwrapping) {
+            if (valueUnwrapping != ValidateUnwrappedValue.SKIP && context.getValue() != null) {
+                final Optional<Map.Entry<ContainerElementKey, ValueExtractor<?>>> valueExtractorAndAssociatedContainerElementKey =
+                    findValueExtractorAndAssociatedContainerElementKey(context.getValue().getClass(), valueUnwrapping);
+
+                if (valueExtractorAndAssociatedContainerElementKey.isPresent()) {
+                    return ExtractValues
+                        .extract(context, valueExtractorAndAssociatedContainerElementKey.get().getKey(),
+                            valueExtractorAndAssociatedContainerElementKey.get().getValue())
+                        .stream().map(child -> new UnwrappedElementConstraintValidationPseudoFrame<>(this, child));
+                }
+            }
+            return Stream.of(this);
+        }
+
+        private Optional<Map.Entry<ContainerElementKey, ValueExtractor<?>>> findValueExtractorAndAssociatedContainerElementKey(
+            Class<?> containerClass, ValidateUnwrappedValue valueUnwrapping) {
+            final Map<ContainerElementKey, ValueExtractor<?>> m = new HashMap<>();
+            final Predicate<ValueExtractor<?>> valueExtractorFilter =
+                x -> valueUnwrapping == ValidateUnwrappedValue.UNWRAP || ValueExtractors.isUnwrapByDefault(x);
+
+            final ContainerElementKey nonGenericKey = new ContainerElementKey(containerClass, null);
+
+            Optional.of(nonGenericKey).map(validatorContext.getValueExtractors()::find).filter(valueExtractorFilter)
+                .ifPresent(x -> m.put(nonGenericKey, x));
+
+            if (containerClass.getTypeParameters().length == 1) {
+                final ContainerElementKey genericKey = new ContainerElementKey(containerClass, Integer.valueOf(0));
+
+                Optional.of(genericKey).map(validatorContext.getValueExtractors()::find).filter(valueExtractorFilter)
+                    .ifPresent(x -> m.put(genericKey, x));
+            }
+            if (m.isEmpty()) {
+                Exceptions.raiseIf(valueUnwrapping == ValidateUnwrappedValue.UNWRAP,
+                    ConstraintDeclarationException::new, "No %s found for %s", containerClass);
+                return Optional.empty();
+            }
+            Exceptions.raiseIf(m.size() > 1, ConstraintDeclarationException::new,
+                "Found generic and non-generic %ss for %s", ValueExtractor.class.getSimpleName(), containerClass);
+
+            return Optional.of(m.entrySet().iterator().next());
         }
 
         @SuppressWarnings("unchecked")
@@ -126,10 +176,10 @@ public abstract class ValidationJob<T> {
                 // seen, ignore:
                 return true;
             }
+            final ConstraintValidator constraintValidator = getConstraintValidator(constraint);
+
             final ConstraintValidatorContextImpl<T> constraintValidatorContext =
                 new ConstraintValidatorContextImpl<>(this, constraint);
-
-            final ConstraintValidator constraintValidator = getConstraintValidator(constraint);
 
             final boolean valid;
             if (constraintValidator == null) {
@@ -144,9 +194,9 @@ public abstract class ValidationJob<T> {
                 } catch (Exception e) {
                     throw new ValidationException(e);
                 }
-            }
-            if (!valid) {
-                constraintValidatorContext.getRequiredViolations().forEach(sink);
+                if (!valid) {
+                    constraintValidatorContext.getRequiredViolations().forEach(sink);
+                }
             }
             if (valid || !constraint.isReportAsSingleViolation()) {
                 final boolean compositionValid = validateComposed(constraint, sink);
@@ -392,6 +442,30 @@ public abstract class ValidationJob<T> {
 
             new SproutFrame<>(parent, descriptor, context.getParent().child(path, context.getValue())).recurse(group,
                 sink);
+        }
+    }
+
+    private class UnwrappedElementConstraintValidationPseudoFrame<D extends ElementD<?, ?>> extends Frame<D> {
+        final Lazy<IllegalStateException> exc = new Lazy<>(() -> Exceptions.create(IllegalStateException::new,
+            "%s is not meant to participate in validation lifecycle", getClass()));
+
+        UnwrappedElementConstraintValidationPseudoFrame(ValidationJob<T>.Frame<D> parent, GraphContext context) {
+            super(parent, parent.descriptor, context);
+        }
+
+        @Override
+        void validateDescriptorConstraints(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            throw exc.get();
+        }
+
+        @Override
+        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            throw exc.get();
+        }
+
+        @Override
+        Object getBean() {
+            return parent.getBean();
         }
     }
 

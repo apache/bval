@@ -19,6 +19,7 @@ package org.apache.bval.jsr.metadata;
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,6 +37,7 @@ import javax.validation.valueextraction.ExtractedValue;
 import javax.validation.valueextraction.ValueExtractor;
 import javax.validation.valueextraction.ValueExtractorDefinitionException;
 
+import org.apache.bval.util.EmulatedAnnotatedType;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.LazyInt;
@@ -43,6 +45,7 @@ import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public class ContainerElementKey implements Comparable<ContainerElementKey> {
+
     private static Logger log = Logger.getLogger(ContainerElementKey.class.getName());
 
     public static ContainerElementKey forValueExtractor(ValueExtractor<?> extractor) {
@@ -57,10 +60,15 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
                 final AnnotatedType containerType = decl.getAnnotatedActualTypeArguments()[0];
 
                 if (containerType.isAnnotationPresent(ExtractedValue.class)) {
-                    Exceptions.raiseIf(void.class.equals(containerType.getAnnotation(ExtractedValue.class).type()),
-                        ValueExtractorDefinitionException::new, "%s does not specify %s type for %s", extractorType,
-                        ExtractedValue.class.getSimpleName(), containerType);
-                    result.get().add(new ContainerElementKey(containerType, null));
+                    final Class<?> extractedType = containerType.getAnnotation(ExtractedValue.class).type();
+                    Exceptions.raiseIf(void.class.equals(extractedType), ValueExtractorDefinitionException::new,
+                        "%s does not specify %s type for %s", extractorType, ExtractedValue.class.getSimpleName(),
+                        containerType);
+                    result.get().add(new ContainerElementKey(containerType, null) {
+                        public AnnotatedType getAnnotatedType() {
+                            return EmulatedAnnotatedType.wrap(extractedType);
+                        }
+                    });
                 }
                 Optional.of(containerType).filter(AnnotatedParameterizedType.class::isInstance)
                     .map(AnnotatedParameterizedType.class::cast)
@@ -105,6 +113,14 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
             .getAnnotatedActualTypeArguments()[typeArgumentIndex.intValue()];
     }
 
+    public ContainerElementKey(Class<?> containerClass, Integer typeArgumentIndex) {
+        Validate.notNull(containerClass, "containerClass");
+        this.containerClass = containerClass;
+        this.typeArgumentIndex = validTypeArgumentIndex(typeArgumentIndex, containerClass);
+        this.annotatedType = typeArgumentIndex == null ? null
+            : EmulatedAnnotatedType.wrap(containerClass.getTypeParameters()[typeArgumentIndex.intValue()]);
+    }
+
     public Class<?> getContainerClass() {
         return containerClass;
     }
@@ -114,15 +130,14 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
     }
 
     public AnnotatedType getAnnotatedType() {
-        return annotatedType;
+        return Optional.ofNullable(annotatedType).orElseThrow(UnsupportedOperationException::new);
     }
 
     @Override
     public boolean equals(Object obj) {
         return obj == this || Optional.ofNullable(obj).filter(ContainerElementKey.class::isInstance)
-            .map(ContainerElementKey.class::cast)
-            .filter(
-                cek -> Objects.equals(containerClass, cek.containerClass) && typeArgumentIndex == cek.typeArgumentIndex)
+            .map(ContainerElementKey.class::cast).filter(cek -> Objects.equals(containerClass, cek.containerClass)
+                && Objects.equals(typeArgumentIndex, cek.typeArgumentIndex))
             .isPresent();
     }
 
@@ -139,7 +154,8 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
     @Override
     public int compareTo(ContainerElementKey o) {
         return Comparator.comparing(ContainerElementKey::containerClassName)
-            .thenComparing(Comparator.comparing(ContainerElementKey::getTypeArgumentIndex)).compare(this, o);
+            .thenComparing(Comparator.nullsFirst(Comparator.comparing(ContainerElementKey::getTypeArgumentIndex)))
+            .compare(this, o);
     }
 
     public Set<ContainerElementKey> getAssignableKeys() {
@@ -155,11 +171,12 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
     }
 
     private void hierarchy(Consumer<ContainerElementKey> sink) {
+        final TypeVariable<?> var;
         if (typeArgumentIndex == null) {
-            return;
+            var = null;
+        } else {
+            var = containerClass.getTypeParameters()[typeArgumentIndex.intValue()];
         }
-        final TypeVariable<?> var = containerClass.getTypeParameters()[typeArgumentIndex.intValue()];
-
         final Lazy<Set<ContainerElementKey>> round = new Lazy<>(LinkedHashSet::new);
         Stream
             .concat(Stream.of(containerClass.getAnnotatedSuperclass()),
@@ -168,7 +185,8 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
             .forEach(t -> {
                 final AnnotatedType[] args = ((AnnotatedParameterizedType) t).getAnnotatedActualTypeArguments();
                 for (int i = 0; i < args.length; i++) {
-                    if (args[i].getType().equals(var)) {
+                    final Type boundArgumentType = args[i].getType();
+                    if (boundArgumentType instanceof Class<?> || boundArgumentType.equals(var)) {
                         round.get().add(new ContainerElementKey(t, Integer.valueOf(i)));
                     }
                 }
@@ -176,6 +194,7 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
 
         round.optional().ifPresent(s -> {
             s.forEach(sink);
+            // recurse:
             s.forEach(k -> k.hierarchy(sink));
         });
     }

@@ -16,6 +16,7 @@
  */
 package org.apache.bval.util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -111,6 +112,18 @@ public class Exceptions {
     public static <E extends Exception, C extends Throwable> void raiseUnless(boolean condition,
         BiFunction<? super String, ? super C, ? extends E> fn, C cause, Supplier<String> message) throws E {
         raiseIf(!condition, fn, cause, message);
+    }
+
+    /**
+     * Extract cause from {@link InvocationTargetException}s.
+     * @param t to unwrap
+     * @return first of t, cause hierarchy not instanceof {@link InvocationTargetException}
+     */
+    public static Throwable causeOf(Throwable t) {
+        while (t instanceof InvocationTargetException) {
+            t = t.getCause();
+        }
+        return t;
     }
 
     private static <T extends Throwable> T elideStackTrace(T t) {

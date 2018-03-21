@@ -78,15 +78,15 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public MethodDescriptor getConstraintsForMethod(String methodName, Class<?>... parameterTypes) {
-        final Signature key = new Signature(methodName, parameterTypes);
-        return methods.get(key);
+        Exceptions.raiseIf(StringUtils.isBlank(methodName), IllegalArgumentException::new,
+            "method name cannot be null/empty/blank");
+        return methods.get(new Signature(methodName, parameterTypes));
     }
 
     @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
         final EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);
-        return methods.values().stream().filter(DescriptorManager::isConstrained)
-            .filter(m -> filter.contains(m.getMethodType())).collect(ToUnmodifiable.set());
+        return methods.values().stream().filter(m -> filter.contains(m.getMethodType())).collect(ToUnmodifiable.set());
     }
 
     @Override
@@ -96,7 +96,7 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public Set<ConstructorDescriptor> getConstrainedConstructors() {
-        return constructors.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
+        return constructors.values().stream().collect(ToUnmodifiable.set());
     }
 
     public PropertyDescriptor getProperty(String propertyName) {

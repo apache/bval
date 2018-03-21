@@ -140,7 +140,11 @@ class MetadataReader {
                 final Method m = Reflection.find(meta.getHost(),
                     t -> Reflection.getDeclaredMethod(t, sig.getName(), sig.getParameterTypes()));
 
-                result.put(sig, new MethodD(new MetadataReader.ForMethod(new Meta.ForMethod(m), builder), parent));
+                final MethodD descriptor =
+                    new MethodD(new MetadataReader.ForMethod(new Meta.ForMethod(m), builder), parent);
+                if (DescriptorManager.isConstrained(descriptor)) {
+                    result.put(sig, descriptor);
+                }
             });
             return Collections.unmodifiableMap(result);
         }
@@ -158,7 +162,11 @@ class MetadataReader {
                 final Constructor<?> c = Reflection.getDeclaredConstructor(meta.getHost(), sig.getParameterTypes());
                 @SuppressWarnings({ "unchecked", "rawtypes" })
                 final Meta.ForConstructor<T> metaCtor = (Meta.ForConstructor) new Meta.ForConstructor<>(c);
-                result.put(sig, new ConstructorD<>(new MetadataReader.ForConstructor<T>(metaCtor, builder), parent));
+                final ConstructorD<T> descriptor =
+                    new ConstructorD<>(new MetadataReader.ForConstructor<T>(metaCtor, builder), parent);
+                if (DescriptorManager.isConstrained(descriptor)) {
+                    result.put(sig, descriptor);
+                }
             });
             return Collections.unmodifiableMap(result);
         }

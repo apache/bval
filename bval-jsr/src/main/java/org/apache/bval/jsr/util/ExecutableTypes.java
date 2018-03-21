@@ -22,12 +22,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.validation.executable.ExecutableType;
 
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 
 /**
@@ -35,18 +34,11 @@ import org.apache.bval.util.Validate;
  */
 public class ExecutableTypes {
 
-    private static final Map<ExecutableType, Set<ExecutableType>> INTERPRETED_EXECUTABLE_TYPES;
-    static {
-        final Map<ExecutableType, Set<ExecutableType>> m = new LinkedHashMap<>();
+    private static final Set<ExecutableType> ALL_TYPES = Collections.unmodifiableSet(
+        EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS, ExecutableType.GETTER_METHODS));
 
-        m.put(ExecutableType.ALL, Collections.unmodifiableSet(
-            EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS, ExecutableType.GETTER_METHODS)));
-        m.put(ExecutableType.IMPLICIT,
-            Collections.unmodifiableSet(EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS)));
-        m.put(ExecutableType.NONE, Collections.emptySet());
-
-        INTERPRETED_EXECUTABLE_TYPES = Collections.unmodifiableMap(m);
-    }
+    private static final Set<ExecutableType> IMPLICIT_TYPES =
+        Collections.unmodifiableSet(EnumSet.of(ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS));
 
     /**
      * Interpret occurrences of {@link ExecutableType#ALL}, {@link ExecutableType#IMPLICIT}, and
@@ -57,13 +49,20 @@ public class ExecutableTypes {
      */
     public static Set<ExecutableType> interpret(Collection<ExecutableType> executableTypes) {
         Validate.notNull(executableTypes);
-
-        for (Map.Entry<ExecutableType, Set<ExecutableType>> e : INTERPRETED_EXECUTABLE_TYPES.entrySet()) {
-            if (e.getValue().equals(executableTypes) || executableTypes.contains(e.getKey())) {
-                return e.getValue();
-            }
+        if (executableTypes.isEmpty()) {
+            return Collections.emptySet();
         }
-        return Collections.unmodifiableSet(EnumSet.copyOf(executableTypes));
+        final Set<ExecutableType> result = EnumSet.copyOf(executableTypes);
+        if (result.contains(ExecutableType.ALL)) {
+            return ALL_TYPES;
+        }
+        if (result.remove(ExecutableType.IMPLICIT)) {
+            Exceptions.raiseUnless(result.isEmpty(), IllegalArgumentException::new,
+                "Mixing %s with other %ss is illegal.", ExecutableType.IMPLICIT, ExecutableType.class.getSimpleName());
+            return IMPLICIT_TYPES;
+        }
+        result.remove(ExecutableType.NONE);
+        return result.isEmpty() ? Collections.emptySet() : Collections.unmodifiableSet(result);
     }
 
     /**

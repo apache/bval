@@ -73,8 +73,8 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         ForConstructor(ApacheFactoryContext validatorContext, Constructor<? extends T> ctor, Object returnValue,
             Class<?>[] groups) {
             super(validatorContext,
-                new Meta.ForConstructor<>(Validate.notNull(ctor, IllegalArgumentException::new, "ctor")), returnValue,
-                groups);
+                new Meta.ForConstructor<>(Validate.notNull(ctor, IllegalArgumentException::new, "ctor")),
+                Validate.notNull(returnValue, IllegalArgumentException::new, "constructor cannot return null"), groups);
         }
 
         @Override

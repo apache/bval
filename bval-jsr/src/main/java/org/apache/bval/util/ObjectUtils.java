@@ -18,6 +18,7 @@ package org.apache.bval.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -94,5 +95,43 @@ public final class ObjectUtils {
         newArray[newArray.length - 1] = objectToAdd;
 
         return newArray;
+    }
+
+    /**
+     * Get hashcode of {@code o}, taking into account array values.
+     * @param o
+     * @return {@code int}
+     * @see Arrays
+     * @see Objects#hashCode(Object)
+     */
+    public static int hashCode(Object o) {
+        if (o instanceof Object[]) {
+            return Arrays.hashCode((Object[]) o);
+        }
+        if (o instanceof byte[]) {
+            return Arrays.hashCode((byte[]) o);
+        }
+        if (o instanceof short[]) {
+            return Arrays.hashCode((short[]) o);
+        }
+        if (o instanceof int[]) {
+            return Arrays.hashCode((int[]) o);
+        }
+        if (o instanceof char[]) {
+            return Arrays.hashCode((char[]) o);
+        }
+        if (o instanceof long[]) {
+            return Arrays.hashCode((long[]) o);
+        }
+        if (o instanceof float[]) {
+            return Arrays.hashCode((float[]) o);
+        }
+        if (o instanceof double[]) {
+            return Arrays.hashCode((double[]) o);
+        }
+        if (o instanceof boolean[]) {
+            return Arrays.hashCode((boolean[]) o);
+        }
+        return Objects.hashCode(o);
     }
 }

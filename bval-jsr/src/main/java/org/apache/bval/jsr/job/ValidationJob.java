@@ -514,8 +514,9 @@ public abstract class ValidationJob<T> {
     private boolean each(Stream<Class<?>> groupSequence, BiConsumer<Class<?>, Consumer<ConstraintViolation<T>>> closure,
         Consumer<ConstraintViolation<T>> sink) {
         final Lazy<Set<ConstraintViolation<T>>> sequenceViolations = new Lazy<>(LinkedHashSet::new);
-        for (Class<?> g : (Iterable<Class<?>>) () -> groupSequence.iterator()) {
-            closure.accept(g, sequenceViolations.consumer(Set::add));
+        final Consumer<ConstraintViolation<T>> addSequenceViolation = sequenceViolations.consumer(Set::add);
+        for (Class<?> g : (Iterable<Class<?>>) groupSequence::iterator) {
+            closure.accept(g, addSequenceViolation);
             if (sequenceViolations.optional().isPresent()) {
                 sequenceViolations.get().forEach(sink);
                 return false;

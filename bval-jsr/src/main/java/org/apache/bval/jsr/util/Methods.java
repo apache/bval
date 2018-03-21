@@ -18,6 +18,7 @@ package org.apache.bval.jsr.util;
 
 import java.beans.Introspector;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.stream.Stream;
 
 import org.apache.bval.util.Validate;
@@ -28,7 +29,7 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 @Privilizing(@CallTo(Reflection.class))
 public final class Methods {
     public static boolean isGetter(Method m) {
-        if (m.getParameterCount() > 0) {
+        if (Modifier.isStatic(m.getModifiers()) || m.getParameterCount() > 0) {
             return false;
         }
         // TODO look for capital letter after verb?

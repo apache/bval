@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintTarget;
 import javax.validation.OverridesAttribute;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
@@ -160,10 +159,6 @@ public class AnnotationsManager {
             final Class<? extends Payload>[] payload =
                 ConstraintAnnotationAttributes.PAYLOAD.analyze(source.annotationType()).read(source);
 
-            final Optional<ConstraintTarget> constraintTarget =
-                Optional.of(source.annotationType()).map(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO::analyze)
-                    .filter(ConstraintAnnotationAttributes.Worker::isValid).map(w -> w.read(source));
-
             final Map<Class<? extends Annotation>, AtomicInteger> constraintCounts = new HashMap<>();
 
             return Stream.of(components).map(c -> {
@@ -174,7 +169,6 @@ public class AnnotationsManager {
 
                 proxyBuilder.setGroups(groups);
                 proxyBuilder.setPayload(payload);
-                constraintTarget.ifPresent(proxyBuilder::setValidationAppliesTo);
 
                 overrides.optional().map(o -> o.get(new OverriddenAnnotationSpecifier(c.annotationType(), index)))
                     .ifPresent(m -> {

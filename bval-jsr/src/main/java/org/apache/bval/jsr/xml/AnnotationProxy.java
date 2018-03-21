@@ -19,14 +19,20 @@ package org.apache.bval.jsr.xml;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.StringUtils;
+import org.apache.bval.util.reflection.Reflection;
 
 /**
  * Description: <br/>
@@ -37,6 +43,8 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 1L;
+    
+    private Signature EQUALS = new Signature("equals", Object.class);
 
     private final Class<? extends Annotation> annotationType;
     private final SortedMap<String, Object> values;
@@ -74,6 +82,9 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
         if (values.containsKey(method.getName())) {
             return values.get(method.getName());
         }
+        if (EQUALS.equals(Signature.of(method))) {
+            return equalTo(args[0]);
+        }
         return method.invoke(this, args);
     }
 
@@ -90,7 +101,68 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
      */
     @Override
     public String toString() {
-        return values.entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue()))
+        return values.entrySet().stream()
+            .map(e -> String.format("%s=%s", e.getKey(), StringUtils.valueOf(e.getValue())))
             .collect(Collectors.joining(", ", String.format("@%s(", annotationType().getName()), ")"));
+    }
+
+    @Override
+    public int hashCode() {
+        return values.entrySet().stream().mapToInt(e -> {
+            return (127 * e.getKey().hashCode()) ^ ObjectUtils.hashCode(e.getValue());
+        }).sum();
+    }
+
+    private boolean equalTo(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof Annotation) {
+            final Annotation other = (Annotation) obj;
+            return other.annotationType().equals(annotationType)
+                && values.entrySet().stream().allMatch(e -> memberEquals(other, e.getKey(), e.getValue()));
+        }
+        return false;
+    }
+
+    private boolean memberEquals(Annotation other, String name, Object value) {
+        final Method member = Reflection.getDeclaredMethod(annotationType, name);
+        final Object otherValue;
+        try {
+            otherValue = member.invoke(other);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new IllegalStateException(e);
+        }
+        Exceptions.raiseIf(otherValue == null || !otherValue.getClass().equals(value.getClass()),
+            IllegalStateException::new, "Unexpected value %s for member %s of %s", otherValue, name, other);
+
+        if (value instanceof Object[]) {
+            return Arrays.equals((Object[]) value, (Object[]) otherValue);
+        }
+        if (value instanceof byte[]) {
+            return Arrays.equals((byte[]) value, (byte[]) otherValue);
+        }
+        if (value instanceof short[]) {
+            return Arrays.equals((short[]) value, (short[]) otherValue);
+        }
+        if (value instanceof int[]) {
+            return Arrays.equals((int[]) value, (int[]) otherValue);
+        }
+        if (value instanceof char[]) {
+            return Arrays.equals((char[]) value, (char[]) otherValue);
+        }
+        if (value instanceof long[]) {
+            return Arrays.equals((long[]) value, (long[]) otherValue);
+        }
+        if (value instanceof float[]) {
+            return Arrays.equals((float[]) value, (float[]) otherValue);
+        }
+        if (value instanceof double[]) {
+            return Arrays.equals((double[]) value, (double[]) otherValue);
+        }
+        if (value instanceof boolean[]) {
+            return Arrays.equals((boolean[]) value, (boolean[]) otherValue);
+        }
+        return value.equals(otherValue);
     }
 }

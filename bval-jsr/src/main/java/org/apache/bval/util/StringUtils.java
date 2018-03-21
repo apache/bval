@@ -17,6 +17,7 @@
 package org.apache.bval.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class StringUtils {
@@ -113,6 +114,8 @@ public final class StringUtils {
 
     /**
      * <p>Splits the provided text into an array, separator is whitespace.
+     * @param str
+     * @return {@link String}[]
      */
     public static String[] split(String str) {
         return split(str, null);
@@ -120,12 +123,14 @@ public final class StringUtils {
 
     /**
      * <p>Splits the provided text into an array, separator is whitespace.
+     * @param str
+     * @param token
+     * @return {@link String}[]
      */
     public static String[] split(String str, Character token) {
         if (str == null || str.isEmpty()) {
             return ObjectUtils.EMPTY_STRING_ARRAY;
         }
-
         // split on token
         List<String> ret = new ArrayList<>();
         StringBuilder sb = new StringBuilder(str.length());
@@ -146,4 +151,41 @@ public final class StringUtils {
         return ret.toArray(new String[ret.size()]);
     }
 
+    /**
+     * Return a {@link String} representation of {@code o}, accounting for array types.
+     * @param o
+     * @return {@link String}
+     * @see Arrays
+     * @see String#valueOf(Object)
+     */
+    public static String valueOf(Object o) {
+        if (o instanceof Object[]) {
+            return Arrays.toString((Object[]) o);
+        }
+        if (o instanceof byte[]) {
+            return Arrays.toString((byte[]) o);
+        }
+        if (o instanceof short[]) {
+            return Arrays.toString((short[]) o);
+        }
+        if (o instanceof int[]) {
+            return Arrays.toString((int[]) o);
+        }
+        if (o instanceof char[]) {
+            return Arrays.toString((char[]) o);
+        }
+        if (o instanceof long[]) {
+            return Arrays.toString((long[]) o);
+        }
+        if (o instanceof float[]) {
+            return Arrays.toString((float[]) o);
+        }
+        if (o instanceof double[]) {
+            return Arrays.toString((double[]) o);
+        }
+        if (o instanceof boolean[]) {
+            return Arrays.toString((boolean[]) o);
+        }
+        return String.valueOf(o);
+    }
 }

@@ -210,19 +210,22 @@ class MetadataReader {
 
         Set<GroupConversion> getGroupConversions() {
             final Set<GroupConversion> groupConversions = builder.getGroupConversions(meta);
-            Exceptions.raiseUnless(groupConversions.isEmpty() || isCascaded(), ConstraintDeclarationException::new,
-                "@%s declared without @%s on %s", ConvertGroup.class.getSimpleName(), Valid.class.getSimpleName(),
-                meta.describeHost());
+            if (!groupConversions.isEmpty()) {
+                Exceptions.raiseUnless(isCascaded(), ConstraintDeclarationException::new,
+                    "@%s declared without @%s on %s", ConvertGroup.class.getSimpleName(), Valid.class.getSimpleName(),
+                    meta.describeHost());
 
-            Exceptions.raiseIf(
-                groupConversions.stream().map(GroupConversion::getFrom).distinct().count() < groupConversions.size(),
-                ConstraintDeclarationException::new, "%s has duplicate 'from' group conversions", meta.describeHost());
+                Exceptions.raiseIf(
+                    groupConversions.stream().map(GroupConversion::getFrom).distinct().count() < groupConversions
+                        .size(),
+                    ConstraintDeclarationException::new, "%s has duplicate 'from' group conversions",
+                    meta.describeHost());
 
-            groupConversions.stream().map(GroupConversion::getFrom)
-                .forEach(f -> Exceptions.raiseIf(f.isAnnotationPresent(GroupSequence.class),
-                    ConstraintDeclarationException::new,
-                    "Invalid group conversion declared on %s from group sequence %s", meta.describeHost(), f));
-
+                groupConversions.stream().map(GroupConversion::getFrom)
+                    .forEach(f -> Exceptions.raiseIf(f.isAnnotationPresent(GroupSequence.class),
+                        ConstraintDeclarationException::new,
+                        "Invalid group conversion declared on %s from group sequence %s", meta.describeHost(), f));
+            }
             return groupConversions;
         }
 

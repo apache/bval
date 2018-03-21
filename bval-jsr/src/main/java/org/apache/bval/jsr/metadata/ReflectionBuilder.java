@@ -24,6 +24,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +82,7 @@ public class ReflectionBuilder {
             if (declaredFields.length == 0) {
                 return Collections.emptyMap();
             }
-            return Stream.of(declaredFields).collect(
+            return Stream.of(declaredFields).filter(f -> !Modifier.isStatic(f.getModifiers())).collect(
                 Collectors.toMap(Field::getName, f -> new ReflectionBuilder.ForContainer<>(new Meta.ForField(f))));
         }
 

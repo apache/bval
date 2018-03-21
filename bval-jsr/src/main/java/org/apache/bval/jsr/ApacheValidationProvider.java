@@ -25,6 +25,7 @@ import javax.validation.spi.BootstrapState;
 import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.reflection.Reflection;
 
 /**
@@ -92,9 +93,13 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
 
         try {
             return validatorFactoryClass.getConstructor(ConfigurationState.class).newInstance(configuration);
-        } catch (final Exception ex) {
-            throw new ValidationException("Cannot instantiate : " + validatorFactoryClass, ex);
+        } catch (Exception e) {
+            final Throwable t = Exceptions.causeOf(e);
+            if (t instanceof ValidationException) {
+                throw (ValidationException) t;
+            }
+            throw Exceptions.create(ValidationException::new, t, "Cannot instantiate %s",
+                validatorFactoryClass.getName());
         }
     }
-
 }

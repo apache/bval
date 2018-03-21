@@ -53,7 +53,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
         ForMethod(ApacheFactoryContext validatorContext, T object, Method executable, Object[] parameterValues,
             Class<?>[] groups) {
-            super(validatorContext, object, executable, parameterValues, groups, new Meta.ForMethod(executable));
+            super(validatorContext, object, Validate.notNull(executable, IllegalArgumentException::new, "null method"),
+                parameterValues, groups, new Meta.ForMethod(executable));
             this.object = Validate.notNull(object, IllegalArgumentException::new, "object");
         }
 
@@ -84,7 +85,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
         ForConstructor(ApacheFactoryContext validatorContext, Constructor<? extends T> executable,
             Object[] parameterValues, Class<?>[] groups) {
-            super(validatorContext, null, executable, parameterValues, groups, new Meta.ForConstructor<>(executable));
+            super(validatorContext, null, Validate.notNull(executable, IllegalArgumentException::new, "null ctor"),
+                parameterValues, groups, new Meta.ForConstructor<>(executable));
         }
 
         @Override
@@ -145,7 +147,7 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         super(validatorContext, groups, meta);
         this.object = object;
         this.parameterValues =
-            Validate.notNull(parameterValues, IllegalArgumentException::new, "parameterValues").clone();
+            Validate.notNull(parameterValues, IllegalArgumentException::new, "null parameter values").clone();
 
         final Type[] genericParameterTypes = executable.getGenericParameterTypes();
         Exceptions.raiseUnless(parameterValues.length == genericParameterTypes.length, IllegalArgumentException::new,

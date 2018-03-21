@@ -18,20 +18,24 @@
  */
 package org.apache.bval.constraints;
 
+import java.lang.annotation.Annotation;
 import java.util.function.IntPredicate;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.constraints.Negative;
+import javax.validation.constraints.NegativeOrZero;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 
 import org.apache.bval.util.Validate;
 
 /**
  * Description: validate positive/negative number values.
  */
-public abstract class NumberSignValidator implements ConstraintValidator<Negative, Number> {
-    public static class ForPositive extends NumberSignValidator {
-        public static class OrZero extends NumberSignValidator {
+public abstract class NumberSignValidator<A extends Annotation> implements ConstraintValidator<A, Number> {
+    public static class ForPositive extends NumberSignValidator<Positive> {
+        public static class OrZero extends NumberSignValidator<PositiveOrZero> {
             public OrZero() {
                 super(n -> n >= 0);
             }
@@ -42,8 +46,8 @@ public abstract class NumberSignValidator implements ConstraintValidator<Negativ
         }
     }
 
-    public static class ForNegative extends NumberSignValidator {
-        public static class OrZero extends NumberSignValidator {
+    public static class ForNegative extends NumberSignValidator<Negative> {
+        public static class OrZero extends NumberSignValidator<NegativeOrZero> {
             public OrZero() {
                 super(n -> n <= 0);
             }

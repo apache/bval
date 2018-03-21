@@ -19,8 +19,7 @@ package org.apache.bval.jsr.valueextraction;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Collection;
+import java.lang.reflect.WildcardType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +27,14 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.valueextraction.UnwrapByDefault;
 import javax.validation.valueextraction.ValueExtractor;
 import javax.validation.valueextraction.ValueExtractorDeclarationException;
 import javax.validation.valueextraction.ValueExtractorDefinitionException;
@@ -42,6 +45,7 @@ import org.apache.bval.util.Lazy;
 import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.util.reflection.Reflection.Interfaces;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public class ValueExtractors {
@@ -80,14 +84,27 @@ public class ValueExtractors {
     }
 
     public static Class<?> getExtractedType(ValueExtractor<?> extractor, Type target) {
+        
         final ContainerElementKey key = ContainerElementKey.forValueExtractor(extractor);
         Type result = key.getAnnotatedType().getType();
-        if (result instanceof TypeVariable<?>) {
-            result = TypeUtils.getTypeArguments(target, key.getContainerClass()).get(result);
+        if (result instanceof WildcardType && key.getTypeArgumentIndex() != null) {
+            result = TypeUtils.getTypeArguments(target, key.getContainerClass())
+                .get(key.getContainerClass().getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
         }
         Exceptions.raiseUnless(result instanceof Class<?>, ValueExtractorDefinitionException::new,
             "%s did not resolve to a %s relative to %s", key, Class.class.getName(), target);
         return (Class<?>) result;
+    }
+
+    public static boolean isUnwrapByDefault(ValueExtractor<?> valueExtractor) {
+        if (valueExtractor != null) {
+            for (Class<?> t : Reflection.hierarchy(valueExtractor.getClass(), Interfaces.INCLUDE)) {
+                if (t.isAnnotationPresent(UnwrapByDefault.class)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static Stream<String> split(String s) {
@@ -128,6 +145,10 @@ public class ValueExtractors {
         }).map(ValueExtractors::newInstance);
     }
 
+    private static boolean related(Class<?> c1, Class<?> c2) {
+        return c1.isAssignableFrom(c2) || c2.isAssignableFrom(c1);
+    }
+
     private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> valueExtractors = new Lazy<>(HashMap::new);
     private final ValueExtractors parent;
 
@@ -164,20 +185,31 @@ public class ValueExtractors {
             return allValueExtractors.get(key);
         }
         // search for assignable ContainerElementKey:
-        Set<ContainerElementKey> assignableKeys = key.getAssignableKeys();
-        while (!assignableKeys.isEmpty()) {
-            final Optional<ValueExtractor<?>> found = assignableKeys.stream().filter(allValueExtractors::containsKey)
-                .<ValueExtractor<?>> map(allValueExtractors::get).findFirst();
-            if (found.isPresent()) {
-                return found.get();
-            }
-            assignableKeys = assignableKeys.stream().map(ContainerElementKey::getAssignableKeys)
-                .flatMap(Collection::stream).collect(Collectors.toSet());
+        final Set<ContainerElementKey> assignableKeys = key.getAssignableKeys();
+        if (assignableKeys.isEmpty()) {
+            return null;
         }
-        return null;
+        final Map<ContainerElementKey, ValueExtractor<?>> candidateMap =
+            assignableKeys.stream().filter(allValueExtractors::containsKey)
+                .collect(Collectors.toMap(Function.identity(), allValueExtractors::get));
+
+        if (candidateMap.isEmpty()) {
+            return null;
+        }
+        if (candidateMap.size() > 1) {
+            final Set<Class<?>> containerTypes =
+                candidateMap.keySet().stream().map(ContainerElementKey::getContainerClass).collect(Collectors.toSet());
+
+            final boolean allRelated = containerTypes.stream().allMatch(quid -> containerTypes.stream()
+                .filter(Predicate.isEqual(quid).negate()).allMatch(quo -> related(quid, quo)));
+
+            Exceptions.raiseUnless(allRelated, ConstraintDeclarationException::new,
+                "> 1 maximally specific %s found for %s", ValueExtractor.class.getSimpleName(), key);
+        }
+        return candidateMap.values().iterator().next();
     }
 
-    protected void populate(Supplier<Map<ContainerElementKey, ValueExtractor<?>>> target) {
+    private void populate(Supplier<Map<ContainerElementKey, ValueExtractor<?>>> target) {
         Optional.ofNullable(parent).ifPresent(p -> p.populate(target));
         valueExtractors.optional().ifPresent(m -> target.get().putAll(m));
     }

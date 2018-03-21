@@ -18,7 +18,6 @@
  */
 package org.apache.bval.jsr.metadata;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.AnnotatedType;
@@ -33,6 +32,7 @@ import java.util.Objects;
 
 import javax.validation.constraintvalidation.ValidationTarget;
 
+import org.apache.bval.util.EmulatedAnnotatedType;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
@@ -44,9 +44,11 @@ import org.apache.bval.util.Validate;
 public abstract class Meta<E extends AnnotatedElement> {
 
     public static class ForClass<T> extends Meta<Class<T>> {
+        private final AnnotatedType annotatedType;
 
         public ForClass(Class<T> host) {
             super(host, ElementType.TYPE);
+            this.annotatedType = EmulatedAnnotatedType.wrap(host);
         }
 
         @Override
@@ -61,28 +63,7 @@ public abstract class Meta<E extends AnnotatedElement> {
 
         @Override
         public AnnotatedType getAnnotatedType() {
-            return new AnnotatedType() {
-
-                @Override
-                public Annotation[] getDeclaredAnnotations() {
-                    return getHost().getDeclaredAnnotations();
-                }
-
-                @Override
-                public Annotation[] getAnnotations() {
-                    return getHost().getAnnotations();
-                }
-
-                @Override
-                public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-                    return getHost().getAnnotation(annotationClass);
-                }
-
-                @Override
-                public Type getType() {
-                    return getHost();
-                }
-            };
+            return annotatedType;
         }
 
         @Override

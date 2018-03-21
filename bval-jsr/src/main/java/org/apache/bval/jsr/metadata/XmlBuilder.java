@@ -271,7 +271,7 @@ public class XmlBuilder {
                             "Missing required type argument index for %s", host);
                         typeArgumentIndex = Integer.valueOf(0);
                     }
-                    return new ContainerElementKey((AnnotatedParameterizedType) annotatedType, typeArgumentIndex);
+                    return new ContainerElementKey(annotatedType, typeArgumentIndex);
                 }, XmlBuilder.ForContainerElementType::new));
             }
             Exceptions.raiseUnless(elements.isEmpty(), ValidationException::new,

@@ -214,6 +214,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
     public boolean setValidationAppliesTo(ConstraintTarget constraintTarget) {
         return setValue(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName(), constraintTarget);
     }
+
     public boolean isChanged() {
         return changed;
     }

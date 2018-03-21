@@ -49,13 +49,11 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     public static class ForMethod<T> extends ValidateParameters<Method, T> {
 
-        private final T object;
-
         ForMethod(ApacheFactoryContext validatorContext, T object, Method executable, Object[] parameterValues,
             Class<?>[] groups) {
             super(validatorContext, object, Validate.notNull(executable, IllegalArgumentException::new, "null method"),
                 parameterValues, groups, new Meta.ForMethod(executable));
-            this.object = Validate.notNull(object, IllegalArgumentException::new, "object");
+            Validate.notNull(object, IllegalArgumentException::new, "object");
         }
 
         @Override

@@ -162,6 +162,11 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         return new ParametersFrame(describe(), new GraphContext(validatorContext, cp, parameterValues));
     }
 
+    @Override
+    protected boolean hasWork() {
+        return describe() != null;
+    }
+
     protected abstract ExecutableDescriptor describe();
 
     protected abstract List<String> getParameterNames(ParameterNameProvider parameterNameProvider);

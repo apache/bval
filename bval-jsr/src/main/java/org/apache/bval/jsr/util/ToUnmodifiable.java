@@ -31,20 +31,44 @@ import java.util.stream.Collectors;
  */
 public class ToUnmodifiable {
 
+    /**
+     * Collector to unmodifiable {@link Set} with custom backing implementation.
+     * 
+     * @param set
+     *            {@link Supplier}
+     * @return {@link Collector}
+     */
     public static <T> Collector<T, ?, Set<T>> set(Supplier<Set<T>> set) {
         return Collectors.collectingAndThen(Collectors.toCollection(set),
             t -> t.isEmpty() ? Collections.emptySet() : Collections.unmodifiableSet(t));
     }
 
+    /**
+     * Collector to unmodifiable {@link Set} (maintains insertion order).
+     * 
+     * @return {@link Collector}
+     */
     public static <T> Collector<T, ?, Set<T>> set() {
         return set(LinkedHashSet::new);
     }
 
+    /**
+     * Collector to unmodifiable {@link List}.
+     * 
+     * @return {@link Collector}
+     */
     public static <T> Collector<T, ?, List<T>> list() {
         return Collectors.collectingAndThen(Collectors.toList(),
             t -> t.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(t));
     }
 
+    /**
+     * Collector to unmodifiable {@link Map}.
+     * 
+     * @param keyMapper
+     * @param valueMapper
+     * @return {@link Collector}
+     */
     public static <T, K, U> Collector<T, ?, Map<K, U>> map(Function<? super T, ? extends K> keyMapper,
         Function<? super T, ? extends U> valueMapper) {
         return Collectors.collectingAndThen(Collectors.toMap(keyMapper, valueMapper),

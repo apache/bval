@@ -57,9 +57,9 @@ public abstract class NumberSignValidator<A extends Annotation> implements Const
             super(n -> n < 0);
         }
     }
-    
+
     private final IntPredicate comparisonTest;
-    
+
     protected NumberSignValidator(IntPredicate comparisonTest) {
         super();
         this.comparisonTest = Validate.notNull(comparisonTest);
@@ -67,6 +67,13 @@ public abstract class NumberSignValidator<A extends Annotation> implements Const
 
     @Override
     public boolean isValid(Number value, ConstraintValidatorContext context) {
-        return value == null || comparisonTest.test(Double.compare(value.doubleValue(), 0.0));
+        if (value == null) {
+            return true;
+        }
+        final double d = value.doubleValue();
+        if (Double.isNaN(d)) {
+            return false;
+        }
+        return comparisonTest.test(Double.compare(d, 0.0));
     }
 }

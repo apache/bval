@@ -32,19 +32,22 @@ import java.util.stream.Collectors;
 public class ToUnmodifiable {
 
     public static <T> Collector<T, ?, Set<T>> set(Supplier<Set<T>> set) {
-        return Collectors.collectingAndThen(Collectors.toCollection(set), Collections::unmodifiableSet);
+        return Collectors.collectingAndThen(Collectors.toCollection(set),
+            t -> t.isEmpty() ? Collections.emptySet() : Collections.unmodifiableSet(t));
     }
 
     public static <T> Collector<T, ?, Set<T>> set() {
-        return Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), Collections::unmodifiableSet);
+        return set(LinkedHashSet::new);
     }
 
     public static <T> Collector<T, ?, List<T>> list() {
-        return Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList);
+        return Collectors.collectingAndThen(Collectors.toList(),
+            t -> t.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(t));
     }
 
     public static <T, K, U> Collector<T, ?, Map<K, U>> map(Function<? super T, ? extends K> keyMapper,
         Function<? super T, ? extends U> valueMapper) {
-        return Collectors.collectingAndThen(Collectors.toMap(keyMapper, valueMapper), Collections::unmodifiableMap);
+        return Collectors.collectingAndThen(Collectors.toMap(keyMapper, valueMapper),
+            t -> t.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(t));
     }
 }

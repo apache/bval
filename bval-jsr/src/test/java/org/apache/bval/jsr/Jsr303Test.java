@@ -40,7 +40,7 @@ import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 
-import org.apache.bval.constraints.SizeValidatorForCharSequence;
+import org.apache.bval.constraints.SizeValidator;
 import org.apache.bval.jsr.example.Address;
 import org.apache.bval.jsr.example.Book;
 import org.apache.bval.jsr.example.Engine;
@@ -145,7 +145,7 @@ public class Jsr303Test extends ValidationTestBase {
         boolean found = false;
 
         for (ConstraintDescriptor<?> each : desc.getConstraintDescriptors()) {
-            if (each.getConstraintValidatorClasses().contains(SizeValidatorForCharSequence.class)) {
+            if (each.getConstraintValidatorClasses().contains(SizeValidator.ForCharSequence.class)) {
                 assertTrue(each.getAttributes().containsKey("max"));
                 assertEquals(30, each.getAttributes().get("max"));
                 found = true;

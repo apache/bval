@@ -33,9 +33,11 @@ import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.constraints.FutureOrPresent;
@@ -72,14 +74,14 @@ public abstract class FutureOrPresentValidator<T extends Comparable<T>> extends 
     public static class ForChronoLocalDate extends FutureOrPresentValidator<ChronoLocalDate> {
 
         public ForChronoLocalDate() {
-            super(LocalDate::now);
+            super(LocalDate::now, CHRONO_LOCAL_DATE_COMPARATOR);
         }
     }
 
     public static class ForChronoLocalDateTime extends FutureOrPresentValidator<ChronoLocalDateTime<?>> {
 
         public ForChronoLocalDateTime() {
-            super(LocalDateTime::now);
+            super(LocalDateTime::now, CHRONO_LOCAL_DATE_TIME_COMPARATOR);
         }
     }
 
@@ -107,7 +109,7 @@ public abstract class FutureOrPresentValidator<T extends Comparable<T>> extends 
     public static class ForChronoZonedDateTime extends FutureOrPresentValidator<ChronoZonedDateTime<?>> {
 
         public ForChronoZonedDateTime() {
-            super(ZonedDateTime::now);
+            super(ZonedDateTime::now, CHRONO_ZONED_DATE_TIME_COMPARATOR);
         }
     }
 
@@ -132,7 +134,14 @@ public abstract class FutureOrPresentValidator<T extends Comparable<T>> extends 
         }
     }
 
+    private static final IntPredicate TEST = n -> n >= 0;
+
     protected FutureOrPresentValidator(Function<Clock, T> now) {
-        super(now, n -> n >= 0);
+        super(now, TEST);
     }
+
+    protected FutureOrPresentValidator(Function<Clock, T> now, Comparator<? super T> cmp) {
+        super(now, cmp, TEST);
+    }
+
 }

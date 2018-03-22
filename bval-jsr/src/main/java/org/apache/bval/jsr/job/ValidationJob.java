@@ -489,26 +489,31 @@ public abstract class ValidationJob<T> {
         if (results.optional().isPresent()) {
             return results.get();
         }
-        final Frame<?> baseFrame = computeBaseFrame();
-        Validate.validState(baseFrame != null, "%s computed null baseFrame", getClass().getName());
+        if (hasWork()) {
+            final Frame<?> baseFrame = computeBaseFrame();
+            Validate.validState(baseFrame != null, "%s computed null baseFrame", getClass().getName());
 
-        final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
+            final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
 
-        validatedPathsByConstraint = new ConcurrentHashMap<>();
+            validatedPathsByConstraint = new ConcurrentHashMap<>();
 
-        try {
-            groups.getGroups().stream().map(Group::getGroup).forEach(g -> baseFrame.process(g, sink));
+            try {
+                groups.getGroups().stream().map(Group::getGroup).forEach(g -> baseFrame.process(g, sink));
 
-            sequences: for (List<Group> seq : groups.getSequences()) {
-                final boolean proceed = each(seq.stream().map(Group::getGroup), baseFrame::process, sink);
-                if (!proceed) {
-                    break sequences;
+                sequences: for (List<Group> seq : groups.getSequences()) {
+                    final boolean proceed = each(seq.stream().map(Group::getGroup), baseFrame::process, sink);
+                    if (!proceed) {
+                        break sequences;
+                    }
                 }
+            } finally {
+                validatedPathsByConstraint = null;
             }
-        } finally {
-            validatedPathsByConstraint = null;
+            if (results.optional().isPresent()) {
+                return Collections.unmodifiableSet(results.get());
+            }
         }
-        return results.optional().map(Collections::unmodifiableSet).orElse(Collections.emptySet());
+        return results.reset(Collections::emptySet).get();
     }
 
     private boolean each(Stream<Class<?>> groupSequence, BiConsumer<Class<?>, Consumer<ConstraintViolation<T>>> closure,
@@ -542,6 +547,10 @@ public abstract class ValidationJob<T> {
     protected abstract Frame<?> computeBaseFrame();
 
     protected abstract Class<T> getRootBeanClass();
+
+    protected boolean hasWork() {
+        return true;
+    }
 
     private final String interpolate(String messageTemplate, MessageInterpolator.Context context) {
         try {

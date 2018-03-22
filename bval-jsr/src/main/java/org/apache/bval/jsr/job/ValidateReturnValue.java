@@ -131,6 +131,11 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
             context.getConstraintDescriptor().unwrap(ConstraintD.class).getDeclaredOn(), returnValue, null);
     }
 
+    @Override
+    protected boolean hasWork() {
+        return describe() != null;
+    }
+
     protected abstract ExecutableD<?, ?, ?> describe();
 
     protected abstract T getRootBean();

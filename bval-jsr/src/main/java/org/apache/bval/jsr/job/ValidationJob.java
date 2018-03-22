@@ -355,27 +355,32 @@ public abstract class ValidationJob<T> {
                 .map(context -> new BeanFrame<>(this, context)).forEach(b -> b.process(group, sink));
         }
 
+        protected GraphContext getMultiplexContext() {
+            return context;
+        }
+
         private Stream<GraphContext> multiplex() {
-            final Object value = context.getValue();
+            final GraphContext multiplexContext = getMultiplexContext();
+            final Object value = multiplexContext.getValue();
             if (value == null) {
                 return Stream.empty();
             }
             if (value.getClass().isArray()) {
                 // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
                 final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
-                return IntStream.range(0, Array.getLength(value)).mapToObj(i -> context
-                    .child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                return IntStream.range(0, Array.getLength(value)).mapToObj(
+                    i -> multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
             }
             if (Map.class.isInstance(value)) {
                 return ((Map<?, ?>) value).entrySet().stream()
-                    .map(e -> context.child(
+                    .map(e -> multiplexContext.child(
                         setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
                         e.getValue()));
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
                 return IntStream.range(0, l.size())
-                    .mapToObj(i -> context.child(
+                    .mapToObj(i -> multiplexContext.child(
                         setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
                         l.get(i)));
             }
@@ -383,11 +388,11 @@ public abstract class ValidationJob<T> {
                 final Stream.Builder<Object> b = Stream.builder();
                 ((Iterable<?>) value).forEach(b);
                 return b.build()
-                    .map(o -> context.child(
+                    .map(o -> multiplexContext.child(
                         setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
                         o));
             }
-            return Stream.of(context);
+            return Stream.of(multiplexContext);
         }
 
         // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type
@@ -422,7 +427,7 @@ public abstract class ValidationJob<T> {
         }
 
         @Override
-        protected void recurseSingleExpandedGroup(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+        protected GraphContext getMultiplexContext() {
             final PathImpl path = context.getPath();
             final NodeImpl leafNode = path.getLeafNode();
 
@@ -440,8 +445,7 @@ public abstract class ValidationJob<T> {
             }
             path.addNode(newLeaf);
 
-            new SproutFrame<>(parent, descriptor, context.getParent().child(path, context.getValue())).recurse(group,
-                sink);
+            return context.getParent().child(path, context.getValue());
         }
     }
 

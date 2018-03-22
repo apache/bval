@@ -205,8 +205,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     private Set<ConstraintDescriptor<?>> computeComposingConstraints(ApacheValidatorFactory validatorFactory) {
         return Stream.of(validatorFactory.getAnnotationsManager().getComposingConstraints(annotation))
-            .map(c -> new ConstraintD<>(c, scope, meta, validatorFactory))
-            .collect(ToUnmodifiable.set(LinkedHashSet::new));
+            .map(c -> new ConstraintD<>(c, scope, meta, validatorFactory)).collect(ToUnmodifiable.set());
     }
 
     @SuppressWarnings("unchecked")

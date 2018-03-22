@@ -20,25 +20,44 @@ package org.apache.bval.constraints;
 
 import java.lang.annotation.Annotation;
 import java.time.Clock;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.chrono.ChronoZonedDateTime;
+import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-public abstract class TimeValidator<A extends Annotation, T extends Comparable<T>> implements ConstraintValidator<A, T> {
+public abstract class TimeValidator<A extends Annotation, T> implements ConstraintValidator<A, T> {
+    protected static final Comparator<ChronoLocalDate> CHRONO_LOCAL_DATE_COMPARATOR =
+        Comparator.nullsFirst((quid, quo) -> quid.isBefore(quo) ? -1 : quid.isAfter(quo) ? 1 : 0);
+
+    protected static final Comparator<ChronoLocalDateTime<?>> CHRONO_LOCAL_DATE_TIME_COMPARATOR =
+            Comparator.nullsFirst((quid, quo) -> quid.isBefore(quo) ? -1 : quid.isAfter(quo) ? 1 : 0);
+
+    protected static final Comparator<ChronoZonedDateTime<?>> CHRONO_ZONED_DATE_TIME_COMPARATOR =
+            Comparator.nullsFirst((quid, quo) -> quid.isBefore(quo) ? -1 : quid.isAfter(quo) ? 1 : 0);
 
     private final Function<Clock, T> now;
+    private final Comparator<? super T> cmp;
     private final IntPredicate test;
-    
+
+    @SuppressWarnings("unchecked")
     protected TimeValidator(Function<Clock, T> now, IntPredicate test) {
+        this(now, (Comparator<T>) Comparator.naturalOrder(), test);
+    }
+
+    protected TimeValidator(Function<Clock, T> now, Comparator<? super T> cmp,IntPredicate test) {
         super();
         this.now = now;
+        this.cmp = cmp;
         this.test = test;
     }
 
     @Override
     public final boolean isValid(T value, ConstraintValidatorContext context) {
-        return value == null || test.test(value.compareTo(now.apply(context.getClockProvider().getClock())));
+        return value == null || test.test(cmp.compare(value, now.apply(context.getClockProvider().getClock())));
     }
 }

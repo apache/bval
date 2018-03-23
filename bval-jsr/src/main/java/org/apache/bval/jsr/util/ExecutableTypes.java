@@ -57,8 +57,10 @@ public class ExecutableTypes {
             return ALL_TYPES;
         }
         if (result.remove(ExecutableType.IMPLICIT)) {
-            Exceptions.raiseUnless(result.isEmpty(), IllegalArgumentException::new,
-                "Mixing %s with other %ss is illegal.", ExecutableType.IMPLICIT, ExecutableType.class.getSimpleName());
+            if (!result.isEmpty()) {
+                Exceptions.raise(IllegalArgumentException::new, "Mixing %s with other %ss is illegal.",
+                    ExecutableType.IMPLICIT, ExecutableType.class.getSimpleName());
+            }
             return IMPLICIT_TYPES;
         }
         result.remove(ExecutableType.NONE);

@@ -61,9 +61,10 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
 
                 if (containerType.isAnnotationPresent(ExtractedValue.class)) {
                     final Class<?> extractedType = containerType.getAnnotation(ExtractedValue.class).type();
-                    Exceptions.raiseIf(void.class.equals(extractedType), ValueExtractorDefinitionException::new,
-                        "%s does not specify %s type for %s", extractorType, ExtractedValue.class.getSimpleName(),
-                        containerType);
+                    if (void.class.equals(extractedType)) {
+                        Exceptions.raise(ValueExtractorDefinitionException::new, "%s does not specify %s type for %s",
+                            extractorType, ExtractedValue.class.getSimpleName(), containerType);
+                    }
                     result.get().add(new ContainerElementKey(containerType, null) {
                         public AnnotatedType getAnnotatedType() {
                             return EmulatedAnnotatedType.wrap(extractedType);

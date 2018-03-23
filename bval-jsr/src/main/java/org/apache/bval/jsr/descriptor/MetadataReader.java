@@ -105,9 +105,9 @@ class MetadataReader {
             beanBuilder.getGetters(meta).forEach((g, builder) -> {
                 final Method getter = Methods.getter(meta.getHost(), g);
 
-                Exceptions.raiseIf(getter == null, IllegalStateException::new,
-                    "Getter method for property %s not found", g);
-
+                if (getter == null) {
+                    Exceptions.raise(IllegalStateException::new, "Getter method for property %s not found", g);
+                }
                 properties.computeIfAbsent(g, descriptorList).add(new PropertyD.ForMethod(
                     new MetadataReader.ForContainer<>(new Meta.ForMethod(getter), builder), parent));
             });
@@ -173,27 +173,31 @@ class MetadataReader {
 
         List<Class<?>> getGroupSequence() {
             List<Class<?>> result = builder.getGroupSequence(meta);
+            final Class<T> host = meta.getHost();
             if (result == null) {
                 // resolve group sequence/Default redefinition up class hierarchy:
-                final Class<?> superclass = meta.getHost().getSuperclass();
+                final Class<?> superclass = host.getSuperclass();
                 if (superclass != null) {
                     // attempt to mock parent sequence intent by appending this type immediately after supertype:
                     result = ((ElementD<?, ?>) validatorFactory.getDescriptorManager().getBeanDescriptor(superclass))
                         .getGroupSequence();
                     if (result != null) {
                         result = new ArrayList<>(result);
-                        result.add(result.indexOf(superclass) + 1, meta.getHost());
+                        result.add(result.indexOf(superclass) + 1, host);
                     }
                 }
             }
             if (result == null) {
                 return null;
             }
-            Exceptions.raiseUnless(result.contains(meta.getHost()), GroupDefinitionException::new,
-                "@%s for %s must contain %<s", GroupSequence.class.getSimpleName(), meta.getHost());
-            Exceptions.raiseIf(result.contains(Default.class), GroupDefinitionException::new,
-                "@%s for %s must not contain %s", GroupSequence.class.getSimpleName(), meta.getHost(),
-                Default.class.getName());
+            if (!result.contains(host)) {
+                Exceptions.raise(GroupDefinitionException::new, "@%s for %s must contain %<s",
+                    GroupSequence.class.getSimpleName(), host);
+            }
+            if (result.contains(Default.class)) {
+                Exceptions.raise(GroupDefinitionException::new, "@%s for %s must not contain %s",
+                    GroupSequence.class.getSimpleName(), host, Default.class.getName());
+            }
             return Collections.unmodifiableList(result);
         }
     }
@@ -211,20 +215,19 @@ class MetadataReader {
         Set<GroupConversion> getGroupConversions() {
             final Set<GroupConversion> groupConversions = builder.getGroupConversions(meta);
             if (!groupConversions.isEmpty()) {
-                Exceptions.raiseUnless(isCascaded(), ConstraintDeclarationException::new,
-                    "@%s declared without @%s on %s", ConvertGroup.class.getSimpleName(), Valid.class.getSimpleName(),
-                    meta.describeHost());
-
-                Exceptions.raiseIf(
-                    groupConversions.stream().map(GroupConversion::getFrom).distinct().count() < groupConversions
-                        .size(),
-                    ConstraintDeclarationException::new, "%s has duplicate 'from' group conversions",
-                    meta.describeHost());
-
+                if (!isCascaded()) {
+                    Exceptions.raise(ConstraintDeclarationException::new, "@%s declared without @%s on %s",
+                        ConvertGroup.class.getSimpleName(), Valid.class.getSimpleName(), meta.describeHost());
+                }
+                if (groupConversions.stream().map(GroupConversion::getFrom).distinct().count() < groupConversions
+                    .size()) {
+                    Exceptions.raise(ConstraintDeclarationException::new, "%s has duplicate 'from' group conversions",
+                        meta.describeHost());
+                }
                 groupConversions.stream().map(GroupConversion::getFrom)
-                    .forEach(f -> Exceptions.raiseIf(f.isAnnotationPresent(GroupSequence.class),
+                    .forEach(from -> Exceptions.raiseIf(from.isAnnotationPresent(GroupSequence.class),
                         ConstraintDeclarationException::new,
-                        "Invalid group conversion declared on %s from group sequence %s", meta.describeHost(), f));
+                        "Invalid group conversion declared on %s from group sequence %s", f -> f.args(meta.describeHost(), from)));
             }
             return groupConversions;
         }

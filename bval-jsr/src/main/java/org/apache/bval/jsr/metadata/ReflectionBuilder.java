@@ -270,10 +270,13 @@ public class ReflectionBuilder {
                         }
                     } else {
                         target = impliedConstraintTarget();
-                        Exceptions.raiseIf(target == null, ConstraintDeclarationException::new,
-                            "Found %d possible %s types for constraint type %s and no explicit assignment via #%s()",
-                            supportedTargets.size(), ValidationTarget.class.getSimpleName(), constraintType.getName(),
-                            ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName());
+                        if (target == null) {
+                            Exceptions.raise(ConstraintDeclarationException::new,
+                                "Found %d possible %s types for constraint type %s and no explicit assignment via #%s()",
+                                supportedTargets.size(), ValidationTarget.class.getSimpleName(),
+                                constraintType.getName(),
+                                ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName());
+                        }
                     }
                 }
                 result.computeIfAbsent(target, k -> new ArrayList<>()).add(constraint);

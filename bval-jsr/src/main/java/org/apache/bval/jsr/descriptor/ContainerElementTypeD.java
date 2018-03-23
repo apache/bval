@@ -59,9 +59,10 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
     @Override
     protected Stream<GraphContext> readImpl(GraphContext context) throws Exception {
         final ValueExtractor<?> valueExtractor = context.getValidatorContext().getValueExtractors().find(key);
-        Exceptions.raiseIf(valueExtractor == null, ConstraintDeclarationException::new, "No %s found for %s",
-            ValueExtractor.class.getSimpleName(), key);
-
+        if (valueExtractor == null) {
+            Exceptions.raise(ConstraintDeclarationException::new, "No %s found for %s",
+                ValueExtractor.class.getSimpleName(), key);
+        }
         return ExtractValues.extract(context, key, valueExtractor).stream();
     }
 }

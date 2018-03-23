@@ -131,18 +131,19 @@ public class AnnotationsManager {
                     if (spec.impliesSingleComposingConstraint) {
                         Exceptions.raiseUnless(count == 1, ConstraintDefinitionException::new,
                             "Expected a single composing %s constraint", spec.annotationType);
-                    } else {
-                        Exceptions.raiseUnless(count > spec.constraintIndex, ConstraintDefinitionException::new,
+                    } else if (count <= spec.constraintIndex) {
+                        Exceptions.raise(ConstraintDefinitionException::new,
                             "Expected at least %s composing %s constraints", spec.constraintIndex + 1,
                             spec.annotationType);
                     }
                     final Map<String, String> attributeMapping =
                         overrides.get().computeIfAbsent(spec, k -> new HashMap<>());
 
-                    Exceptions.raiseIf(attributeMapping.containsKey(to), ConstraintDefinitionException::new,
-                        "Attempt to override %s#%s() index %d from multiple sources", overridesAttribute.constraint(),
-                        to, overridesAttribute.constraintIndex());
-
+                    if (attributeMapping.containsKey(to)) {
+                        Exceptions.raise(ConstraintDefinitionException::new,
+                            "Attempt to override %s#%s() index %d from multiple sources",
+                            overridesAttribute.constraint(), to, overridesAttribute.constraintIndex());
+                    }
                     attributeMapping.put(to, from);
                 }
             }
@@ -342,10 +343,11 @@ public class AnnotationsManager {
             final Composition result = new Composition(annotationType);
             Stream.of(result.components).map(Annotation::annotationType).forEach(at -> {
                 final Set<ValidationTarget> composingTargets = supportedTargets(at);
-                Exceptions.raiseIf(Collections.disjoint(composingTargets, composedTargets),
-                    ConstraintDefinitionException::new,
-                    "Attempt to compose %s of %s but validator types are incompatible", annotationType.getName(),
-                    at.getName());
+                if (Collections.disjoint(composingTargets, composedTargets)) {
+                    Exceptions.raise(ConstraintDefinitionException::new,
+                        "Attempt to compose %s of %s but validator types are incompatible", annotationType.getName(),
+                        at.getName());
+                }
             });
             return result;
         });

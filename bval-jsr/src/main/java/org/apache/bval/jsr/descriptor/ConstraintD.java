@@ -197,7 +197,8 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
             Optional.of(constraintType).map(attr::analyze).filter(Worker::isValid).map(w -> w.<T> read(annotation));
 
         Exceptions.raiseUnless(optionality.isOptional() || result.isPresent(), ConstraintDefinitionException::new,
-            "Required attribute %s missing from constraint type %s", attr.getAttributeName(), constraintType);
+            "Required attribute %s missing from constraint type %s",
+            f -> f.args(attr.getAttributeName(), constraintType));
 
         return result.orElse(null);
     }
@@ -237,18 +238,21 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     private Set<Class<? extends Payload>> computePayload() {
         final Set<Class<? extends Payload>> result =
             set(() -> read(ConstraintAnnotationAttributes.PAYLOAD, Optionality.REQUIRED));
-        Exceptions.raiseIf(result.containsAll(Arrays.asList(Unwrapping.Unwrap.class, Unwrapping.Skip.class)),
-            ConstraintDeclarationException::new,
-            "Constraint %s declared at %s specifies conflicting value unwrapping hints", annotation, meta.getHost());
+        if (result.containsAll(Arrays.asList(Unwrapping.Unwrap.class, Unwrapping.Skip.class))) {
+            Exceptions.raise(ConstraintDeclarationException::new,
+                "Constraint %s declared at %s specifies conflicting value unwrapping hints", annotation,
+                meta.getHost());
+        }
         return result;
     }
 
     private Class<?> computeValidatedType(ApacheValidatorFactory validatorFactory) {
         final Class<?> rawType = TypeUtils.getRawType(meta.getType(), null);
 
-        Exceptions.raiseIf(rawType == null, UnexpectedTypeException::new, "Could not calculate validated type from %s",
-            meta.getType());
-
+        if (rawType == null) {
+            Exceptions.raise(UnexpectedTypeException::new, "Could not calculate validated type from %s",
+                meta.getType());
+        }
         if (payload.contains(Unwrapping.Skip.class)) {
             return rawType;
         }
@@ -258,8 +262,10 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         final boolean unwrap = payload.contains(Unwrapping.Unwrap.class);
 
         if (valueExtractor == null) {
-            Exceptions.raiseIf(unwrap, ConstraintDeclarationException::new, "No compatible %s found for %s",
-                ValueExtractor.class.getSimpleName(), meta.getType());
+            if (unwrap) {
+                Exceptions.raise(ConstraintDeclarationException::new, "No compatible %s found for %s",
+                    ValueExtractor.class.getSimpleName(), meta.getType());
+            }
         } else {
             @SuppressWarnings("unchecked")
             final Class<? extends ValueExtractor<?>> extractorClass =

@@ -38,9 +38,11 @@ public abstract class ValidatorMappingProvider {
                 final Type constraintParameter = TypeUtils.getTypeArguments(t, ConstraintValidator.class)
                     .get(ConstraintValidator.class.getTypeParameters()[0]);
 
-                Exceptions.raiseUnless(constraintType.equals(constraintParameter), ConstraintDefinitionException::new,
-                    "%s %s expected first type parameter of %s, %s; source %s", ConstraintValidator.class, t,
-                    constraintType, constraintParameter, result.get().getSource());
+                if (!constraintType.equals(constraintParameter)) {
+                    Exceptions.raise(ConstraintDefinitionException::new,
+                        "%s %s expected first type parameter of %s, %s; source %s", ConstraintValidator.class, t,
+                        constraintType, constraintParameter, result.get().getSource());
+                }
             }
             return result.get();
         }

@@ -166,8 +166,8 @@ class Liskov {
             .stream().filter(Predicate.isEqual(t).negate()).anyMatch(t2 -> related(t, t2)));
 
         Exceptions.raiseIf(anyRelated, ConstraintDeclarationException::new,
-            "Multiple method return values marked @%s in hierarchy %s", Valid.class.getSimpleName(),
-            cascadedReturnValues.values());
+            "Multiple method return values marked @%s in hierarchy %s",
+            f -> f.args(Valid.class.getSimpleName(), cascadedReturnValues.values()));
     }
 
     @SafeVarargs

@@ -103,9 +103,9 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         super(validatorContext, groups, meta);
 
         final Type type = Validate.notNull(meta, IllegalArgumentException::new, "meta").getType();
-        Exceptions.raiseUnless(TypeUtils.isInstance(returnValue, type), IllegalArgumentException::new,
-            "%s is not an instance of %s", returnValue, type);
-
+        if (!TypeUtils.isInstance(returnValue, type)) {
+            Exceptions.raise(IllegalArgumentException::new, "%s is not an instance of %s", returnValue, type);
+        }
         this.returnValue = returnValue;
     }
 

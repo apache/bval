@@ -64,7 +64,7 @@ class ComputeConstraintValidatorClass<A extends Annotation>
             this.arrayDepth = d;
         }
 
-        Class<?> unwrap(Class<?> t) {
+        Class<?> unwrapArrayComponentType(Class<?> t) {
             Exceptions.raiseUnless(t.isAssignableFrom(componentType), IllegalArgumentException::new,
                 "%s not assignable from %s", t, componentType);
             if (arrayDepth == 0) {
@@ -80,8 +80,10 @@ class ComputeConstraintValidatorClass<A extends Annotation>
     private static Class<?> getValidatedType(Class<? extends ConstraintValidator<?, ?>> validatorType) {
         final Type result = TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class)
             .get(ConstraintValidator.class.getTypeParameters()[1]);
-        Exceptions.raiseUnless(isSupported(result), ConstraintDefinitionException::new,
-            "Validated type %s declared by %s %s is unsupported", result, CV, validatorType.getName());
+        if (!isSupported(result)) {
+            Exceptions.raise(ConstraintDefinitionException::new, "Validated type %s declared by %s %s is unsupported",
+                result, CV, validatorType.getName());
+        }
         return TypeUtils.getRawType(result, null);
     }
 
@@ -140,14 +142,15 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         @SuppressWarnings("unchecked")
         final Class<A> constraintType = (Class<A>) constraint.annotationType();
 
-        Exceptions.raiseIf(set.size() > 1 || !composed && set.isEmpty(), ConstraintDefinitionException::new,
-            "%d cross-parameter %ss found for constraint type %s", set.size(), CV, constraintType);
+        final int size = set.size();
+        Exceptions.raiseIf(size > 1 || !composed && set.isEmpty(), ConstraintDefinitionException::new,
+            "%d cross-parameter %ss found for constraint type %s", size, CV, constraintType);
 
         final Class<? extends ConstraintValidator<A, ?>> result = set.iterator().next().getType();
-        Exceptions.raiseUnless(TypeUtils.isAssignable(Object[].class, getValidatedType(result)),
-            ConstraintDefinitionException::new,
-            "Cross-parameter %s %s does not support the validation of an object array", CV, result.getName());
-
+        if (!TypeUtils.isAssignable(Object[].class, getValidatedType(result))) {
+            Exceptions.raise(ConstraintDefinitionException::new,
+                "Cross-parameter %s %s does not support the validation of an object array", CV, result.getName());
+        }
         return result;
     }
 
@@ -199,6 +202,6 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         final TypeWrapper w = new TypeWrapper(Reflection.primitiveToWrapper(validatedType));
         Stream.Builder<Class<?>> hierarchy = Stream.builder();
         Reflection.hierarchy(w.componentType, Interfaces.INCLUDE).forEach(hierarchy);
-        return hierarchy.build().map(w::unwrap);
+        return hierarchy.build().map(w::unwrapArrayComponentType);
     }
 }

@@ -237,9 +237,10 @@ public class HierarchyBuilder extends CompositeBuilder {
             }
             final List<Meta<Parameter>> metaParameters = getMetaParameters(hierarchyElement, getParameterNames);
 
-            Exceptions.raiseUnless(metaParameters.size() == parameterDelegates.size(), IllegalStateException::new,
-                "Got wrong number of parameter delegates for %s", meta.getHost());
-
+            if (metaParameters.size() != parameterDelegates.size()) {
+                Exceptions.raise(IllegalStateException::new, "Got wrong number of parameter delegates for %s",
+                    meta.getHost());
+            }
             return IntStream.range(0, parameterDelegates.size())
                 .mapToObj(n -> new ContainerDelegate<>(parameterDelegates.get(n), metaParameters.get(n)))
                 .collect(Collectors.toList());

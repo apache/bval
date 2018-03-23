@@ -200,8 +200,10 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
                 bean = (BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(element.getElementClass());
             }
             final PropertyDescriptor property = bean.getProperty(name);
-            Exceptions.raiseIf(property == null, IllegalArgumentException::new, "Unknown property %s of %s", name,
-                bean.getElementClass());
+            if (property == null) {
+                Exceptions.raise(IllegalArgumentException::new, "Unknown property %s of %s", name,
+                    bean.getElementClass());
+            }
             current = new DescriptorWrapper(property);
         }
 
@@ -259,11 +261,8 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
                     Optional.ofNullable(TypeUtils.getTypeArguments(type, Iterable.class).get(ITERABLE_ELEMENT))
                         .orElse(ITERABLE_ELEMENT);
             } else {
-                elementType = null;
+                throw Exceptions.create(IllegalArgumentException::new, "Unable to resolve element type of %s", type);
             }
-            Exceptions.raiseIf(elementType == null, IllegalArgumentException::new,
-                "Unable to resolve element type of %s", type);
-
             return new TypeWrapper(validatorContext, elementType);
         }
 
@@ -380,7 +379,9 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
             } else {
                 try {
                     final int index = Integer.parseInt(indexOrKey);
-                    Exceptions.raiseIf(index < 0, IllegalArgumentException::new, "Invalid index %d", index);
+                    if (index < 0) {
+                        Exceptions.raise(IllegalArgumentException::new, "Invalid index %d", index);
+                    }
                     if (o != null && TypeUtils.isArrayType(o.getClass())) {
                         if (Array.getLength(o) > index) {
                             return Array.get(o, index);
@@ -478,8 +479,9 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
             descriptor = (ElementD<?, ?>) validatorContext.getDescriptorManager().getBeanDescriptor(t);
         } else {
             final Class<?> propertyType = descriptor.getElementClass();
-            Exceptions.raiseUnless(TypeUtils.isInstance(value, propertyType), IllegalArgumentException::new,
-                "%s is not an instance of %s", value, propertyType);
+            if (!TypeUtils.isInstance(value, propertyType)) {
+                Exceptions.raise(IllegalArgumentException::new, "%s is not an instance of %s", value, propertyType);
+            }
         }
     }
 
@@ -489,8 +491,9 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         this(new ForBeanProperty<>(validatorContext, bean), validatorContext,
             (Class<T>) Validate.notNull(bean, IllegalArgumentException::new, "bean").getClass(), property, groups);
 
-        Exceptions.raiseIf(descriptor == null, IllegalArgumentException::new,
-            "Could not resolve property name/path: %s", property);
+        if (descriptor == null) {
+            Exceptions.raise(IllegalArgumentException::new, "Could not resolve property name/path: %s", property);
+        }
     }
 
     public ValidateProperty<T> cascade(boolean cascade) {

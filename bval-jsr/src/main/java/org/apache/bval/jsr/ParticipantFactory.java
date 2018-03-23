@@ -41,7 +41,7 @@ import org.apache.commons.weaver.privilizer.Privileged;
  * by name, taking into account whether Apache BVal is operating in a CDI environment.
  */
 class ParticipantFactory implements Closeable {
-    private static final String META_INF_SERVICES = "/META_INF/services/";
+    private static final String META_INF_SERVICES = "META-INF/services/";
 
     private final Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
     private final ClassLoader loader;

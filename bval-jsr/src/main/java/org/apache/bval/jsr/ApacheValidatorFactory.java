@@ -35,12 +35,14 @@ import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
+import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.metadata.MetadataBuilders;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.jsr.xml.ValidationMappingParser;
+import org.apache.bval.util.CloseableAble;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -54,19 +56,6 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     private static volatile ApacheValidatorFactory DEFAULT_FACTORY;
-
-    private MessageInterpolator messageResolver;
-    private TraversableResolver traversableResolver;
-    private ConstraintValidatorFactory constraintValidatorFactory;
-    private ParameterNameProvider parameterNameProvider;
-    private ClockProvider clockProvider;
-    private final Map<String, String> properties;
-    private final AnnotationsManager annotationsManager;
-    private final DescriptorManager descriptorManager = new DescriptorManager(this);
-    private final MetadataBuilders metadataBuilders = new MetadataBuilders();
-    private final ValueExtractors valueExtractors = new ValueExtractors();
-    private final ConstraintCached constraintsCache = new ConstraintCached();
-    private final Collection<Closeable> toClose = new ArrayList<>();
 
     /**
      * Convenience method to retrieve a default global ApacheValidatorFactory
@@ -94,6 +83,26 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         DEFAULT_FACTORY = aDefaultFactory;
     }
 
+    private static ValueExtractors createBaseValueExtractors(ParticipantFactory participantFactory) {
+        final ValueExtractors result = new ValueExtractors();
+        participantFactory.loadServices(ValueExtractor.class).forEach(result::add);
+        return result;
+    }
+
+    private MessageInterpolator messageResolver;
+    private TraversableResolver traversableResolver;
+    private ConstraintValidatorFactory constraintValidatorFactory;
+    private ParameterNameProvider parameterNameProvider;
+    private ClockProvider clockProvider;
+    private final Map<String, String> properties;
+    private final AnnotationsManager annotationsManager;
+    private final DescriptorManager descriptorManager = new DescriptorManager(this);
+    private final MetadataBuilders metadataBuilders = new MetadataBuilders();
+    private final ConstraintCached constraintsCache = new ConstraintCached();
+    private final Collection<Closeable> toClose = new ArrayList<>();
+    private final ParticipantFactory participantFactory;
+    private final ValueExtractors valueExtractors;
+
     /**
      * Create a new ApacheValidatorFactory instance.
      */
@@ -105,9 +114,13 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         constraintValidatorFactory = configuration.getConstraintValidatorFactory();
         clockProvider = configuration.getClockProvider();
 
-        if (ConfigurationImpl.class.isInstance(configuration)) {
-            toClose.add(ConfigurationImpl.class.cast(configuration).getClosable());
+        if (configuration instanceof CloseableAble) {
+            toClose.add(((CloseableAble) configuration).getCloseable());
         }
+        participantFactory = new ParticipantFactory(ApacheValidatorFactory.class.getClassLoader());
+        toClose.add(participantFactory);
+
+        valueExtractors = createBaseValueExtractors(participantFactory).createChild();
         configuration.getValueExtractors().forEach(valueExtractors::add);
 
         annotationsManager = new AnnotationsManager(this);

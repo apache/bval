@@ -94,6 +94,5 @@ public class BValAnnotatedType<A> implements AnnotatedType<A> {
         public String toString() {
             return String.format("@%s()", BValBinding.class.getName());
         }
-
     }
 }

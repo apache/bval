@@ -105,55 +105,8 @@ public class ConstraintCached {
         new Lazy<>(this::createValidatorMappingProvider);
 
     public void add(ValidatorMappingProvider validatorMappingProvider) {
-        if (customValidatorMappingProviders.add(validatorMappingProvider)) {
-            this.validatorMappingProvider.reset(this::createValidatorMappingProvider);
-        }
-    }
-
-    /**
-     * Record the set of validator classes for a given constraint annotation.
-     * 
-     * @param annotationClass
-     * @param definitionClasses
-     */
-    @Deprecated
-    public <A extends Annotation> void putConstraintValidator(Class<A> annotationClass,
-        Class<? extends ConstraintValidator<A, ?>>[] definitionClasses) {
-        if (ObjectUtils.isEmpty(definitionClasses)) {
-            return;
-        }
-        Validate.notNull(annotationClass, "annotationClass");
-        Stream.of(definitionClasses).map(ConstraintValidatorInfo::new)
-            .forEach(constraintValidatorInfo.computeIfAbsent(annotationClass, k -> new HashSet<>())::add);
-    }
-
-    /**
-     * Learn whether we have cached the validator classes for the requested
-     * constraint annotation.
-     * 
-     * @param annotationClass
-     *            to look up
-     * @return boolean
-     */
-    @Deprecated
-    public boolean containsConstraintValidator(Class<? extends Annotation> annotationClass) {
-        return constraintValidatorInfo.containsKey(annotationClass);
-    }
-
-    /**
-     * Get the cached validator classes for the requested constraint annotation.
-     * 
-     * @param constraintType
-     *            to look up
-     * @return array of {@link ConstraintValidator} implementation types
-     */
-    @SuppressWarnings("unchecked")
-    @Deprecated
-    public <A extends Annotation> Class<? extends ConstraintValidator<A, ?>>[] getConstraintValidators(
-        Class<A> constraintType) {
-        final Set<ConstraintValidatorInfo<A>> infos = infos(constraintType);
-        return infos == null ? new Class[0]
-            : infos.stream().map(ConstraintValidatorInfo::getType).toArray(Class[]::new);
+        customValidatorMappingProviders.add(validatorMappingProvider);
+        this.validatorMappingProvider.reset(this::createValidatorMappingProvider);
     }
 
     public <A extends Annotation> List<Class<? extends ConstraintValidator<A, ?>>> getConstraintValidatorClasses(

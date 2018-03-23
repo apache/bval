@@ -120,7 +120,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         if (configuration instanceof CloseableAble) {
             toClose.add(((CloseableAble) configuration).getCloseable());
         }
-        participantFactory = new ParticipantFactory(ApacheValidatorFactory.class.getClassLoader());
+        participantFactory = new ParticipantFactory(Thread.currentThread().getContextClassLoader(),
+            ApacheValidatorFactory.class.getClassLoader());
+
         toClose.add(participantFactory);
 
         valueExtractors = createBaseValueExtractors(participantFactory).createChild();

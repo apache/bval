@@ -23,10 +23,16 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.validation.ValidationException;
@@ -41,14 +47,16 @@ import org.apache.commons.weaver.privilizer.Privileged;
  * by name, taking into account whether Apache BVal is operating in a CDI environment.
  */
 class ParticipantFactory implements Closeable {
+    private static final Logger log = Logger.getLogger(ParticipantFactory.class.getName());
     private static final String META_INF_SERVICES = "META-INF/services/";
 
     private final Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
-    private final ClassLoader loader;
+    private final List<ClassLoader> loaders;
 
-    ParticipantFactory(ClassLoader loader) {
+    ParticipantFactory(ClassLoader... loaders) {
         super();
-        this.loader = Validate.notNull(loader);
+        this.loaders = Collections.unmodifiableList(Arrays.asList(Validate
+            .noNullElements(loaders, "null %s specified at index %d", ClassLoader.class.getSimpleName()).clone()));
     }
 
     @Override
@@ -65,29 +73,39 @@ class ParticipantFactory implements Closeable {
 
     <T> Set<T> loadServices(Class<T> type) {
         Validate.notNull(type);
-        try {
-            return Collections.list(loader.getResources(META_INF_SERVICES + type.getName())).stream().map(this::read)
-                .flatMap(Collection::stream).<T> map(this::create).collect(ToUnmodifiable.set());
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+        final Set<URL> resources = new LinkedHashSet<>();
+        final String resourceName = META_INF_SERVICES + type.getName();
+        for (ClassLoader loader : loaders) {
+            try {
+                for (Enumeration<URL> urls = loader.getResources(resourceName); urls.hasMoreElements();) {
+                    resources.add(urls.nextElement());
+                }
+            } catch (IOException e) {
+                log.log(Level.SEVERE, "Error searching for resource(s) " + resourceName, e);
+            }
         }
+        return resources.stream().map(this::read).flatMap(Collection::stream).<T> map(this::create)
+            .collect(ToUnmodifiable.set());
     }
 
     private Set<String> read(URL url) {
         try (BufferedReader r = new BufferedReader(new InputStreamReader(url.openStream()))) {
             return r.lines().map(String::trim).filter(line -> line.charAt(0) != '#').collect(Collectors.toSet());
         } catch (IOException e) {
-            throw new IllegalStateException(e);
+            log.log(Level.SEVERE, "Unable to read resource " + url, e);
+            return Collections.emptySet();
         }
     }
 
     @SuppressWarnings("unchecked")
     private <T> Class<T> loadClass(final String className) {
-        try {
-            return (Class<T>) Class.forName(className, true, loader);
-        } catch (final ClassNotFoundException ex) {
-            throw new ValidationException(ex);
+        for (ClassLoader loader : loaders) {
+            try {
+                return (Class<T>) Class.forName(className, true, loader);
+            } catch (final ClassNotFoundException ex) {
+            }
         }
+        throw new ValidationException("Unable to load class " + className);
     }
 
     @Privileged

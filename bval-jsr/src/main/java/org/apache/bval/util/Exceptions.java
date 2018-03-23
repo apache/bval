@@ -18,6 +18,7 @@ package org.apache.bval.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -26,6 +27,17 @@ import java.util.stream.Stream;
  * Utility class for sundry {@link Exception}-related tasks.
  */
 public class Exceptions {
+    /**
+     * Callback interface that collects format arguments in conditional raise* method variants.
+     * @see Exceptions#raiseIf(boolean, Function, String, Consumer)
+     * @see Exceptions#raiseIf(boolean, BiFunction, Throwable, String, Consumer)
+     * @see Exceptions#raiseUnless(boolean, Function, String, Consumer)
+     * @see Exceptions#raiseUnless(boolean, BiFunction, Throwable, String, Consumer)
+     */
+    @FunctionalInterface
+    public interface FormatArgs {
+        void args(Object... args);
+    }
 
     public static <E extends Exception> E create(Function<? super String, ? extends E> fn, String format,
         Object... args) {
@@ -69,10 +81,22 @@ public class Exceptions {
     }
 
     public static <E extends Exception> void raiseIf(boolean condition, Function<? super String, ? extends E> fn,
+        String format, Consumer<FormatArgs> argsProvider) throws E {
+        if (condition) {
+            raise(fn, message(format,argsProvider));
+        }
+    }
+
+    public static <E extends Exception> void raiseIf(boolean condition, Function<? super String, ? extends E> fn,
         Supplier<String> message) throws E {
         if (condition) {
             raise(fn, message);
         }
+    }
+
+    public static <E extends Exception> void raiseUnless(boolean condition, Function<? super String, ? extends E> fn,
+        String format, Consumer<FormatArgs> argsProvider) throws E {
+        raiseIf(!condition, fn, format, argsProvider);
     }
 
     public static <E extends Exception> void raiseUnless(boolean condition, Function<? super String, ? extends E> fn,
@@ -103,10 +127,24 @@ public class Exceptions {
     }
 
     public static <E extends Exception, C extends Throwable> void raiseIf(boolean condition,
+        BiFunction<? super String, ? super C, ? extends E> fn, C cause, String format,
+        Consumer<FormatArgs> argsProvider) throws E {
+        if (condition) {
+            raise(fn, cause, message(format, argsProvider));
+        }
+    }
+
+    public static <E extends Exception, C extends Throwable> void raiseIf(boolean condition,
         BiFunction<? super String, ? super C, ? extends E> fn, C cause, Supplier<String> message) throws E {
         if (condition) {
             raise(fn, cause, message);
         }
+    }
+
+    public static <E extends Exception, C extends Throwable> void raiseUnless(boolean condition,
+        BiFunction<? super String, ? super C, ? extends E> fn, C cause, String format,
+        Consumer<FormatArgs> argsProvider) throws E {
+        raiseIf(!condition, fn, cause, message(format, argsProvider));
     }
 
     public static <E extends Exception, C extends Throwable> void raiseUnless(boolean condition,
@@ -131,6 +169,12 @@ public class Exceptions {
         t.setStackTrace(Stream.of(stackTrace).filter(e -> !Exceptions.class.getName().equals(e.getClassName()))
             .toArray(StackTraceElement[]::new));
         return t;
+    }
+
+    private static Supplier<String> message(String format, Consumer<FormatArgs> argsProvider) {
+        final ObjectWrapper<Object[]> args = new ObjectWrapper<>();
+        argsProvider.accept(args::accept);
+        return () -> String.format(format, args.get());
     }
 
     private Exceptions() {

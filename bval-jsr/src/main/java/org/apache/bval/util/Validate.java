@@ -47,8 +47,10 @@ public final class Validate {
         Validate.notNull(array);
 
         for (int i = 0; i < array.length; i++) {
-            Exceptions.raiseIf(array[i] == null, IllegalArgumentException::new, message,
-                ObjectUtils.arrayAdd(values, Integer.valueOf(i)));
+            if (array[i] == null) {
+                Exceptions.raise(IllegalArgumentException::new, message,
+                    ObjectUtils.arrayAdd(values, Integer.valueOf(i)));
+            }
         }
         return array;
     }

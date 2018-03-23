@@ -100,8 +100,9 @@ public class CompositeBuilder {
         public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
             return merge(b -> b.getFields(meta), (f, l) -> {
                 final Field fld = Reflection.find(meta.getHost(), t -> Reflection.getDeclaredField(t, f));
-                Exceptions.raiseIf(fld == null, IllegalStateException::new, "Could not find field %s of %s", f,
-                    meta.getHost());
+                if (fld == null) {
+                    Exceptions.raise(IllegalStateException::new, "Could not find field %s of %s", f, meta.getHost());
+                }
                 return forContainer(l, new Meta.ForField(fld), ElementKind.PROPERTY);
             });
         }
@@ -110,8 +111,10 @@ public class CompositeBuilder {
         public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             return merge(b -> b.getGetters(meta), (g, l) -> {
                 final Method getter = Methods.getter(meta.getHost(), g);
-                Exceptions.raiseIf(getter == null, IllegalStateException::new,
-                    "Could not find getter for property %s of %s", g, meta.getHost());
+                if (getter == null) {
+                    Exceptions.raise(IllegalStateException::new, "Could not find getter for property %s of %s", g,
+                        meta.getHost());
+                }
                 return forContainer(l, new Meta.ForMethod(getter), ElementKind.PROPERTY);
             });
         }
@@ -252,9 +255,10 @@ public class CompositeBuilder {
         final List<String> parameterNames =
             getParameterNames.apply(validatorFactory.getParameterNameProvider(), meta.getHost());
 
-        Exceptions.raiseUnless(parameterNames.size() == parameters.length, IllegalStateException::new,
-            "%s returned wrong number of parameter names", validatorFactory.getParameterNameProvider());
-
+        if (parameterNames.size() != parameters.length) {
+            Exceptions.raise(IllegalStateException::new, "%s returned wrong number of parameter names",
+                validatorFactory.getParameterNameProvider());
+        }
         return IntStream.range(0, parameters.length)
             .mapToObj(n -> new Meta.ForParameter(parameters[n], parameterNames.get(n))).collect(Collectors.toList());
     }

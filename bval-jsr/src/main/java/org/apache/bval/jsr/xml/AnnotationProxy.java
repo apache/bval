@@ -64,14 +64,15 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
                 values.put(m.getName(), descriptor.getValue(m.getName()));
                 processedValuesFromDescriptor++;
             } else {
-                Exceptions.raiseIf(m.getDefaultValue() == null, IllegalArgumentException::new,
-                    "No value provided for %s", m.getName());
+                if (m.getDefaultValue() == null) {
+                    Exceptions.raise(IllegalArgumentException::new, "No value provided for %s", m.getName());
+                }
                 values.put(m.getName(), m.getDefaultValue());
             }
         }
         Exceptions.raiseUnless(processedValuesFromDescriptor == descriptor.size() || Valid.class.equals(annotationType),
             IllegalArgumentException::new, "Trying to instantiate %s with unknown parameters.",
-            annotationType.getName());
+            f -> f.args(annotationType.getName()));
     }
 
     /**

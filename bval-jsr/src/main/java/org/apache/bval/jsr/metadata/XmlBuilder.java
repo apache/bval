@@ -274,9 +274,10 @@ public class XmlBuilder {
                     return new ContainerElementKey(annotatedType, typeArgumentIndex);
                 }, XmlBuilder.ForContainerElementType::new));
             }
-            Exceptions.raiseUnless(elements.isEmpty(), ValidationException::new,
-                "Illegally specified %d container element type(s) for %s", elements.size(), host);
-
+            if (!elements.isEmpty()) {
+                Exceptions.raise(ValidationException::new, "Illegally specified %d container element type(s) for %s",
+                    elements.size(), host);
+            }
             return Collections.emptyMap();
         }
 

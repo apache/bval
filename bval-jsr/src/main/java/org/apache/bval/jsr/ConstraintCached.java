@@ -24,13 +24,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintValidator;
@@ -44,7 +42,6 @@ import org.apache.bval.jsr.metadata.ValidatorMappingProvider;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
-import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 
 /**
@@ -73,8 +70,10 @@ public class ConstraintCached {
             supportedTargets = svt == null ? DEFAULT_VALIDATION_TARGETS
                 : Collections.unmodifiableSet(EnumSet.copyOf(Arrays.asList(svt.value())));
 
-            Exceptions.raiseIf(supportedTargets.isEmpty(), ConstraintDefinitionException::new,
-                "Illegally specified 0-length %s value on %s", SupportedValidationTarget.class.getSimpleName(), type);
+            if (supportedTargets.isEmpty()) {
+                Exceptions.raise(ConstraintDefinitionException::new, "Illegally specified 0-length %s value on %s",
+                    SupportedValidationTarget.class.getSimpleName(), type);
+            }
         }
 
         public Class<? extends ConstraintValidator<T, ?>> getType() {

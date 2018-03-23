@@ -148,13 +148,15 @@ public abstract class ValidationJob<T> {
                     .ifPresent(x -> m.put(genericKey, x));
             }
             if (m.isEmpty()) {
-                Exceptions.raiseIf(valueUnwrapping == ValidateUnwrappedValue.UNWRAP,
-                    ConstraintDeclarationException::new, "No %s found for %s", containerClass);
+                if (valueUnwrapping == ValidateUnwrappedValue.UNWRAP) {
+                    Exceptions.raise(ConstraintDeclarationException::new, "No %s found for %s", containerClass);
+                }
                 return Optional.empty();
             }
-            Exceptions.raiseIf(m.size() > 1, ConstraintDeclarationException::new,
-                "Found generic and non-generic %ss for %s", ValueExtractor.class.getSimpleName(), containerClass);
-
+            if (m.size() > 1) {
+                Exceptions.raise(ConstraintDeclarationException::new, "Found generic and non-generic %ss for %s",
+                    ValueExtractor.class.getSimpleName(), containerClass);
+            }
             return Optional.of(m.entrySet().iterator().next());
         }
 
@@ -231,9 +233,10 @@ public abstract class ValidationJob<T> {
                 constraint.getConstraintValidatorClass();
 
             if (constraintValidatorClass == null) {
-                Exceptions.raiseIf(constraint.getComposingConstraints().isEmpty(), UnexpectedTypeException::new,
-                    "No %s type located for non-composed constraint %s", ConstraintValidator.class.getSimpleName(),
-                    constraint);
+                if (constraint.getComposingConstraints().isEmpty()) {
+                    Exceptions.raise(UnexpectedTypeException::new, "No %s type located for non-composed constraint %s",
+                        ConstraintValidator.class.getSimpleName(), constraint);
+                }
                 return null;
             }
             ConstraintValidator constraintValidator = null;
@@ -244,10 +247,10 @@ public abstract class ValidationJob<T> {
             } catch (Exception e) {
                 cause = e;
             }
-            Exceptions.raiseIf(constraintValidator == null, ValidationException::new, cause,
-                "Unable to get %s instance from %s", constraintValidatorClass.getName(),
-                validatorContext.getConstraintValidatorFactory());
-
+            if (constraintValidator == null) {
+                Exceptions.raise(ValidationException::new, cause, "Unable to get %s instance from %s",
+                    constraintValidatorClass.getName(), validatorContext.getConstraintValidatorFactory());
+            }
             return constraintValidator;
         }
 

@@ -137,10 +137,9 @@ public class GroupsComputer {
         Exceptions.raiseIf(groups.stream().anyMatch(Objects::isNull), IllegalArgumentException::new,
             "Null group specified");
 
-        for (final Class<?> clazz : groups) {
-            Exceptions.raiseUnless(clazz.isInterface(), ValidationException::new,
-                "A group must be an interface. %s is not.", clazz);
-        }
+        groups.forEach(g -> Exceptions.raiseUnless(g.isInterface(), ValidationException::new,
+            "A group must be an interface. %s is not.", g));
+
         final Groups chain = new Groups();
         for (Class<?> clazz : groups) {
             final GroupSequence anno = clazz.getAnnotation(GroupSequence.class);

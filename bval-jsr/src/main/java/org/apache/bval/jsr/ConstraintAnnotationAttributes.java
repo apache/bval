@@ -126,8 +126,9 @@ public enum ConstraintAnnotationAttributes {
     public <V> V get(Map<? super String, ? super V> map) {
         @SuppressWarnings("unchecked")
         final V result = (V) map.get(getAttributeName());
-        Exceptions.raiseUnless(TypeUtils.isInstance(result, getType()), IllegalStateException::new,
-            "Invalid '%s' value: %s", getAttributeName(), result);
+        if (!TypeUtils.isInstance(result, getType())) {
+            Exceptions.raise(IllegalStateException::new, "Invalid '%s' value: %s", getAttributeName(), result);
+        }
         return result;
     }
 

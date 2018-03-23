@@ -313,7 +313,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     @Override
     public <T extends Node> T as(final Class<T> nodeType) {
         Exceptions.raiseUnless(nodeType.isInstance(this), ClassCastException::new, "Type %s not supported by %s",
-            nodeType, getClass());
+            f -> f.args(nodeType, getClass()));
         return nodeType.cast(this);
     }
 

@@ -82,7 +82,7 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
         @Override
         public NodeBuilderDefinedContext addParameterNode(int index) {
             Exceptions.raiseUnless(frame.descriptor instanceof CrossParameterDescriptor, ValidationException::new,
-                "Cannot add parameter node for %s", frame.descriptor.getClass().getName());
+                "Cannot add parameter node for %s", f -> f.args(frame.descriptor.getClass().getName()));
 
             final CrossParameterD<?, ?> crossParameter =
                 ComposedD.unwrap(frame.descriptor, CrossParameterD.class).findFirst().get();
@@ -175,9 +175,9 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
 
     Set<ConstraintViolation<T>> getRequiredViolations() {
         if (!violations.optional().isPresent()) {
-            Exceptions.raiseIf(defaultConstraintViolationDisabled, ValidationException::new,
-                "Expected custom constraint violation(s)");
-
+            if (defaultConstraintViolationDisabled) {
+                Exceptions.raise(ValidationException::new, "Expected custom constraint violation(s)");
+            }
             addError(getDefaultConstraintMessageTemplate(), frame.context.getPath());
         }
         return violations.get();

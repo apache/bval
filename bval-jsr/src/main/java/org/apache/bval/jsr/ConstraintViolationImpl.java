@@ -172,7 +172,9 @@ public class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Seria
 
     @Override
     public <U> U unwrap(Class<U> type) {
-        Exceptions.raiseUnless(type.isInstance(this), ValidationException::new, "Type %s is not supported", type);
+        if (!type.isInstance(this)) {
+            Exceptions.raise(ValidationException::new, "Type %s is not supported", type);
+        }
         return type.cast(this);
     }
 

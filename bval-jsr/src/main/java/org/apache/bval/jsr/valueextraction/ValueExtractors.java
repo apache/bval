@@ -95,7 +95,7 @@ public class ValueExtractors {
                 .get(key.getContainerClass().getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
         }
         Exceptions.raiseUnless(result instanceof Class<?>, ValueExtractorDefinitionException::new,
-            "%s did not resolve to a %s relative to %s", key, Class.class.getName(), target);
+            "%s did not resolve to a %s relative to %s", f -> f.args(key, Class.class.getName(), target));
         return (Class<?>) result;
     }
 
@@ -171,7 +171,7 @@ public class ValueExtractors {
         Validate.notNull(extractor);
         valueExtractors.get().compute(ContainerElementKey.forValueExtractor(extractor), (k, v) -> {
             Exceptions.raiseIf(v != null, ValueExtractorDeclarationException::new,
-                "Multiple context-level %ss specified for %s", ValueExtractor.class.getSimpleName(), k);
+                "Multiple context-level %ss specified for %s", f -> f.args(ValueExtractor.class.getSimpleName(), k));
             return extractor;
         });
     }
@@ -207,7 +207,7 @@ public class ValueExtractors {
                 .filter(Predicate.isEqual(quid).negate()).allMatch(quo -> related(quid, quo)));
 
             Exceptions.raiseUnless(allRelated, ConstraintDeclarationException::new,
-                "> 1 maximally specific %s found for %s", ValueExtractor.class.getSimpleName(), key);
+                "> 1 maximally specific %s found for %s", f -> f.args(ValueExtractor.class.getSimpleName(), key));
         }
         return candidateMap.values().iterator().next();
     }

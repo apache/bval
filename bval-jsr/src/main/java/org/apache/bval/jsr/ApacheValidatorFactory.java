@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidatorFactory;
@@ -38,10 +39,12 @@ import javax.validation.spi.ConfigurationState;
 import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.descriptor.DescriptorManager;
+import org.apache.bval.jsr.metadata.MetadataBuilder;
+import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
 import org.apache.bval.jsr.metadata.MetadataBuilders;
+import org.apache.bval.jsr.metadata.MetadataSource;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
-import org.apache.bval.jsr.xml.ValidationMappingParser;
 import org.apache.bval.util.CloseableAble;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -350,8 +353,12 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     private void loadAndVerifyUserCustomizations(ConfigurationState configuration) {
-        //TODO introduce service interface
-        new ValidationMappingParser(this).processMappingConfig(configuration.getMappingStreams());
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        final BiConsumer<Class<?>, ForBean<?>> addBuilder = (t, b) -> {
+            getMetadataBuilders().registerCustomBuilder((Class) t, (MetadataBuilder.ForBean) b);
+        };
+        participantFactory.loadServices(MetadataSource.class)
+            .forEach(ms -> ms.process(configuration, getConstraintsCache()::add, addBuilder));
 
         getMetadataBuilders().getCustomizedTypes().forEach(getDescriptorManager()::getBeanDescriptor);
     }

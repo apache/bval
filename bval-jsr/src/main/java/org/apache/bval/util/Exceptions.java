@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Utility class for the creation and throwing of Exceptions.
+ * Utility class for sundry {@link Exception}-related tasks.
  */
 public class Exceptions {
 

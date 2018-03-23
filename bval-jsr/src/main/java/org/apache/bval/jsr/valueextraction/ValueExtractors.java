@@ -48,6 +48,9 @@ import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
 import org.apache.bval.util.reflection.TypeUtils;
 
+/**
+ * {@link ValueExtractor} collection of some level of a bean validation hierarchy.
+ */
 public class ValueExtractors {
     public static final ValueExtractors DEFAULT;
 

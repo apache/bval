@@ -176,6 +176,10 @@ public class ValueExtractors {
         });
     }
 
+    public Map<ContainerElementKey, ValueExtractor<?>> getLocalValueExtractors() {
+        return valueExtractors.optional().map(Collections::unmodifiableMap).orElseGet(Collections::emptyMap);
+    }
+
     public Map<ContainerElementKey, ValueExtractor<?>> getValueExtractors() {
         final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> result = new Lazy<>(HashMap::new);
         populate(result);

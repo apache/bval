@@ -371,7 +371,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     @Override
     public Set<ValueExtractor<?>> getValueExtractors() {
-        return Collections.unmodifiableSet(new LinkedHashSet<>(valueExtractors.getValueExtractors().values()));
+        return Collections.unmodifiableSet(new LinkedHashSet<>(valueExtractors.getLocalValueExtractors().values()));
     }
 
     public void deferBootstrapOverrides() {

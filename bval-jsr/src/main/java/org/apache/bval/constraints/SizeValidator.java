@@ -29,7 +29,7 @@ import javax.validation.ValidationException;
 import javax.validation.constraints.Size;
 
 /**
- * Description: Abstract validator impl. for @Size annotation<br/>
+ * Description: Abstract validator impl. for @Size annotation.
  */
 public abstract class SizeValidator<T> implements ConstraintValidator<Size, T> {
     public static class ForArray<T> extends SizeValidator<T> {
@@ -81,12 +81,6 @@ public abstract class SizeValidator<T> implements ConstraintValidator<Size, T> {
     public static class ForMap extends SizeValidator<Map<?, ?>> {
         public ForMap() {
             super(Map::size);
-        }
-    }
-
-    public static class ForNumber extends SizeValidator<Number> {
-        public ForNumber() {
-            super(Number::intValue);
         }
     }
 

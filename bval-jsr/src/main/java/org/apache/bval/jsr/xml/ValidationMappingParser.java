@@ -20,29 +20,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import javax.validation.ValidationException;
+import javax.validation.spi.ConfigurationState;
 
-import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.metadata.MetadataBuilder;
+import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
+import org.apache.bval.jsr.metadata.MetadataSource;
+import org.apache.bval.jsr.metadata.ValidatorMappingProvider;
 import org.apache.bval.jsr.metadata.XmlBuilder;
 import org.apache.bval.jsr.metadata.XmlValidationMappingProvider;
 import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 import org.xml.sax.InputSource;
 
 /**
- * Uses JAXB to parse constraints.xml based on the validation-mapping XML
- * schema.
+ * Uses JAXB to parse constraints.xml based on the validation-mapping XML schema.
  */
 @Privilizing(@CallTo(Reflection.class))
-public class ValidationMappingParser {
+public class ValidationMappingParser implements MetadataSource {
     private static final SchemaManager SCHEMA_MANAGER = new SchemaManager.Builder()
         .add(null, "http://jboss.org/xml/ns/javax/validation/mapping", "META-INF/validation-mapping-1.0.xsd")
         .add(XmlBuilder.Version.v11.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
@@ -51,26 +51,16 @@ public class ValidationMappingParser {
             "META-INF/validation-mapping-2.0.xsd")
         .build();
 
-    private final ApacheValidatorFactory factory;
-
-    public ValidationMappingParser(ApacheValidatorFactory factory) {
-        this.factory = Validate.notNull(factory, "factory");
-    }
-
-    /**
-     * Parse files with constraint mappings and collect information in the
-     * factory.
-     * 
-     * @param xmlStreams
-     *            - one or more contraints.xml file streams to parse
-     */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void processMappingConfig(Set<InputStream> xmlStreams) throws ValidationException {
-        for (final InputStream xmlStream : xmlStreams) {
+    @Override
+    public void process(ConfigurationState configurationState,
+        Consumer<ValidatorMappingProvider> addValidatorMappingProvider, BiConsumer<Class<?>, ForBean<?>> addBuilder) {
+        if (configurationState.isIgnoreXmlConfiguration()) {
+            return;
+        }
+        for (final InputStream xmlStream : configurationState.getMappingStreams()) {
             final ConstraintMappingsType mapping = parseXmlMappings(xmlStream);
-            processConstraintDefinitions(mapping.getConstraintDefinition(), mapping.getDefaultPackage());
-            new XmlBuilder(mapping).forBeans().forEach(
-                (k, v) -> factory.getMetadataBuilders().registerCustomBuilder((Class) k, (MetadataBuilder.ForBean) v));
+            addValidatorMappingProvider.accept(toMappingProvider(mapping));
+            new XmlBuilder(mapping).forBeans().forEach(addBuilder::accept);
         }
     }
 
@@ -93,15 +83,13 @@ public class ValidationMappingParser {
         }
     }
 
-    private void processConstraintDefinitions(List<ConstraintDefinitionType> constraintDefinitionList,
-        String defaultPackage) {
-
+    private ValidatorMappingProvider toMappingProvider(ConstraintMappingsType mapping) {
         final Map<Class<? extends Annotation>, ValidatedByType> validatorMappings = new HashMap<>();
 
-        for (ConstraintDefinitionType constraintDefinition : constraintDefinitionList) {
+        for (ConstraintDefinitionType constraintDefinition : mapping.getConstraintDefinition()) {
             final String annotationClassName = constraintDefinition.getAnnotation();
 
-            final Class<?> clazz = loadClass(annotationClassName, defaultPackage);
+            final Class<?> clazz = loadClass(annotationClassName, mapping.getDefaultPackage());
 
             Exceptions.raiseUnless(clazz.isAnnotation(), ValidationException::new, "%s is not an annotation",
                 annotationClassName);
@@ -113,8 +101,8 @@ public class ValidationMappingParser {
 
             validatorMappings.put(annotationClass, constraintDefinition.getValidatedBy());
         }
-        factory.getConstraintsCache()
-            .add(new XmlValidationMappingProvider(validatorMappings, cn -> toQualifiedClassName(cn, defaultPackage)));
+        return new XmlValidationMappingProvider(validatorMappings,
+            cn -> toQualifiedClassName(cn, mapping.getDefaultPackage()));
     }
 
     private Class<?> loadClass(String className, String defaultPackage) {

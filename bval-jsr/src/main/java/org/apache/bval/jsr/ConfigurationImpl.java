@@ -21,14 +21,13 @@ package org.apache.bval.jsr;
 import java.io.Closeable;
 import java.io.InputStream;
 import java.time.Clock;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
 import javax.validation.BootstrapConfiguration;
@@ -45,11 +44,12 @@ import javax.validation.spi.ConfigurationState;
 import javax.validation.spi.ValidationProvider;
 import javax.validation.valueextraction.ValueExtractor;
 
-import org.apache.bval.cdi.BValExtension;
 import org.apache.bval.jsr.parameter.DefaultParameterNameProvider;
 import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr.util.IOs;
+import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.jsr.xml.ValidationParser;
+import org.apache.bval.util.CloseableAble;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.commons.weaver.privilizer.Privileged;
@@ -60,7 +60,7 @@ import org.apache.commons.weaver.privilizer.Privileged;
  * hence this can be passed to buildValidatorFactory(ConfigurationState).
  * <br/>
  */
-public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState {
+public class ConfigurationImpl implements ApacheValidatorConfiguration, ConfigurationState, CloseableAble {
 
     private class LazyParticipant<T> extends Lazy<T> {
         private boolean locked;
@@ -135,11 +135,13 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     private final LazyParticipant<ClockProvider> clockProvider = new LazyParticipant<>(this::getDefaultClockProvider);
 
-    private Lazy<BootstrapConfiguration> bootstrapConfiguration = new Lazy<>(this::createBootstrapConfiguration);
+    private final ValueExtractors bootstrapValueExtractors = new ValueExtractors();
+    private final ValueExtractors valueExtractors = bootstrapValueExtractors.createChild();
 
-    private Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
+    private final Lazy<BootstrapConfiguration> bootstrapConfiguration = new Lazy<>(this::createBootstrapConfiguration);
 
-    private Set<ValueExtractor<?>> valueExtractors = new HashSet<>();
+    private final Set<InputStream> mappingStreams = new HashSet<>();
+    private final Map<String, String> properties = new HashMap<>();
 
     private boolean beforeCdi = false;
     private ClassLoader loader;
@@ -151,9 +153,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private boolean prepared = false;
     // END DEFAULTS
 
-    private final Set<InputStream> mappingStreams = new HashSet<>();
-    private final Map<String, String> properties = new HashMap<>();
     private boolean ignoreXmlConfiguration = false;
+
+    private ParticipantFactory participantFactory;
 
     /**
      * Create a new ConfigurationImpl instance.
@@ -369,7 +371,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     @Override
     public Set<ValueExtractor<?>> getValueExtractors() {
-        return Collections.unmodifiableSet(valueExtractors);
+        return Collections.unmodifiableSet(new LinkedHashSet<>(valueExtractors.getValueExtractors().values()));
     }
 
     public void deferBootstrapOverrides() {
@@ -383,13 +385,13 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         }
     }
 
-    public Closeable getClosable() {
-        return () -> {
-            for (final BValExtension.Releasable<?> releasable : releasables) {
-                releasable.release();
-            }
-            releasables.clear();
-        };
+    @Override
+    public Closeable getCloseable() {
+        if (participantFactory == null) {
+            return () -> {
+            };
+        }
+        return participantFactory;
     }
 
     @Privileged
@@ -407,16 +409,20 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     private BootstrapConfiguration createBootstrapConfiguration() {
-        if (!ignoreXmlConfiguration) {
-            loader = ValidationParser.class.getClassLoader();
-            final BootstrapConfiguration xmlBootstrap =
-                ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
-            if (xmlBootstrap != null) {
-                return xmlBootstrap;
+        try {
+            if (!ignoreXmlConfiguration) {
+                loader = ValidationParser.class.getClassLoader();
+                final BootstrapConfiguration xmlBootstrap =
+                    ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
+                if (xmlBootstrap != null) {
+                    return xmlBootstrap;
+                }
             }
+            loader = ApacheValidatorFactory.class.getClassLoader();
+            return BootstrapConfigurationImpl.DEFAULT;
+        } finally {
+            participantFactory = new ParticipantFactory(loader);
         }
-        loader = ApacheValidatorFactory.class.getClassLoader();
-        return BootstrapConfigurationImpl.DEFAULT;
     }
 
     private void applyBootstrapConfiguration() {
@@ -425,7 +431,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         if (bootstrapConfig.getDefaultProviderClassName() != null) {
             this.providerClass = loadClass(bootstrapConfig.getDefaultProviderClassName());
         }
-
         bootstrapConfig.getProperties().forEach(this::addProperty);
         bootstrapConfig.getConstraintMappingResourcePaths().stream().map(ValidationParser::open)
             .forEach(this::addMapping);
@@ -442,6 +447,9 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         override(constraintValidatorFactory, bootstrapConfig::getConstraintValidatorFactoryClassName);
         override(parameterNameProvider, bootstrapConfig::getParameterNameProviderClassName);
         override(clockProvider, bootstrapConfig::getClockProviderClassName);
+
+        bootstrapConfig.getValueExtractorClassNames().stream().<ValueExtractor<?>> map(participantFactory::create)
+            .forEach(bootstrapValueExtractors::add);
     }
 
     @SuppressWarnings("unchecked")
@@ -475,25 +483,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     }
 
     private <T> void override(LazyParticipant<T> participant, Supplier<String> getClassName) {
-        final String className = getClassName.get();
-        if (className != null) {
-            final Class<T> t = loadClass(className);
-            participant.override(newInstance(t));
-        }
-    }
-
-    @Privileged
-    private <T> T newInstance(final Class<T> cls) {
-        try {
-            final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
-            releasables.add(releasable);
-            return releasable.getInstance();
-        } catch (Exception | NoClassDefFoundError e) {
-        }
-        try {
-            return cls.getConstructor().newInstance();
-        } catch (final Exception e) {
-            throw new ValidationException(e.getMessage(), e);
-        }
+        Optional.ofNullable(getClassName.get()).<T> map(participantFactory::create).ifPresent(participant::override);
     }
 }

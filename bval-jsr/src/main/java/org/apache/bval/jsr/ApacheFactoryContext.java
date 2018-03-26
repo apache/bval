@@ -179,4 +179,8 @@ public class ApacheFactoryContext implements ValidatorContext {
     public GroupsComputer getGroupsComputer() {
         return groupsComputer.get();
     }
+
+    public ConstraintCached getConstraintsCache() {
+        return factory.getConstraintsCache();
+    }
 }

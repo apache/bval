@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.bval.jsr.descriptor;
+package org.apache.bval.jsr.job;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -35,8 +35,9 @@ import javax.validation.ConstraintValidator;
 import javax.validation.UnexpectedTypeException;
 import javax.validation.constraintvalidation.ValidationTarget;
 
-import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.ConstraintCached;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
+import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
@@ -98,27 +99,25 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         return false;
     }
 
-    private final ApacheValidatorFactory validatorFactory;
-    private final Class<?> validatedType;
+    private final ConstraintCached constraintsCache;
+    private final ConstraintD<?> descriptor;
     private final ValidationTarget validationTarget;
-    private final A constraint;
-    private final boolean composed;
+    private final Class<?> validatedType;
 
-    ComputeConstraintValidatorClass(ApacheValidatorFactory validatorFactory, ValidationTarget validationTarget,
-        A constraint, Class<?> validatedType) {
+    ComputeConstraintValidatorClass(ConstraintCached constraintsCache, ConstraintD<A> descriptor,
+        ValidationTarget validationTarget, Class<?> validatedType) {
         super();
-        this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
+        this.constraintsCache = Validate.notNull(constraintsCache, "constraintsCache");
+        this.descriptor = Validate.notNull(descriptor, "descriptor");
         this.validationTarget = Validate.notNull(validationTarget, "validationTarget");
-        this.constraint = Validate.notNull(constraint, "constraint");
         this.validatedType = Validate.notNull(validatedType, "validatedType");
-        this.composed = validatorFactory.getAnnotationsManager().isComposed(constraint);
     }
 
     @Override
     public Class<? extends ConstraintValidator<A, ?>> get() {
         @SuppressWarnings("unchecked")
-        final Class<A> constraintType = (Class<A>) constraint.annotationType();
-        return findValidator(validatorFactory.getConstraintsCache().getConstraintValidatorInfo(constraintType));
+        final Class<A> constraintType = (Class<A>) descriptor.getAnnotation().annotationType();
+        return findValidator(constraintsCache.getConstraintValidatorInfo(constraintType));
     }
 
     private Class<? extends ConstraintValidator<A, ?>> findValidator(Set<ConstraintValidatorInfo<A>> infos) {
@@ -140,10 +139,10 @@ class ComputeConstraintValidatorClass<A extends Annotation>
                 .collect(Collectors.toSet());
 
         @SuppressWarnings("unchecked")
-        final Class<A> constraintType = (Class<A>) constraint.annotationType();
+        final Class<A> constraintType = (Class<A>) descriptor.getAnnotation().annotationType();
 
         final int size = set.size();
-        Exceptions.raiseIf(size > 1 || !composed && set.isEmpty(), ConstraintDefinitionException::new,
+        Exceptions.raiseIf(size > 1 || !isComposed() && set.isEmpty(), ConstraintDefinitionException::new,
             "%d cross-parameter %ss found for constraint type %s", size, CV, constraintType);
 
         final Class<? extends ConstraintValidator<A, ?>> result = set.iterator().next().getType();
@@ -183,7 +182,7 @@ class ComputeConstraintValidatorClass<A extends Annotation>
                 (Class<? extends ConstraintValidator<A, ?>>) candidates.values().iterator().next();
             return result;
         case 0:
-            if (composed) {
+            if (isComposed()) {
                 return null;
             }
             cond = "No compliant";
@@ -193,7 +192,7 @@ class ComputeConstraintValidatorClass<A extends Annotation>
             break;
         }
         throw Exceptions.create(UnexpectedTypeException::new, "%s %s %s found for annotated element of type %s", cond,
-            constraint.annotationType().getName(), CV, TypeUtils.toString(validatedType));
+            descriptor.getAnnotation().annotationType().getName(), CV, TypeUtils.toString(validatedType));
     }
 
     // account for validated array types by unwrapping and rewrapping component
@@ -202,6 +201,13 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         final TypeWrapper w = new TypeWrapper(Reflection.primitiveToWrapper(validatedType));
         Stream.Builder<Class<?>> hierarchy = Stream.builder();
         Reflection.hierarchy(w.componentType, Interfaces.INCLUDE).forEach(hierarchy);
+        if (validatedType.isInterface()) {
+            hierarchy.accept(Object.class);
+        }
         return hierarchy.build().map(w::unwrapArrayComponentType);
+    }
+
+    private boolean isComposed() {
+        return !descriptor.getComposingConstraints().isEmpty();
     }
 }

@@ -29,6 +29,7 @@ import java.util.stream.IntStream;
 import javax.validation.ConstraintViolation;
 import javax.validation.ParameterNameProvider;
 import javax.validation.Path;
+import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
@@ -117,6 +118,11 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
             super(null, (CrossParameterD<?, ?>) Validate.notNull(executableDescriptor, "executableDescriptor")
                 .getCrossParameterDescriptor(), context);
             this.executableDescriptor = executableDescriptor;
+        }
+
+        @Override
+        protected ValidationTarget getValidationTarget() {
+            return ValidationTarget.PARAMETERS;
         }
 
         @Override

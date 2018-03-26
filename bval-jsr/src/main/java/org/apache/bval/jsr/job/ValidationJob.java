@@ -48,12 +48,14 @@ import javax.validation.Path;
 import javax.validation.TraversableResolver;
 import javax.validation.UnexpectedTypeException;
 import javax.validation.ValidationException;
+import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.groups.Default;
 import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.ValidateUnwrappedValue;
+import javax.validation.valueextraction.UnwrapByDefault;
 import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
@@ -91,6 +93,10 @@ public abstract class ValidationJob<T> {
             this.parent = parent;
             this.descriptor = Validate.notNull(descriptor, "descriptor");
             this.context = Validate.notNull(context, "context");
+        }
+
+        protected ValidationTarget getValidationTarget() {
+            return ValidationTarget.ANNOTATED_ELEMENT;
         }
 
         final ValidationJob<T> getJob() {
@@ -230,7 +236,8 @@ public abstract class ValidationJob<T> {
         @SuppressWarnings({ "rawtypes" })
         private ConstraintValidator getConstraintValidator(ConstraintD<?> constraint) {
             final Class<? extends ConstraintValidator> constraintValidatorClass =
-                constraint.getConstraintValidatorClass();
+                new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
+                    getValidationTarget(), computeValidatedType(constraint)).get();
 
             if (constraintValidatorClass == null) {
                 if (constraint.getComposingConstraints().isEmpty()) {
@@ -254,7 +261,34 @@ public abstract class ValidationJob<T> {
             return constraintValidator;
         }
 
-        protected Stream<Class<?>> expand(Class<?> group) {
+        private Class<?> computeValidatedType(ConstraintD<?> constraint) {
+            final Class<?> elementClass = descriptor.getElementClass();
+
+            if (constraint.getValueUnwrapping() == ValidateUnwrappedValue.SKIP) {
+                return elementClass;
+            }
+            final ValueExtractor<?> valueExtractor =
+                validatorContext.getValueExtractors().find(new ContainerElementKey(elementClass, null));
+
+            final boolean unwrap = constraint.getValueUnwrapping() == ValidateUnwrappedValue.UNWRAP;
+
+            if (valueExtractor == null) {
+                if (unwrap) {
+                    Exceptions.raise(ConstraintDeclarationException::new, "No compatible %s found for %s",
+                        ValueExtractor.class.getSimpleName(), elementClass);
+                }
+            } else {
+                @SuppressWarnings("unchecked")
+                final Class<? extends ValueExtractor<?>> extractorClass =
+                    (Class<? extends ValueExtractor<?>>) valueExtractor.getClass();
+                if (unwrap || extractorClass.isAnnotationPresent(UnwrapByDefault.class)) {
+                    return ValueExtractors.getExtractedType(valueExtractor, elementClass);
+                }
+            }
+            return elementClass;
+        }
+
+        private Stream<Class<?>> expand(Class<?> group) {
             if (Default.class.equals(group)) {
                 final List<Class<?>> groupSequence = descriptor.getGroupSequence();
                 if (groupSequence != null) {

@@ -90,7 +90,6 @@ public class ValueExtractors {
     }
 
     public static Class<?> getExtractedType(ValueExtractor<?> extractor, Type target) {
-        
         final ContainerElementKey key = ContainerElementKey.forValueExtractor(extractor);
         Type result = key.getAnnotatedType().getType();
         if (result instanceof WildcardType && key.getTypeArgumentIndex() != null) {

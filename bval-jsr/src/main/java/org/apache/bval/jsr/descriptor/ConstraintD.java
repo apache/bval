@@ -35,29 +35,23 @@ import javax.validation.ConstraintTarget;
 import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
-import javax.validation.UnexpectedTypeException;
 import javax.validation.ValidationException;
 import javax.validation.groups.Default;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.Scope;
 import javax.validation.metadata.ValidateUnwrappedValue;
-import javax.validation.valueextraction.UnwrapByDefault;
 import javax.validation.valueextraction.Unwrapping;
 import javax.validation.valueextraction.Unwrapping.Skip;
 import javax.validation.valueextraction.Unwrapping.Unwrap;
-import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
-import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.ToUnmodifiable;
-import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
-import org.apache.bval.util.reflection.TypeUtils;
 
 public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A> {
     private enum Optionality {
@@ -77,8 +71,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     private final Meta<?> meta;
 
     private final Set<Class<? extends Payload>> payload;
-    private final Class<?> validatedType;
-
     private final Set<Class<?>> groups;
     private final boolean reportAsSingle;
     private final ValidateUnwrappedValue valueUnwrapping;
@@ -86,7 +78,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     private final Set<ConstraintDescriptor<?>> composingConstraints;
     private final List<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClasses;
-    private final Class<? extends ConstraintValidator<A, ?>> constraintValidatorClass;
 
     public ConstraintD(A annotation, Scope scope, Meta<?> meta, ApacheValidatorFactory validatorFactory) {
         this.annotation = Validate.notNull(annotation, "annotation");
@@ -94,8 +85,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         this.meta = Validate.notNull(meta, "meta");
 
         payload = computePayload();
-        validatedType = computeValidatedType(validatorFactory);
-
         groups = computeGroups();
         reportAsSingle = annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
         valueUnwrapping = computeValidateUnwrappedValue();
@@ -104,8 +93,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         Validate.notNull(validatorFactory, "validatorFactory");
         composingConstraints = computeComposingConstraints(validatorFactory);
         constraintValidatorClasses = computeConstraintValidatorClasses(validatorFactory);
-        constraintValidatorClass = new ComputeConstraintValidatorClass<>(validatorFactory, meta.getValidationTarget(),
-            annotation, validatedType).get();
     }
 
     @Override
@@ -179,14 +166,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         return meta.getElementType();
     }
 
-    public Class<?> getValidatedType() {
-        return validatedType;
-    }
-
-    public Class<? extends ConstraintValidator<A, ?>> getConstraintValidatorClass() {
-        return constraintValidatorClass;
-    }
-
     private <T> T read(ConstraintAnnotationAttributes attr) {
         return read(attr, Optionality.OPTIONAL);
     }
@@ -244,36 +223,5 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
                 meta.getHost());
         }
         return result;
-    }
-
-    private Class<?> computeValidatedType(ApacheValidatorFactory validatorFactory) {
-        final Class<?> rawType = TypeUtils.getRawType(meta.getType(), null);
-
-        if (rawType == null) {
-            Exceptions.raise(UnexpectedTypeException::new, "Could not calculate validated type from %s",
-                meta.getType());
-        }
-        if (payload.contains(Unwrapping.Skip.class)) {
-            return rawType;
-        }
-        final ValueExtractor<?> valueExtractor =
-            validatorFactory.getValueExtractors().find(new ContainerElementKey(meta.getAnnotatedType(), null));
-
-        final boolean unwrap = payload.contains(Unwrapping.Unwrap.class);
-
-        if (valueExtractor == null) {
-            if (unwrap) {
-                Exceptions.raise(ConstraintDeclarationException::new, "No compatible %s found for %s",
-                    ValueExtractor.class.getSimpleName(), meta.getType());
-            }
-        } else {
-            @SuppressWarnings("unchecked")
-            final Class<? extends ValueExtractor<?>> extractorClass =
-                (Class<? extends ValueExtractor<?>>) valueExtractor.getClass();
-            if (unwrap || extractorClass.isAnnotationPresent(UnwrapByDefault.class)) {
-                return ValueExtractors.getExtractedType(valueExtractor, meta.getType());
-            }
-        }
-        return rawType;
     }
 }

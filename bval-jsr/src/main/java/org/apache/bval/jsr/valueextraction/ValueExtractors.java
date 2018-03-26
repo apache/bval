@@ -26,7 +26,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -52,38 +54,39 @@ import org.apache.bval.util.reflection.TypeUtils;
  * {@link ValueExtractor} collection of some level of a bean validation hierarchy.
  */
 public class ValueExtractors {
+    public enum OnDuplicateContainerElementKey {
+        EXCEPTION, OVERWRITE;
+    }
+
+    public static final ValueExtractors EMPTY =
+        new ValueExtractors(null, OnDuplicateContainerElementKey.EXCEPTION, Collections.emptyMap());
+
     public static final ValueExtractors DEFAULT;
-
     static {
-        DEFAULT = new ValueExtractors(null) {
-            {
-                final Properties defaultExtractors = new Properties();
-                try {
-                    defaultExtractors.load(ValueExtractors.class.getResourceAsStream("DefaultExtractors.properties"));
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-                split(defaultExtractors.getProperty(ValueExtractor.class.getName())).map(cn -> {
-                    try {
-                        @SuppressWarnings("unchecked")
-                        final Class<? extends ValueExtractor<?>> result =
-                            (Class<? extends ValueExtractor<?>>) Reflection.toClass(cn)
-                                .asSubclass(ValueExtractor.class);
-                        return result;
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }).map(ValueExtractors::newInstance).forEach(super::add);
+        final Properties defaultExtractors = new Properties();
+        try {
+            defaultExtractors.load(ValueExtractors.class.getResourceAsStream("DefaultExtractors.properties"));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        final Map<ContainerElementKey, ValueExtractor<?>> m = new TreeMap<>();
+        final Consumer<ValueExtractor<?>> put = ve -> m.put(ContainerElementKey.forValueExtractor(ve), ve);
 
-                split(defaultExtractors.getProperty(ValueExtractor.class.getName() + ".container"))
-                    .flatMap(ValueExtractors::loadValueExtractors).forEach(super::add);
+        split(defaultExtractors.getProperty(ValueExtractor.class.getName())).map(cn -> {
+            try {
+                @SuppressWarnings("unchecked")
+                final Class<? extends ValueExtractor<?>> result =
+                    (Class<? extends ValueExtractor<?>>) Reflection.toClass(cn).asSubclass(ValueExtractor.class);
+                return result;
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
             }
+        }).map(ValueExtractors::newInstance).forEach(put);
 
-            @Override
-            public void add(ValueExtractor<?> extractor) {
-                throw new UnsupportedOperationException();
-            }
-        };
+        split(defaultExtractors.getProperty(ValueExtractor.class.getName() + ".container"))
+            .flatMap(ValueExtractors::loadValueExtractors).forEach(put);
+
+        DEFAULT = new ValueExtractors(null, OnDuplicateContainerElementKey.EXCEPTION, Collections.unmodifiableMap(m));
     }
 
     public static Class<?> getExtractedType(ValueExtractor<?> extractor, Type target) {
@@ -152,32 +155,56 @@ public class ValueExtractors {
         return c1.isAssignableFrom(c2) || c2.isAssignableFrom(c1);
     }
 
-    private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> valueExtractors = new Lazy<>(HashMap::new);
     private final ValueExtractors parent;
+    private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> valueExtractors = new Lazy<>(TreeMap::new);
+    private final OnDuplicateContainerElementKey onDuplicateContainerElementKey;
 
     public ValueExtractors() {
-        this(DEFAULT);
+        this(OnDuplicateContainerElementKey.EXCEPTION);
     }
 
-    private ValueExtractors(ValueExtractors parent) {
+    public ValueExtractors(OnDuplicateContainerElementKey onDuplicateContainerElementKey) {
+        this(DEFAULT, Validate.notNull(onDuplicateContainerElementKey));
+    }
+
+    private ValueExtractors(ValueExtractors parent, OnDuplicateContainerElementKey onDuplicateContainerElementKey) {
         this.parent = parent;
+        this.onDuplicateContainerElementKey = onDuplicateContainerElementKey;
+    }
+
+    private ValueExtractors(ValueExtractors parent, OnDuplicateContainerElementKey onDuplicateContainerElementKey,
+        Map<ContainerElementKey, ValueExtractor<?>> backingMap) {
+        this(parent, onDuplicateContainerElementKey);
+        this.valueExtractors.reset(backingMap);
     }
 
     public ValueExtractors createChild() {
-        return new ValueExtractors(this);
+        return createChild(OnDuplicateContainerElementKey.EXCEPTION);
+    }
+
+    public ValueExtractors createChild(OnDuplicateContainerElementKey onDuplicateContainerElementKey) {
+        return new ValueExtractors(this, onDuplicateContainerElementKey);
     }
 
     public void add(ValueExtractor<?> extractor) {
         Validate.notNull(extractor);
-        valueExtractors.get().compute(ContainerElementKey.forValueExtractor(extractor), (k, v) -> {
-            Exceptions.raiseIf(v != null, ValueExtractorDeclarationException::new,
-                "Multiple context-level %ss specified for %s", f -> f.args(ValueExtractor.class.getSimpleName(), k));
-            return extractor;
-        });
-    }
-
-    public Map<ContainerElementKey, ValueExtractor<?>> getLocalValueExtractors() {
-        return valueExtractors.optional().map(Collections::unmodifiableMap).orElseGet(Collections::emptyMap);
+        final ContainerElementKey key = ContainerElementKey.forValueExtractor(extractor);
+        if (key == null) {
+            Exceptions.raise(IllegalStateException::new, "Computed null %s for %s",
+                ContainerElementKey.class.getSimpleName(), extractor);
+        }
+        final Map<ContainerElementKey, ValueExtractor<?>> m = valueExtractors.get();
+        if (onDuplicateContainerElementKey == OnDuplicateContainerElementKey.EXCEPTION) {
+            synchronized (this) {
+                if (m.containsKey(key)) {
+                    Exceptions.raise(ValueExtractorDeclarationException::new,
+                        "Multiple context-level %ss specified for %s", ValueExtractor.class.getSimpleName(), key);
+                }
+                m.put(key, extractor);
+            }
+        } else {
+            m.put(key, extractor);
+        }
     }
 
     public Map<ContainerElementKey, ValueExtractor<?>> getValueExtractors() {

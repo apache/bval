@@ -45,6 +45,7 @@ import org.apache.bval.jsr.metadata.MetadataBuilders;
 import org.apache.bval.jsr.metadata.MetadataSource;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
+import org.apache.bval.jsr.valueextraction.ValueExtractors.OnDuplicateContainerElementKey;
 import org.apache.bval.util.CloseableAble;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -87,7 +88,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     private static ValueExtractors createBaseValueExtractors(ParticipantFactory participantFactory) {
-        final ValueExtractors result = new ValueExtractors();
+        final ValueExtractors result = new ValueExtractors(OnDuplicateContainerElementKey.OVERWRITE);
         participantFactory.loadServices(ValueExtractor.class).forEach(result::add);
         return result;
     }

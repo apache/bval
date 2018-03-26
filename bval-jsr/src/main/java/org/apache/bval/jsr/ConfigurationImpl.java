@@ -135,7 +135,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     private final LazyParticipant<ClockProvider> clockProvider = new LazyParticipant<>(this::getDefaultClockProvider);
 
-    private final ValueExtractors bootstrapValueExtractors = new ValueExtractors();
+    private final ValueExtractors bootstrapValueExtractors = ValueExtractors.EMPTY.createChild();
     private final ValueExtractors valueExtractors = bootstrapValueExtractors.createChild();
 
     private final Lazy<BootstrapConfiguration> bootstrapConfiguration = new Lazy<>(this::createBootstrapConfiguration);
@@ -371,7 +371,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
 
     @Override
     public Set<ValueExtractor<?>> getValueExtractors() {
-        return Collections.unmodifiableSet(new LinkedHashSet<>(valueExtractors.getLocalValueExtractors().values()));
+        return Collections.unmodifiableSet(new LinkedHashSet<>(valueExtractors.getValueExtractors().values()));
     }
 
     public void deferBootstrapOverrides() {

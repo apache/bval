@@ -39,6 +39,12 @@ public class Lazy<T> implements Supplier<T> {
         return this;
     }
 
+    public synchronized Lazy<T> reset(T value) {
+        this.value = value;
+        this.init = null;
+        return this;
+    }
+
     @Override
     public T get() {
         if (init != null) {

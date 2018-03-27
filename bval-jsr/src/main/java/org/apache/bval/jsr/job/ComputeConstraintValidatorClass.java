@@ -201,10 +201,11 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         final TypeWrapper w = new TypeWrapper(Reflection.primitiveToWrapper(validatedType));
         Stream.Builder<Class<?>> hierarchy = Stream.builder();
         Reflection.hierarchy(w.componentType, Interfaces.INCLUDE).forEach(hierarchy);
-        if (validatedType.isInterface()) {
-            hierarchy.accept(Object.class);
+        final Stream<Class<?>> result = hierarchy.build().map(w::unwrapArrayComponentType);
+        if (validatedType.isInterface() || validatedType.isArray()) {
+            return Stream.concat(result, Stream.of(Object.class));
         }
-        return hierarchy.build().map(w::unwrapArrayComponentType);
+        return result;
     }
 
     private boolean isComposed() {

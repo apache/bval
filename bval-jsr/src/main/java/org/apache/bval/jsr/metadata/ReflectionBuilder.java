@@ -253,7 +253,7 @@ public class ReflectionBuilder {
                     target = explicitTarget.get();
                 } else {
                     final Set<ValidationTarget> supportedTargets =
-                            validatorFactory.getAnnotationsManager().supportedTargets(constraintType);
+                        validatorFactory.getAnnotationsManager().supportedTargets(constraintType);
 
                     if (supportedTargets.size() == 1) {
                         final ValidationTarget validationTarget = supportedTargets.iterator().next();

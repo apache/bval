@@ -83,7 +83,7 @@ public class CompositeBuilder {
         }
     }
 
-    private class ForBean<T> extends CompositeBuilder.Delegator<MetadataBuilder.ForBean<T>>
+    class ForBean<T> extends CompositeBuilder.Delegator<MetadataBuilder.ForBean<T>>
         implements MetadataBuilder.ForBean<T> {
 
         ForBean(List<MetadataBuilder.ForBean<T>> delegates) {

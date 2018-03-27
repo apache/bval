@@ -57,7 +57,7 @@ public class ValidationParser {
     private static final Logger log = Logger.getLogger(ValidationParser.class.getName());
 
     private static final SchemaManager SCHEMA_MANAGER = new SchemaManager.Builder()
-        .add(null, "http://jboss.org/xml/ns/javax/validation/configuration",
+        .add(XmlBuilder.Version.v10.getId(), "http://jboss.org/xml/ns/javax/validation/configuration",
             "META-INF/validation-configuration-1.0.xsd")
         .add(XmlBuilder.Version.v11.getId(), "http://jboss.org/xml/ns/javax/validation/configuration",
             "META-INF/validation-configuration-1.1.xsd")

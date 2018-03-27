@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -223,8 +224,8 @@ public class ValueExtractors {
             return null;
         }
         final Map<ContainerElementKey, ValueExtractor<?>> candidateMap =
-            assignableKeys.stream().filter(allValueExtractors::containsKey)
-                .collect(Collectors.toMap(Function.identity(), allValueExtractors::get));
+            assignableKeys.stream().filter(allValueExtractors::containsKey).collect(
+                Collectors.toMap(Function.identity(), allValueExtractors::get, (quid, quo) -> quo, LinkedHashMap::new));
 
         if (candidateMap.isEmpty()) {
             return null;

@@ -30,8 +30,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-import javax.validation.constraintvalidation.ValidationTarget;
-
 import org.apache.bval.util.EmulatedAnnotatedType;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
@@ -184,11 +182,6 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
 
         @Override
-        public ValidationTarget getValidationTarget() {
-            return ValidationTarget.PARAMETERS;
-        }
-
-        @Override
         public String describeHost() {
             return String.format("%s of %s", getName(), getHost());
         }
@@ -327,10 +320,6 @@ public abstract class Meta<E extends AnnotatedElement> {
     public abstract String getName();
 
     public abstract Meta<?> getParent();
-
-    public ValidationTarget getValidationTarget() {
-        return ValidationTarget.ANNOTATED_ELEMENT;
-    }
 
     @Override
     public final String toString() {

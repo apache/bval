@@ -155,7 +155,8 @@ public abstract class ValidationJob<T> {
             }
             if (m.isEmpty()) {
                 if (valueUnwrapping == ValidateUnwrappedValue.UNWRAP) {
-                    Exceptions.raise(ConstraintDeclarationException::new, "No %s found for %s", containerClass);
+                    Exceptions.raise(ConstraintDeclarationException::new, "No %s found for %s",
+                        ValueExtractor.class.getSimpleName(), containerClass);
                 }
                 return Optional.empty();
             }

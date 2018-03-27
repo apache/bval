@@ -30,12 +30,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -43,6 +46,7 @@ import java.util.stream.Stream;
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintTarget;
 import javax.validation.GroupSequence;
+import javax.validation.ParameterNameProvider;
 import javax.validation.Valid;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.groups.ConvertGroup;
@@ -54,6 +58,7 @@ import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
@@ -82,15 +87,42 @@ public class ReflectionBuilder {
             if (declaredFields.length == 0) {
                 return Collections.emptyMap();
             }
-            return Stream.of(declaredFields).filter(f -> !Modifier.isStatic(f.getModifiers())).collect(
-                Collectors.toMap(Field::getName, f -> new ReflectionBuilder.ForContainer<>(new Meta.ForField(f))));
+            return Stream.of(declaredFields).filter(f -> !(Modifier.isStatic(f.getModifiers()) || f.isSynthetic()))
+                .collect(
+                    Collectors.toMap(Field::getName, f -> new ReflectionBuilder.ForContainer<>(new Meta.ForField(f))));
         }
 
         @Override
         public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> ignored) {
-            return Stream.of(Reflection.getDeclaredMethods(meta.getHost())).filter(Methods::isGetter)
-                .collect(ToUnmodifiable.map(Methods::propertyName,
-                    g -> new ReflectionBuilder.ForContainer<>(new Meta.ForMethod(g))));
+            final Method[] declaredMethods = Reflection.getDeclaredMethods(meta.getHost());
+            if (declaredMethods.length == 0) {
+                return Collections.emptyMap();
+            }
+            final Map<String, Set<Method>> getters = new HashMap<>();
+            for (Method m : declaredMethods) {
+                if (Methods.isGetter(m)) {
+                    getters.computeIfAbsent(Methods.propertyName(m), k -> new LinkedHashSet<>()).add(m);
+                }
+            }
+            final Map<String, MetadataBuilder.ForContainer<Method>> result = new TreeMap<>();
+            getters.forEach((k, methods) -> {
+                if ("class".equals(k)) {
+                    return;
+                }
+                final List<MetadataBuilder.ForContainer<Method>> delegates = methods.stream()
+                    .map(g -> new ReflectionBuilder.ForContainer<>(new Meta.ForMethod(g))).collect(Collectors.toList());
+                if (delegates.isEmpty()) {
+                    return;
+                }
+                final MetadataBuilder.ForContainer<Method> builder;
+                if (delegates.size() == 1) {
+                    builder = delegates.get(0);
+                } else {
+                    builder = compositeBuilder.get().new ForContainer<>(delegates);
+                }
+                result.put(k, builder);
+            });
+            return result;
         }
 
         @Override
@@ -101,7 +133,7 @@ public class ReflectionBuilder {
             }
             return Stream.of(declaredConstructors).collect(
                 Collectors.toMap(Signature::of, c -> new ReflectionBuilder.ForExecutable<>(new Meta.ForConstructor<>(c),
-                    validatorFactory.getParameterNameProvider()::getParameterNames)));
+                    ParameterNameProvider::getParameterNames)));
         }
 
         @Override
@@ -110,10 +142,33 @@ public class ReflectionBuilder {
             if (declaredMethods.length == 0) {
                 return Collections.emptyMap();
             }
+            final Map<Signature, Set<Method>> methodsBySignature = new HashMap<>();
+            for (Method m : declaredMethods) {
+                if (!Modifier.isStatic(m.getModifiers())) {
+                    methodsBySignature.computeIfAbsent(Signature.of(m), k -> new LinkedHashSet<>()).add(m);
+                }
+            }
+            final Map<Signature, MetadataBuilder.ForExecutable<Method>> result = new TreeMap<>();
+
             // we can't filter the getters since they can be validated, todo: read the config to know if we need or not
-            return Stream.of(declaredMethods).collect(
-                Collectors.toMap(Signature::of, m -> new ReflectionBuilder.ForExecutable<>(new Meta.ForMethod(m),
-                    validatorFactory.getParameterNameProvider()::getParameterNames)));
+
+            methodsBySignature.forEach((sig, methods) -> {
+                final List<MetadataBuilder.ForExecutable<Method>> delegates =
+                    methods.stream().map(g -> new ReflectionBuilder.ForExecutable<>(new Meta.ForMethod(g),
+                        ParameterNameProvider::getParameterNames)).collect(Collectors.toList());
+                if (delegates.isEmpty()) {
+                    return;
+                }
+                final MetadataBuilder.ForExecutable<Method> builder;
+                if (delegates.size() == 1) {
+                    builder = delegates.get(0);
+                } else {
+                    builder = compositeBuilder.get().new ForExecutable<MetadataBuilder.ForExecutable<Method>, Method>(
+                        delegates, ParameterNameProvider::getParameterNames);
+                }
+                result.put(sig, builder);
+            });
+            return result;
         }
     }
 
@@ -128,6 +183,16 @@ public class ReflectionBuilder {
         @Override
         public Annotation[] getDeclaredConstraints(Meta<E> ignored) {
             return AnnotationsManager.getDeclaredConstraints(meta);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj == this || this.getClass().isInstance(obj) && ((ForElement<?>) obj).meta.equals(meta);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getClass(), meta);
         }
     }
 
@@ -186,9 +251,9 @@ public class ReflectionBuilder {
     private class ForExecutable<E extends Executable> implements MetadataBuilder.ForExecutable<E> {
 
         final Meta<E> meta;
-        final Function<E, List<String>> getParameterNames;
+        final BiFunction<ParameterNameProvider, E, List<String>> getParameterNames;
 
-        ForExecutable(Meta<E> meta, Function<E, List<String>> getParameterNames) {
+        ForExecutable(Meta<E> meta, BiFunction<ParameterNameProvider,E, List<String>> getParameterNames) {
             super();
             this.meta = Validate.notNull(meta, "meta");
             this.getParameterNames = Validate.notNull(getParameterNames, "getParameterNames");
@@ -200,7 +265,7 @@ public class ReflectionBuilder {
             if (parameters.length == 0) {
                 return Collections.emptyList();
             }
-            final List<String> parameterNames = getParameterNames.apply(meta.getHost());
+            final List<String> parameterNames = getParameterNames.apply(validatorFactory.getParameterNameProvider(),meta.getHost());
 
             return IntStream.range(0, parameters.length).mapToObj(
                 n -> new ReflectionBuilder.ForContainer<>(new Meta.ForParameter(parameters[n], parameterNames.get(n))))
@@ -296,10 +361,13 @@ public class ReflectionBuilder {
     }
 
     private final ApacheValidatorFactory validatorFactory;
+    private final Lazy<CompositeBuilder> compositeBuilder;
 
     public ReflectionBuilder(ApacheValidatorFactory validatorFactory) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
+        this.compositeBuilder =
+            new Lazy<>(() -> new CompositeBuilder(this.validatorFactory, x -> AnnotationBehavior.ABSTAIN));
     }
 
     public <T> MetadataBuilder.ForBean<T> forBean(Class<T> beanClass) {

@@ -44,7 +44,8 @@ import org.xml.sax.InputSource;
 @Privilizing(@CallTo(Reflection.class))
 public class ValidationMappingParser implements MetadataSource {
     private static final SchemaManager SCHEMA_MANAGER = new SchemaManager.Builder()
-        .add(null, "http://jboss.org/xml/ns/javax/validation/mapping", "META-INF/validation-mapping-1.0.xsd")
+        .add(XmlBuilder.Version.v10.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
+            "META-INF/validation-mapping-1.0.xsd")
         .add(XmlBuilder.Version.v11.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
             "META-INF/validation-mapping-1.1.xsd")
         .add(XmlBuilder.Version.v20.getId(), "http://xmlns.jcp.org/xml/ns/validation/mapping",

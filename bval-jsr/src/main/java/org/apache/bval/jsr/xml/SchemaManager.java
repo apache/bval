@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.validation.ValidationException;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -38,7 +39,10 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.ValidatorHandler;
 
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
+import org.apache.bval.util.StringUtils;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.w3c.dom.Document;
 import org.xml.sax.Attributes;
@@ -75,8 +79,10 @@ public class SchemaManager {
 
         Key(String version, String ns) {
             super();
-            this.version = Objects.toString(version, "");
-            this.ns = Objects.toString(ns, "");
+            Validate.isTrue(StringUtils.isNotBlank(version), "version cannot be null/empty/blank");
+            this.version = version;
+            Validate.isTrue(StringUtils.isNotBlank(ns), "ns cannot be null/empty/blank");
+            this.ns = ns;
         }
 
         public String getVersion() {
@@ -126,14 +132,16 @@ public class SchemaManager {
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
             if (getContentHandler() == ch) {
-                final Key schemaKey = new Key(Objects.toString(atts.getValue("version"), ""), uri);
-                if (data.containsKey(schemaKey)) {
-                    final Schema schema = data.get(schemaKey).get();
-                    final ValidatorHandler vh = schema.newValidatorHandler();
-                    vh.startDocument();
-                    vh.setContentHandler(ch);
-                    super.setContentHandler(vh);
-                }
+                final String version = Objects.toString(atts.getValue("version"), data.firstKey().getVersion());
+                final Key schemaKey = new Key(version, uri);
+                Exceptions.raiseUnless(data.containsKey(schemaKey), ValidationException::new,
+                    "Unknown validation schema %s", schemaKey);
+
+                final Schema schema = data.get(schemaKey).get();
+                final ValidatorHandler vh = schema.newValidatorHandler();
+                vh.startDocument();
+                vh.setContentHandler(ch);
+                super.setContentHandler(vh);
             }
             try {
                 super.startElement(uri, localName, qName, atts);
@@ -172,7 +180,8 @@ public class SchemaManager {
 
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-            final Key schemaKey = new Key(Objects.toString(atts.getValue("version"), ""), uri);
+            final Key schemaKey =
+                new Key(Objects.toString(atts.getValue("version"), data.firstKey().getVersion()), uri);
 
             if (!target.equals(schemaKey) && data.containsKey(schemaKey)) {
                 uri = target.ns;

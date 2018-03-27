@@ -39,10 +39,20 @@ public final class Methods {
         return !Void.TYPE.equals(m.getReturnType()) && m.getName().startsWith("get");
     }
 
+    public static boolean isGetter(String methodName) {
+        Validate.notNull(methodName);
+        final int len = methodName.length();
+        return len > 2 && methodName.startsWith("is") || len > 3 && methodName.startsWith("get");
+    }
+
     public static String propertyName(Method getter) {
         Validate.isTrue(isGetter(getter), "%s is not a getter", getter);
-        final String name = getter.getName();
-        final String suffix = name.startsWith("is") ? name.substring(2) : name.substring(3);
+        return propertyName(getter.getName());
+    }
+
+    public static String propertyName(String methodName) {
+        Validate.isTrue(isGetter(methodName), "%s does not represent a property getter");
+        final String suffix = methodName.startsWith("is") ? methodName.substring(2) : methodName.substring(3);
         return Introspector.decapitalize(suffix);
     }
 

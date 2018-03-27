@@ -23,6 +23,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.validation.ValidationException;
+
+import org.apache.bval.jsr.util.Methods;
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
 
 public class MetadataBuilders {
@@ -32,6 +36,7 @@ public class MetadataBuilders {
     public <T> void registerCustomBuilder(Class<T> bean, MetadataBuilder.ForBean<T> builder) {
         Validate.notNull(bean, "bean");
         Validate.notNull(builder, "builder");
+        validateCustomBuilder(bean, builder);
         beanBuilders.computeIfAbsent(bean, c -> new ArrayList<>()).add(builder);
     }
 
@@ -43,5 +48,15 @@ public class MetadataBuilders {
 
     public Set<Class<?>> getCustomizedTypes() {
         return beanBuilders.keySet();
+    }
+
+    private <T> void validateCustomBuilder(Class<T> bean, MetadataBuilder.ForBean<T> builder) {
+        final Meta<Class<T>> meta = new Meta.ForClass<>(bean);
+        final Set<String> propertyNames = builder.getGetters(meta).keySet();
+        builder.getMethods(meta).keySet().stream().map(Signature::getName).filter(Methods::isGetter)
+            .map(Methods::propertyName).forEach(pn -> {
+                Exceptions.raiseIf(propertyNames.contains(pn), ValidationException::new,
+                    "%s user metadata cannot specify both method and getter elements for %s", f -> f.args(bean, pn));
+            });
     }
 }

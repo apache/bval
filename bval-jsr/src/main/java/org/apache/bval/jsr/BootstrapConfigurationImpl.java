@@ -53,7 +53,7 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
         final String clockProviderClassName, final Set<String> valueExtractorClassNames) {
 
         this(Collections.unmodifiableSet(constraintMappingResourcePaths), executableValidationEnabled,
-            ExecutableTypes.interpret(defaultValidatedExecutableTypes), Collections.unmodifiableMap(properties),
+            defaultValidatedExecutableTypes, Collections.unmodifiableMap(properties),
             Collections.unmodifiableSet(valueExtractorClassNames));
 
         this.parameterNameProviderClassName = parameterNameProviderClassName;
@@ -70,7 +70,7 @@ public class BootstrapConfigurationImpl implements BootstrapConfiguration {
 
         this.constraintMappingResourcePaths = constraintMappingResourcePaths;
         this.executableValidationEnabled = executableValidationEnabled;
-        this.defaultValidatedExecutableTypes = defaultValidatedExecutableTypes;
+        this.defaultValidatedExecutableTypes = ExecutableTypes.interpret(defaultValidatedExecutableTypes);
         this.properties = properties;
         this.valueExtractorClassNames = valueExtractorClassNames;
     }

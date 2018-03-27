@@ -552,7 +552,6 @@ public class XmlBuilder {
             ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName())) {
             annoBuilder.setValidationAppliesTo(target);
         }
-
         for (final ElementType elementType : constraint.getElement()) {
             final String name = elementType.getName();
             checkValidName(name);

@@ -18,17 +18,23 @@ package org.apache.bval.jsr.metadata;
 
 import java.lang.reflect.Executable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.bval.util.Comparators;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.LazyInt;
 import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.Validate;
 
-public final class Signature {
+public final class Signature implements Comparable<Signature> {
+    private static final Comparator<Signature> COMPARATOR = Comparator.nullsFirst(Comparator
+        .comparing(Signature::getName).thenComparing(Comparator.comparing(s -> Arrays.asList(s.getParameterTypes()),
+            Comparators.comparingIterables(Comparator.comparing(Class::getName)))));
+
     public static Signature of(Executable x) {
         return new Signature(x.getName(), x.getParameterTypes());
     }
@@ -71,5 +77,10 @@ public final class Signature {
     @Override
     public String toString() {
         return toString.get();
+    }
+
+    @Override
+    public int compareTo(Signature sig) {
+        return COMPARATOR.compare(this, sig);
     }
 }

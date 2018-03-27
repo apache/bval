@@ -20,6 +20,8 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Executable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +77,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     private final boolean reportAsSingle;
     private final ValidateUnwrappedValue valueUnwrapping;
     private final Map<String, Object> attributes;
+    private final ConstraintTarget validationAppliesTo;
 
     private final Set<ConstraintDescriptor<?>> composingConstraints;
     private final List<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClasses;
@@ -89,6 +92,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         reportAsSingle = annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
         valueUnwrapping = computeValidateUnwrappedValue();
         attributes = AnnotationsManager.readAttributes(annotation);
+        validationAppliesTo = computeValidationAppliesTo(meta.getElementType());
 
         Validate.notNull(validatorFactory, "validatorFactory");
         composingConstraints = computeComposingConstraints(validatorFactory);
@@ -137,7 +141,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     @Override
     public ConstraintTarget getValidationAppliesTo() {
-        return read(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO);
+        return validationAppliesTo;
     }
 
     @Override
@@ -221,6 +225,30 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
             Exceptions.raise(ConstraintDeclarationException::new,
                 "Constraint %s declared at %s specifies conflicting value unwrapping hints", annotation,
                 meta.getHost());
+        }
+        return result;
+    }
+
+    private ConstraintTarget computeValidationAppliesTo(ElementType elementType) {
+        final ConstraintTarget result = read(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO);
+        if (result != null) {
+            final AnnotatedElement host = meta.getHost();
+            Exceptions.raiseUnless(host instanceof Executable, ConstraintDeclarationException::new, "Illegal %s on %s",
+                result, host);
+
+            switch (result) {
+            case PARAMETERS:
+                Exceptions.raiseIf(((Executable) host).getParameterCount() == 0, ConstraintDeclarationException::new,
+                    "Illegal specification of %s on %s with no parameters", result, elementType);
+                break;
+            case RETURN_VALUE:
+                Exceptions.raiseIf(Void.TYPE.equals(meta.getType()), ConstraintDeclarationException::new,
+                    "Illegal %s on %s method %s", result, Void.TYPE, host);
+                break;
+            case IMPLICIT:
+                // handled in ReflectionBuilder
+            default:
+            }
         }
         return result;
     }

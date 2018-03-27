@@ -101,7 +101,6 @@ class MetadataReader {
                 properties.computeIfAbsent(f, descriptorList).add(new PropertyD.ForField(
                     new MetadataReader.ForContainer<>(new Meta.ForField(fld), builder), parent));
             });
-
             beanBuilder.getGetters(meta).forEach((g, builder) -> {
                 final Method getter = Methods.getter(meta.getHost(), g);
 

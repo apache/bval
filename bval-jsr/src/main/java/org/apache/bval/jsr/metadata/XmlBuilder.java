@@ -218,7 +218,8 @@ public class XmlBuilder {
 
         ForClass(ClassType descriptor) {
             super(descriptor);
-            this.withGetConstraintTypes(ClassType::getConstraint);
+            this.withGetConstraintTypes(ClassType::getConstraint)
+                .withGetIgnoreAnnotations(ClassType::getIgnoreAnnotations);
         }
 
         @Override

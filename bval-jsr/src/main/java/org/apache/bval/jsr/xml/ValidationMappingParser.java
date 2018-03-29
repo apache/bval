@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -60,7 +61,7 @@ public class ValidationMappingParser implements MetadataSource {
         }
         for (final InputStream xmlStream : configurationState.getMappingStreams()) {
             final ConstraintMappingsType mapping = parseXmlMappings(xmlStream);
-            addValidatorMappingProvider.accept(toMappingProvider(mapping));
+            Optional.of(mapping).map(this::toMappingProvider).ifPresent(addValidatorMappingProvider);
             new XmlBuilder(mapping).forBeans().forEach(addBuilder::accept);
         }
     }
@@ -85,6 +86,9 @@ public class ValidationMappingParser implements MetadataSource {
     }
 
     private ValidatorMappingProvider toMappingProvider(ConstraintMappingsType mapping) {
+        if (mapping.getConstraintDefinition().isEmpty()) {
+            return null;
+        }
         final Map<Class<? extends Annotation>, ValidatedByType> validatorMappings = new HashMap<>();
 
         for (ConstraintDefinitionType constraintDefinition : mapping.getConstraintDefinition()) {

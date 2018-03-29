@@ -48,6 +48,7 @@ import org.apache.bval.jsr.descriptor.CascadableContainerD;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.ContainerElementTypeD;
+import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.descriptor.ElementD;
 import org.apache.bval.jsr.descriptor.PropertyD;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
@@ -476,7 +477,7 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
                 t = value.getClass();
             }
             descriptor = (ElementD<?, ?>) validatorContext.getDescriptorManager().getBeanDescriptor(t);
-        } else {
+        } else if (hasWork()) {
             final Class<?> propertyType = descriptor.getElementClass();
             if (!TypeUtils.isInstance(value, propertyType)) {
                 Exceptions.raise(IllegalArgumentException::new, "%s is not an instance of %s", value, propertyType);
@@ -503,13 +504,20 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
     @Override
     protected Frame<?> computeBaseFrame() {
         // TODO assign bean as its own property and figure out what to do
-
         return strategy.frame(this, propertyPath);
     }
 
     @Override
     protected Class<T> getRootBeanClass() {
         return rootBeanClass;
+    }
+
+    @Override
+    protected boolean hasWork() {
+        if (descriptor instanceof BeanDescriptor) {
+            return ((BeanDescriptor) descriptor).isBeanConstrained();
+        }
+        return DescriptorManager.isConstrained((PropertyDescriptor) descriptor);
     }
 
     @Override

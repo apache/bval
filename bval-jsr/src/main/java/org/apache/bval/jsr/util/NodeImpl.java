@@ -48,10 +48,16 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Comparator for any path {@link Node}.
+     * Comparator for any path {@link Node}. For iterable nodes with no, or {@code null}, key and index values
+     * the left operand is always treated as less than the right.
      */
     public static final Comparator<Path.Node> NODE_COMPARATOR =
         nullsFirst(comparing(Node::getName, nullsFirst(naturalOrder())).thenComparing(NodeImpl::compareIterability)
+            .thenComparing(NodeImpl::compareSpecificNodeInfo));
+
+    private static final Comparator<Path.Node> NODE_EQUALITY_COMPARATOR =
+        nullsFirst(comparing(Node::getName, nullsFirst(naturalOrder()))
+            .thenComparing((o1, o2) -> NodeImpl.compareIterability(o1, o2, false))
             .thenComparing(NodeImpl::compareSpecificNodeInfo));
 
     private static final Comparator<Class<?>> CLASS_COMPARATOR = Comparator.nullsFirst(
@@ -130,15 +136,26 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     }
 
     private static int compareIterability(Node quid, Node quo) {
+        final boolean strict = true;
+        return compareIterability(quid, quo, strict);
+    }
+
+    private static int compareIterability(Node quid, Node quo, boolean strict) {
         if (quid.isInIterable()) {
             if (quo.isInIterable()) {
                 if (quid.getKey() != null) {
                     return Comparator.comparing(Node::getKey, KEY_COMPARATOR).compare(quid, quo);
                 }
-                if (quid.getIndex() == null) {
-                    // this method cannot consistently order iterables without key or index; the first argument is
-                    // always assumed to be less:
+                if (quo.getKey() != null) {
                     return -1;
+                }
+                if (quid.getIndex() == null) {
+                    if (strict) {
+                        // this method cannot consistently order iterables without key or index; the first argument is
+                        // always assumed to be less:
+                        return -1;
+                    }
+                    return quo.getIndex() == null ? 0 : -1;
                 }
                 return quo.getIndex() == null ? 1 : quid.getIndex().compareTo(quo.getIndex());
             }
@@ -336,7 +353,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         if (o == null || !getClass().equals(o.getClass())) {
             return false;
         }
-        return NODE_COMPARATOR.compare(this, (NodeImpl) o) == 0;
+        return NODE_EQUALITY_COMPARATOR.compare(this, (NodeImpl) o) == 0;
     }
 
     /**

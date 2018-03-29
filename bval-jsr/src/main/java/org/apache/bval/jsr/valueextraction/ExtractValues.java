@@ -29,6 +29,7 @@ import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
@@ -76,10 +77,8 @@ public final class ExtractValues {
 
         private void addChild(NodeImpl node, Object value) {
             final PathImpl path = context.getPath();
-            if (node.getName() != null) {
-                path.addNode(node.inContainer(containerElementKey.getContainerClass(),
-                    containerElementKey.getTypeArgumentIndex()));
-            }
+            path.addNode(
+                node.inContainer(containerElementKey.getContainerClass(), containerElementKey.getTypeArgumentIndex()));
             result.get().add(context.child(path, value));
         }
     }
@@ -93,6 +92,8 @@ public final class ExtractValues {
         Validate.notNull(context, "context");
         Validate.notNull(containerElementKey, "containerElementKey");
         if (valueExtractor != null) {
+            Exceptions.raiseIf(context.getValue() == null, IllegalStateException::new,
+                "Cannot extract values from null");
             final Receiver receiver = new Receiver(context, containerElementKey);
             try {
                 ((ValueExtractor) valueExtractor).extractValues(context.getValue(), receiver);

@@ -28,7 +28,6 @@ import java.util.stream.IntStream;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ParameterNameProvider;
-import javax.validation.Path;
 import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.metadata.ExecutableDescriptor;
 
@@ -181,7 +180,7 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     @Override
     ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
-        ConstraintValidatorContextImpl<T> context, Path propertyPath) {
+        ConstraintValidatorContextImpl<T> context, PathImpl propertyPath) {
         return new ConstraintViolationImpl<T>(messageTemplate, message, getRootBean(), context.getFrame().getBean(),
             propertyPath, context.getFrame().context.getValue(), context.getConstraintDescriptor(), getRootBeanClass(),
             context.getConstraintDescriptor().unwrap(ConstraintD.class).getDeclaredOn(), null, parameterValues);

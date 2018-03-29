@@ -41,6 +41,9 @@ public class PathImpl implements Path, Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * @see NodeImpl#NODE_COMPARATOR
+     */
     public static final Comparator<Path> PATH_COMPARATOR = Comparators.comparingIterables(NodeImpl.NODE_COMPARATOR);
 
     static final String PROPERTY_PATH_SEPARATOR = ".";

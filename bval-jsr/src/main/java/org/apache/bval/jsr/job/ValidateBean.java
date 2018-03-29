@@ -18,8 +18,6 @@
  */
 package org.apache.bval.jsr.job;
 
-import javax.validation.Path;
-
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
@@ -50,7 +48,7 @@ public final class ValidateBean<T> extends ValidationJob<T> {
 
     @Override
     ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
-        ConstraintValidatorContextImpl<T> context, Path propertyPath) {
+        ConstraintValidatorContextImpl<T> context, PathImpl propertyPath) {
         return new ConstraintViolationImpl<>(messageTemplate, message, bean,
             context.getFrame().getBean(), propertyPath, context.getFrame().context.getValue(),
             context.getConstraintDescriptor(), getRootBeanClass(),

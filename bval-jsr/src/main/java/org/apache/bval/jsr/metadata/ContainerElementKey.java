@@ -41,6 +41,7 @@ import org.apache.bval.util.EmulatedAnnotatedType;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.LazyInt;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -87,6 +88,12 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
             });
         return result.optional().filter(s -> s.size() == 1)
             .orElseThrow(() -> new ValueExtractorDefinitionException(extractorType.getName())).iterator().next();
+    }
+
+    public static ContainerElementKey forTypeVariable(TypeVariable<?> var) {
+        final Class<?> container = (Class<?>) var.getGenericDeclaration();
+        final int argIndex = ObjectUtils.indexOf(container.getTypeParameters(), var);
+        return new ContainerElementKey(container, Integer.valueOf(argIndex));
     }
 
     private static Integer validTypeArgumentIndex(Integer typeArgumentIndex, Class<?> containerClass) {
@@ -154,8 +161,9 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
 
     @Override
     public int compareTo(ContainerElementKey o) {
-        return Comparator.comparing(ContainerElementKey::containerClassName)
-            .thenComparing(Comparator.nullsFirst(Comparator.comparing(ContainerElementKey::getTypeArgumentIndex)))
+        return Comparator
+            .nullsFirst(Comparator.comparing(ContainerElementKey::containerClassName)
+                .thenComparing(Comparator.nullsFirst(Comparator.comparing(ContainerElementKey::getTypeArgumentIndex))))
             .compare(this, o);
     }
 

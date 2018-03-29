@@ -22,11 +22,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
+import javax.validation.ValidationException;
 import javax.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.PathImpl;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -94,12 +96,19 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
         this.host = reader.meta.getHost();
     }
 
-    @Override
-    protected Stream<GraphContext> readImpl(GraphContext context) throws Exception {
-        final Object value = getValue(context.getValue());
-        final PathImpl p = PathImpl.copy(context.getPath());
-        p.addProperty(getPropertyName());
-        return Stream.of(context.child(p, value));
+    public final Stream<GraphContext> read(GraphContext context) {
+        Validate.notNull(context);
+        if (context.getValue() == null) {
+            return Stream.empty();
+        }
+        try {
+            final Object value = getValue(context.getValue());
+            final PathImpl p = PathImpl.copy(context.getPath());
+            p.addProperty(getPropertyName());
+            return Stream.of(context.child(p, value));
+        } catch (Exception e) {
+            throw e instanceof ValidationException ? (ValidationException) e : new ValidationException(e);
+        }
     }
 
     public abstract Object getValue(Object parent) throws Exception;

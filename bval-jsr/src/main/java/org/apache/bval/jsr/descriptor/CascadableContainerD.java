@@ -20,18 +20,14 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Set;
-import java.util.stream.Stream;
 
-import javax.validation.ValidationException;
 import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
 import javax.validation.metadata.ContainerElementTypeDescriptor;
 import javax.validation.metadata.GroupConversionDescriptor;
 
-import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.groups.GroupConversion;
 import org.apache.bval.jsr.util.ToUnmodifiable;
-import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends AnnotatedElement> extends
@@ -68,21 +64,5 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
     public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
         return containerElementTypes.stream().filter(DescriptorManager::isConstrained)
             .collect(ToUnmodifiable.set());
-    }
-
-    public final Stream<GraphContext> read(GraphContext context) {
-        Validate.notNull(context);
-        if (context.getValue() == null) {
-            return Stream.empty();
-        }
-        try {
-            return readImpl(context);
-        } catch (Exception e) {
-            throw e instanceof ValidationException ? (ValidationException) e : new ValidationException(e);
-        }
-    }
-
-    protected Stream<GraphContext> readImpl(GraphContext context) throws Exception {
-        throw new UnsupportedOperationException();
     }
 }

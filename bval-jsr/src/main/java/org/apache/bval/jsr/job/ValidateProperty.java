@@ -31,7 +31,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.Path;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
@@ -515,7 +514,7 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
 
     @Override
     ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
-        ConstraintValidatorContextImpl<T> context, Path propertyPath) {
+        ConstraintValidatorContextImpl<T> context, PathImpl propertyPath) {
         return new ConstraintViolationImpl<>(messageTemplate, message, rootBean, context.getFrame().getBean(),
             propertyPath, context.getFrame().context.getValue(), context.getConstraintDescriptor(), rootBeanClass,
             context.getConstraintDescriptor().unwrap(ConstraintD.class).getDeclaredOn(), null, null);

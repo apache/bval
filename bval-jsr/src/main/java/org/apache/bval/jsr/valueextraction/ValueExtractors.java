@@ -19,9 +19,12 @@ package org.apache.bval.jsr.valueextraction;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.ConstraintDeclarationException;
+import javax.validation.metadata.ValidateUnwrappedValue;
 import javax.validation.valueextraction.UnwrapByDefault;
 import javax.validation.valueextraction.ValueExtractor;
 import javax.validation.valueextraction.ValueExtractorDeclarationException;
@@ -45,6 +49,7 @@ import javax.validation.valueextraction.ValueExtractorDefinitionException;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
@@ -57,6 +62,17 @@ import org.apache.bval.util.reflection.TypeUtils;
 public class ValueExtractors {
     public enum OnDuplicateContainerElementKey {
         EXCEPTION, OVERWRITE;
+    }
+
+    public static class UnwrappingInfo {
+        public final ContainerElementKey containerElementKey;
+        public final ValueExtractor<?> valueExtractor;
+
+        private UnwrappingInfo(ContainerElementKey containerElementKey, ValueExtractor<?> valueExtractor) {
+            super();
+            this.containerElementKey = containerElementKey;
+            this.valueExtractor = valueExtractor;
+        }
     }
 
     public static final ValueExtractors EMPTY =
@@ -151,12 +167,27 @@ public class ValueExtractors {
         }).map(ValueExtractors::newInstance);
     }
 
-    private static boolean related(Class<?> c1, Class<?> c2) {
-        return c1.isAssignableFrom(c2) || c2.isAssignableFrom(c1);
+    private static <T> Optional<T> maximallySpecific(Collection<T> candidates, Function<? super T, Class<?>> toType) {
+        final Collection<T> result;
+        if (candidates.size() > 1) {
+            result = new HashSet<>();
+            for (T candidate : candidates) {
+                final Class<?> candidateType = toType.apply(candidate);
+                if (candidates.stream().filter(Predicate.isEqual(candidate).negate()).map(toType)
+                    .allMatch(t -> t.isAssignableFrom(candidateType))) {
+                    result.add(candidate);
+                }
+            }
+        } else {
+            result = candidates;
+        }
+        return result.size() == 1 ? Optional.of(result.iterator().next()) : Optional.empty();
     }
 
     private final ValueExtractors parent;
     private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> valueExtractors = new Lazy<>(TreeMap::new);
+    private final Lazy<Set<ValueExtractors>> children = new Lazy<>(HashSet::new);
+    private final Lazy<Map<ContainerElementKey, ValueExtractor<?>>> searchCache = new Lazy<>(HashMap::new);
     private final OnDuplicateContainerElementKey onDuplicateContainerElementKey;
 
     public ValueExtractors() {
@@ -183,7 +214,9 @@ public class ValueExtractors {
     }
 
     public ValueExtractors createChild(OnDuplicateContainerElementKey onDuplicateContainerElementKey) {
-        return new ValueExtractors(this, onDuplicateContainerElementKey);
+        final ValueExtractors child = new ValueExtractors(this, onDuplicateContainerElementKey);
+        children.get().add(child);
+        return child;
     }
 
     public void add(ValueExtractor<?> extractor) {
@@ -205,6 +238,7 @@ public class ValueExtractors {
         } else {
             m.put(key, extractor);
         }
+        children.optional().ifPresent(s -> s.stream().forEach(ValueExtractors::clearCache));
     }
 
     public Map<ContainerElementKey, ValueExtractor<?>> getValueExtractors() {
@@ -214,37 +248,84 @@ public class ValueExtractors {
     }
 
     public ValueExtractor<?> find(ContainerElementKey key) {
+        final Optional<ValueExtractor<?>> cacheHit = searchCache.optional().map(m -> m.get(key));
+        if (cacheHit.isPresent()) {
+            return cacheHit.get();
+        }
         final Map<ContainerElementKey, ValueExtractor<?>> allValueExtractors = getValueExtractors();
         if (allValueExtractors.containsKey(key)) {
             return allValueExtractors.get(key);
         }
-        // search for assignable ContainerElementKey:
-        final Set<ContainerElementKey> assignableKeys = key.getAssignableKeys();
-        if (assignableKeys.isEmpty()) {
-            return null;
-        }
-        final Map<ContainerElementKey, ValueExtractor<?>> candidateMap =
-            assignableKeys.stream().filter(allValueExtractors::containsKey).collect(
-                Collectors.toMap(Function.identity(), allValueExtractors::get, (quid, quo) -> quo, LinkedHashMap::new));
+        final Map<ValueExtractor<?>, ContainerElementKey> candidates = Stream
+            .concat(Stream.of(key), key.getAssignableKeys().stream()).filter(allValueExtractors::containsKey).collect(
+                Collectors.toMap(allValueExtractors::get, Function.identity(), (quid, quo) -> quo, LinkedHashMap::new));
 
-        if (candidateMap.isEmpty()) {
-            return null;
+        final Optional<ValueExtractor<?>> result =
+            maximallySpecific(candidates.keySet(), ve -> candidates.get(ve).getContainerClass());
+        if (result.isPresent()) {
+            searchCache.get().put(key, result.get());
+            return result.get();
         }
-        if (candidateMap.size() > 1) {
-            final Set<Class<?>> containerTypes =
-                candidateMap.keySet().stream().map(ContainerElementKey::getContainerClass).collect(Collectors.toSet());
+        throw Exceptions.create(ConstraintDeclarationException::new, "Could not determine %s for %s",
+            ValueExtractor.class.getSimpleName(), key);
+    }
 
-            final boolean allRelated = containerTypes.stream().allMatch(quid -> containerTypes.stream()
-                .filter(Predicate.isEqual(quid).negate()).allMatch(quo -> related(quid, quo)));
-
-            Exceptions.raiseUnless(allRelated, ConstraintDeclarationException::new,
-                "> 1 maximally specific %s found for %s", f -> f.args(ValueExtractor.class.getSimpleName(), key));
+    public Optional<UnwrappingInfo> findUnwrappingInfo(Class<?> containerClass,
+        ValidateUnwrappedValue valueUnwrapping) {
+        if (valueUnwrapping == ValidateUnwrappedValue.SKIP) {
+            return Optional.empty();
         }
-        return candidateMap.values().iterator().next();
+        final Map<ContainerElementKey, ValueExtractor<?>> allValueExtractors = getValueExtractors();
+
+        final Set<UnwrappingInfo> unwrapping = allValueExtractors.entrySet().stream()
+            .filter(e -> e.getKey().getContainerClass().isAssignableFrom(containerClass))
+            .map(e -> new UnwrappingInfo(e.getKey(), e.getValue())).collect(Collectors.toSet());
+
+        final Optional<UnwrappingInfo> result =
+            maximallySpecific(unwrapping, u -> u.containerElementKey.getContainerClass());
+
+        if (result.isPresent()) {
+            if (valueUnwrapping == ValidateUnwrappedValue.UNWRAP || isUnwrapByDefault(result.get().valueExtractor)) {
+                return result
+                    .map(u -> new UnwrappingInfo(translateTo(containerClass, u.containerElementKey), u.valueExtractor));
+            }
+        } else if (valueUnwrapping == ValidateUnwrappedValue.UNWRAP) {
+            Exceptions.raise(ConstraintDeclarationException::new, "Could not determine %s for %s",
+                ValueExtractor.class.getSimpleName(), containerClass);
+        }
+        return Optional.empty();
+    }
+
+    private static ContainerElementKey translateTo(Class<?> containerClass, ContainerElementKey key) {
+        final Class<?> keyContainer = key.getContainerClass();
+        if (keyContainer.equals(containerClass)) {
+            return key;
+        }
+        Validate.validState(keyContainer.isAssignableFrom(containerClass), "Cannot render %s in terms of %s", key,
+            containerClass);
+        if (key.getTypeArgumentIndex() == null) {
+            return new ContainerElementKey(containerClass, null);
+        }
+        Integer typeArgumentIndex = null;
+        final Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(containerClass, keyContainer);
+        Type t = typeArguments.get(keyContainer.getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
+        while (t instanceof TypeVariable<?>) {
+            final TypeVariable<?> var = (TypeVariable<?>) t;
+            if (containerClass.equals(var.getGenericDeclaration())) {
+                typeArgumentIndex = Integer.valueOf(ObjectUtils.indexOf(containerClass.getTypeParameters(), var));
+                break;
+            }
+            t = typeArguments.get(t);
+        }
+        return new ContainerElementKey(containerClass, typeArgumentIndex);
     }
 
     private void populate(Supplier<Map<ContainerElementKey, ValueExtractor<?>>> target) {
         Optional.ofNullable(parent).ifPresent(p -> p.populate(target));
         valueExtractors.optional().ifPresent(m -> target.get().putAll(m));
+    }
+
+    private void clearCache() {
+        searchCache.optional().ifPresent(Map::clear);
     }
 }

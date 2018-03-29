@@ -165,7 +165,7 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void addError(String messageTemplate, Path propertyPath) {
+    public void addError(String messageTemplate, PathImpl propertyPath) {
         violations.get().add(((ValidationJob) frame.getJob()).createViolation(messageTemplate, this, propertyPath));
     }
 

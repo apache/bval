@@ -18,11 +18,19 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.Path;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Map;
 
+import javax.validation.Path;
+import javax.validation.ValidationException;
+
+import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
+import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
+import org.apache.bval.util.reflection.TypeUtils;
 
 public class GraphContext {
 
@@ -64,9 +72,9 @@ public class GraphContext {
 
     public GraphContext child(Path p, Object value) {
         Validate.notNull(p, "Path");
-        final PathImpl impl = PathImpl.copy(p);
+        final PathImpl impl = PathImpl.of(p);
         Validate.isTrue(impl.isSubPathOf(path), "%s is not a subpath of %s", p, path);
-        return new GraphContext(validatorContext, impl, value, this);
+        return new GraphContext(validatorContext, impl == p ? PathImpl.copy(impl) : impl, value, this);
     }
 
     public boolean isRoot() {
@@ -91,5 +99,32 @@ public class GraphContext {
     @Override
     public String toString() {
         return String.format("%s: %s at '%s'", getClass().getSimpleName(), value, path);
+    }
+
+    public ContainerElementKey runtimeKey(ContainerElementKey key) {
+        final Class<?> containerClass = key.getContainerClass();
+        final Class<? extends Object> runtimeType = value.getClass();
+        if (!runtimeType.equals(containerClass)) {
+            Exceptions.raiseUnless(containerClass.isAssignableFrom(runtimeType), ValidationException::new,
+                "Value %s is not assignment-compatible with %s", value, containerClass);
+
+            if (key.getTypeArgumentIndex() == null) {
+                return new ContainerElementKey(runtimeType, null);
+            }
+            final Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(runtimeType, containerClass);
+
+            Type type = typeArguments.get(containerClass.getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
+
+            while (type instanceof TypeVariable<?>) {
+                final TypeVariable<?> var = (TypeVariable<?>) type;
+                final Type nextType = typeArguments.get(var);
+                if (nextType instanceof TypeVariable<?>) {
+                    type = nextType;
+                } else {
+                    return ContainerElementKey.forTypeVariable(var);
+                }
+            }
+        }
+        return key;
     }
 }

@@ -21,8 +21,6 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import javax.validation.Path;
-
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
@@ -125,7 +123,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     ConstraintViolationImpl<T> createViolation(String messageTemplate, String message,
-        ConstraintValidatorContextImpl<T> context, Path propertyPath) {
+        ConstraintValidatorContextImpl<T> context, PathImpl propertyPath) {
         return new ConstraintViolationImpl<>(messageTemplate, message, getRootBean(), context.getFrame().getBean(),
             propertyPath, context.getFrame().context.getValue(), context.getConstraintDescriptor(), getRootBeanClass(),
             context.getConstraintDescriptor().unwrap(ConstraintD.class).getDeclaredOn(), returnValue, null);

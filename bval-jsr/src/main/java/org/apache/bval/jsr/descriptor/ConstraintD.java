@@ -53,6 +53,7 @@ import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
 public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A> {
@@ -81,6 +82,8 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     private final Set<ConstraintDescriptor<?>> composingConstraints;
     private final List<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClasses;
+    private final Lazy<String> toString =
+        new Lazy<>(() -> String.format("%s: %s", ConstraintD.class.getSimpleName(), getAnnotation()));
 
     public ConstraintD(A annotation, Scope scope, Meta<?> meta, ApacheValidatorFactory validatorFactory) {
         this.annotation = Validate.notNull(annotation, "annotation");
@@ -168,6 +171,11 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     public ElementType getDeclaredOn() {
         return meta.getElementType();
+    }
+
+    @Override
+    public String toString() {
+        return toString.get();
     }
 
     private <T> T read(ConstraintAnnotationAttributes attr) {

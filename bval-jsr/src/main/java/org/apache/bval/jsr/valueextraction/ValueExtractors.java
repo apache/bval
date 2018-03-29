@@ -73,6 +73,43 @@ public class ValueExtractors {
             this.containerElementKey = containerElementKey;
             this.valueExtractor = valueExtractor;
         }
+        
+        UnwrappingInfo inTermsOf(Class<?> containerClass) {
+            final Class<?> keyContainer = containerElementKey.getContainerClass();
+            if (keyContainer.equals(containerClass)) {
+                return this;
+            }
+            Validate.validState(keyContainer.isAssignableFrom(containerClass), "Cannot render %s in terms of %s",
+                containerElementKey, containerClass);
+
+            final ContainerElementKey key;
+
+            if (containerElementKey.getTypeArgumentIndex() == null) {
+                key = new ContainerElementKey(containerClass, null);
+            } else {
+                Integer typeArgumentIndex = null;
+                final Map<TypeVariable<?>, Type> typeArguments =
+                    TypeUtils.getTypeArguments(containerClass, keyContainer);
+                Type t = typeArguments
+                    .get(keyContainer.getTypeParameters()[containerElementKey.getTypeArgumentIndex().intValue()]);
+                while (t instanceof TypeVariable<?>) {
+                    final TypeVariable<?> var = (TypeVariable<?>) t;
+                    if (containerClass.equals(var.getGenericDeclaration())) {
+                        typeArgumentIndex =
+                            Integer.valueOf(ObjectUtils.indexOf(containerClass.getTypeParameters(), var));
+                        break;
+                    }
+                    t = typeArguments.get(t);
+                }
+                key = new ContainerElementKey(containerClass, typeArgumentIndex);
+            }
+            return new UnwrappingInfo(key, valueExtractor);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s:%s", containerElementKey, valueExtractor);
+        }
     }
 
     public static final ValueExtractors EMPTY =
@@ -279,45 +316,18 @@ public class ValueExtractors {
 
         final Set<UnwrappingInfo> unwrapping = allValueExtractors.entrySet().stream()
             .filter(e -> e.getKey().getContainerClass().isAssignableFrom(containerClass))
+            .filter(e -> valueUnwrapping == ValidateUnwrappedValue.UNWRAP || isUnwrapByDefault(e.getValue()))
             .map(e -> new UnwrappingInfo(e.getKey(), e.getValue())).collect(Collectors.toSet());
 
         final Optional<UnwrappingInfo> result =
-            maximallySpecific(unwrapping, u -> u.containerElementKey.getContainerClass());
+            maximallySpecific(unwrapping, u -> u.containerElementKey.getContainerClass())
+                .map(u -> u.inTermsOf(containerClass));
 
-        if (result.isPresent()) {
-            if (valueUnwrapping == ValidateUnwrappedValue.UNWRAP || isUnwrapByDefault(result.get().valueExtractor)) {
-                return result
-                    .map(u -> new UnwrappingInfo(translateTo(containerClass, u.containerElementKey), u.valueExtractor));
-            }
-        } else if (valueUnwrapping == ValidateUnwrappedValue.UNWRAP) {
+        if (!result.isPresent() && valueUnwrapping == ValidateUnwrappedValue.UNWRAP) {
             Exceptions.raise(ConstraintDeclarationException::new, "Could not determine %s for %s",
                 ValueExtractor.class.getSimpleName(), containerClass);
         }
-        return Optional.empty();
-    }
-
-    private static ContainerElementKey translateTo(Class<?> containerClass, ContainerElementKey key) {
-        final Class<?> keyContainer = key.getContainerClass();
-        if (keyContainer.equals(containerClass)) {
-            return key;
-        }
-        Validate.validState(keyContainer.isAssignableFrom(containerClass), "Cannot render %s in terms of %s", key,
-            containerClass);
-        if (key.getTypeArgumentIndex() == null) {
-            return new ContainerElementKey(containerClass, null);
-        }
-        Integer typeArgumentIndex = null;
-        final Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(containerClass, keyContainer);
-        Type t = typeArguments.get(keyContainer.getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
-        while (t instanceof TypeVariable<?>) {
-            final TypeVariable<?> var = (TypeVariable<?>) t;
-            if (containerClass.equals(var.getGenericDeclaration())) {
-                typeArgumentIndex = Integer.valueOf(ObjectUtils.indexOf(containerClass.getTypeParameters(), var));
-                break;
-            }
-            t = typeArguments.get(t);
-        }
-        return new ContainerElementKey(containerClass, typeArgumentIndex);
+        return result;
     }
 
     private void populate(Supplier<Map<ContainerElementKey, ValueExtractor<?>>> target) {

@@ -118,7 +118,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     @Override
     public String toString() {
-        return String.format("%s: %s", getClass().getSimpleName(), getTarget());
+        return String.format("%s: %s", getClass().getSimpleName(), meta.describeHost());
     }
 
     protected abstract BeanD<?> getBean();

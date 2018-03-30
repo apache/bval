@@ -283,7 +283,7 @@ public abstract class ValidationJob<T> {
             final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
 
             final Stream<PropertyD<?>> reachableProperties = properties.filter(d -> {
-                final PathImpl p = PathImpl.copy(context.getPath());
+                final PathImpl p = context.getPath();
                 p.addProperty(d.getPropertyName());
                 try {
                     return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
@@ -337,7 +337,7 @@ public abstract class ValidationJob<T> {
                 final Object traversableObject =
                     Optional.ofNullable(context.getParent()).map(GraphContext::getValue).orElse(null);
 
-                final PathImpl pathToTraversableObject = PathImpl.copy(context.getPath());
+                final PathImpl pathToTraversableObject = context.getPath();
                 final NodeImpl traversableProperty = pathToTraversableObject.removeLeafNode();
 
                 try {

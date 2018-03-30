@@ -100,7 +100,7 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
         }
         try {
             final Object value = getValue(context.getValue());
-            final PathImpl p = PathImpl.copy(context.getPath());
+            final PathImpl p = context.getPath();
             p.addProperty(getPropertyName());
             return Stream.of(context.child(p, value));
         } catch (Exception e) {

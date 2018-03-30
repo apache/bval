@@ -31,6 +31,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ValidationException;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
@@ -63,13 +64,10 @@ import org.apache.bval.util.reflection.TypeUtils;
 public final class ValidateProperty<T> extends ValidationJob<T> {
 
     interface Strategy<T> {
-        default PathNavigation.Callback<?> callback(PathImpl.Builder pathBuilder, FindDescriptor findDescriptor) {
-            return new PathNavigation.CompositeCallbackProcedure(Arrays.asList(pathBuilder, findDescriptor));
-        }
+        T getRootBean();
 
-        default T getRootBean() {
-            return null;
-        }
+        PathNavigation.Callback<?> callback(PathImpl.Builder pathBuilder, FindDescriptor findDescriptor,
+            ObjectWrapper<Boolean> reachable);
 
         ValidateProperty<T>.Frame<?> frame(ValidateProperty<T> job, PathImpl path);
     }
@@ -91,18 +89,15 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         }
 
         @Override
-        public PathNavigation.Callback<?> callback(PathImpl.Builder pathBuilder, FindDescriptor findDescriptor) {
-            return new WalkGraph(validatorContext, pathBuilder, findDescriptor, value,
-                (p, v) -> leafContext.accept(p.isRootPath() ? rootContext : rootContext.child(p, v)));
-        }
-
-        @Override
         public T getRootBean() {
             return rootBean;
         }
 
-        public GraphContext baseContext(PathImpl path, ApacheFactoryContext validatorContext) {
-            return new GraphContext(validatorContext, PathImpl.create(), rootBean).child(path, value.get());
+        @Override
+        public PathNavigation.Callback<?> callback(PathImpl.Builder pathBuilder, FindDescriptor findDescriptor,
+            ObjectWrapper<Boolean> reachable) {
+            return new WalkGraph(validatorContext, rootBean.getClass(), pathBuilder, findDescriptor, value, reachable,
+                (p, v) -> leafContext.accept(p.isRootPath() ? rootContext : rootContext.child(p, v)));
         }
 
         @Override
@@ -116,11 +111,27 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
     }
 
     static class ForPropertyValue<T> implements Strategy<T> {
+        final ApacheFactoryContext validatorContext;
+        final Class<?> rootBeanClass;
         final Object value;
 
-        ForPropertyValue(Object value) {
+        ForPropertyValue(ApacheFactoryContext validatorContext, Class<?> rootBeanClass, Object value) {
             super();
+            this.validatorContext = validatorContext;
+            this.rootBeanClass = rootBeanClass;
             this.value = value;
+        }
+
+        @Override
+        public T getRootBean() {
+            return null;
+        }
+
+        @Override
+        public PathNavigation.Callback<?> callback(PathImpl.Builder pathBuilder, FindDescriptor findDescriptor,
+            ObjectWrapper<Boolean> reachable) {
+            return new WalkGraph(validatorContext, rootBeanClass, pathBuilder, findDescriptor, new ObjectWrapper<>(),
+                reachable, null);
         }
 
         @Override
@@ -274,17 +285,22 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
 
     private static class WalkGraph extends PathNavigation.CallbackProcedure {
         final ApacheFactoryContext validatorContext;
+        final Class<?> rootBeanClass;
         final PathImpl.Builder pathBuilder;
         final FindDescriptor findDescriptor;
         final ObjectWrapper<Object> value;
+        final ObjectWrapper<Boolean> reachable;
         final BiConsumer<PathImpl, Object> recordLeaf;
 
-        WalkGraph(ApacheFactoryContext validatorContext, PathImpl.Builder pathBuilder, FindDescriptor findDescriptor,
-            ObjectWrapper<Object> value, BiConsumer<PathImpl, Object> recordLeaf) {
+        WalkGraph(ApacheFactoryContext validatorContext, Class<?> rootBeanClass, PathImpl.Builder pathBuilder,
+            FindDescriptor findDescriptor, ObjectWrapper<Object> value, ObjectWrapper<Boolean> reachable,
+            BiConsumer<PathImpl, Object> recordLeaf) {
             this.validatorContext = validatorContext;
+            this.rootBeanClass = rootBeanClass;
             this.pathBuilder = pathBuilder;
             this.findDescriptor = findDescriptor;
             this.value = value;
+            this.reachable = reachable;
             this.recordLeaf = recordLeaf;
         }
 
@@ -292,10 +308,21 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         public void handleProperty(String name) {
             final PathImpl p = PathImpl.copy(pathBuilder.result());
             pathBuilder.handleProperty(name);
-            if (value.optional().isPresent()) {
-                recordLeaf.accept(p, value.get());
+            findDescriptor.handleProperty(name);
 
-                findDescriptor.handleProperty(name);
+            if (reachable.get().booleanValue()) {
+                try {
+                    reachable.accept(validatorContext.getTraversableResolver().isReachable(value.get(),
+                        pathBuilder.result().getLeafNode(), rootBeanClass, p,
+                        findDescriptor.result().getElementType()));
+                } catch (ValidationException ve) {
+                    throw ve;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
+                }
+            }
+            if (reachable.get().booleanValue() && value.optional().isPresent() && recordLeaf != null) {
+                recordLeaf.accept(p, value.get());
 
                 final PropertyD<?> propertyD =
                     ComposedD.unwrap(findDescriptor.current.element(), PropertyD.class).findFirst().get();
@@ -441,6 +468,7 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
     private final Class<T> rootBeanClass;
     private final PathImpl propertyPath;
     private final T rootBean;
+    private final boolean reachable;
     private ElementD<?, ?> descriptor;
     private boolean cascade;
 
@@ -456,17 +484,20 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
 
         final PathImpl.Builder pathBuilder = new PathImpl.Builder();
         final FindDescriptor findDescriptor = new FindDescriptor(validatorContext, rootBeanClass);
+        final ObjectWrapper<Boolean> reachable = new ObjectWrapper<>(Boolean.TRUE);
 
-        PathNavigation.navigate(property, strategy.callback(pathBuilder, findDescriptor));
+        PathNavigation.navigate(property, strategy.callback(pathBuilder, findDescriptor, reachable));
 
         this.propertyPath = pathBuilder.result();
         this.descriptor = findDescriptor.result();
         this.rootBean = strategy.getRootBean();
+        this.reachable = reachable.get().booleanValue();
     }
 
     ValidateProperty(ApacheFactoryContext validatorContext, Class<T> rootBeanClass, String property, Object value,
         Class<?>[] groups) {
-        this(new ForPropertyValue<>(value), validatorContext, rootBeanClass, property, groups);
+        this(new ForPropertyValue<>(validatorContext, rootBeanClass, value), validatorContext, rootBeanClass, property,
+            groups);
         if (descriptor == null) {
             // should only occur when the root class is raw
 
@@ -488,8 +519,8 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
     @SuppressWarnings("unchecked")
     ValidateProperty(ApacheFactoryContext validatorContext, T bean, String property, Class<?>[] groups)
         throws Exception {
-        this(new ForBeanProperty<>(validatorContext, bean), validatorContext,
-            (Class<T>) Validate.notNull(bean, IllegalArgumentException::new, "bean").getClass(), property, groups);
+        this(new ForBeanProperty<>(validatorContext, Validate.notNull(bean, IllegalArgumentException::new, "bean")),
+            validatorContext, (Class<T>) bean.getClass(), property, groups);
 
         if (descriptor == null) {
             Exceptions.raise(IllegalArgumentException::new, "Could not resolve property name/path: %s", property);
@@ -514,6 +545,9 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
 
     @Override
     protected boolean hasWork() {
+        if (!reachable) {
+            return false;
+        }
         if (descriptor instanceof BeanDescriptor) {
             return ((BeanDescriptor) descriptor).isBeanConstrained();
         }

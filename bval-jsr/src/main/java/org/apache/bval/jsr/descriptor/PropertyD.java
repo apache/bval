@@ -45,19 +45,19 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public String getPropertyName() {
-            return host.getName();
+            return getTarget().getName();
         }
 
         @Override
         public Object getValue(Object parent) throws Exception {
-            final boolean mustUnset = Reflection.setAccessible(host, true);
+            final boolean mustUnset = Reflection.setAccessible(getTarget(), true);
             try {
-                return host.get(parent);
+                return getTarget().get(parent);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException(e);
             } finally {
                 if (mustUnset) {
-                    Reflection.setAccessible(host, false);
+                    Reflection.setAccessible(getTarget(), false);
                 }
             }
         }
@@ -71,29 +71,26 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public String getPropertyName() {
-            return Methods.propertyName(host);
+            return Methods.propertyName(getTarget());
         }
 
         @Override
         public Object getValue(Object parent) throws Exception {
-            final boolean mustUnset = Reflection.setAccessible(host, true);
+            final boolean mustUnset = Reflection.setAccessible(getTarget(), true);
             try {
-                return host.invoke(parent);
+                return getTarget().invoke(parent);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new IllegalArgumentException(e);
             } finally {
                 if (mustUnset) {
-                    Reflection.setAccessible(host, false);
+                    Reflection.setAccessible(getTarget(), false);
                 }
             }
         }
     }
 
-    protected final E host;
-
     protected PropertyD(MetadataReader.ForContainer<E> reader, BeanD<?> parent) {
         super(reader, parent);
-        this.host = reader.meta.getHost();
     }
 
     public final Stream<GraphContext> read(GraphContext context) {

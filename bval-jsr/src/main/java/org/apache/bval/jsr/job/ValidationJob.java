@@ -285,8 +285,14 @@ public abstract class ValidationJob<T> {
             final Stream<PropertyD<?>> reachableProperties = properties.filter(d -> {
                 final PathImpl p = PathImpl.copy(context.getPath());
                 p.addProperty(d.getPropertyName());
-                return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(), p,
-                    d.getElementType());
+                try {
+                    return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                        p, d.getElementType());
+                } catch (ValidationException ve) {
+                    throw ve;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
+                }
             });
             return reachableProperties.flatMap(
                 d -> d.read(context).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)));
@@ -328,12 +334,21 @@ public abstract class ValidationJob<T> {
             if (descriptor instanceof PropertyDescriptor) {
                 final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
 
+                final Object traversableObject =
+                    Optional.ofNullable(context.getParent()).map(GraphContext::getValue).orElse(null);
+
                 final PathImpl pathToTraversableObject = PathImpl.copy(context.getPath());
                 final NodeImpl traversableProperty = pathToTraversableObject.removeLeafNode();
 
-                if (!traversableResolver.isCascadable(context.getValue(), traversableProperty, getRootBeanClass(),
-                    pathToTraversableObject, ((PropertyD<?>) descriptor).getElementType())) {
-                    return;
+                try {
+                    if (!traversableResolver.isCascadable(traversableObject, traversableProperty, getRootBeanClass(),
+                        pathToTraversableObject, ((PropertyD<?>) descriptor).getElementType())) {
+                        return;
+                    }
+                } catch (ValidationException ve) {
+                    throw ve;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
                 }
             }
             multiplex().filter(context -> context.getValue() != null && !context.isRecursive())

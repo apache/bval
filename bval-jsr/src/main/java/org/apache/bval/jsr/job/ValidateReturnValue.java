@@ -64,6 +64,16 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
                 .getBeanDescriptor(object.getClass())
                 .getConstraintsForMethod(executable.getName(), executable.getParameterTypes());
         }
+
+        @Override
+        protected ValidationJob<T>.Frame<?> createBaseFrame(ReturnValueD<?, ?> descriptor, GraphContext context) {
+            return new SproutFrame<ReturnValueD<?, ?>>(descriptor, context) {
+                @Override
+                Object getBean() {
+                    return getRootBean();
+                }
+            };
+        }
     }
 
     public static class ForConstructor<T> extends ValidateReturnValue<Constructor<?>, T> {
@@ -93,6 +103,17 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
                 .getBeanDescriptor(executable.getDeclaringClass())
                 .getConstraintsForConstructor(executable.getParameterTypes());
         }
+
+        @Override
+        protected ValidationJob<T>.Frame<?> createBaseFrame(ReturnValueD<?, ?> descriptor, GraphContext context) {
+            final Object returnValue = context.getValue();
+            return new SproutFrame<ReturnValueD<?, ?>>(descriptor, context) {
+                @Override
+                Object getBean() {
+                    return returnValue;
+                }
+            };
+        }
     }
 
     private final Object returnValue;
@@ -112,13 +133,8 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         final PathImpl path = createBasePath();
         path.addNode(new NodeImpl.ReturnValueNodeImpl());
 
-        return new SproutFrame<ReturnValueD<?, ?>>((ReturnValueD<?, ?>) describe().getReturnValueDescriptor(),
-            new GraphContext(validatorContext, path, returnValue)) {
-            @Override
-            Object getBean() {
-                return getRootBean();
-            }
-        };
+        return createBaseFrame((ReturnValueD<?, ?>) describe().getReturnValueDescriptor(),
+            new GraphContext(validatorContext, path, returnValue));
     }
 
     @Override
@@ -137,4 +153,6 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
     protected abstract ExecutableD<?, ?, ?> describe();
 
     protected abstract T getRootBean();
+
+    protected abstract Frame<?> createBaseFrame(ReturnValueD<?, ?> descriptor, GraphContext context);
 }

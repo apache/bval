@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 
+import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
@@ -72,6 +73,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     }
 
     protected final Type genericType;
+    final GroupsComputer groupsComputer;
 
     private final Meta<E> meta;
     private final Set<ConstraintD<?>> constraints;
@@ -82,6 +84,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         this.meta = reader.meta;
         this.genericType = reader.meta.getType();
         this.constraints = reader.getConstraints();
+        this.groupsComputer = reader.getValidatorFactory().getGroupsComputer();
     }
 
     @Override
@@ -97,7 +100,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     @Override
     public final ConstraintFinder findConstraints() {
-        return new Finder(this);
+        return new Finder(groupsComputer, this);
     }
 
     public final ElementType getElementType() {

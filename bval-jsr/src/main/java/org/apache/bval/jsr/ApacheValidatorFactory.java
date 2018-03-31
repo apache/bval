@@ -39,6 +39,7 @@ import javax.validation.spi.ConfigurationState;
 import javax.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.descriptor.DescriptorManager;
+import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
 import org.apache.bval.jsr.metadata.MetadataBuilders;
@@ -47,6 +48,7 @@ import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.jsr.valueextraction.ValueExtractors.OnDuplicateContainerElementKey;
 import org.apache.bval.util.CloseableAble;
+import org.apache.bval.util.Lazy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -93,11 +95,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         return result;
     }
 
-    private MessageInterpolator messageResolver;
-    private TraversableResolver traversableResolver;
-    private ConstraintValidatorFactory constraintValidatorFactory;
-    private ParameterNameProvider parameterNameProvider;
-    private ClockProvider clockProvider;
+    private final Lazy<GroupsComputer> groupsComputer = new Lazy<>(GroupsComputer::new);
     private final Map<String, String> properties;
     private final AnnotationsManager annotationsManager;
     private final DescriptorManager descriptorManager = new DescriptorManager(this);
@@ -106,6 +104,12 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final Collection<Closeable> toClose = new ArrayList<>();
     private final ParticipantFactory participantFactory;
     private final ValueExtractors valueExtractors;
+
+    private MessageInterpolator messageResolver;
+    private TraversableResolver traversableResolver;
+    private ConstraintValidatorFactory constraintValidatorFactory;
+    private ParameterNameProvider parameterNameProvider;
+    private ClockProvider clockProvider;
 
     /**
      * Create a new ApacheValidatorFactory instance.
@@ -353,6 +357,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
     public MetadataBuilders getMetadataBuilders() {
         return metadataBuilders;
+    }
+
+    public GroupsComputer getGroupsComputer() {
+        return groupsComputer.get();
     }
 
     private void loadAndVerifyUserCustomizations(ConfigurationState configuration) {

@@ -19,41 +19,57 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.lang.annotation.ElementType;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.validation.GroupDefinitionException;
+import javax.validation.GroupSequence;
 import javax.validation.groups.Default;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 import javax.validation.metadata.Scope;
 
+import org.apache.bval.jsr.groups.Group;
+import org.apache.bval.jsr.groups.Groups;
+import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.util.ToUnmodifiable;
+import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
-class Finder implements ConstraintFinder, Supplier<Stream<ConstraintD<?>>> {
-    private Predicate<ConstraintD<?>> groups = c -> true;
-    private Predicate<ConstraintD<?>> scope;
-    private Predicate<ConstraintD<?>> elements;
+class Finder implements ConstraintFinder {
+    private static Stream<Group> allGroups(Groups groups) {
+        return Stream.concat(groups.getGroups().stream(), groups.getSequences().stream().flatMap(Collection::stream));
+    }
 
+    private volatile Predicate<ConstraintD<?>> groups = c -> true;
+    private volatile Predicate<ConstraintD<?>> scope;
+    private volatile Predicate<ConstraintD<?>> elements;
+
+    private final GroupsComputer groupsComputer;
     private final ElementDescriptor owner;
+    private final Lazy<Groups> getDefaultSequence = new Lazy<>(this::computeDefaultSequence);
+    private final Lazy<Class<?>> beanClass;
 
-    Finder(ElementDescriptor owner) {
+    Finder(GroupsComputer groupsComputer, ElementDescriptor owner) {
+        this.groupsComputer = Validate.notNull(groupsComputer, "groupsComputer");
         this.owner = Validate.notNull(owner, "owner");
+        this.beanClass = new Lazy<>(() -> firstAtomicElementDescriptor().getBean().getElementClass());
     }
 
     @Override
     public ConstraintFinder unorderedAndMatchingGroups(Class<?>... groups) {
-        this.groups = c -> Stream.of(groups).anyMatch(t -> {
-            final Set<Class<?>> constraintGroups = c.getGroups();
-            return constraintGroups.contains(t)
-                || constraintGroups.contains(Default.class) && c.getDeclaringClass().isAssignableFrom(t);
-        });
+        final Set<Class<?>> allGroups = computeAll(groups);
+        this.groups = c -> !Collections.disjoint(allGroups, c.getGroups());
         return this;
     }
 
@@ -73,12 +89,7 @@ class Finder implements ConstraintFinder, Supplier<Stream<ConstraintD<?>>> {
 
     @Override
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
-        return get().collect(ToUnmodifiable.set());
-    }
-
-    @Override
-    public Stream<ConstraintD<?>> get() {
-        return getConstraints().filter(filter());
+        return getConstraints().filter(filter()).collect(ToUnmodifiable.set());
     }
 
     @Override
@@ -99,5 +110,38 @@ class Finder implements ConstraintFinder, Supplier<Stream<ConstraintD<?>>> {
             result = result.and(elements);
         }
         return result;
+    }
+
+    private ElementD<?,?> firstAtomicElementDescriptor() {
+        return ComposedD.unwrap(owner, ElementD.class).findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    private Groups computeDefaultSequence() {
+        final ElementD<?, ?> element = firstAtomicElementDescriptor();
+        Collection<Class<?>> redef = element.getGroupSequence();
+        if (redef == null) {
+            return GroupsComputer.DEFAULT_GROUPS;
+        }
+        final Class<?> t = this.beanClass.get();
+        if (redef.contains(Default.class)) {
+            Exceptions.raise(GroupDefinitionException::new, "%s for %s cannot include %s.class",
+                GroupSequence.class.getSimpleName(), t, Default.class.getSimpleName());
+        }
+        redef = redef.stream()
+                .map(substituteDefaultGroup())
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return groupsComputer.computeGroups(redef);
+    }
+
+    private Set<Class<?>> computeAll(Class<?>[] groups) {
+        final Groups preliminaryGroups = groupsComputer.computeGroups(Stream.of(groups).map(substituteDefaultGroup()));
+        return allGroups(preliminaryGroups)
+            .flatMap(g -> g.isDefault() ? allGroups(getDefaultSequence.get()) : Stream.of(g)).map(Group::getGroup)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private UnaryOperator<Class<?>> substituteDefaultGroup() {
+        return t -> t.isAssignableFrom(beanClass.get()) ? Default.class : t;
     }
 }

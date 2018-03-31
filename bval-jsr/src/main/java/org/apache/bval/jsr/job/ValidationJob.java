@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -49,7 +48,6 @@ import javax.validation.constraintvalidation.ValidationTarget;
 import javax.validation.groups.Default;
 import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
-import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
 import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.ValidateUnwrappedValue;
 import javax.validation.valueextraction.ValueExtractor;
@@ -113,7 +111,7 @@ public abstract class ValidationJob<T> {
         abstract Object getBean();
 
         void validateDescriptorConstraints(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            constraintsFrom(descriptor.findConstraints().unorderedAndMatchingGroups(group))
+            constraintsFor(group)
                 .forEach(c -> unwrap(c.getValueUnwrapping()).forEach(f -> f.validate(c, sink)));
         }
 
@@ -133,14 +131,13 @@ public abstract class ValidationJob<T> {
             return Stream.of(this);
         }
 
-        @SuppressWarnings("unchecked")
-        private Stream<ConstraintD<?>> constraintsFrom(ConstraintFinder finder) {
-            // our ConstraintFinder implementation is a Stream supplier; reference without exposing it beyond its
-            // package:
-            if (finder instanceof Supplier<?>) {
-                return (Stream<ConstraintD<?>>) ((Supplier<?>) finder).get();
-            }
-            return finder.getConstraintDescriptors().stream().map(ConstraintD.class::cast);
+        private Stream<ConstraintD<?>> constraintsFor(Class<?> group) {
+            return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
+                .filter(c -> Stream.of(group).anyMatch(t -> {
+                    final Set<Class<?>> constraintGroups = c.getGroups();
+                    return constraintGroups.contains(t)
+                        || constraintGroups.contains(Default.class) && c.getDeclaringClass().isAssignableFrom(t);
+                }));
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })

@@ -24,10 +24,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
@@ -50,7 +50,7 @@ public class GroupsComputer {
      * The default group array used in case any of the validate methods is
      * called without a group.
      */
-    private static final Groups DEFAULT_GROUPS;
+    public static final Groups DEFAULT_GROUPS;
     static {
         DEFAULT_GROUPS = new Groups();
         for (Class<?> g : DEFAULT_GROUP) {
@@ -82,7 +82,7 @@ public class GroupsComputer {
      * @return {@link Groups}
      */
     public final Groups computeCascadingGroups(Set<GroupConversionDescriptor> groupConversions, Class<?> group) {
-        final Groups preliminaryResult = computeGroups(group);
+        final Groups preliminaryResult = computeGroups(Stream.of(group));
 
         final Map<Class<?>, Class<?>> gcMap = groupConversions.stream()
             .collect(Collectors.toMap(GroupConversionDescriptor::getFrom, GroupConversionDescriptor::getTo));
@@ -91,9 +91,8 @@ public class GroupsComputer {
 
         // conversion of a simple (non-sequence) group:
         if (simpleGroup && gcMap.containsKey(group)) {
-            return computeGroups(gcMap.get(group));
+            return computeGroups(Stream.of(gcMap.get(group)));
         }
-
         final Groups result = new Groups();
 
         if (simpleGroup) {
@@ -107,7 +106,7 @@ public class GroupsComputer {
                 for (Group gg : seq) {
                     final Class<?> c = gg.getGroup();
                     if (gcMap.containsKey(c)) {
-                        final Groups convertedGroupExpansion = computeGroups(gcMap.get(c));
+                        final Groups convertedGroupExpansion = computeGroups(Stream.of(gcMap.get(c)));
                         if (convertedGroupExpansion.getSequences().isEmpty()) {
                             converted.add(gg);
                         } else {
@@ -123,35 +122,49 @@ public class GroupsComputer {
     }
 
     /**
-     * Main compute implementation.
+     * Compute groups from a {@link Collection}.
      * 
      * @param groups
      * @return {@link Groups}
      */
-    protected Groups computeGroups(Collection<Class<?>> groups) {
+    public Groups computeGroups(Collection<Class<?>> groups) {
         Validate.notNull(groups, "groups");
 
         if (groups.isEmpty() || Arrays.asList(DEFAULT_GROUP).equals(new ArrayList<>(groups))) {
             return DEFAULT_GROUPS;
         }
-        Exceptions.raiseIf(groups.stream().anyMatch(Objects::isNull), IllegalArgumentException::new,
-            "Null group specified");
+        return computeGroups(groups.stream());
+    }
 
-        groups.forEach(g -> Exceptions.raiseUnless(g.isInterface(), ValidationException::new,
-            "A group must be an interface. %s is not.", g));
+    /**
+     * Compute groups from a {@link Stream}.
+     * 
+     * @param groups
+     * @return {@link Groups}
+     */
+    public Groups computeGroups(Stream<Class<?>> groups) {
+        final Groups result = new Groups();
 
-        final Groups chain = new Groups();
-        for (Class<?> clazz : groups) {
-            final GroupSequence anno = clazz.getAnnotation(GroupSequence.class);
+        groups.peek(g -> {
+            Exceptions.raiseIf(g == null, IllegalArgumentException::new, "Null group specified");
+
+            Exceptions.raiseUnless(g.isInterface(), ValidationException::new,
+                "A group must be an interface. %s is not.", g);
+
+        }).forEach(g -> {
+            final GroupSequence anno = g.getAnnotation(GroupSequence.class);
             if (anno == null) {
-                chain.insertGroup(new Group(clazz));
-                insertInheritedGroups(clazz, chain);
-                continue;
+                result.insertGroup(new Group(g));
+                insertInheritedGroups(g, result);
+            } else {
+                result.insertSequence(
+                    resolvedSequences.computeIfAbsent(g, gg -> resolveSequence(gg, anno, new HashSet<>())));
             }
-            chain.insertSequence(
-                resolvedSequences.computeIfAbsent(clazz, g -> resolveSequence(g, anno, new HashSet<>())));
+        });
+        if (Arrays.asList(DEFAULT_GROUP).equals(result.getGroups()) && result.getSequences().isEmpty()) {
+            return DEFAULT_GROUPS;
         }
-        return chain;
+        return result;
     }
 
     private void insertInheritedGroups(Class<?> clazz, Groups chain) {

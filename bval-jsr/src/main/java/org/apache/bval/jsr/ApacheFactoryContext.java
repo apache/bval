@@ -30,7 +30,6 @@ import javax.validation.valueextraction.ValueExtractor;
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -40,7 +39,6 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
  */
 @Privilizing(@CallTo(Reflection.class))
 public class ApacheFactoryContext implements ValidatorContext {
-    private final Lazy<GroupsComputer> groupsComputer = new Lazy<>(GroupsComputer::new);
     private final ApacheValidatorFactory factory;
     private final ValueExtractors valueExtractors;
 
@@ -172,12 +170,12 @@ public class ApacheFactoryContext implements ValidatorContext {
     }
 
     public DescriptorManager getDescriptorManager() {
-        // TODO handle context customizations
+        // TODO implementation-specific feature to handle context-local descriptor customizations
         return factory.getDescriptorManager();
     }
 
     public GroupsComputer getGroupsComputer() {
-        return groupsComputer.get();
+        return factory.getGroupsComputer();
     }
 
     public ConstraintCached getConstraintsCache() {

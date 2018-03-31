@@ -241,8 +241,8 @@ public class AnnotationsManager {
             final GroupsComputer groupsComputer = new GroupsComputer();
             // ensure interface group is implied by Default group:
             Stream.of(result).map(c -> {
-                final Groups groups = groupsComputer
-                    .computeGroups(ConstraintAnnotationAttributes.GROUPS.analyze(c.annotationType()).read(c));
+                final Groups groups = groupsComputer.computeGroups(
+                    ConstraintAnnotationAttributes.GROUPS.analyze(c.annotationType()).<Class<?>[]> read(c));
                 if (groups.getGroups().stream().anyMatch(Group::isDefault)) {
                     final Set<Class<?>> groupClasses = groups.getGroups().stream().map(Group::getGroup)
                         .collect(Collectors.toCollection(LinkedHashSet::new));

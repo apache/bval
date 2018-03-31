@@ -79,6 +79,10 @@ class MetadataReader {
                 .flatMap(e -> describe(e.getValue(), e.getKey(), meta)).collect(ToUnmodifiable.set());
         }
 
+        ApacheValidatorFactory getValidatorFactory() {
+            return validatorFactory;
+        }
+
         private Stream<ConstraintD<?>> describe(Annotation[] constraints, Scope scope, Meta<?> meta) {
             return Stream.of(constraints).map(c -> new ConstraintD<>(c, scope, meta, validatorFactory));
         }

@@ -32,6 +32,7 @@ import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.GroupConversionDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 
+import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Validate;
 
@@ -118,6 +119,9 @@ public abstract class ComposedD<D extends ElementD<?, ?>> implements ElementDesc
 
     @Override
     public ConstraintFinder findConstraints() {
-        return new Finder(this);
+        final GroupsComputer groupsComputer =
+            unwrap(this, ElementD.class).findFirst().orElseThrow(IllegalStateException::new).groupsComputer;
+
+        return new Finder(groupsComputer, this);
     }
 }

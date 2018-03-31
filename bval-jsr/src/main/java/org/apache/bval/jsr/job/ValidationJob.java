@@ -242,6 +242,8 @@ public abstract class ValidationJob<T> {
             if (Default.class.equals(group)) {
                 final List<Class<?>> groupSequence = descriptor.getGroupSequence();
                 if (groupSequence != null) {
+                    groups.assertDefaultGroupSequenceIsExpandable(
+                        groupSequence.stream().map(Group::new).collect(Collectors.toList()));
                     return groupSequence.stream();
                 }
             }

@@ -85,20 +85,20 @@ public class GroupsComputerTest {
         groups.add(Second.class);
         groups.add(Last.class);
         Groups chain = groupsComputer.computeGroups(groups);
-        assertEquals(3, chain.groups.size());
+        assertEquals(3, chain.getGroups().size());
 
         groups.clear();
         groups.add(First.class);
         groups.add(First.class);
         chain = groupsComputer.computeGroups(groups);
-        assertEquals(1, chain.groups.size());
+        assertEquals(1, chain.getGroups().size());
 
         groups.clear();
         groups.add(First.class);
         groups.add(Last.class);
         groups.add(First.class);
         chain = groupsComputer.computeGroups(groups);
-        assertEquals(2, chain.groups.size());
+        assertEquals(2, chain.getGroups().size());
     }
 
     @Test

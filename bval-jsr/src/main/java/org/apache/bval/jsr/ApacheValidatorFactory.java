@@ -48,7 +48,6 @@ import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.jsr.valueextraction.ValueExtractors.OnDuplicateContainerElementKey;
 import org.apache.bval.util.CloseableAble;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -95,13 +94,13 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         return result;
     }
 
-    private final Lazy<GroupsComputer> groupsComputer = new Lazy<>(GroupsComputer::new);
     private final Map<String, String> properties;
     private final AnnotationsManager annotationsManager;
     private final DescriptorManager descriptorManager = new DescriptorManager(this);
     private final MetadataBuilders metadataBuilders = new MetadataBuilders();
     private final ConstraintCached constraintsCache = new ConstraintCached();
     private final Collection<Closeable> toClose = new ArrayList<>();
+    private final GroupsComputer groupsComputer = new GroupsComputer();
     private final ParticipantFactory participantFactory;
     private final ValueExtractors valueExtractors;
 
@@ -360,7 +359,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     public GroupsComputer getGroupsComputer() {
-        return groupsComputer.get();
+        return groupsComputer;
     }
 
     private void loadAndVerifyUserCustomizations(ConfigurationState configuration) {

@@ -19,6 +19,7 @@
 package org.apache.bval.jsr.groups;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.validation.GroupDefinitionException;
@@ -32,11 +33,11 @@ import org.apache.bval.util.Exceptions;
  * @author Roman Stumm
  */
 public class Groups {
+    /** The list of single groups. */
+    private final List<Group> groups = new ArrayList<>();
+
     /** The list of sequences. */
     private final List<List<Group>> sequences = new ArrayList<>();
-
-    /** The list of single groups. */
-    final List<Group> groups = new ArrayList<>();
 
     /**
      * Get the Groups.
@@ -44,7 +45,7 @@ public class Groups {
      * @return {@link List} of {@link Group}.
      */
     public List<Group> getGroups() {
-        return groups;
+        return Collections.unmodifiableList(groups);
     }
 
     /**
@@ -53,7 +54,7 @@ public class Groups {
      * @return {@link List} of {@link List} of {@link Group}
      */
     public List<List<Group>> getSequences() {
-        return sequences;
+        return Collections.unmodifiableList(sequences);
     }
 
     /**
@@ -76,7 +77,7 @@ public class Groups {
      */
     void insertSequence(List<Group> groups) {
         if (!(groups == null || groups.isEmpty() || sequences.contains(groups))) {
-            sequences.add(groups);
+            sequences.add(Collections.unmodifiableList(groups));
         }
     }
 

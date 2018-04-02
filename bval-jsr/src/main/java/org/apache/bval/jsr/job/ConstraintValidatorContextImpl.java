@@ -118,16 +118,6 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
     private final Lazy<Set<ConstraintViolation<T>>> violations = new Lazy<>(HashSet::new);
     private boolean defaultConstraintViolationDisabled;
 
-    /**
-     * Temporary for code migration
-     */
-    // TODO delete
-    @Deprecated
-    protected ConstraintValidatorContextImpl() {
-        this.frame = null;
-        this.constraint = null;
-    }
-
     ConstraintValidatorContextImpl(ValidationJob<T>.Frame<?> frame, ConstraintD<?> constraint) {
         super();
         this.frame = Validate.notNull(frame, "frame");

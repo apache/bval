@@ -300,7 +300,7 @@ public class ReflectionBuilder {
 
         private Map<ConstraintTarget, List<Annotation>> getConstraintsByTarget() {
             final Annotation[] declaredConstraints = AnnotationsManager.getDeclaredConstraints(meta);
-            if (ObjectUtils.isEmpty(declaredConstraints)) {
+            if (ObjectUtils.isEmptyArray(declaredConstraints)) {
                 return Collections.emptyMap();
             }
             final Map<ConstraintTarget, List<Annotation>> result = new EnumMap<>(ConstraintTarget.class);

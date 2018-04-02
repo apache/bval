@@ -51,12 +51,8 @@ public final class ObjectUtils {
         return object == null ? defaultValue : object;
     }
 
-    public static <T> boolean isNotEmpty(final T[] array) {
-        return !isEmpty(array);
-    }
-
-    public static boolean isEmpty(final Object[] array) {
-        return array == null || array.length == 0;
+    public static boolean isEmptyArray(final Object array) {
+        return array == null || array.getClass().isArray() && Array.getLength(array) == 0;
     }
 
     /**

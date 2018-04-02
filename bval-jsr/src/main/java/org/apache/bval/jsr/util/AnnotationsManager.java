@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -181,6 +182,11 @@ public class AnnotationsManager {
         }
     }
 
+    private static final Set<ConstraintAnnotationAttributes> CONSTRAINT_ATTRIBUTES =
+        Collections.unmodifiableSet(EnumSet.complementOf(EnumSet.of(ConstraintAnnotationAttributes.VALUE)));
+
+    private static final Set<Class<? extends Annotation>> VALIDATED_CONSTRAINT_TYPES = new HashSet<>();
+
     public static Map<String, Object> readAttributes(Annotation a) {
         final Lazy<Map<String, Object>> result = new Lazy<>(LinkedHashMap::new);
 
@@ -292,6 +298,50 @@ public class AnnotationsManager {
             throw Exceptions.create(IllegalStateException::new, e,
                 "Cannot parse value %s for configuration property %s", cacheSize,
                 ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
+        }
+    }
+
+    public void validateConstraintDefinition(Class<? extends Annotation> type) {
+        if (VALIDATED_CONSTRAINT_TYPES.add(type)) {
+            Exceptions.raiseUnless(type.isAnnotationPresent(Constraint.class), ConstraintDefinitionException::new,
+                "%s is not a validation constraint", type);
+
+            final Set<ValidationTarget> supportedTargets = supportedTargets(type);
+
+            final Map<String, Method> attributes =
+                Stream.of(Reflection.getDeclaredMethods(type)).filter(m -> m.getParameterCount() == 0)
+                    .collect(Collectors.toMap(Method::getName, Function.identity()));
+
+            if (supportedTargets.size() > 1
+                && !attributes.containsKey(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName())) {
+                Exceptions.raise(ConstraintDefinitionException::new,
+                    "Constraint %s is both generic and cross-parameter but lacks %s attribute", type.getName(),
+                    ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO);
+            }
+            for (ConstraintAnnotationAttributes attr : CONSTRAINT_ATTRIBUTES) {
+                if (attributes.containsKey(attr.getAttributeName())) {
+                    Exceptions.raiseUnless(attr.analyze(type).isValid(), ConstraintDefinitionException::new,
+                        "%s declared invalid type for attribute %s", type, attr);
+
+                    if (!attr.isValidDefaultValue(attributes.get(attr.getAttributeName()).getDefaultValue())) {
+                        Exceptions.raise(ConstraintDefinitionException::new,
+                            "%s declares invalid default value for attribute %s", type, attr);
+                    }
+                    if (attr == ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO) {
+                        if (supportedTargets.size() == 1) {
+                            Exceptions.raise(ConstraintDefinitionException::new,
+                                "Pure %s constraint %s should not declare attribute %s",
+                                supportedTargets.iterator().next(), type, attr);
+                        }
+                    }
+                } else if (attr.isMandatory()) {
+                    Exceptions.raise(ConstraintDefinitionException::new, "%s does not declare mandatory attribute %s",
+                        type, attr);
+                }
+                attributes.remove(attr.getAttributeName());
+            }
+            attributes.keySet().forEach(k -> Exceptions.raiseIf(k.startsWith("valid"),
+                ConstraintDefinitionException::new, "Invalid constraint attribute %s", k));
         }
     }
 

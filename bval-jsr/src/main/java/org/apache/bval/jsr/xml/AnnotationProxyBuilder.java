@@ -16,13 +16,6 @@
  */
 package org.apache.bval.jsr.xml;
 
-import org.apache.bval.cdi.EmptyAnnotationLiteral;
-import org.apache.bval.jsr.ConstraintAnnotationAttributes;
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.weaver.privilizer.Privileged;
-import org.apache.commons.weaver.privilizer.Privilizing;
-import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -40,6 +33,14 @@ import javax.validation.Payload;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.validation.groups.ConvertGroup;
+
+import org.apache.bval.cdi.EmptyAnnotationLiteral;
+import org.apache.bval.jsr.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr.util.AnnotationsManager;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privileged;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Description: Holds the information and creates an annotation proxy during xml
@@ -94,19 +95,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
     @SuppressWarnings("unchecked")
     public AnnotationProxyBuilder(A annot) {
         this((Class<A>) annot.annotationType());
-        // Obtain the "elements" of the annotation
-        for (Method m : methods) {
-            final boolean mustUnset = Reflection.setAccessible(m, true);
-            try {
-                this.elements.put(m.getName(), m.invoke(annot));
-            } catch (Exception e) {
-                throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName(), e);
-            } finally {
-                if (mustUnset) {
-                    Reflection.setAccessible(m, false);
-                }
-            }
-        }
+        elements.putAll(AnnotationsManager.readAttributes(annot));
     }
 
     public Method[] getMethods() {

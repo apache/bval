@@ -171,7 +171,7 @@ public class TypeUtils {
          * @param lowerBounds of this type
          */
         private WildcardTypeImpl(final Type[] upperBounds, final Type[] lowerBounds) {
-            this.upperBounds = ObjectUtils.isEmpty(upperBounds) ? EMPTY_UPPER_BOUNDS : upperBounds;
+            this.upperBounds = ObjectUtils.isEmptyArray(upperBounds) ? EMPTY_UPPER_BOUNDS : upperBounds;
             this.lowerBounds = lowerBounds == null ? EMPTY_LOWER_BOUNDS : lowerBounds;
         }
 

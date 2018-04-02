@@ -16,22 +16,28 @@
  */
 package org.apache.bval.jsr;
 
-import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.bval.util.reflection.TypeUtils;
-import org.apache.commons.weaver.privilizer.Privilizing;
-import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.Validate;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.util.reflection.TypeUtils;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Defines the well-known attributes of {@link Constraint} annotations.
@@ -43,27 +49,27 @@ public enum ConstraintAnnotationAttributes {
     /**
      * "message"
      */
-    MESSAGE("message"),
+    MESSAGE("message", m -> true),
 
     /**
      * "groups"
      */
-    GROUPS("groups"),
+    GROUPS("groups", ObjectUtils::isEmptyArray),
 
     /**
      * "payload"
      */
-    PAYLOAD("payload"),
+    PAYLOAD("payload", ObjectUtils::isEmptyArray),
 
     /**
      * "validationAppliesTo"
      */
-    VALIDATION_APPLIES_TO("validationAppliesTo"),
+    VALIDATION_APPLIES_TO("validationAppliesTo", Predicate.isEqual(ConstraintTarget.IMPLICIT)),
 
     /**
      * "value" for multi-valued constraints
      */
-    VALUE("value");
+    VALUE("value", ObjectUtils::isEmptyArray);
 
     @SuppressWarnings("unused")
     private static class Types {
@@ -74,23 +80,29 @@ public enum ConstraintAnnotationAttributes {
         ConstraintTarget validationAppliesTo;
     }
 
-    private final Type type;
-    private final String attributeName;
+    private static final Set<ConstraintAnnotationAttributes> MANDATORY =
+            Collections.unmodifiableSet(EnumSet.of(ConstraintAnnotationAttributes.MESSAGE,
+                ConstraintAnnotationAttributes.GROUPS, ConstraintAnnotationAttributes.PAYLOAD));
 
-    private ConstraintAnnotationAttributes(final String name) {
+    private final Class<?> type;
+    private final String attributeName;
+    private final Predicate<Object> validateDefaultValue;
+
+    private ConstraintAnnotationAttributes(final String name, Predicate<Object> validateDefaultValue) {
         this.attributeName = name;
         try {
-            this.type = Types.class.getDeclaredField(getAttributeName()).getGenericType();
+            this.type = Types.class.getDeclaredField(getAttributeName()).getType();
         } catch (Exception e) {
             // should never happen
             throw new RuntimeException(e);
         }
+        this.validateDefaultValue = Validate.notNull(validateDefaultValue, "validateDefaultValue");
     }
 
     /**
      * Get the expected type of the represented attribute.
      */
-    public Type getType() {
+    public Class<?> getType() {
         return type;
     }
 
@@ -100,6 +112,11 @@ public enum ConstraintAnnotationAttributes {
      * @return String
      */
     public String getAttributeName() {
+        return attributeName;
+    }
+
+    @Override
+    public String toString() {
         return attributeName;
     }
 
@@ -139,6 +156,14 @@ public enum ConstraintAnnotationAttributes {
             return w;
         }
         return new Worker<C>(clazz);
+    }
+
+    public boolean isMandatory() {
+        return MANDATORY.contains(this);
+    }
+
+    public boolean isValidDefaultValue(Object o) {
+        return validateDefaultValue.test(o);
     }
 
     // this is static but related to Worker

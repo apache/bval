@@ -592,7 +592,7 @@ public abstract class ValidationJob<T> {
         PathImpl propertyPath) {
         if (!propertyPath.isRootPath()) {
             final NodeImpl leafNode = propertyPath.getLeafNode();
-            if (leafNode.getName() == null && !leafNode.isInIterable()) {
+            if (leafNode.getName() == null && !(leafNode.getKind() == ElementKind.BEAN || leafNode.isInIterable())) {
                 propertyPath.removeLeafNode();
             }
         }

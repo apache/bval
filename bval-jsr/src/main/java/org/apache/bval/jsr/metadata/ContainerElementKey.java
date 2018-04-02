@@ -16,6 +16,10 @@
  */
 package org.apache.bval.jsr.metadata;
 
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
+
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
@@ -46,6 +50,9 @@ import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public class ContainerElementKey implements Comparable<ContainerElementKey> {
+    public static final Comparator<ContainerElementKey> COMPARATOR =
+        nullsFirst(comparing(ContainerElementKey::containerClassName)
+            .thenComparing(ContainerElementKey::getTypeArgumentIndex, nullsFirst(naturalOrder())));
 
     private static Logger log = Logger.getLogger(ContainerElementKey.class.getName());
 
@@ -161,10 +168,7 @@ public class ContainerElementKey implements Comparable<ContainerElementKey> {
 
     @Override
     public int compareTo(ContainerElementKey o) {
-        return Comparator
-            .nullsFirst(Comparator.comparing(ContainerElementKey::containerClassName)
-                .thenComparing(Comparator.nullsFirst(Comparator.comparing(ContainerElementKey::getTypeArgumentIndex))))
-            .compare(this, o);
+        return COMPARATOR.compare(this, o);
     }
 
     public Set<ContainerElementKey> getAssignableKeys() {

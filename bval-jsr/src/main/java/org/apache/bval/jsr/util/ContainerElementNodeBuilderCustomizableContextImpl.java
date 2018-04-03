@@ -28,50 +28,40 @@ import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
 public class ContainerElementNodeBuilderCustomizableContextImpl
     implements ContainerElementNodeBuilderCustomizableContext {
-    private final ConstraintValidatorContextImpl<?> context;
-    private final String template;
     private final PathImpl path;
-    private NodeImpl node;
+    private final ConstraintValidatorContextImpl<?>.ConstraintViolationBuilderImpl builder;
 
-    public ContainerElementNodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl<?> context, String template,
-        PathImpl path, String name, Class<?> containerType, Integer typeArgumentIndex) {
+    public ContainerElementNodeBuilderCustomizableContextImpl(PathImpl path, String name, Class<?> containerType,
+        Integer typeArgumentIndex, ConstraintValidatorContextImpl<?>.ConstraintViolationBuilderImpl builder) {
         super();
-        this.context = context;
-        this.path = path;
-        this.template = template;
-        this.node = new NodeImpl.ContainerElementNodeImpl(name, containerType, typeArgumentIndex);
+        this.builder = builder.ofLegalState();
+        this.path = path.addNode(new NodeImpl.ContainerElementNodeImpl(name, containerType, typeArgumentIndex));
     }
 
     @Override
     public ContainerElementNodeContextBuilder inIterable() {
-        node.setInIterable(true);
-        return new ContainerElementNodeContextBuilderImpl(context, template, path, node);
+        return new ContainerElementNodeContextBuilderImpl(path, builder);
     }
 
     @Override
     public NodeBuilderCustomizableContext addPropertyNode(String name) {
-        path.addNode(node);
-        return new NodeBuilderCustomizableContextImpl(context, template, path, name);
+        return new NodeBuilderCustomizableContextImpl(path, name, builder);
     }
 
     @Override
     public LeafNodeBuilderCustomizableContext addBeanNode() {
-        path.addNode(node);
-        return new LeafNodeBuilderCustomizableContextImpl(context, template, path);
+        return new LeafNodeBuilderCustomizableContextImpl(path, builder);
     }
 
     @Override
     public ContainerElementNodeBuilderCustomizableContext addContainerElementNode(String name, Class<?> containerType,
         Integer typeArgumentIndex) {
-        path.addNode(node);
-        node = new NodeImpl.ContainerElementNodeImpl(name, containerType, typeArgumentIndex);
+        path.addNode(new NodeImpl.ContainerElementNodeImpl(name, containerType, typeArgumentIndex));
         return this;
     }
 
     @Override
     public ConstraintValidatorContext addConstraintViolation() {
-        path.addNode(node);
-        context.addError(template, path);
-        return context;
+        return builder.addConstraintViolation(path);
     }
 }

@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintViolation;
+import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
 import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
@@ -43,9 +44,11 @@ import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
 public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorContext, MessageInterpolator.Context {
-    private class ConstraintViolationBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder {
+    public class ConstraintViolationBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder {
         private final String template;
         private final PathImpl path;
+
+        private boolean complete;
 
         ConstraintViolationBuilderImpl(String template, PathImpl path) {
             this.template = template;
@@ -57,29 +60,22 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
          */
         @Override
         public NodeBuilderDefinedContext addNode(String name) {
-            PathImpl p;
-            if (path.isRootPath()) {
-                p = PathImpl.create();
-                p.getLeafNode().setName(name);
-            } else {
-                p = PathImpl.copy(path);
-                p.addNode(new NodeImpl.PropertyNodeImpl(name));
-            }
-            return new NodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl.this, template, p);
+            return new NodeBuilderDefinedContextImpl(extensiblePath().addProperty(name), this);
         }
 
         @Override
         public NodeBuilderCustomizableContext addPropertyNode(String name) {
-            return new NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl.this, template, path, name);
+            return new NodeBuilderCustomizableContextImpl(extensiblePath(), name, this);
         }
 
         @Override
         public LeafNodeBuilderCustomizableContext addBeanNode() {
-            return new LeafNodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl.this, template, path);
+            return new LeafNodeBuilderCustomizableContextImpl(extensiblePath(), this);
         }
 
         @Override
         public NodeBuilderDefinedContext addParameterNode(int index) {
+            ofLegalState();
             Exceptions.raiseUnless(frame.descriptor instanceof CrossParameterDescriptor, ValidationException::new,
                 "Cannot add parameter node for %s", f -> f.args(frame.descriptor.getClass().getName()));
 
@@ -88,12 +84,9 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
 
             final String parameterName = crossParameter.getParent().getParameterDescriptors().get(index).getName();
 
-            final NodeImpl node = new NodeImpl.ParameterNodeImpl(parameterName, index);
-            if (!path.isRootPath()) {
-                path.removeLeafNode();
-            }
-            path.addNode(node);
-            return new NodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl.this, template, path);
+            path.removeLeafNode();
+            return new NodeBuilderDefinedContextImpl(path.addNode(new NodeImpl.ParameterNodeImpl(parameterName, index)),
+                this);
         }
 
         /**
@@ -101,15 +94,42 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
          */
         @Override
         public ConstraintValidatorContext addConstraintViolation() {
-            addError(template, path);
+            return addConstraintViolation(path);
+        }
+
+        public synchronized ConstraintViolationBuilderImpl ofLegalState() {
+            Validate.validState(!complete, "#addConstraintViolation() already called");
+            return this;
+        }
+
+        public ConstraintValidatorContext addConstraintViolation(PathImpl p) {
+            synchronized (this) {
+                ofLegalState();
+                complete = true;
+            }
+            addError(template, p);
             return ConstraintValidatorContextImpl.this;
         }
 
         @Override
         public ContainerElementNodeBuilderCustomizableContext addContainerElementNode(String name,
             Class<?> containerType, Integer typeArgumentIndex) {
-            return new ContainerElementNodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl.this, template,
-                path, name, containerType, typeArgumentIndex);
+            ofLegalState();
+            return new ContainerElementNodeBuilderCustomizableContextImpl(extensiblePath(), name,
+                containerType, typeArgumentIndex, this);
+        }
+
+        private PathImpl extensiblePath() {
+            if (path.isRootPath()) {
+                return PathImpl.create();
+            }
+            final PathImpl result = PathImpl.copy(path);
+            final NodeImpl leafNode = result.getLeafNode();
+            if (leafNode.getKind() == ElementKind.BEAN
+                && !(leafNode.isInIterable() || leafNode.getContainerClass() != null)) {
+                result.removeLeafNode();
+            }
+            return result;
         }
     }
 
@@ -153,11 +173,6 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void addError(String messageTemplate, PathImpl propertyPath) {
-        violations.get().add(((ValidationJob) frame.getJob()).createViolation(messageTemplate, this, propertyPath));
-    }
-
     ValidationJob<T>.Frame<?> getFrame() {
         return frame;
     }
@@ -180,5 +195,10 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
     @Override
     public Object getValidatedValue() {
         return frame.context.getValue();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void addError(String messageTemplate, PathImpl propertyPath) {
+        violations.get().add(((ValidationJob) frame.getJob()).createViolation(messageTemplate, this, propertyPath));
     }
 }

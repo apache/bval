@@ -27,39 +27,35 @@ import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.No
 import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
 public class ContainerElementNodeBuilderDefinedContextImpl implements ContainerElementNodeBuilderDefinedContext {
-    private final ConstraintValidatorContextImpl<?> context;
-    private final String template;
+    private final ConstraintValidatorContextImpl<?>.ConstraintViolationBuilderImpl builder;
     private final PathImpl path;
 
-    ContainerElementNodeBuilderDefinedContextImpl(ConstraintValidatorContextImpl<?> context, String template,
-        PathImpl path) {
+    ContainerElementNodeBuilderDefinedContextImpl(PathImpl path,
+        ConstraintValidatorContextImpl<?>.ConstraintViolationBuilderImpl builder) {
         super();
-        this.context = context;
-        this.template = template;
         this.path = path;
+        this.builder = builder.ofLegalState();
     }
 
     @Override
     public NodeBuilderCustomizableContext addPropertyNode(String name) {
-        return new NodeBuilderCustomizableContextImpl(context, template, path, name);
+        return new NodeBuilderCustomizableContextImpl(path, name, builder);
     }
 
     @Override
     public LeafNodeBuilderCustomizableContext addBeanNode() {
-        return new LeafNodeBuilderCustomizableContextImpl(context, template, path);
+        return new LeafNodeBuilderCustomizableContextImpl(path, builder);
     }
 
     @Override
     public ContainerElementNodeBuilderCustomizableContext addContainerElementNode(String name, Class<?> containerType,
         Integer typeArgumentIndex) {
-        return new ContainerElementNodeBuilderCustomizableContextImpl(context, name, path, name, containerType,
-            typeArgumentIndex);
+        return new ContainerElementNodeBuilderCustomizableContextImpl(path, name, containerType, typeArgumentIndex,
+            builder);
     }
 
     @Override
     public ConstraintValidatorContext addConstraintViolation() {
-        context.addError(template, path);
-        return context;
+        return builder.addConstraintViolation(path);
     }
-
 }

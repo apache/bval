@@ -25,34 +25,25 @@ import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.No
 import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
 /**
- * Description: implementation of {@link javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
+ * Description: implementation of
+ * {@link javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
  */
 public final class NodeBuilderCustomizableContextImpl
     implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {
-    private final ConstraintValidatorContextImpl<?> context;
-    private final String template;
     private final PathImpl path;
-    private NodeImpl node;
+    private final ConstraintValidatorContextImpl<?>.ConstraintViolationBuilderImpl builder;
 
     /**
      * Create a new NodeBuilderCustomizableContextImpl instance.
-     * @param context
-     * @param template
+     * 
      * @param path
      * @param name
+     * @param builder
      */
-    public NodeBuilderCustomizableContextImpl(ConstraintValidatorContextImpl<?> context, String template, PathImpl path,
-        String name) {
-        this.context = context;
-        this.template = template;
-        this.path = path;
-
-        if (path.isRootPath() || path.getLeafNode().getName() != null) {
-            node = new NodeImpl.PropertyNodeImpl(name);
-        } else {
-            node = new NodeImpl.PropertyNodeImpl(path.removeLeafNode());
-            node.setName(name);
-        }
+    public NodeBuilderCustomizableContextImpl(PathImpl path, String name,
+        ConstraintValidatorContextImpl<?>.ConstraintViolationBuilderImpl builder) {
+        this.builder = builder.ofLegalState();
+        this.path = path.addProperty(name);
     }
 
     /**
@@ -60,8 +51,7 @@ public final class NodeBuilderCustomizableContextImpl
      */
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeContextBuilder inIterable() {
-        node.setInIterable(true);
-        return new NodeContextBuilderImpl(context, template, path, node);
+        return new NodeContextBuilderImpl(path, builder);
     }
 
     /**
@@ -75,15 +65,14 @@ public final class NodeBuilderCustomizableContextImpl
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addPropertyNode(
         String name) {
-        path.addNode(node);
-        node = new NodeImpl.PropertyNodeImpl(name);
+        builder.ofLegalState();
+        path.addProperty(name);
         return this;
     }
 
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.LeafNodeBuilderCustomizableContext addBeanNode() {
-        path.addNode(node);
-        return new LeafNodeBuilderCustomizableContextImpl(context, template, path);
+        return new LeafNodeBuilderCustomizableContextImpl(path, builder);
     }
 
     /**
@@ -91,25 +80,20 @@ public final class NodeBuilderCustomizableContextImpl
      */
     @Override
     public ConstraintValidatorContext addConstraintViolation() {
-        path.addNode(node);
-        node = null;
-        context.addError(template, path);
-        return context;
+        return builder.addConstraintViolation(path);
     }
 
     @Override
     public NodeBuilderCustomizableContext inContainer(Class<?> containerClass, Integer typeArgumentIndex) {
-        node.inContainer(containerClass, typeArgumentIndex);
+        builder.ofLegalState();
+        path.getLeafNode().inContainer(containerClass, typeArgumentIndex);
         return this;
     }
 
     @Override
     public ContainerElementNodeBuilderCustomizableContext addContainerElementNode(String name, Class<?> containerType,
         Integer typeArgumentIndex) {
-        path.addNode(node);
-        node = new NodeImpl.ContainerElementNodeImpl(name, containerType, typeArgumentIndex);
-        return new ContainerElementNodeBuilderCustomizableContextImpl(context, template, path, name, containerType,
-            typeArgumentIndex);
+        return new ContainerElementNodeBuilderCustomizableContextImpl(path, name, containerType, typeArgumentIndex,
+            builder);
     }
-
 }

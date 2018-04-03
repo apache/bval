@@ -162,9 +162,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     @Override
     protected Frame<?> computeBaseFrame() {
-        final PathImpl cp = createBasePath();
-        cp.addNode(new NodeImpl.CrossParameterNodeImpl());
-        return new ParametersFrame(describe(), new GraphContext(validatorContext, cp, parameterValues));
+        return new ParametersFrame(describe(), new GraphContext(validatorContext,
+            createBasePath().addNode(new NodeImpl.CrossParameterNodeImpl()), parameterValues));
     }
 
     @Override

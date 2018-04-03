@@ -188,37 +188,28 @@ public class PathImpl implements Path, Serializable {
     }
 
     /**
-     * Return a new {@link PathImpl} that represents <code>this</code> minus its leaf node (if present).
-     * 
-     * @return PathImpl
-     */
-    public PathImpl getPathWithoutLeafNode() {
-        if (nodeList.size() < 2) {
-            return null;
-        }
-        return new PathImpl(nodeList.subList(0, nodeList.size() - 1));
-    }
-
-    /**
      * Add a node to this {@link PathImpl}.
      * 
      * @param node
      *            to add
+     * @return {@code this}, fluently
      */
-    public void addNode(Node node) {
+    public PathImpl addNode(Node node) {
         final NodeImpl impl = node instanceof NodeImpl ? (NodeImpl) node : newNode(node);
         if (isRootPath()) {
             nodeList.pop();
         }
         nodeList.add(impl);
+        return this;
     }
 
     /**
      * Encapsulate the node manipulations needed to add a named property to this path.
      * 
      * @param name
+     * @return {@code this}, fluently
      */
-    public void addProperty(String name) {
+    public PathImpl addProperty(String name) {
         if (!nodeList.isEmpty()) {
             NodeImpl leaf = getLeafNode();
             if (isAwaitingPropertyName(leaf)) {
@@ -229,10 +220,20 @@ public class PathImpl implements Path, Serializable {
                     leaf = tmp;
                 }
                 leaf.setName(name);
-                return;
+                return this;
             }
         }
-        addNode(new NodeImpl.PropertyNodeImpl(name));
+        return addNode(new NodeImpl.PropertyNodeImpl(name));
+    }
+
+    public PathImpl addBean() {
+        final NodeImpl.BeanNodeImpl node;
+        if (!nodeList.isEmpty() && isAwaitingPropertyName(getLeafNode())) {
+            node = new NodeImpl.BeanNodeImpl(removeLeafNode());
+        } else {
+            node = new NodeImpl.BeanNodeImpl();
+        }
+        return addNode(node);
     }
 
     /**

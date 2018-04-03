@@ -240,7 +240,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     private ConstraintTarget computeValidationAppliesTo(ElementType elementType) {
         final ConstraintTarget result = read(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO);
-        if (result != null) {
+        if (result != null && result != ConstraintTarget.IMPLICIT) {
             final AnnotatedElement host = meta.getHost();
             Exceptions.raiseUnless(host instanceof Executable, ConstraintDeclarationException::new, "Illegal %s on %s",
                 result, host);
@@ -254,9 +254,9 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
                 Exceptions.raiseIf(Void.TYPE.equals(meta.getType()), ConstraintDeclarationException::new,
                     "Illegal %s on %s method %s", result, Void.TYPE, host);
                 break;
-            case IMPLICIT:
-                // handled in ReflectionBuilder
             default:
+                Exceptions.raise(IllegalStateException::new, "Unknown %s %s", ConstraintTarget.class.getSimpleName(),
+                    result);
             }
         }
         return result;

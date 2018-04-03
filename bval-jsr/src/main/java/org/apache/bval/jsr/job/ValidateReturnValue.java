@@ -130,11 +130,8 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     protected Frame<?> computeBaseFrame() {
-        final PathImpl path = createBasePath();
-        path.addNode(new NodeImpl.ReturnValueNodeImpl());
-
-        return createBaseFrame((ReturnValueD<?, ?>) describe().getReturnValueDescriptor(),
-            new GraphContext(validatorContext, path, returnValue));
+        return createBaseFrame((ReturnValueD<?, ?>) describe().getReturnValueDescriptor(), new GraphContext(
+            validatorContext, createBasePath().addNode(new NodeImpl.ReturnValueNodeImpl()), returnValue));
     }
 
     @Override

@@ -384,6 +384,11 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         return typeArgumentIndex;
     }
 
+    public NodeImpl inIterable() {
+        setInIterable(true);
+        return this;
+    }
+
     public NodeImpl inContainer(Class<?> containerType, Integer typeArgumentIndex) {
         this.containerType = containerType;
         this.typeArgumentIndex = typeArgumentIndex;

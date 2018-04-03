@@ -252,13 +252,16 @@ public abstract class ValidationJob<T> {
     }
 
     public class BeanFrame<B> extends Frame<BeanD<B>> {
+        private final GraphContext realContext;
 
         BeanFrame(GraphContext context) {
             this(null, context);
         }
 
         BeanFrame(Frame<?> parent, GraphContext context) {
-            super(parent, getBeanDescriptor(context.getValue()), context);
+            super(parent, getBeanDescriptor(context.getValue()),
+                context.child(context.getPath().addBean(), context.getValue()));
+            this.realContext = context;
         }
 
         @Override
@@ -282,7 +285,7 @@ public abstract class ValidationJob<T> {
             final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
 
             final Stream<PropertyD<?>> reachableProperties = properties.filter(d -> {
-                final PathImpl p = context.getPath();
+                final PathImpl p = realContext.getPath();
                 p.addProperty(d.getPropertyName());
                 try {
                     return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
@@ -294,7 +297,7 @@ public abstract class ValidationJob<T> {
                 }
             });
             return reachableProperties.flatMap(
-                d -> d.read(context).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)));
+                d -> d.read(realContext).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)));
         }
     }
 

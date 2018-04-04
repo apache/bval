@@ -36,11 +36,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.Constraint;
+import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintDefinitionException;
+import javax.validation.ConstraintTarget;
 import javax.validation.OverridesAttribute;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
@@ -49,6 +52,7 @@ import javax.validation.constraintvalidation.ValidationTarget;
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.Groups;
@@ -105,6 +109,11 @@ public class AnnotationsManager {
     }
 
     private static class Composition {
+        static <A extends Annotation> Optional<ConstraintAnnotationAttributes.Worker<A>> validWorker(
+            ConstraintAnnotationAttributes attr, Class<A> type) {
+            return Optional.of(type).map(attr::analyze).filter(Worker::isValid);
+        }
+
         final Lazy<Map<OverriddenAnnotationSpecifier, Map<String, String>>> overrides = new Lazy<>(HashMap::new);
         final Annotation[] components;
 
@@ -161,6 +170,10 @@ public class AnnotationsManager {
             final Class<? extends Payload>[] payload =
                 ConstraintAnnotationAttributes.PAYLOAD.analyze(source.annotationType()).read(source);
 
+            final Optional<ConstraintTarget> constraintTarget =
+                validWorker(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO, source.annotationType())
+                    .map(w -> w.read(source));
+
             final Map<Class<? extends Annotation>, AtomicInteger> constraintCounts = new HashMap<>();
 
             return Stream.of(components).map(c -> {
@@ -172,6 +185,11 @@ public class AnnotationsManager {
                 proxyBuilder.setGroups(groups);
                 proxyBuilder.setPayload(payload);
 
+                if (constraintTarget.isPresent()
+                    && validWorker(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO, c.annotationType())
+                        .isPresent()) {
+                    proxyBuilder.setValidationAppliesTo(constraintTarget.get());
+                }
                 overrides.optional().map(o -> o.get(new OverriddenAnnotationSpecifier(c.annotationType(), index)))
                     .ifPresent(m -> {
                         final Map<String, Object> sourceAttributes = readAttributes(source);
@@ -265,14 +283,31 @@ public class AnnotationsManager {
     }
 
     private static Annotation[] getDeclaredConstraints(AnnotatedElement e) {
-        return Stream.of(e.getDeclaredAnnotations()).flatMap((Function<Annotation, Stream<Annotation>>) a -> {
-            final ConstraintAnnotationAttributes.Worker<? extends Annotation> analyzer =
-                ConstraintAnnotationAttributes.VALUE.analyze(a.annotationType());
-            if (analyzer.isValid()) {
-                return Stream.of(analyzer.<Annotation[]> read(a));
+        final Annotation[] declaredAnnotations = e.getDeclaredAnnotations();
+
+        // collect constraint explicitly nested into repeatable containers:
+        final Map<Class<? extends Annotation>, Annotation[]> repeated = new HashMap<>();
+
+        for (Annotation a : declaredAnnotations) {
+            final Class<? extends Annotation> annotationType = a.annotationType();
+            final Worker<? extends Annotation> w = ConstraintAnnotationAttributes.VALUE.analyze(annotationType);
+            if (w.isValid()
+                && ((Class<?>) w.getSpecificType()).getComponentType().isAnnotationPresent(Constraint.class)) {
+                repeated.put(annotationType, w.read(a));
             }
-            return Stream.of(a);
-        }).filter(a -> a.annotationType().isAnnotationPresent(Constraint.class)).toArray(Annotation[]::new);
+        }
+        final Set<Annotation> constraints = Stream.of(declaredAnnotations)
+            .filter((Predicate<Annotation>) a -> a.annotationType().isAnnotationPresent(Constraint.class))
+            .collect(Collectors.toSet());
+
+        Exceptions.raiseIf(
+            constraints.stream().map(Annotation::annotationType).filter(t -> t.isAnnotationPresent(Repeatable.class))
+                .map(rct -> rct.getAnnotation(Repeatable.class).value()).anyMatch(repeated::containsKey),
+            ConstraintDeclarationException::new,
+            "Simultaneous declaration of repeatable constraint and associated container on %s", e);
+
+        return Stream.concat(constraints.stream(), repeated.values().stream().flatMap(Stream::of))
+            .toArray(Annotation[]::new);
     }
 
     public static boolean declaresAttribute(Class<? extends Annotation> annotationType, String name) {

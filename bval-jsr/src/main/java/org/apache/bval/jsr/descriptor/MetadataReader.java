@@ -50,7 +50,9 @@ import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.groups.GroupConversion;
+import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.Meta;
@@ -58,7 +60,9 @@ import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
+import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 
@@ -75,16 +79,43 @@ class MetadataReader {
         }
 
         Set<ConstraintD<?>> getConstraints() {
-            return builder.getConstraintsByScope(meta).entrySet().stream()
-                .flatMap(e -> describe(e.getValue(), e.getKey(), meta)).collect(ToUnmodifiable.set());
+            return builder.getConstraintDeclarationMap(meta).entrySet().stream().flatMap(e -> {
+                final Meta<E> m = e.getKey();
+                final Class<?> declaredBy = m.getDeclaringClass();
+                final Scope scope = declaredBy.equals(beanClass) ? Scope.LOCAL_ELEMENT : Scope.HIERARCHY;
+                return Stream.of(e.getValue())
+                    .peek(
+                        c -> validatorFactory.getAnnotationsManager().validateConstraintDefinition(c.annotationType()))
+                    .map(c -> rewriteConstraint(c, declaredBy))
+                    .map(c -> new ConstraintD<>(c, scope, m, validatorFactory));
+            }).collect(ToUnmodifiable.set());
         }
 
         ApacheValidatorFactory getValidatorFactory() {
             return validatorFactory;
         }
 
-        private Stream<ConstraintD<?>> describe(Annotation[] constraints, Scope scope, Meta<?> meta) {
-            return Stream.of(constraints).map(c -> new ConstraintD<>(c, scope, meta, validatorFactory));
+        private <A extends Annotation> A rewriteConstraint(A constraint, Class<?> declaredBy) {
+            boolean mustRewrite = false;
+            Class<?>[] groups =
+                ConstraintAnnotationAttributes.GROUPS.analyze(constraint.annotationType()).read(constraint);
+            if (groups.length == 0) {
+                mustRewrite = true;
+                groups = GroupsComputer.DEFAULT_GROUP;
+            }
+            if (!(declaredBy.equals(beanClass) || beanClass.isInterface())) {
+                if (ObjectUtils.arrayContains(groups, Default.class)
+                    && !ObjectUtils.arrayContains(groups, declaredBy)) {
+                    mustRewrite = true;
+                    groups = ObjectUtils.arrayAdd(groups, declaredBy);
+                }
+            }
+            if (mustRewrite) {
+                final AnnotationProxyBuilder<A> builder = new AnnotationProxyBuilder<A>(constraint);
+                builder.setGroups(groups);
+                return builder.createAnnotation();
+            }
+            return constraint;
         }
     }
 
@@ -316,13 +347,16 @@ class MetadataReader {
     }
 
     private final ApacheValidatorFactory validatorFactory;
+    private final Class<?> beanClass;
 
-    MetadataReader(ApacheValidatorFactory validatorFactory) {
+    MetadataReader(ApacheValidatorFactory validatorFactory, Class<?> beanClass) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
+        this.beanClass = Validate.notNull(beanClass, "beanClass");
     }
 
-    <T> MetadataReader.ForBean<T> forBean(Class<T> beanClass, MetadataBuilder.ForBean<T> builder) {
-        return new MetadataReader.ForBean<>(new Meta.ForClass<>(beanClass), builder);
+    @SuppressWarnings("unchecked")
+    <T> MetadataReader.ForBean<T> forBean(MetadataBuilder.ForBean<T> builder) {
+        return new MetadataReader.ForBean<>(new Meta.ForClass<>((Class<T>) beanClass), builder);
     }
 }

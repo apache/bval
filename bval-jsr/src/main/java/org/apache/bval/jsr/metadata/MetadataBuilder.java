@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.metadata.Scope;
-
 import org.apache.bval.jsr.groups.GroupConversion;
 
 /**
@@ -65,8 +63,8 @@ public final class MetadataBuilder {
 
         Annotation[] getDeclaredConstraints(Meta<E> meta);
 
-        default Map<Scope, Annotation[]> getConstraintsByScope(Meta<E> meta) {
-            return Collections.singletonMap(Scope.LOCAL_ELEMENT, getDeclaredConstraints(meta));
+        default Map<Meta<E>, Annotation[]> getConstraintDeclarationMap(Meta<E> meta) {
+            return Collections.singletonMap(meta, getDeclaredConstraints(meta));
         }
     }
 

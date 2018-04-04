@@ -87,7 +87,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     public ConstraintD(A annotation, Scope scope, Meta<?> meta, ApacheValidatorFactory validatorFactory) {
         this.annotation = Validate.notNull(annotation, "annotation");
-        validatorFactory.getAnnotationsManager().validateConstraintDefinition(annotation.annotationType());
         this.scope = Validate.notNull(scope, "scope");
         this.meta = Validate.notNull(meta, "meta");
 

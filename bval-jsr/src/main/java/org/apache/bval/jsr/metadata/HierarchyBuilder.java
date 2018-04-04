@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,10 +36,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.validation.ElementKind;
 import javax.validation.ParameterNameProvider;
-import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;
@@ -314,20 +313,16 @@ public class HierarchyBuilder extends CompositeBuilder {
     }
 
     @Override
-    protected <E extends AnnotatedElement> Map<Scope, Annotation[]> getConstraintsByScope(
+    protected <E extends AnnotatedElement> Map<Meta<E>, Annotation[]> getConstraintDeclarationMap(
         CompositeBuilder.ForElement<? extends MetadataBuilder.ForElement<E>, E> composite, Meta<E> meta) {
 
-        final Iterator<? extends MetadataBuilder.ForElement<E>> iter = composite.delegates.iterator();
+        @SuppressWarnings("unchecked")
+        final Function<MetadataBuilder.ForElement<E>, Meta<E>> keyMapper =
+            d -> Optional.of(d).filter(HierarchyDelegate.class::isInstance).map(HierarchyDelegate.class::cast)
+                .map(HierarchyDelegate::getHierarchyElement).orElse(meta);
 
-        final Map<Scope, Annotation[]> result = new EnumMap<>(Scope.class);
-        result.put(Scope.LOCAL_ELEMENT, iter.next().getDeclaredConstraints(meta));
-
-        if (iter.hasNext()) {
-            final List<Annotation> hierarchyConstraints = new ArrayList<>();
-            iter.forEachRemaining(d -> Collections.addAll(hierarchyConstraints, d.getDeclaredConstraints(meta)));
-            result.put(Scope.HIERARCHY, hierarchyConstraints.toArray(new Annotation[hierarchyConstraints.size()]));
-        }
-        return result;
+        return composite.delegates.stream().collect(Collectors.toMap(keyMapper, d -> d.getDeclaredConstraints(meta),
+            (u, v) -> Stream.of(u, v).flatMap(Stream::of).toArray(Annotation[]::new), LinkedHashMap::new));
     }
 
     @Override

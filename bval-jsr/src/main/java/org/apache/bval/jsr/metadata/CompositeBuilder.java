@@ -39,7 +39,6 @@ import java.util.stream.Stream;
 
 import javax.validation.ElementKind;
 import javax.validation.ParameterNameProvider;
-import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;
@@ -71,7 +70,8 @@ public class CompositeBuilder {
         }
 
         <K, D> Map<K, D> merge(Function<DELEGATE, Map<K, D>> toMap, BiFunction<K, List<D>, D> merge) {
-            final List<Map<K, D>> maps = delegates.stream().map(toMap).collect(Collectors.toList());
+            final List<Map<K, D>> maps =
+                delegates.stream().map(toMap).filter(m -> !m.isEmpty()).collect(Collectors.toList());
 
             final Function<? super K, ? extends D> valueMapper = k -> {
                 final List<D> mappedDelegates =
@@ -140,8 +140,8 @@ public class CompositeBuilder {
         }
 
         @Override
-        public Map<Scope, Annotation[]> getConstraintsByScope(Meta<E> meta) {
-            return CompositeBuilder.this.getConstraintsByScope(this, meta);
+        public Map<Meta<E>, Annotation[]> getConstraintDeclarationMap(Meta<E> meta) {
+            return CompositeBuilder.this.getConstraintDeclarationMap(this, meta);
         }
 
         @Override
@@ -263,9 +263,9 @@ public class CompositeBuilder {
             .mapToObj(n -> new Meta.ForParameter(parameters[n], parameterNames.get(n))).collect(Collectors.toList());
     }
 
-    protected <E extends AnnotatedElement> Map<Scope, Annotation[]> getConstraintsByScope(
+    protected <E extends AnnotatedElement> Map<Meta<E>, Annotation[]> getConstraintDeclarationMap(
         CompositeBuilder.ForElement<? extends MetadataBuilder.ForElement<E>, E> composite, Meta<E> meta) {
-        return Collections.singletonMap(Scope.LOCAL_ELEMENT, composite.getDeclaredConstraints(meta));
+        return Collections.singletonMap(meta, composite.getDeclaredConstraints(meta));
     }
 
     protected <T> List<Class<?>> getGroupSequence(CompositeBuilder.ForClass<T> composite, Meta<Class<T>> meta) {

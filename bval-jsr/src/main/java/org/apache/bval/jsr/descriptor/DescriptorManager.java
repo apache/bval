@@ -50,13 +50,11 @@ public class DescriptorManager {
     private final ApacheValidatorFactory validatorFactory;
     private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
     private final ReflectionBuilder reflectionBuilder;
-    private final MetadataReader metadataReader;
 
     public DescriptorManager(ApacheValidatorFactory validatorFactory) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory, "validatorFactory");
         this.reflectionBuilder = new ReflectionBuilder(validatorFactory);
-        this.metadataReader = new MetadataReader(validatorFactory);
     }
 
     public <T> BeanDescriptor getBeanDescriptor(Class<T> beanClass) {
@@ -66,7 +64,9 @@ public class DescriptorManager {
         if (beanDescriptors.containsKey(beanClass)) {
             return beanDescriptors.get(beanClass);
         }
-        final BeanD<T> beanD = new BeanD<>(metadataReader.forBean(beanClass, builder(beanClass)));
+        final MetadataReader.ForBean<T> reader =
+            new MetadataReader(validatorFactory, beanClass).forBean(builder(beanClass));
+        final BeanD<T> beanD = new BeanD<>(reader);
         @SuppressWarnings("unchecked")
         final BeanD<T> result =
             Optional.ofNullable((BeanD<T>) beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);

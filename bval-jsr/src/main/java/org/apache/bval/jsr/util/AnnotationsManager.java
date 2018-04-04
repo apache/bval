@@ -29,14 +29,12 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,9 +52,6 @@ import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
-import org.apache.bval.jsr.groups.Group;
-import org.apache.bval.jsr.groups.Groups;
-import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
@@ -259,32 +254,14 @@ public class AnnotationsManager {
      * @return Annotation[]
      */
     public static Annotation[] getDeclaredConstraints(Meta<?> meta) {
-        final Annotation[] result = getDeclaredConstraints(meta.getHost());
-        final Class<?> dc = meta.getDeclaringClass();
-        if (dc.isInterface()) {
-            final GroupsComputer groupsComputer = new GroupsComputer();
-            // ensure interface group is implied by Default group:
-            Stream.of(result).map(c -> {
-                final Groups groups = groupsComputer.computeGroups(
-                    ConstraintAnnotationAttributes.GROUPS.analyze(c.annotationType()).<Class<?>[]> read(c));
-                if (groups.getGroups().stream().anyMatch(Group::isDefault)) {
-                    final Set<Class<?>> groupClasses = groups.getGroups().stream().map(Group::getGroup)
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
-                    if (groupClasses.add(dc)) {
-                        final AnnotationProxyBuilder<?> proxyBuilder = new AnnotationProxyBuilder<>(c);
-                        proxyBuilder.setGroups(groupClasses.toArray(new Class[groupClasses.size()]));
-                        return proxyBuilder.createAnnotation();
-                    }
-                }
-                return c;
-            }).toArray(n -> result);
-        }
-        return result;
+        return getDeclaredConstraints(meta.getHost());
     }
 
     private static Annotation[] getDeclaredConstraints(AnnotatedElement e) {
         final Annotation[] declaredAnnotations = e.getDeclaredAnnotations();
-
+        if (declaredAnnotations.length == 0) {
+            return declaredAnnotations;
+        }
         // collect constraint explicitly nested into repeatable containers:
         final Map<Class<? extends Annotation>, Annotation[]> repeated = new HashMap<>();
 
@@ -296,18 +273,19 @@ public class AnnotationsManager {
                 repeated.put(annotationType, w.read(a));
             }
         }
-        final Set<Annotation> constraints = Stream.of(declaredAnnotations)
-            .filter((Predicate<Annotation>) a -> a.annotationType().isAnnotationPresent(Constraint.class))
-            .collect(Collectors.toSet());
+        Stream<Annotation> constraints = Stream.of(declaredAnnotations)
+                .filter(a -> a.annotationType().isAnnotationPresent(Constraint.class));
 
-        Exceptions.raiseIf(
-            constraints.stream().map(Annotation::annotationType).filter(t -> t.isAnnotationPresent(Repeatable.class))
-                .map(rct -> rct.getAnnotation(Repeatable.class).value()).anyMatch(repeated::containsKey),
-            ConstraintDeclarationException::new,
-            "Simultaneous declaration of repeatable constraint and associated container on %s", e);
+        if (!repeated.isEmpty()) {
+            constraints = constraints.peek(c -> Exceptions.raiseIf(
+                Optional.of(c.annotationType()).map(t -> t.getAnnotation(Repeatable.class)).map(Repeatable::value)
+                    .filter(repeated::containsKey).isPresent(),
+                ConstraintDeclarationException::new,
+                "Simultaneous declaration of repeatable constraint and associated container on %s", e));
 
-        return Stream.concat(constraints.stream(), repeated.values().stream().flatMap(Stream::of))
-            .toArray(Annotation[]::new);
+            constraints = Stream.concat(constraints, repeated.values().stream().flatMap(Stream::of));
+        }
+        return constraints.toArray(Annotation[]::new);
     }
 
     private final ApacheValidatorFactory validatorFactory;
@@ -328,47 +306,50 @@ public class AnnotationsManager {
     }
 
     public void validateConstraintDefinition(Class<? extends Annotation> type) {
-        if (VALIDATED_CONSTRAINT_TYPES.add(type)) {
-            Exceptions.raiseUnless(type.isAnnotationPresent(Constraint.class), ConstraintDefinitionException::new,
-                "%s is not a validation constraint", type);
-
-            final Set<ValidationTarget> supportedTargets = supportedTargets(type);
-
-            final Map<String, Method> attributes =
-                Stream.of(Reflection.getDeclaredMethods(type)).filter(m -> m.getParameterCount() == 0)
-                    .collect(Collectors.toMap(Method::getName, Function.identity()));
-
-            if (supportedTargets.size() > 1
-                && !attributes.containsKey(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName())) {
-                Exceptions.raise(ConstraintDefinitionException::new,
-                    "Constraint %s is both generic and cross-parameter but lacks %s attribute", type.getName(),
-                    ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO);
-            }
-            for (ConstraintAnnotationAttributes attr : CONSTRAINT_ATTRIBUTES) {
-                if (attributes.containsKey(attr.getAttributeName())) {
-                    Exceptions.raiseUnless(attr.analyze(type).isValid(), ConstraintDefinitionException::new,
-                        "%s declared invalid type for attribute %s", type, attr);
-
-                    if (!attr.isValidDefaultValue(attributes.get(attr.getAttributeName()).getDefaultValue())) {
-                        Exceptions.raise(ConstraintDefinitionException::new,
-                            "%s declares invalid default value for attribute %s", type, attr);
-                    }
-                    if (attr == ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO) {
-                        if (supportedTargets.size() == 1) {
-                            Exceptions.raise(ConstraintDefinitionException::new,
-                                "Pure %s constraint %s should not declare attribute %s",
-                                supportedTargets.iterator().next(), type, attr);
-                        }
-                    }
-                } else if (attr.isMandatory()) {
-                    Exceptions.raise(ConstraintDefinitionException::new, "%s does not declare mandatory attribute %s",
-                        type, attr);
-                }
-                attributes.remove(attr.getAttributeName());
-            }
-            attributes.keySet().forEach(k -> Exceptions.raiseIf(k.startsWith("valid"),
-                ConstraintDefinitionException::new, "Invalid constraint attribute %s", k));
+        if (VALIDATED_CONSTRAINT_TYPES.contains(type)) {
+            return;
         }
+        Exceptions.raiseUnless(type.isAnnotationPresent(Constraint.class), ConstraintDefinitionException::new,
+            "%s is not a validation constraint", type);
+
+        final Set<ValidationTarget> supportedTargets = supportedTargets(type);
+
+        final Map<String, Method> attributes =
+            Stream.of(Reflection.getDeclaredMethods(type)).filter(m -> m.getParameterCount() == 0)
+                .collect(Collectors.toMap(Method::getName, Function.identity()));
+
+        if (supportedTargets.size() > 1
+            && !attributes.containsKey(ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName())) {
+            Exceptions.raise(ConstraintDefinitionException::new,
+                "Constraint %s is both generic and cross-parameter but lacks %s attribute", type.getName(),
+                ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO);
+        }
+        for (ConstraintAnnotationAttributes attr : CONSTRAINT_ATTRIBUTES) {
+            if (attributes.containsKey(attr.getAttributeName())) {
+                Exceptions.raiseUnless(attr.analyze(type).isValid(), ConstraintDefinitionException::new,
+                    "%s declared invalid type for attribute %s", type, attr);
+
+                if (!attr.isValidDefaultValue(attributes.get(attr.getAttributeName()).getDefaultValue())) {
+                    Exceptions.raise(ConstraintDefinitionException::new,
+                        "%s declares invalid default value for attribute %s", type, attr);
+                }
+                if (attr == ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO) {
+                    if (supportedTargets.size() == 1) {
+                        Exceptions.raise(ConstraintDefinitionException::new,
+                            "Pure %s constraint %s should not declare attribute %s",
+                            supportedTargets.iterator().next(), type, attr);
+                    }
+                }
+            } else if (attr.isMandatory()) {
+                Exceptions.raise(ConstraintDefinitionException::new, "%s does not declare mandatory attribute %s",
+                    type, attr);
+            }
+            attributes.remove(attr.getAttributeName());
+        }
+        attributes.keySet().forEach(k -> Exceptions.raiseIf(k.startsWith("valid"),
+            ConstraintDefinitionException::new, "Invalid constraint attribute %s", k));
+
+        VALIDATED_CONSTRAINT_TYPES.add(type);
     }
 
     /**

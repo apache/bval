@@ -139,9 +139,6 @@ public class ConstraintCached {
             }
             configured = new DualValidationMappingProvider(AnnotationDeclaredValidatorMappingProvider.INSTANCE, custom);
         }
-        // interpret spec as saying that default constraint validators are
-        // always present even when annotation-based validators
-        // have been excluded by custom (i.e. XML) config:
-        return new DualValidationMappingProvider(configured, ConstraintDefaults.INSTANCE);
+        return new DualValidationMappingProvider(ConstraintDefaults.INSTANCE, configured);
     }
 }

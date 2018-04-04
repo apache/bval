@@ -35,16 +35,16 @@ public class DualValidationMappingProvider extends ValidatorMappingProvider {
     protected <A extends Annotation> ValidatorMapping<A> doGetValidatorMapping(Class<A> constraintType) {
 
         final ValidatorMapping<A> secondaryMapping = secondaryDelegate.doGetValidatorMapping(constraintType);
+        final ValidatorMapping<A> primaryMapping = primaryDelegate.doGetValidatorMapping(constraintType);
         if (secondaryMapping == null) {
-            return primaryDelegate.doGetValidatorMapping(constraintType);
+            return primaryMapping;
         }
         final AnnotationBehavior annotationBehavior = secondaryMapping.getAnnotationBehavior();
 
-        if (annotationBehavior == AnnotationBehavior.EXCLUDE) {
+        if (primaryMapping == null || annotationBehavior == AnnotationBehavior.EXCLUDE) {
             return secondaryMapping;
         }
-        return ValidatorMapping.merge(
-            Arrays.asList(primaryDelegate.doGetValidatorMapping(constraintType), secondaryMapping),
+        return ValidatorMapping.merge(Arrays.asList(primaryMapping, secondaryMapping),
             AnnotationBehaviorMergeStrategy.consensus());
     }
 }

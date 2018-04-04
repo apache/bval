@@ -133,11 +133,11 @@ public abstract class ValidationJob<T> {
 
         private Stream<ConstraintD<?>> constraintsFor(Class<?> group) {
             return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
-                .filter(c -> Stream.of(group).anyMatch(t -> {
+                .filter(c -> {
                     final Set<Class<?>> constraintGroups = c.getGroups();
-                    return constraintGroups.contains(t)
-                        || constraintGroups.contains(Default.class) && c.getDeclaringClass().isAssignableFrom(t);
-                }));
+                    return constraintGroups.contains(group)
+                        || constraintGroups.contains(Default.class) && c.getDeclaringClass().isAssignableFrom(group);
+                });
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })

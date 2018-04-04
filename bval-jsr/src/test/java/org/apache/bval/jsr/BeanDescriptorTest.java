@@ -42,7 +42,6 @@ import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.util.TestUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -121,8 +120,6 @@ public class BeanDescriptorTest extends ValidationTestBase {
      * interface group when querying the interface directly.
      */
     @Test
-    // spec does not dictate this
-    @Ignore
     public void testNoImplicitGroupWhenQueryingInterfaceDirectly() {
         Set<ConstraintDescriptor<?>> nameDescriptors =
             validator.getConstraintsForClass(Person.class).getConstraintsForProperty("name").getConstraintDescriptors();

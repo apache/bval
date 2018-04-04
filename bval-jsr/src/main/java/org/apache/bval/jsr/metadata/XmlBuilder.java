@@ -49,7 +49,6 @@ import javax.xml.bind.JAXBElement;
 
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.groups.GroupConversion;
-import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.jsr.xml.AnnotationType;
@@ -549,8 +548,7 @@ public class XmlBuilder {
         annoBuilder.setGroups(getGroups(constraint.getGroups()));
         annoBuilder.setPayload(getPayload(constraint.getPayload()));
 
-        if (AnnotationsManager.declaresAttribute(annotationClass,
-            ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.getAttributeName())) {
+        if (ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO.analyze(annotationClass).isValid()) {
             annoBuilder.setValidationAppliesTo(target);
         }
         for (final ElementType elementType : constraint.getElement()) {

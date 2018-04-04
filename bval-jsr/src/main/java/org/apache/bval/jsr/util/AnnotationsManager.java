@@ -310,15 +310,6 @@ public class AnnotationsManager {
             .toArray(Annotation[]::new);
     }
 
-    public static boolean declaresAttribute(Class<? extends Annotation> annotationType, String name) {
-        try {
-            annotationType.getDeclaredMethod(name);
-            return true;
-        } catch (NoSuchMethodException | SecurityException e) {
-            return false;
-        }
-    }
-
     private final ApacheValidatorFactory validatorFactory;
     private final LRUCache<Class<? extends Annotation>, Composition> compositions;
 

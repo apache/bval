@@ -204,7 +204,7 @@ public class ReflectionBuilder {
 
         @Override
         public List<Class<?>> getGroupSequence(Meta<Class<T>> ignored) {
-            final GroupSequence groupSequence = meta.getHost().getAnnotation(GroupSequence.class);
+            final GroupSequence groupSequence = AnnotationsManager.getAnnotation(meta.getHost(), GroupSequence.class);
             return groupSequence == null ? null : Collections.unmodifiableList(Arrays.asList(groupSequence.value()));
         }
     }
@@ -238,12 +238,12 @@ public class ReflectionBuilder {
 
         @Override
         public boolean isCascade(Meta<E> ignored) {
-            return meta.getHost().isAnnotationPresent(Valid.class);
+            return AnnotationsManager.isAnnotationDirectlyPresent(meta.getHost(), Valid.class);
         }
 
         @Override
         public Set<GroupConversion> getGroupConversions(Meta<E> ignored) {
-            return Stream.of(meta.getHost().getDeclaredAnnotationsByType(ConvertGroup.class))
+            return Stream.of(AnnotationsManager.getDeclaredAnnotationsByType(meta.getHost(), ConvertGroup.class))
                 .map(cg -> GroupConversion.from(cg.from()).to(cg.to())).collect(ToUnmodifiable.set());
         }
     }

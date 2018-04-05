@@ -95,7 +95,19 @@ public class HierarchyBuilder extends CompositeBuilder {
 
         @Override
         public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
-            return delegate.getFields(hierarchyElement);
+            final Map<String, MetadataBuilder.ForContainer<Field>> fields = delegate.getFields(hierarchyElement);
+
+            if (fields.isEmpty()) {
+                return fields;
+            }
+            final Map<String, MetadataBuilder.ForContainer<Field>> result = new LinkedHashMap<>();
+
+            fields.forEach((k, v) -> {
+                final Field fld = Reflection.getDeclaredField(hierarchyElement.getHost(), k);
+                Exceptions.raiseIf(fld == null, IllegalStateException::new, "delegate builder specified unknown field");
+                result.put(k, new ContainerDelegate<Field>(v, new Meta.ForField(fld)));
+            });
+            return result;
         }
 
         @Override
@@ -113,6 +125,9 @@ public class HierarchyBuilder extends CompositeBuilder {
         @Override
         public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
             final Map<String, MetadataBuilder.ForContainer<Method>> getters = delegate.getGetters(hierarchyElement);
+            if (getters.isEmpty()) {
+                return getters;
+            }
             final Map<String, MetadataBuilder.ForContainer<Method>> result = new LinkedHashMap<>();
 
             getters.forEach((k, v) -> {

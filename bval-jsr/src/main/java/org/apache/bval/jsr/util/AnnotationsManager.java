@@ -21,8 +21,11 @@ package org.apache.bval.jsr.util;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -56,6 +59,7 @@ import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
+import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
@@ -219,31 +223,19 @@ public class AnnotationsManager {
         return result.optional().map(Collections::unmodifiableMap).orElseGet(Collections::emptyMap);
     }
 
-    /**
-     * Meta-annotation aware.
-     * 
-     * @param e
-     * @param t
-     * @return {@code boolean}
-     * @see AnnotatedElement#isAnnotationPresent(Class)
-     */
-    public static boolean isAnnotationPresent(AnnotatedElement e, Class<? extends Annotation> t) {
-        if (e.isAnnotationPresent(t)) {
-            return true;
-        }
-        return Stream.of(e.getAnnotations()).map(Annotation::annotationType).anyMatch(a -> isAnnotationPresent(a, t));
+    public static boolean isAnnotationDirectlyPresent(AnnotatedElement e, Class<? extends Annotation> t) {
+        return substitute(e).filter(s -> s.isAnnotationPresent(t)).isPresent();
     }
 
-    /**
-     * Get declared annotations with a particular meta-annotation.
-     * 
-     * @param e
-     * @param meta
-     * @return {@link Annotation}[]
-     */
-    public static Annotation[] getDeclared(AnnotatedElement e, Class<? extends Annotation> meta) {
-        return Stream.of(e.getDeclaredAnnotations()).filter(ann -> isAnnotationPresent(ann.annotationType(), meta))
-            .toArray(Annotation[]::new);
+    public static <T extends Annotation> T getAnnotation(AnnotatedElement e, Class<T> annotationClass) {
+        return substitute(e).map(s -> s.getAnnotation(annotationClass)).orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Annotation> T[] getDeclaredAnnotationsByType(AnnotatedElement e,
+        Class<T> annotationClass) {
+        return substitute(e).map(s -> s.getDeclaredAnnotationsByType(annotationClass))
+            .orElse((T[]) ObjectUtils.EMPTY_ANNOTATION_ARRAY);
     }
 
     /**
@@ -258,7 +250,9 @@ public class AnnotationsManager {
     }
 
     private static Annotation[] getDeclaredConstraints(AnnotatedElement e) {
-        final Annotation[] declaredAnnotations = e.getDeclaredAnnotations();
+        final Annotation[] declaredAnnotations =
+            substitute(e).map(AnnotatedElement::getDeclaredAnnotations).orElse(ObjectUtils.EMPTY_ANNOTATION_ARRAY);
+        
         if (declaredAnnotations.length == 0) {
             return declaredAnnotations;
         }
@@ -286,6 +280,32 @@ public class AnnotationsManager {
             constraints = Stream.concat(constraints, repeated.values().stream().flatMap(Stream::of));
         }
         return constraints.toArray(Annotation[]::new);
+    }
+    
+
+    private static Optional<AnnotatedElement> substitute(AnnotatedElement e) {
+        if (e instanceof Parameter) {
+            final Parameter p = (Parameter) e;
+            if (p.getDeclaringExecutable() instanceof Constructor<?>) {
+                final Constructor<?> ctor = (Constructor<?>) p.getDeclaringExecutable();
+                final Class<?> dc = ctor.getDeclaringClass();
+                if (!(dc.getDeclaringClass() == null || Modifier.isStatic(dc.getModifiers()))) {
+                    // found ctor for non-static inner class
+                    final Annotation[][] parameterAnnotations = ctor.getParameterAnnotations();
+                    if (parameterAnnotations.length == ctor.getParameterCount() - 1) {
+                        final Parameter[] parameters = ctor.getParameters();
+                        final int idx = ObjectUtils.indexOf(parameters, p);
+                        if (idx == 0) {
+                            return Optional.empty();
+                        }
+                        return Optional.of(parameters[idx - 1]);
+                    }
+                    Validate.validState(parameterAnnotations.length == ctor.getParameterCount(),
+                            "Cannot make sense of parameter annotations of %s", ctor);
+                }
+            }
+        }
+        return Optional.of(e);
     }
 
     private final ApacheValidatorFactory validatorFactory;

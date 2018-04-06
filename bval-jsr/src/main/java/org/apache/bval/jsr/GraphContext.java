@@ -102,26 +102,31 @@ public class GraphContext {
     }
 
     public ContainerElementKey runtimeKey(ContainerElementKey key) {
-        final Class<?> containerClass = key.getContainerClass();
-        final Class<? extends Object> runtimeType = value.getClass();
-        if (!runtimeType.equals(containerClass)) {
-            Exceptions.raiseUnless(containerClass.isAssignableFrom(runtimeType), ValidationException::new,
-                "Value %s is not assignment-compatible with %s", value, containerClass);
+        Validate.notNull(key);
+        if (value != null) {
+            final Class<?> containerClass = key.getContainerClass();
+            final Class<? extends Object> runtimeType = value.getClass();
+            if (!runtimeType.equals(containerClass)) {
+                Exceptions.raiseUnless(containerClass.isAssignableFrom(runtimeType), ValidationException::new,
+                    "Value %s is not assignment-compatible with %s", value, containerClass);
 
-            if (key.getTypeArgumentIndex() == null) {
-                return new ContainerElementKey(runtimeType, null);
-            }
-            final Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(runtimeType, containerClass);
+                if (key.getTypeArgumentIndex() == null) {
+                    return new ContainerElementKey(runtimeType, null);
+                }
+                final Map<TypeVariable<?>, Type> typeArguments =
+                    TypeUtils.getTypeArguments(runtimeType, containerClass);
 
-            Type type = typeArguments.get(containerClass.getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
+                Type type =
+                    typeArguments.get(containerClass.getTypeParameters()[key.getTypeArgumentIndex().intValue()]);
 
-            while (type instanceof TypeVariable<?>) {
-                final TypeVariable<?> var = (TypeVariable<?>) type;
-                final Type nextType = typeArguments.get(var);
-                if (nextType instanceof TypeVariable<?>) {
-                    type = nextType;
-                } else {
-                    return ContainerElementKey.forTypeVariable(var);
+                while (type instanceof TypeVariable<?>) {
+                    final TypeVariable<?> var = (TypeVariable<?>) type;
+                    final Type nextType = typeArguments.get(var);
+                    if (nextType instanceof TypeVariable<?>) {
+                        type = nextType;
+                    } else {
+                        return ContainerElementKey.forTypeVariable(var);
+                    }
                 }
             }
         }

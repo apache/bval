@@ -23,7 +23,9 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.validation.ConstraintViolation;
@@ -125,15 +127,25 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         }
 
         @Override
-        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            executableDescriptor.getParameterDescriptors().stream()
-                .map(pd -> new SproutFrame<ParameterD<?>>(this, (ParameterD<?>) pd, parameter(pd.getIndex())))
-                .forEach(f -> f.process(group, sink));
+        void process(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            Validate.notNull(sink, "sink");
+            final Lazy<Set<Frame<?>>> parameterFrames = new Lazy<>(this::parameterFrames);
+            each(expand(group), (t, u) -> {
+                validateDescriptorConstraints(t, u);
+                parameterFrames.get().forEach(p -> p.validateDescriptorConstraints(t, u));
+            }, sink);
+            parameterFrames.get().forEach(p -> p.recurse(group, sink));
         }
 
         @Override
         Object getBean() {
             return object;
+        }
+
+        private Set<Frame<?>> parameterFrames() {
+            return executableDescriptor.getParameterDescriptors().stream()
+                .map(pd -> new SproutFrame<ParameterD<?>>(this, (ParameterD<?>) pd, parameter(pd.getIndex())))
+                .collect(Collectors.toSet());
         }
     }
 

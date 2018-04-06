@@ -97,21 +97,20 @@ public abstract class ValidationJob<T> {
             return ValidationJob.this;
         }
 
-        final void process(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+        void process(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-
-            each(expand(group), (g, s) -> {
-                validateDescriptorConstraints(g, s);
-                recurse(g, s);
-            }, sink);
+            each(expand(group), this::validateDescriptorConstraints, sink);
+            recurse(group, sink);
         }
 
-        abstract void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink);
+        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            throw new UnsupportedOperationException();
+        }
 
         abstract Object getBean();
 
         void validateDescriptorConstraints(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            constraintsFor(group)
+            constraintsFor(descriptor, group)
                 .forEach(c -> unwrap(c.getValueUnwrapping()).forEach(f -> f.validate(c, sink)));
         }
 
@@ -129,15 +128,6 @@ public abstract class ValidationJob<T> {
                 }
             }
             return Stream.of(this);
-        }
-
-        private Stream<ConstraintD<?>> constraintsFor(Class<?> group) {
-            return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
-                .filter(c -> {
-                    final Set<Class<?>> constraintGroups = c.getGroups();
-                    return constraintGroups.contains(group)
-                        || constraintGroups.contains(Default.class) && c.getDeclaringClass().isAssignableFrom(group);
-                });
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -238,7 +228,7 @@ public abstract class ValidationJob<T> {
             return extractedType.orElse(elementClass);
         }
 
-        private Stream<Class<?>> expand(Class<?> group) {
+        Stream<Class<?>> expand(Class<?> group) {
             if (Default.class.equals(group)) {
                 final List<Class<?>> groupSequence = descriptor.getGroupSequence();
                 if (groupSequence != null) {
@@ -264,9 +254,14 @@ public abstract class ValidationJob<T> {
             this.realContext = context;
         }
 
-        @Override
-        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            propertyFrames().forEach(f -> f.process(group, sink));
+        void process(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            Validate.notNull(sink, "sink");
+            final Lazy<Set<Frame<?>>> propertyFrames = new Lazy<>(this::propertyFrames);
+            each(expand(group), (t, u) -> {
+                validateDescriptorConstraints(t, u);
+                propertyFrames.get().forEach(p -> p.validateDescriptorConstraints(t, u));
+            }, sink);
+            propertyFrames.get().forEach(p -> p.recurse(group, sink));
         }
 
         protected Frame<?> propertyFrame(PropertyD<?> d, GraphContext context) {
@@ -278,7 +273,7 @@ public abstract class ValidationJob<T> {
             return context.getValue();
         }
 
-        private Stream<Frame<?>> propertyFrames() {
+        private Set<Frame<?>> propertyFrames() {
             final Stream<PropertyD<?>> properties = descriptor.getConstrainedProperties().stream()
                 .flatMap(d -> ComposedD.unwrap(d, PropertyD.class)).map(d -> (PropertyD<?>) d);
 
@@ -296,8 +291,8 @@ public abstract class ValidationJob<T> {
                     throw new ValidationException(e);
                 }
             });
-            return reachableProperties.flatMap(
-                d -> d.read(realContext).filter(context -> !context.isRecursive()).map(child -> propertyFrame(d, child)));
+            return reachableProperties.flatMap(d -> d.read(realContext).filter(context -> !context.isRecursive())
+                .map(child -> propertyFrame(d, child))).collect(Collectors.toSet());
         }
     }
 
@@ -310,6 +305,25 @@ public abstract class ValidationJob<T> {
         public SproutFrame(Frame<?> parent, D descriptor, GraphContext context) {
             super(parent, descriptor, context);
         }
+        
+        @Override
+        void validateDescriptorConstraints(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            super.validateDescriptorConstraints(group, sink);
+            if (context.getValue() != null) {
+                descriptor.getConstrainedContainerElementTypes().stream()
+                    .flatMap(d -> ComposedD.unwrap(d, ContainerElementTypeD.class)).forEach(d -> {
+                        if (constraintsFor(d, group).findFirst().isPresent()
+                            || !d.getConstrainedContainerElementTypes().isEmpty()) {
+                            final ValueExtractor<?> declaredTypeValueExtractor =
+                                context.getValidatorContext().getValueExtractors().find(d.getKey());
+                            ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor).stream()
+                                .filter(e -> !e.isRecursive())
+                                .map(e -> new ContainerElementConstraintsFrame(this, d, e))
+                                .forEach(f -> f.validateDescriptorConstraints(group, sink));
+                        }
+                    });
+            }
+        }
 
         @Override
         void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
@@ -317,19 +331,28 @@ public abstract class ValidationJob<T> {
                 validatorContext.getGroupsComputer().computeCascadingGroups(descriptor.getGroupConversions(),
                     descriptor.getDeclaringClass().isAssignableFrom(group) ? Default.class : group);
 
-            convertedGroups.getGroups().stream().map(Group::getGroup).forEach(g -> recurseSingleExpandedGroup(g, sink));
+            convertedGroups.getGroups().stream().map(Group::getGroup).forEach(g -> cascade(g, sink));
 
             sequences: for (List<Group> seq : convertedGroups.getSequences()) {
-                final boolean proceed = each(seq.stream().map(Group::getGroup), this::recurseSingleExpandedGroup, sink);
+                final boolean proceed = each(seq.stream().map(Group::getGroup), this::cascade, sink);
                 if (!proceed) {
                     break sequences;
                 }
             }
         }
 
-        protected void recurseSingleExpandedGroup(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            processContainerElements(group, sink);
-
+        private void cascade(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+            if (context.getValue() != null) {
+                descriptor.getConstrainedContainerElementTypes().stream()
+                    .filter(d -> d.isCascaded() || !d.getConstrainedContainerElementTypes().isEmpty())
+                    .flatMap(d -> ComposedD.unwrap(d, ContainerElementTypeD.class)).forEach(d -> {
+                        final ValueExtractor<?> runtimeTypeValueExtractor =
+                            context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
+                        ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor).stream()
+                            .filter(e -> !e.isRecursive()).map(e -> new ContainerElementCascadeFrame(this, d, e))
+                            .forEach(f -> f.recurse(group, sink));
+                    });
+            }
             if (!descriptor.isCascaded()) {
                 return;
             }
@@ -355,30 +378,6 @@ public abstract class ValidationJob<T> {
             }
             multiplex().filter(context -> context.getValue() != null && !context.isRecursive())
                 .map(context -> new BeanFrame<>(this, context)).forEach(b -> b.process(group, sink));
-        }
-
-        private void processContainerElements(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
-            if (context.getValue() == null) {
-                return;
-            }
-            // handle spec dichotomy: declared type for constraints; runtime type for cascades. Bypass #process()
-            descriptor.getConstrainedContainerElementTypes().stream()
-                .flatMap(d -> ComposedD.unwrap(d, ContainerElementTypeD.class)).forEach(d -> {
-                    if (!d.findConstraints().unorderedAndMatchingGroups(group).getConstraintDescriptors().isEmpty()) {
-                        final ValueExtractor<?> declaredTypeValueExtractor =
-                            context.getValidatorContext().getValueExtractors().find(d.getKey());
-                        ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor).stream()
-                            .filter(e -> !e.isRecursive()).map(e -> new ContainerElementConstraintsFrame(this, d, e))
-                            .forEach(f -> f.validateDescriptorConstraints(group, sink));
-                    }
-                    if (d.isCascaded() || !d.getConstrainedContainerElementTypes().isEmpty()) {
-                        final ValueExtractor<?> runtimeTypeValueExtractor =
-                            context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
-                        ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor).stream()
-                            .filter(e -> !e.isRecursive()).map(e -> new ContainerElementCascadeFrame(this, d, e))
-                            .forEach(f -> f.recurse(group, sink));
-                    }
-                });
         }
 
         protected GraphContext getMultiplexContext() {
@@ -527,6 +526,15 @@ public abstract class ValidationJob<T> {
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
 
+    private static Stream<ConstraintD<?>> constraintsFor(ElementD<?, ?> descriptor, Class<?> group) {
+        return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
+            .filter(c -> {
+                final Set<Class<?>> constraintGroups = c.getGroups();
+                return constraintGroups.contains(group)
+                    || constraintGroups.contains(Default.class) && c.getDeclaringClass().isAssignableFrom(group);
+            });
+    }
+
     protected final ApacheFactoryContext validatorContext;
 
     private final Groups groups;
@@ -571,8 +579,8 @@ public abstract class ValidationJob<T> {
         return results.reset(Collections::emptySet).get();
     }
 
-    private boolean each(Stream<Class<?>> groupSequence, BiConsumer<Class<?>, Consumer<ConstraintViolation<T>>> closure,
-        Consumer<ConstraintViolation<T>> sink) {
+    protected boolean each(Stream<Class<?>> groupSequence,
+        BiConsumer<Class<?>, Consumer<ConstraintViolation<T>>> closure, Consumer<ConstraintViolation<T>> sink) {
         final Lazy<Set<ConstraintViolation<T>>> sequenceViolations = new Lazy<>(LinkedHashSet::new);
         final Consumer<ConstraintViolation<T>> addSequenceViolation = sequenceViolations.consumer(Set::add);
         for (Class<?> g : (Iterable<Class<?>>) groupSequence::iterator) {

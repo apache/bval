@@ -129,6 +129,7 @@ public class HierarchyBuilder extends CompositeBuilder {
                 return getters;
             }
             final Map<String, MetadataBuilder.ForContainer<Method>> result = new LinkedHashMap<>();
+            final List<ContainerDelegate<Method>> delegates = new ArrayList<>();
 
             getters.forEach((k, v) -> {
                 final Method getter = Methods.getter(hierarchyElement.getHost(), k);
@@ -136,8 +137,12 @@ public class HierarchyBuilder extends CompositeBuilder {
                 Exceptions.raiseIf(getter == null, IllegalStateException::new,
                     "delegate builder specified unknown getter");
 
-                result.put(k, new ContainerDelegate<Method>(v, new Meta.ForMethod(getter)));
+                final ContainerDelegate<Method> d = new ContainerDelegate<>(v, new Meta.ForMethod(getter));
+                result.put(k, d);
+                delegates.add(d);
             });
+            Liskov.validateValidateOnExecution(delegates);
+
             return result;
         }
 
@@ -148,11 +153,17 @@ public class HierarchyBuilder extends CompositeBuilder {
                 return methods;
             }
             final Map<Signature, MetadataBuilder.ForExecutable<Method>> result = new LinkedHashMap<>();
-            methods
-                .forEach((k, v) -> result.put(k,
-                    new ExecutableDelegate<>(v, new Meta.ForMethod(
+            final List<ExecutableDelegate<Method>> delegates = new ArrayList<>();
+            methods.forEach((k, v) -> {
+                final ExecutableDelegate<Method> d = new ExecutableDelegate<>(v,
+                    new Meta.ForMethod(
                         Reflection.getDeclaredMethod(hierarchyElement.getHost(), k.getName(), k.getParameterTypes())),
-                        ParameterNameProvider::getParameterNames)));
+                    ParameterNameProvider::getParameterNames);
+                result.put(k, d);
+                delegates.add(d);
+            });
+            Liskov.validateValidateOnExecution(delegates);
+
             return result;
         }
     }

@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -34,6 +33,7 @@ import java.util.stream.Stream;
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ElementKind;
 import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ContainerDelegate;
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ElementDelegate;
@@ -44,7 +44,7 @@ import org.apache.bval.util.Validate;
 class Liskov {
     //@formatter:off
     private enum ValidationElement {
-        constraints, cascades, groupConversions;
+        constraints, cascades, groupConversions, validateOnExecution;
     }
 
     private enum StrengtheningIssue implements Predicate<Map<Meta<?>, Set<ValidationElement>>> {
@@ -106,19 +106,19 @@ class Liskov {
         }
     }
 
-    static void validateContainerHierarchy(List<? extends ContainerDelegate<?>> delegates, ElementKind elementKind) {
+    static void validateContainerHierarchy(Collection<? extends ContainerDelegate<?>> delegates, ElementKind elementKind) {
         if (Validate.notNull(delegates, "delegates").isEmpty()) {
             return;
         }
         if (Validate.notNull(elementKind, "elementKind") == ElementKind.CONTAINER_ELEMENT) {
-            elementKind = getContainer(delegates.get(0).getHierarchyElement());
+            elementKind = getContainer(delegates.iterator().next().getHierarchyElement());
         }
         switch (elementKind) {
         case RETURN_VALUE:
             noRedeclarationOfReturnValueCascading(delegates);
 
             final Map<Meta<?>, Set<ValidationElement>> detectedValidationElements =
-                detectValidationElements(delegates, detectGroupConversion());
+                detectValidationElements(delegates, ElementDelegate::getHierarchyElement, detectGroupConversion());
 
             // pre-check return value overridden hierarchy:
             Stream.of(StrengtheningIssue.values())
@@ -135,11 +135,15 @@ class Liskov {
         }
     }
 
-    static void validateCrossParameterHierarchy(List<? extends ElementDelegate<?, ?>> delegates) {
+    static void validateCrossParameterHierarchy(Collection<? extends ElementDelegate<?, ?>> delegates) {
         if (Validate.notNull(delegates, "delegates").isEmpty()) {
             return;
         }
         noStrengtheningOfPreconditions(delegates, detectConstraints());
+    }
+
+    static void validateValidateOnExecution(Collection<? extends HierarchyDelegate<?, ?>> delegates) {
+        noStrengtheningOfPreconditions(delegates, detectValidateOnExecution());
     }
 
     private static ElementKind getContainer(Meta<?> meta) {
@@ -157,7 +161,7 @@ class Liskov {
         }
     }
 
-    private static void noRedeclarationOfReturnValueCascading(List<? extends ContainerDelegate<?>> delegates) {
+    private static void noRedeclarationOfReturnValueCascading(Collection<? extends ContainerDelegate<?>> delegates) {
         final Map<Class<?>, Meta<?>> cascadedReturnValues =
             delegates.stream().filter(ContainerDelegate::isCascade).map(HierarchyDelegate::getHierarchyElement)
                 .collect(Collectors.toMap(Meta::getDeclaringClass, Function.identity()));
@@ -171,11 +175,11 @@ class Liskov {
     }
 
     @SafeVarargs
-    private static <D extends ElementDelegate<?, ?>> void noStrengtheningOfPreconditions(List<? extends D> delegates,
+    private static <D extends HierarchyDelegate<?, ?>> void noStrengtheningOfPreconditions(Collection<? extends D> delegates,
         Function<? super D, ValidationElement>... detectors) {
 
         final Map<Meta<?>, Set<ValidationElement>> detectedValidationElements = 
-                detectValidationElements(delegates, detectors);
+                detectValidationElements(delegates, HierarchyDelegate::getHierarchyElement, detectors);
 
         if (detectedValidationElements.isEmpty()) {
             return;
@@ -186,11 +190,11 @@ class Liskov {
     }
 
     @SafeVarargs
-    private static <D extends ElementDelegate<?, ?>> Map<Meta<?>, Set<ValidationElement>> detectValidationElements(
-        List<? extends D> delegates, Function<? super D, ValidationElement>... detectors) {
+    private static <T> Map<Meta<?>, Set<ValidationElement>> detectValidationElements(Collection<? extends T> delegates,
+        Function<? super T, Meta<?>> toMeta, Function<? super T, ValidationElement>... detectors) {
         final Map<Meta<?>, Set<ValidationElement>> detectedValidationElements = new LinkedHashMap<>();
         delegates.forEach(d -> {
-            detectedValidationElements.put(d.getHierarchyElement(),
+            detectedValidationElements.put(toMeta.apply(d),
                 Stream.of(detectors).map(dt -> dt.apply(d)).filter(Objects::nonNull)
                     .collect(Collectors.toCollection(() -> EnumSet.noneOf(ValidationElement.class))));
         });
@@ -215,6 +219,11 @@ class Liskov {
 
     private static Function<ContainerDelegate<?>, ValidationElement> detectGroupConversion() {
         return d -> d.getGroupConversions().isEmpty() ? null : ValidationElement.groupConversions;
+    }
+
+    private static Function<HierarchyDelegate<?, ?>, ValidationElement> detectValidateOnExecution() {
+        return d -> d.getHierarchyElement().getHost().isAnnotationPresent(ValidateOnExecution.class)
+            ? ValidationElement.validateOnExecution : null;
     }
 
     private Liskov() {

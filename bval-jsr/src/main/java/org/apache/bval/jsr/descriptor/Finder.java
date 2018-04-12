@@ -48,7 +48,8 @@ import org.apache.bval.util.Validate;
 
 class Finder implements ConstraintFinder {
     private static Stream<Group> allGroups(Groups groups) {
-        return Stream.concat(groups.getGroups().stream(), groups.getSequences().stream().flatMap(Collection::stream));
+        return Stream.concat(groups.getGroups().stream(),
+            groups.getSequences().stream().map(Group.Sequence::getGroups).flatMap(Collection::stream));
     }
 
     private volatile Predicate<ConstraintD<?>> groups = c -> true;
@@ -118,7 +119,9 @@ class Finder implements ConstraintFinder {
 
     private Groups computeDefaultSequence() {
         final ElementD<?, ?> element = firstAtomicElementDescriptor();
-        Collection<Class<?>> redef = element.getGroupSequence();
+        Collection<Class<?>> redef = 
+        element.getGroupStrategy().getGroups().stream().map(Group::getGroup).collect(Collectors.toList());
+        
         if (redef == null) {
             return GroupsComputer.DEFAULT_GROUPS;
         }

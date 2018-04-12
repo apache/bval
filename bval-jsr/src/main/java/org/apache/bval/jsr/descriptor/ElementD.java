@@ -22,13 +22,13 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 
+import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.util.Validate;
@@ -67,8 +67,8 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         }
 
         @Override
-        public final List<Class<?>> getGroupSequence() {
-            return getBean().getGroupSequence();
+        public final GroupStrategy getGroupStrategy() {
+            return getBean().getGroupStrategy();
         }
     }
 
@@ -117,7 +117,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     public abstract Type getGenericType();
 
-    public abstract List<Class<?>> getGroupSequence();
+    public abstract GroupStrategy getGroupStrategy();
 
     @Override
     public String toString() {

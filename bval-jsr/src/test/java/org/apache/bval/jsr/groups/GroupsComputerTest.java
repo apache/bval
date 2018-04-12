@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import javax.validation.GroupDefinitionException;
@@ -64,7 +63,7 @@ public class GroupsComputerTest {
 
     @Test
     public void testGroupChainForEmptySet() {
-        assertEquals(Collections.singletonList(Group.DEFAULT),
+        assertEquals(Collections.singleton(Group.DEFAULT),
             groupsComputer.computeGroups(new HashSet<Class<?>>()).getGroups());
     }
 
@@ -106,10 +105,10 @@ public class GroupsComputerTest {
         Set<Class<?>> groups = new HashSet<Class<?>>();
         groups.add(Address.Complete.class);
         Groups chain = groupsComputer.computeGroups(groups);
-        Iterator<List<Group>> sequences = chain.getSequences().iterator();
-        List<Group> sequence = sequences.next();
+        Iterator<Group.Sequence> sequences = chain.getSequences().iterator();
+        Iterator<Group> sequence = sequences.next().getGroups().iterator();
 
-        assertEquals(Default.class, sequence.get(0).getGroup());
-        assertEquals(Address.HighLevelCoherence.class, sequence.get(1).getGroup());
+        assertEquals(Default.class, sequence.next().getGroup());
+        assertEquals(Address.HighLevelCoherence.class, sequence.next().getGroup());
     }
 }

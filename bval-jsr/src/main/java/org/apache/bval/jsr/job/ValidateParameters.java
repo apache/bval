@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -39,6 +40,8 @@ import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.CrossParameterD;
 import org.apache.bval.jsr.descriptor.ParameterD;
+import org.apache.bval.jsr.groups.Group;
+import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
@@ -127,14 +130,16 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         }
 
         @Override
-        void process(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+        void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
             final Lazy<Set<Frame<?>>> parameterFrames = new Lazy<>(this::parameterFrames);
-            each(expand(group), (t, u) -> {
-                validateDescriptorConstraints(t, u);
-                parameterFrames.get().forEach(p -> p.validateDescriptorConstraints(t, u));
-            }, sink);
-            parameterFrames.get().forEach(p -> p.recurse(group, sink));
+
+            GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()))
+                .applyTo(noViolations(gs -> {
+                    validateDescriptorConstraints(gs, sink);
+                    parameterFrames.get().forEach(p -> p.validateDescriptorConstraints(gs, sink));
+                }));
+            parameterFrames.get().forEach(p -> p.recurse(groups, sink));
         }
 
         @Override

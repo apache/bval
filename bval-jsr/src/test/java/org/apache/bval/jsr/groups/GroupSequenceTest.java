@@ -20,13 +20,15 @@ package org.apache.bval.jsr.groups;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.GroupDefinitionException;
 import javax.validation.GroupSequence;
 import javax.validation.constraints.NotNull;
 
@@ -45,13 +47,9 @@ import org.junit.Test;
  * Description: test of group sequence behavior<br/>
  */
 public class GroupSequenceTest extends ValidationTestBase {
-
-    @Test
+    @Test(expected = GroupDefinitionException.class)
     public void testGroupSequence1() {
-        BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
-            .getConstraintsForClass(GInterface1.class);
-
-        assertEquals(Collections.singletonList(GInterface1.class), bean.getGroupSequence());
+        ApacheValidatorFactory.getDefault().usingContext().getValidator().getConstraintsForClass(GInterface1.class);
     }
 
     @Test
@@ -59,23 +57,40 @@ public class GroupSequenceTest extends ValidationTestBase {
         BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
             .getConstraintsForClass(GClass1.class);
 
-        assertNull(bean.getGroupSequence());
+        assertEquals(Group.of(GClass1.class), bean.getGroupStrategy());
     }
 
     @Test
     public void testGroupSequence3() {
         BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
-                .getConstraintsForClass(GClass2.class);
+            .getConstraintsForClass(GClass2.class);
 
-        assertEquals(Arrays.asList(GClass1.class, GClass2.class), bean.getGroupSequence());
+        class TestPredicate implements Predicate<GroupStrategy> {
+
+            final List<GroupStrategy> strategies = new ArrayList<>();
+
+            @Override
+            public boolean test(GroupStrategy t) {
+                return strategies.add(t);
+            }
+        }
+
+        final TestPredicate p = new TestPredicate();
+
+        bean.getGroupStrategy().applyTo(p);
+
+        Group g1 = Group.of(GClass1.class);
+        Group g2 = Group.of(GClass2.class);
+
+        assertEquals(Arrays.asList(g1, GroupStrategy.simple(g1, g2)), p.strategies);
     }
 
     @Test
     public void testGroupSequence4() {
         BeanD<?> bean = (BeanD<?>) ApacheValidatorFactory.getDefault().usingContext().getValidator()
-                .getConstraintsForClass(GClass3.class);
+            .getConstraintsForClass(GClass3.class);
 
-        assertEquals(Arrays.asList(GClass3.class, GClass1.class), bean.getGroupSequence());
+        assertEquals(Group.sequence(Group.of(GClass3.class), Group.of(GClass1.class)), bean.getGroupStrategy());
     }
 
     @Test
@@ -188,5 +203,4 @@ public class GroupSequenceTest extends ValidationTestBase {
         interface Group1 {
         }
     }
-
 }

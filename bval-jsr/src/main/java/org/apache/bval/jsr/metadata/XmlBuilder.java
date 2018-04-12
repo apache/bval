@@ -45,6 +45,7 @@ import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintTarget;
 import javax.validation.Payload;
 import javax.validation.ValidationException;
+import javax.validation.groups.Default;
 import javax.xml.bind.JAXBElement;
 
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
@@ -294,7 +295,8 @@ public class XmlBuilder {
 
             this.getGroupConversions = new Lazy<>(() -> {
                 return getGroupConversions.apply(descriptor).stream().map(gc -> {
-                    final Class<?> source = resolveClass(gc.getFrom());
+                    final String from = gc.getFrom();
+                    final Class<?> source = from == null ? Default.class : resolveClass(from);
                     final Class<?> target = resolveClass(gc.getTo());
                     return GroupConversion.from(source).to(target);
                 }).collect(ToUnmodifiable.set());

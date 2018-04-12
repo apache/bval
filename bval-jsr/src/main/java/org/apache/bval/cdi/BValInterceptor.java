@@ -24,6 +24,8 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,9 +57,10 @@ import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.ExecutableTypes;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.Proxies;
+import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
-import org.apache.bval.util.reflection.TypeUtils;
 
 /**
  * Interceptor class for the {@link BValBinding} {@link InterceptorBinding}.
@@ -69,6 +72,20 @@ import org.apache.bval.util.reflection.TypeUtils;
 // TODO: maybe add it through ASM to be compliant with CDI 1.0 containers using simply this class as a template to
 // generate another one for CDI 1.1 impl
 public class BValInterceptor implements Serializable {
+    private static Collection<ExecutableType> removeFrom(Collection<ExecutableType> coll,
+        ExecutableType... executableTypes) {
+        Validate.notNull(coll, "collection was null");
+        if (!(coll.isEmpty() || ObjectUtils.isEmptyArray(executableTypes))) {
+            final List<ExecutableType> toRemove = Arrays.asList(executableTypes);
+            if (!Collections.disjoint(coll, toRemove)) {
+                final Set<ExecutableType> result = EnumSet.copyOf(coll);
+                result.removeAll(toRemove);
+                return result;
+            }
+        }
+        return coll;
+    }
+
     private transient volatile Set<ExecutableType> classConfiguration;
     private transient volatile Map<Signature, Boolean> executableValidation;
 
@@ -174,13 +191,16 @@ public class BValInterceptor implements Serializable {
         if (classConfiguration == null) {
             synchronized (this) {
                 if (classConfiguration == null) {
-                    final ValidateOnExecution annotation = CDI.current().getBeanManager()
-                        .createAnnotatedType(targetClass).getAnnotation(ValidateOnExecution.class);
+                    final AnnotatedType<?> annotatedType = CDI.current().getBeanManager()
+                        .createAnnotatedType(targetClass);
 
-                    if (annotation == null) {
-                        classConfiguration = globalConfiguration.getGlobalExecutableTypes();
+                    if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)) {
+                        // implicit does not apply at the class level:
+                        classConfiguration = ExecutableTypes.interpret(
+                            removeFrom(Arrays.asList(annotatedType.getAnnotation(ValidateOnExecution.class).type()),
+                                ExecutableType.IMPLICIT));
                     } else {
-                        classConfiguration = ExecutableTypes.interpret(annotation.type());
+                        classConfiguration = globalConfiguration.getGlobalExecutableTypes();
                     }
                 }
             }
@@ -203,41 +223,49 @@ public class BValInterceptor implements Serializable {
     }
 
     private <T> boolean computeIsMethodValidated(Class<T> targetClass, Method method) {
-        Collection<ExecutableType> declaredExecutableTypes = null;
+        final Signature signature = Signature.of(method);
+
+        AnnotatedMethod<?> declaringMethod = null;
 
         for (final Class<?> c : Reflection.hierarchy(targetClass, Interfaces.INCLUDE)) {
             final AnnotatedType<?> annotatedType = CDI.current().getBeanManager().createAnnotatedType(c);
 
             final AnnotatedMethod<?> annotatedMethod = annotatedType.getMethods().stream()
-                .filter(am -> Signature.of(am.getJavaMember()).equals(Signature.of(method))).findFirst().orElse(null);
+                .filter(am -> Signature.of(am.getJavaMember()).equals(signature)).findFirst().orElse(null);
 
-            if (annotatedMethod == null) {
-                continue;
+            if (annotatedMethod != null) {
+                declaringMethod = annotatedMethod;
             }
-            if (annotatedMethod.isAnnotationPresent(ValidateOnExecution.class)) {
-                final List<ExecutableType> validatedTypesOnMethod =
-                    Arrays.asList(annotatedMethod.getAnnotation(ValidateOnExecution.class).type());
+        }
+        if (declaringMethod == null) {
+            return false;
+        }
+        final Collection<ExecutableType> declaredExecutableTypes;
 
-                // implicit directly on method -> early return:
-                if (validatedTypesOnMethod.contains(ExecutableType.IMPLICIT)) {
-                    return true;
-                }
-                declaredExecutableTypes = validatedTypesOnMethod;
-                // ignore the hierarchy once the lowest method is found:
-                break;
+        if (declaringMethod.isAnnotationPresent(ValidateOnExecution.class)) {
+            final List<ExecutableType> validatedTypesOnMethod =
+                Arrays.asList(declaringMethod.getAnnotation(ValidateOnExecution.class).type());
+
+            // implicit directly on method -> early return:
+            if (validatedTypesOnMethod.contains(ExecutableType.IMPLICIT)) {
+                return true;
             }
-            if (declaredExecutableTypes == null) {
-                if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)) {
-                    declaredExecutableTypes =
-                        Arrays.asList(annotatedType.getAnnotation(ValidateOnExecution.class).type());
+            declaredExecutableTypes = validatedTypesOnMethod;
+        } else {
+            final AnnotatedType<?> declaringType = declaringMethod.getDeclaringType();
+            if (declaringType.isAnnotationPresent(ValidateOnExecution.class)) {
+                // IMPLICIT is meaningless at class level:
+                declaredExecutableTypes =
+                    removeFrom(Arrays.asList(declaringType.getAnnotation(ValidateOnExecution.class).type()),
+                        ExecutableType.IMPLICIT);
+            } else {
+                final Package pkg = declaringType.getJavaClass().getPackage();
+                if (pkg != null && pkg.isAnnotationPresent(ValidateOnExecution.class)) {
+                    // presumably IMPLICIT is likewise meaningless at package level:
+                    declaredExecutableTypes = removeFrom(
+                        Arrays.asList(pkg.getAnnotation(ValidateOnExecution.class).type()), ExecutableType.IMPLICIT);
                 } else {
-                    final Optional<Package> pkg = Optional.of(annotatedType).map(AnnotatedType::getBaseType)
-                        .map(t -> TypeUtils.getRawType(t, null)).map(Class::getPackage)
-                        .filter(p -> p.isAnnotationPresent(ValidateOnExecution.class));
-                    if (pkg.isPresent()) {
-                        declaredExecutableTypes =
-                            Arrays.asList(pkg.get().getAnnotation(ValidateOnExecution.class).type());
-                    }
+                    declaredExecutableTypes = null;
                 }
             }
         }

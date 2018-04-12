@@ -81,6 +81,7 @@ public class GroupsComputer {
      * @param group
      * @return {@link Groups}
      */
+    @Deprecated
     public final Groups computeCascadingGroups(Set<GroupConversionDescriptor> groupConversions, Class<?> group) {
         final Groups preliminaryResult = computeGroups(Stream.of(group));
 
@@ -97,21 +98,21 @@ public class GroupsComputer {
 
         if (simpleGroup) {
             // ignore group inheritance from initial argument as that is handled elsewhere:
-            result.insertGroup(preliminaryResult.getGroups().get(0));
+            result.insertGroup(preliminaryResult.getGroups().iterator().next());
         } else {
             // expand group sequence conversions in place:
 
-            for (List<Group> seq : preliminaryResult.getSequences()) {
+            for (Group.Sequence seq : preliminaryResult.getSequences()) {
                 final List<Group> converted = new ArrayList<>();
-                for (Group gg : seq) {
+                for (Group gg : seq.getGroups()) {
                     final Class<?> c = gg.getGroup();
                     if (gcMap.containsKey(c)) {
                         final Groups convertedGroupExpansion = computeGroups(Stream.of(gcMap.get(c)));
                         if (convertedGroupExpansion.getSequences().isEmpty()) {
                             converted.add(gg);
                         } else {
-                            convertedGroupExpansion.getSequences().stream().flatMap(Collection::stream)
-                                .forEach(converted::add);
+                            convertedGroupExpansion.getSequences().stream().map(Group.Sequence::getGroups)
+                                .flatMap(Collection::stream).forEach(converted::add);
                         }
                     }
                 }

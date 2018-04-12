@@ -43,6 +43,12 @@ public class DescriptorManager {
             || !descriptor.getConstrainedContainerElementTypes().isEmpty());
     }
 
+    public static <D extends ElementDescriptor & CascadableDescriptor & ContainerDescriptor> boolean isCascaded(
+        D descriptor) {
+        return descriptor != null && (descriptor.isCascaded()
+            || descriptor.getConstrainedContainerElementTypes().stream().anyMatch(DescriptorManager::isCascaded));
+    }
+
     public static <E extends ExecutableDescriptor> boolean isConstrained(E descriptor) {
         return descriptor != null && (descriptor.hasConstrainedParameters() || descriptor.hasConstrainedReturnValue());
     }

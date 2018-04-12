@@ -19,42 +19,42 @@
 package org.apache.bval.jsr.groups;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.validation.GroupDefinitionException;
 
 import org.apache.bval.util.Exceptions;
 
 /**
- * Defines the order to validate groups during validation. with some inspiration
- * from reference implementation
+ * Defines the order to validate groups during validation. with some inspiration from reference implementation
  *
  * @author Roman Stumm
  */
 public class Groups {
-    /** The list of single groups. */
-    private final List<Group> groups = new ArrayList<>();
-
-    /** The list of sequences. */
-    private final List<List<Group>> sequences = new ArrayList<>();
+    private final Set<Group> groups = new LinkedHashSet<>();
+    private final Set<Group.Sequence> sequences = new LinkedHashSet<>();
 
     /**
      * Get the Groups.
      * 
-     * @return {@link List} of {@link Group}.
+     * @return {@link Set} of {@link Group}.
      */
-    public List<Group> getGroups() {
-        return Collections.unmodifiableList(groups);
+    public Set<Group> getGroups() {
+        return Collections.unmodifiableSet(groups);
     }
 
     /**
      * Get the Group sequences.
      * 
-     * @return {@link List} of {@link List} of {@link Group}
+     * @return {@link List} of {@link Group.Sequence}
      */
-    public List<List<Group>> getSequences() {
-        return Collections.unmodifiableList(sequences);
+    public Collection<Group.Sequence> getSequences() {
+        return Collections.unmodifiableSet(sequences);
     }
 
     /**
@@ -62,11 +62,10 @@ public class Groups {
      * 
      * @param group
      *            to insert
+     * @return success
      */
-    void insertGroup(Group group) {
-        if (!groups.contains(group)) {
-            groups.add(group);
-        }
+    boolean insertGroup(Group group) {
+        return groups.add(group);
     }
 
     /**
@@ -74,26 +73,26 @@ public class Groups {
      * 
      * @param groups
      *            {@link List} of {@link Group} to insert
+     * @return success
      */
-    void insertSequence(List<Group> groups) {
-        if (!(groups == null || groups.isEmpty() || sequences.contains(groups))) {
-            sequences.add(Collections.unmodifiableList(groups));
-        }
+    boolean insertSequence(Collection<Group> groups) {
+        return !(groups == null || groups.isEmpty()) && sequences.add(Group.sequence(groups));
     }
 
     /**
-     * Assert that the default group can be expanded to
-     * <code>defaultGroups</code>.
+     * Assert that the default group can be expanded to <code>defaultGroups</code>.
      * 
      * @param defaultGroups
      */
+    @Deprecated
     public void assertDefaultGroupSequenceIsExpandable(List<Group> defaultGroups) {
-        for (List<Group> groupList : sequences) {
+        Consumer<List<Group>> action = (groupList) -> {
             final int idx = groupList.indexOf(Group.DEFAULT);
             if (idx >= 0) {
                 ensureExpandable(groupList, defaultGroups, idx);
             }
-        }
+        };
+        sequences.stream().map(Group.Sequence::getGroups).map(ArrayList::new).forEach(action);
     }
 
     private void ensureExpandable(List<Group> groupList, List<Group> defaultGroupList, int defaultGroupIndex) {
@@ -118,5 +117,12 @@ public class Groups {
             Exceptions.raise(GroupDefinitionException::new, "Unable to expand default group list %s into sequence %s",
                 defaultGroupList, groupList);
         }
+    }
+
+    public GroupStrategy asStrategy() {
+        final List<GroupStrategy> components = new ArrayList<>();
+        components.addAll(groups);
+        components.addAll(sequences);
+        return GroupStrategy.composite(components);
     }
 }

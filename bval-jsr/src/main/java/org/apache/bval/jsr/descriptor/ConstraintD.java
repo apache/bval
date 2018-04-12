@@ -23,7 +23,6 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Executable;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +37,6 @@ import javax.validation.ConstraintValidator;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
 import javax.validation.ValidationException;
-import javax.validation.groups.Default;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.Scope;
 import javax.validation.metadata.ValidateUnwrappedValue;
@@ -91,7 +89,7 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         this.meta = Validate.notNull(meta, "meta");
 
         payload = computePayload();
-        groups = computeGroups();
+        groups = set(() -> read(ConstraintAnnotationAttributes.GROUPS, Optionality.REQUIRED));
         reportAsSingle = annotation.annotationType().isAnnotationPresent(ReportAsSingleViolation.class);
         valueUnwrapping = computeValidateUnwrappedValue();
         attributes = AnnotationsManager.readAttributes(annotation);
@@ -216,14 +214,6 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
             return ValidateUnwrappedValue.UNWRAP;
         }
         return skip ? ValidateUnwrappedValue.SKIP : ValidateUnwrappedValue.DEFAULT;
-    }
-
-    private Set<Class<?>> computeGroups() {
-        final Class<?>[] groups = read(ConstraintAnnotationAttributes.GROUPS, Optionality.REQUIRED);
-        if (groups.length == 0) {
-            return Collections.singleton(Default.class);
-        }
-        return set(() -> groups);
     }
 
     private Set<Class<? extends Payload>> computePayload() {

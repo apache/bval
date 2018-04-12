@@ -52,6 +52,7 @@ import org.apache.bval.jsr.descriptor.ContainerElementTypeD;
 import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.descriptor.ElementD;
 import org.apache.bval.jsr.descriptor.PropertyD;
+import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.jsr.util.PathNavigation;
@@ -457,9 +458,9 @@ public final class ValidateProperty<T> extends ValidationJob<T> {
         }
 
         @Override
-        void recurse(Class<?> group, Consumer<ConstraintViolation<T>> sink) {
+        void recurse(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             if (cascade) {
-                super.recurse(group, sink);
+                super.recurse(groups, sink);
             }
         }
     }

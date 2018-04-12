@@ -20,7 +20,6 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.Type;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -31,6 +30,7 @@ import javax.validation.metadata.MethodDescriptor;
 import javax.validation.metadata.MethodType;
 import javax.validation.metadata.PropertyDescriptor;
 
+import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Exceptions;
@@ -39,17 +39,17 @@ import org.apache.bval.util.StringUtils;
 public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> implements BeanDescriptor {
 
     private final Class<T> beanClass;
-    private final List<Class<?>> groupSequence;
     private final Map<String, PropertyDescriptor> propertiesMap;
     private final Set<PropertyDescriptor> properties;
     private final Map<Signature, ConstructorD<T>> constructors;
     private final Map<Signature, MethodD> methods;
+    private final GroupStrategy groupStrategy;
 
     BeanD(MetadataReader.ForBean<T> reader) {
         super(reader);
         this.beanClass = reader.meta.getHost();
 
-        groupSequence = reader.getGroupSequence();
+        groupStrategy = reader.getGroupStrategy();
         propertiesMap = reader.getProperties(this);
         properties = propertiesMap.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
         constructors = reader.getConstructors(this);
@@ -112,8 +112,8 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     }
 
     @Override
-    public List<Class<?>> getGroupSequence() {
-        return groupSequence;
+    public GroupStrategy getGroupStrategy() {
+        return groupStrategy;
     }
 
     public final Type getGenericType() {

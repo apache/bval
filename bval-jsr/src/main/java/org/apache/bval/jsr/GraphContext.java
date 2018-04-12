@@ -21,6 +21,7 @@ package org.apache.bval.jsr;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.validation.Path;
 import javax.validation.ValidationException;
@@ -99,6 +100,23 @@ public class GraphContext {
     @Override
     public String toString() {
         return String.format("%s: %s at '%s'", getClass().getSimpleName(), value, path);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !obj.getClass().equals(getClass())) {
+            return false;
+        }
+        final GraphContext other = (GraphContext) obj;
+        return other.validatorContext == validatorContext && other.value == value && other.getPath().equals(path);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(validatorContext, value, path);
     }
 
     public ContainerElementKey runtimeKey(ContainerElementKey key) {

@@ -26,15 +26,20 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -51,13 +56,16 @@ import javax.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
+import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupConversion;
+import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.Signature;
+import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
@@ -65,6 +73,7 @@ import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
+import org.apache.bval.util.reflection.Reflection.Interfaces;
 
 class MetadataReader {
 
@@ -79,16 +88,16 @@ class MetadataReader {
         }
 
         Set<ConstraintD<?>> getConstraints() {
-            return builder.getConstraintDeclarationMap(meta).entrySet().stream().flatMap(e -> {
-                final Meta<E> m = e.getKey();
-                final Class<?> declaredBy = m.getDeclaringClass();
-                final Scope scope = declaredBy.equals(beanClass) ? Scope.LOCAL_ELEMENT : Scope.HIERARCHY;
-                return Stream.of(e.getValue())
-                    .peek(
+            return builder.getConstraintDeclarationMap(meta).entrySet().stream().filter(e -> e.getValue().length > 0)
+                .flatMap(e -> {
+                    final Meta<E> m = e.getKey();
+                    final Class<?> declaredBy = m.getDeclaringClass();
+                    final Scope scope = declaredBy.equals(beanClass) ? Scope.LOCAL_ELEMENT : Scope.HIERARCHY;
+                    return Stream.of(e.getValue()).peek(
                         c -> validatorFactory.getAnnotationsManager().validateConstraintDefinition(c.annotationType()))
-                    .map(c -> rewriteConstraint(c, declaredBy))
-                    .map(c -> new ConstraintD<>(c, scope, m, validatorFactory));
-            }).collect(ToUnmodifiable.set());
+                        .map(c -> rewriteConstraint(c, declaredBy))
+                        .map(c -> new ConstraintD<>(c, scope, m, validatorFactory));
+                }).collect(ToUnmodifiable.set());
         }
 
         ApacheValidatorFactory getValidatorFactory() {
@@ -133,8 +142,8 @@ class MetadataReader {
 
             beanBuilder.getFields(meta).forEach((f, builder) -> {
                 final Field fld = Reflection.find(meta.getHost(), t -> Reflection.getDeclaredField(t, f));
-                properties.computeIfAbsent(f, descriptorList).add(new PropertyD.ForField(
-                    new MetadataReader.ForContainer<>(new Meta.ForField(fld), builder), parent));
+                properties.computeIfAbsent(f, descriptorList).add(
+                    new PropertyD.ForField(new MetadataReader.ForContainer<>(new Meta.ForField(fld), builder), parent));
             });
             beanBuilder.getGetters(meta).forEach((g, builder) -> {
                 final Method getter = Methods.getter(meta.getHost(), g);
@@ -205,34 +214,68 @@ class MetadataReader {
             return Collections.unmodifiableMap(result);
         }
 
-        List<Class<?>> getGroupSequence() {
-            List<Class<?>> result = builder.getGroupSequence(meta);
+        GroupStrategy getGroupStrategy() {
             final Class<T> host = meta.getHost();
-            if (result == null) {
-                // resolve group sequence/Default redefinition up class hierarchy:
-                final Class<?> superclass = host.getSuperclass();
-                if (superclass != null) {
-                    // attempt to mock parent sequence intent by appending this type immediately after supertype:
-                    result = ((ElementD<?, ?>) validatorFactory.getDescriptorManager().getBeanDescriptor(superclass))
-                        .getGroupSequence();
-                    if (result != null) {
-                        result = new ArrayList<>(result);
-                        result.add(result.indexOf(superclass) + 1, host);
+            if (host.isInterface()) {
+                return validatorFactory.getGroupsComputer().computeGroups(host).asStrategy();
+            }
+            final GroupStrategy parentStrategy = Optional.ofNullable(host.getSuperclass()).filter(JDK.negate())
+                .map(validatorFactory.getDescriptorManager()::getBeanDescriptor).map(BeanD.class::cast)
+                .map(BeanD::getGroupStrategy).orElse(null);
+
+            final List<Class<?>> groupSequence = builder.getGroupSequence(meta);
+
+            final Set<Group> parentGroups = parentStrategy == null ? null : parentStrategy.getGroups();
+
+            Group localGroup = Group.of(host);
+            if (groupSequence == null) {
+                final Set<Group> groups = new HashSet<>();
+                groups.add(localGroup);
+
+                for (Class<?> t : Reflection.hierarchy(host, Interfaces.INCLUDE)) {
+                    if (JDK.test(t)) {
+                        continue;
                     }
+                    if (!t.isInterface()) {
+                        continue;
+                    }
+                    if (AnnotationsManager.isAnnotationDirectlyPresent(t, GroupSequence.class)) {
+                        continue;
+                    }
+                    final Group g = Group.of(t);
+                    if (parentGroups != null && parentGroups.contains(g)) {
+                        continue;
+                    }
+                    groups.add(g);
                 }
+                final GroupStrategy strategy = GroupStrategy.simple(groups);
+                return parentStrategy == null ? strategy : GroupStrategy.composite(strategy, parentStrategy);
             }
-            if (result == null) {
-                return null;
-            }
-            if (!result.contains(host)) {
-                Exceptions.raise(GroupDefinitionException::new, "@%s for %s must contain %<s",
-                    GroupSequence.class.getSimpleName(), host);
-            }
-            if (result.contains(Default.class)) {
+            if (groupSequence.contains(Default.class)) {
                 Exceptions.raise(GroupDefinitionException::new, "@%s for %s must not contain %s",
                     GroupSequence.class.getSimpleName(), host, Default.class.getName());
             }
-            return Collections.unmodifiableList(result);
+            if (!groupSequence.contains(host)) {
+                Exceptions.raise(GroupDefinitionException::new, "@%s for %s must contain %<s",
+                    GroupSequence.class.getSimpleName(), host);
+            }
+            final Group.Sequence result =
+                Group.sequence(groupSequence.stream().map(Group::of).collect(Collectors.toList()));
+
+            final Deque<Group> expanded = new ArrayDeque<>();
+            for (Class<?> t : Reflection.hierarchy(host, Interfaces.INCLUDE)) {
+                if (JDK.test(t)) {
+                    continue;
+                }
+                if (t.isInterface() && AnnotationsManager.isAnnotationDirectlyPresent(t, GroupSequence.class)) {
+                    continue;
+                }
+                expanded.push(Group.of(t));
+            }
+            if (expanded.size() == 1) {
+                return result;
+            }
+            return result.redefining(Collections.singletonMap(localGroup, GroupStrategy.simple(expanded)));
         }
     }
 
@@ -261,7 +304,8 @@ class MetadataReader {
                 groupConversions.stream().map(GroupConversion::getFrom)
                     .forEach(from -> Exceptions.raiseIf(from.isAnnotationPresent(GroupSequence.class),
                         ConstraintDeclarationException::new,
-                        "Invalid group conversion declared on %s from group sequence %s", f -> f.args(meta.describeHost(), from)));
+                        "Invalid group conversion declared on %s from group sequence %s",
+                        f -> f.args(meta.describeHost(), from)));
             }
             return groupConversions;
         }
@@ -336,7 +380,8 @@ class MetadataReader {
 
     class ForConstructor<T> extends ForExecutable<Constructor<? extends T>, ForConstructor<T>> {
 
-        ForConstructor(Meta<Constructor<? extends T>> meta, MetadataBuilder.ForExecutable<Constructor<? extends T>> builder) {
+        ForConstructor(Meta<Constructor<? extends T>> meta,
+            MetadataBuilder.ForExecutable<Constructor<? extends T>> builder) {
             super(meta, builder);
         }
 
@@ -345,6 +390,8 @@ class MetadataReader {
             return parameterNameProvider.getParameterNames(host);
         }
     }
+
+    private static final Predicate<Class<?>> JDK = t -> t.getName().startsWith("java.");
 
     private final ApacheValidatorFactory validatorFactory;
     private final Class<?> beanClass;

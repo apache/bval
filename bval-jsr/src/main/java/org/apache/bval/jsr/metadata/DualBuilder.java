@@ -28,7 +28,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,7 +38,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;
+import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.ToUnmodifiable;
 import org.apache.bval.util.Validate;
 
@@ -236,8 +240,128 @@ public class DualBuilder {
         }
     }
 
-    public static <T> MetadataBuilder.ForBean<T> forBean(MetadataBuilder.ForBean<T> primaryDelegate,
-        MetadataBuilder.ForBean<T> customDelegate) {
-        return new DualBuilder.ForBean<>(primaryDelegate, customDelegate);
+    private static class CustomWrapper {
+        private static class ForBean<T> implements MetadataBuilder.ForBean<T> {
+
+            private final MetadataBuilder.ForBean<T> wrapped;
+            private final Map<String, MetadataBuilder.ForContainer<Method>> getters;
+            private final Map<Signature, MetadataBuilder.ForExecutable<Method>> methods;
+
+            ForBean(MetadataBuilder.ForBean<T> wrapped, Map<String, MetadataBuilder.ForContainer<Method>> getters,
+                Map<Signature, MetadataBuilder.ForExecutable<Method>> methods) {
+                super();
+                this.wrapped = Validate.notNull(wrapped, "wrapped");
+                this.getters = Validate.notNull(getters, "getters");
+                this.methods = Validate.notNull(methods, "methods");
+            }
+
+            @Override
+            public AnnotationBehavior getAnnotationBehavior() {
+                return wrapped.getAnnotationBehavior();
+            }
+
+            @Override
+            public MetadataBuilder.ForClass<T> getClass(Meta<Class<T>> meta) {
+                return wrapped.getClass(meta);
+            }
+
+            @Override
+            public Map<String, MetadataBuilder.ForContainer<Field>> getFields(Meta<Class<T>> meta) {
+                return wrapped.getFields(meta);
+            }
+
+            @Override
+            public Map<String, MetadataBuilder.ForContainer<Method>> getGetters(Meta<Class<T>> meta) {
+                return getters;
+            }
+
+            @Override
+            public Map<Signature, MetadataBuilder.ForExecutable<Constructor<? extends T>>> getConstructors(
+                Meta<Class<T>> meta) {
+                return wrapped.getConstructors(meta);
+            }
+
+            @Override
+            public Map<Signature, MetadataBuilder.ForExecutable<Method>> getMethods(Meta<Class<T>> meta) {
+                return methods;
+            }
+        }
+
+        private static class ForGetterMethod implements MetadataBuilder.ForExecutable<Method> {
+            private final MetadataBuilder.ForContainer<Method> returnValue;
+
+            private ForGetterMethod(MetadataBuilder.ForContainer<Method> returnValue) {
+                super();
+                this.returnValue = Validate.notNull(returnValue, "returnValue");
+            }
+
+            @Override
+            public AnnotationBehavior getAnnotationBehavior() {
+                return returnValue.getAnnotationBehavior();
+            }
+
+            @Override
+            public MetadataBuilder.ForContainer<Method> getReturnValue(Meta<Method> meta) {
+                return returnValue;
+            }
+
+            @Override
+            public MetadataBuilder.ForElement<Method> getCrossParameter(Meta<Method> meta) {
+                return EmptyBuilder.instance().forElement();
+            }
+
+            @Override
+            public List<MetadataBuilder.ForContainer<Parameter>> getParameters(Meta<Method> meta) {
+                return Collections.emptyList();
+            }
+        }
+    }
+
+    public static <T> MetadataBuilder.ForBean<T> forBean(Class<T> beanClass, MetadataBuilder.ForBean<T> primaryDelegate,
+        MetadataBuilder.ForBean<T> customDelegate, ApacheValidatorFactory validatorFactory) {
+        return new DualBuilder.ForBean<>(primaryDelegate, wrapCustom(customDelegate, beanClass, validatorFactory));
+    }
+
+    private static <T> MetadataBuilder.ForBean<T> wrapCustom(MetadataBuilder.ForBean<T> customDelegate,
+        Class<T> beanClass, ApacheValidatorFactory validatorFactory) {
+        final Meta.ForClass<T> meta = new Meta.ForClass<>(beanClass);
+
+        final Map<String, MetadataBuilder.ForContainer<Method>> getters = customDelegate.getGetters(meta);
+        final Map<Signature, MetadataBuilder.ForExecutable<Method>> methods = customDelegate.getMethods(meta);
+
+        if (getters.isEmpty() && methods.keySet().stream().noneMatch(Signature::isGetter)) {
+            // nothing to merge
+            return customDelegate;
+        }
+        final CompositeBuilder composite =
+            CompositeBuilder.with(validatorFactory, AnnotationBehaviorMergeStrategy.consensus());
+
+        final Map<String, MetadataBuilder.ForContainer<Method>> mergedGetters = new TreeMap<>(getters);
+
+        methods.forEach((k, v) -> {
+            if (k.isGetter()) {
+                mergedGetters.compute(Methods.propertyName(k.getName()), (p, d) -> {
+                    final Method getter = Methods.getter(beanClass, p);
+                    return Stream.of(d, v.getReturnValue(new Meta.ForMethod(getter))).filter(Objects::nonNull)
+                        .collect(composite.composeContainer());
+                });
+            }
+        });
+        final Map<Signature, MetadataBuilder.ForExecutable<Method>> mergedMethods = new TreeMap<>(methods);
+
+        getters.forEach((k, v) -> {
+            final Method getter = Methods.getter(beanClass, k);
+            final Signature signature = Signature.of(getter);
+            
+            final MetadataBuilder.ForContainer<Method> rv;
+            if (methods.containsKey(signature)) {
+                rv = Stream.of(methods.get(signature).getReturnValue(new Meta.ForMethod(getter)), v)
+                    .collect(composite.composeContainer());
+            } else {
+                rv = v;
+            }
+            mergedMethods.put(signature, new CustomWrapper.ForGetterMethod(rv));
+        });
+        return new CustomWrapper.ForBean<>(customDelegate, mergedGetters, mergedMethods);
     }
 }

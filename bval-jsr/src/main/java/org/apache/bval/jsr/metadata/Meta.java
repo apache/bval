@@ -27,12 +27,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.bval.util.EmulatedAnnotatedType;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
+import org.apache.bval.util.reflection.TypeUtils;
 
 /**
  * Validation class model.
@@ -214,7 +218,7 @@ public abstract class Meta<E extends AnnotatedElement> {
 
         @Override
         public Type getType() {
-            return getHost().getType();
+            return getHost().getParameterizedType();
         }
 
         @Override
@@ -261,7 +265,18 @@ public abstract class Meta<E extends AnnotatedElement> {
 
         @Override
         public Type getType() {
-            return getHost().getType();
+            Type result = getHost().getType();
+            if (result instanceof TypeVariable<?>) {
+                final Type parentType = parent.getType();
+                if (parentType instanceof ParameterizedType) {
+                    final Map<TypeVariable<?>, Type> typeArguments =
+                        TypeUtils.getTypeArguments((ParameterizedType) parentType);
+                    if (typeArguments.containsKey(result)) {
+                        return typeArguments.get(result);
+                    }
+                }
+            }
+            return result;
         }
 
         @Override

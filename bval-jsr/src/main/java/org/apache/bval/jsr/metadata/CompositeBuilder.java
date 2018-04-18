@@ -237,7 +237,7 @@ public class CompositeBuilder {
     private final AnnotationBehaviorMergeStrategy annotationBehaviorStrategy;
     protected final ApacheValidatorFactory validatorFactory;
 
-    CompositeBuilder(ApacheValidatorFactory validatorFactory,
+    protected CompositeBuilder(ApacheValidatorFactory validatorFactory,
         AnnotationBehaviorMergeStrategy annotationBehaviorMergeStrategy) {
         super();
         this.annotationBehaviorStrategy =
@@ -246,7 +246,15 @@ public class CompositeBuilder {
     }
 
     public <T> Collector<MetadataBuilder.ForBean<T>, ?, MetadataBuilder.ForBean<T>> compose() {
-        return Collectors.collectingAndThen(Collectors.toList(), CompositeBuilder.ForBean::new);
+        return Collectors.collectingAndThen(Collectors.toList(),
+            delegates -> delegates.isEmpty() ? EmptyBuilder.instance().forBean()
+                : delegates.size() == 1 ? delegates.get(0) : new CompositeBuilder.ForBean<>(delegates));
+    }
+
+    public <E extends AnnotatedElement> Collector<MetadataBuilder.ForContainer<E>, ?, MetadataBuilder.ForContainer<E>> composeContainer() {
+        return Collectors.collectingAndThen(Collectors.toList(),
+            delegates -> delegates.isEmpty() ? EmptyBuilder.instance().forContainer()
+                : delegates.size() == 1 ? delegates.get(0) : new CompositeBuilder.ForContainer<>(delegates));
     }
 
     protected final <E extends Executable> List<Meta<Parameter>> getMetaParameters(Meta<E> meta,

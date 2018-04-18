@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.util.Comparators;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.LazyInt;
@@ -82,5 +83,9 @@ public final class Signature implements Comparable<Signature> {
     @Override
     public int compareTo(Signature sig) {
         return COMPARATOR.compare(this, sig);
+    }
+
+    public boolean isGetter() {
+        return parameterTypes.length == 0 && Methods.isGetter(name);
     }
 }

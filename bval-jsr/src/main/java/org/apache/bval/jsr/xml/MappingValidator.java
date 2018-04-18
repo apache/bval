@@ -166,10 +166,11 @@ public class MappingValidator {
             final Constructor<?> dc = Reflection.getDeclaredConstructor(t, parameterTypes);
             Exceptions.raiseIf(dc == null, ValidationException::new, "Unknown %s constructor %s", t, result);
 
-            final ForConstructor<?> metaCtor = new Meta.ForConstructor<>(dc);
-            constraints(metaCtor, ctor.getReturnValue().getConstraint());
-            containerElements(metaCtor, ctor.getReturnValue().getContainerElementType());
-
+            Optional.of(ctor).map(ConstructorType::getReturnValue).ifPresent(rv -> {
+                final ForConstructor<?> metaCtor = new Meta.ForConstructor<>(dc);
+                constraints(metaCtor, rv.getConstraint());
+                containerElements(metaCtor, rv.getContainerElementType());
+            });
             final Parameter[] params = dc.getParameters();
 
             IntStream.range(0, parameterTypes.length).forEach(n -> {

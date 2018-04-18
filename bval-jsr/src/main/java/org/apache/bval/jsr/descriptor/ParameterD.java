@@ -18,7 +18,11 @@
  */
 package org.apache.bval.jsr.descriptor;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 
 import javax.validation.metadata.ParameterDescriptor;
 
@@ -42,7 +46,7 @@ public class ParameterD<P extends ExecutableD<?, ?, P>> extends CascadableContai
         this.index = index;
 
         name = reader.meta.getName();
-        type = TypeUtils.getRawType(reader.meta.getType(), parent.getElementClass());
+        type = resolveType();
     }
 
     @Override
@@ -58,5 +62,31 @@ public class ParameterD<P extends ExecutableD<?, ?, P>> extends CascadableContai
     @Override
     public String getName() {
         return name;
+    }
+
+    private Class<?> resolveType() {
+        final Class<?> declaringClass = getTarget().getDeclaringExecutable().getDeclaringClass();
+
+        Type t = getTarget().getParameterizedType();
+
+        int arrayDepth = 0;
+        while (t instanceof GenericArrayType) {
+            arrayDepth++;
+            t = ((GenericArrayType) t).getGenericComponentType();
+        }
+
+        Class<?> result = null;
+
+        while (result == null) {
+            result = TypeUtils.getRawType(t, declaringClass);
+            if (result != null) {
+                break;
+            }
+            if (t instanceof TypeVariable<?>) {
+                final TypeVariable<?> tv = (TypeVariable<?>) t;
+                t = tv.getBounds()[0];
+            }
+        }
+        return arrayDepth > 0 ? Array.newInstance(result, new int[arrayDepth]).getClass() : result;
     }
 }

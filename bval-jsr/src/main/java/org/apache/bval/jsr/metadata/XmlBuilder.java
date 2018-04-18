@@ -27,16 +27,13 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,6 +63,7 @@ import org.apache.bval.jsr.xml.GetterType;
 import org.apache.bval.jsr.xml.GroupConversionType;
 import org.apache.bval.jsr.xml.GroupSequenceType;
 import org.apache.bval.jsr.xml.GroupsType;
+import org.apache.bval.jsr.xml.MappingValidator;
 import org.apache.bval.jsr.xml.MethodType;
 import org.apache.bval.jsr.xml.ParameterType;
 import org.apache.bval.jsr.xml.PayloadType;
@@ -73,6 +71,7 @@ import org.apache.bval.jsr.xml.ReturnValueType;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
+import org.apache.bval.util.StringUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -83,20 +82,33 @@ public class XmlBuilder {
     //@formatter:off
     public enum Version {
         v10("1.0"), v11("1.1"), v20("2.0");
+        //@formatter:on
 
-        final BigDecimal number;
+        static Version of(ConstraintMappingsType constraintMappings) {
+            Validate.notNull(constraintMappings);
+            String version = constraintMappings.getVersion();
+            if (StringUtils.isBlank(version)) {
+                return v10;
+            }
+            version = version.trim();
+            for (Version candidate : values()) {
+                if (candidate.id.equals(version)) {
+                    return candidate;
+                }
+            }
+            throw new ValidationException("Unknown schema version: " + version);
+        }
+
         private final String id;
 
         private Version(String number) {
             this.id = number;
-            this.number = new BigDecimal(number);
         }
 
         public String getId() {
             return id;
         }
     }
-    //@formatter:on
 
     private class ForBean<T> implements MetadataBuilder.ForBean<T> {
 
@@ -458,30 +470,20 @@ public class XmlBuilder {
         }
     }
 
-    private static final Set<ConstraintAnnotationAttributes> RESERVED_PARAMS = Collections
-        .unmodifiableSet(EnumSet.of(ConstraintAnnotationAttributes.GROUPS, ConstraintAnnotationAttributes.MESSAGE,
-            ConstraintAnnotationAttributes.PAYLOAD, ConstraintAnnotationAttributes.VALIDATION_APPLIES_TO));
-
-    static final <T> T lazy(Lazy<T> lazy, String name) {
+    private static final <T> T lazy(Lazy<T> lazy, String name) {
         Validate.validState(lazy != null, "%s not set", name);
         return lazy.get();
     }
 
     private final ConstraintMappingsType constraintMappings;
-    private final BigDecimal version;
+    private final Version version;
 
     public XmlBuilder(ConstraintMappingsType constraintMappings) {
         super();
         this.constraintMappings = constraintMappings;
         Validate.notNull(constraintMappings, "constraintMappings");
-
-        BigDecimal v;
-        try {
-            v = new BigDecimal(constraintMappings.getVersion());
-        } catch (NumberFormatException e) {
-            v = Version.v10.number;
-        }
-        this.version = v;
+        this.version = Version.of(constraintMappings);
+        new MappingValidator(constraintMappings, this::resolveClass).validateMappings();
     }
 
     public Map<Class<?>, MetadataBuilder.ForBean<?>> forBeans() {
@@ -494,7 +496,7 @@ public class XmlBuilder {
     }
 
     boolean atLeast(Version v) {
-        return version.compareTo(v.number) >= 0;
+        return version.compareTo(v) >= 0;
     }
 
     <T> Class<T> resolveClass(String className) {
@@ -555,18 +557,11 @@ public class XmlBuilder {
         }
         for (final ElementType elementType : constraint.getElement()) {
             final String name = elementType.getName();
-            checkValidName(name);
-
             final Class<?> returnType = getAnnotationParameterType(annotationClass, name);
             final Object elementValue = getElementValue(elementType, returnType);
             annoBuilder.setValue(name, elementValue);
         }
         return annoBuilder.createAnnotation();
-    }
-
-    private void checkValidName(String name) {
-        Exceptions.raiseIf(RESERVED_PARAMS.stream().map(ConstraintAnnotationAttributes::getAttributeName)
-            .anyMatch(Predicate.isEqual(name)), ValidationException::new, "%s is a reserved parameter name.", name);
     }
 
     private <A extends Annotation> Class<?> getAnnotationParameterType(final Class<A> annotationClass,
@@ -646,27 +641,31 @@ public class XmlBuilder {
                 throw new ConstraintDeclarationException(e);
             }
         }
-        if (Byte.class.equals(returnType) || byte.class.equals(returnType)) {
-            // spec mandates it:
-            return Byte.parseByte(value);
-        }
-        if (Short.class.equals(returnType) || short.class.equals(returnType)) {
-            return Short.parseShort(value);
-        }
-        if (Integer.class.equals(returnType) || int.class.equals(returnType)) {
-            return Integer.parseInt(value);
-        }
-        if (Long.class.equals(returnType) || long.class.equals(returnType)) {
-            return Long.parseLong(value);
-        }
-        if (Float.class.equals(returnType) || float.class.equals(returnType)) {
-            return Float.parseFloat(value);
-        }
-        if (Double.class.equals(returnType) || double.class.equals(returnType)) {
-            return Double.parseDouble(value);
-        }
-        if (Boolean.class.equals(returnType) || boolean.class.equals(returnType)) {
-            return Boolean.parseBoolean(value);
+        try {
+            if (Byte.class.equals(returnType) || byte.class.equals(returnType)) {
+                // spec mandates it:
+                return Byte.parseByte(value);
+            }
+            if (Short.class.equals(returnType) || short.class.equals(returnType)) {
+                return Short.parseShort(value);
+            }
+            if (Integer.class.equals(returnType) || int.class.equals(returnType)) {
+                return Integer.parseInt(value);
+            }
+            if (Long.class.equals(returnType) || long.class.equals(returnType)) {
+                return Long.parseLong(value);
+            }
+            if (Float.class.equals(returnType) || float.class.equals(returnType)) {
+                return Float.parseFloat(value);
+            }
+            if (Double.class.equals(returnType) || double.class.equals(returnType)) {
+                return Double.parseDouble(value);
+            }
+            if (Boolean.class.equals(returnType) || boolean.class.equals(returnType)) {
+                return Boolean.parseBoolean(value);
+            }
+        } catch (Exception e) {
+            Exceptions.raise(ValidationException::new, e, "Unable to coerce value '%s' to %s", value, returnType);
         }
         if (Character.class.equals(returnType) || char.class.equals(returnType)) {
             Exceptions.raiseIf(value.length() > 1, ConstraintDeclarationException::new,

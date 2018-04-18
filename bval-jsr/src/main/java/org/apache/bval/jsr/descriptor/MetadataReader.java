@@ -19,7 +19,6 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
@@ -75,7 +74,10 @@ import org.apache.bval.util.ObjectUtils;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
+@Privilizing(@CallTo(Reflection.class))
 class MetadataReader {
 
     class ForElement<E extends AnnotatedElement, B extends MetadataBuilder.ForElement<E>> {
@@ -294,10 +296,6 @@ class MetadataReader {
             final Set<GroupConversion> groupConversions = builder.getGroupConversions(meta);
             if (!groupConversions.isEmpty()) {
                 if (!isCascaded()) {
-                    // ignore group conversions without cascade on property getters:
-                    if (meta.getElementType() == ElementType.METHOD && Methods.isGetter((Method) meta.getHost())) {
-                        return Collections.emptySet();
-                    }
                     Exceptions.raise(ConstraintDeclarationException::new, "@%s declared without @%s on %s",
                         ConvertGroup.class.getSimpleName(), Valid.class.getSimpleName(), meta.describeHost());
                 }

@@ -90,7 +90,8 @@ public class DescriptorManager {
         final MetadataBuilder.ForBean<T> customBuilder =
             new HierarchyBuilder(validatorFactory, this::customBuilder).forBean(beanClass);
 
-        return customBuilder.isEmpty() ? primaryBuilder : DualBuilder.forBean(primaryBuilder, customBuilder);
+        return customBuilder.isEmpty() ? primaryBuilder
+            : DualBuilder.forBean(beanClass, primaryBuilder, customBuilder, validatorFactory);
     }
 
     private <T> MetadataBuilder.ForBean<T> customBuilder(Class<T> beanClass) {

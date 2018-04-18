@@ -21,11 +21,12 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+import javax.validation.metadata.ExecutableDescriptor;
+
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.ConstraintD;
-import org.apache.bval.jsr.descriptor.ExecutableD;
 import org.apache.bval.jsr.descriptor.ReturnValueD;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.NodeImpl;
@@ -57,11 +58,9 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
             return (Class<T>) object.getClass();
         }
 
-        @SuppressWarnings("unchecked")
         @Override
-        protected ExecutableD<Method, ?, ?> describe() {
-            return (ExecutableD<Method, ?, ?>) validatorContext.getDescriptorManager()
-                .getBeanDescriptor(object.getClass())
+        protected ExecutableDescriptor describe() {
+            return validatorContext.getDescriptorManager().getBeanDescriptor(object.getClass())
                 .getConstraintsForMethod(executable.getName(), executable.getParameterTypes());
         }
 
@@ -96,11 +95,9 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
             return (Class<T>) executable.getDeclaringClass();
         }
 
-        @SuppressWarnings("unchecked")
         @Override
-        protected ExecutableD<Constructor<T>, ?, ?> describe() {
-            return (ExecutableD<Constructor<T>, ?, ?>) validatorContext.getDescriptorManager()
-                .getBeanDescriptor(executable.getDeclaringClass())
+        protected ExecutableDescriptor describe() {
+            return validatorContext.getDescriptorManager().getBeanDescriptor(executable.getDeclaringClass())
                 .getConstraintsForConstructor(executable.getParameterTypes());
         }
 
@@ -147,7 +144,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
         return describe() != null;
     }
 
-    protected abstract ExecutableD<?, ?, ?> describe();
+    protected abstract ExecutableDescriptor describe();
 
     protected abstract T getRootBean();
 

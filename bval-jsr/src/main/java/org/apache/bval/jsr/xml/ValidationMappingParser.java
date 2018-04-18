@@ -19,15 +19,20 @@ package org.apache.bval.jsr.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.validation.ValidationException;
 import javax.validation.spi.ConfigurationState;
 
+import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
 import org.apache.bval.jsr.metadata.MetadataSource;
 import org.apache.bval.jsr.metadata.ValidatorMappingProvider;
@@ -59,10 +64,21 @@ public class ValidationMappingParser implements MetadataSource {
         if (configurationState.isIgnoreXmlConfiguration()) {
             return;
         }
+        final Set<Class<?>> beanTypes = new HashSet<>();
         for (final InputStream xmlStream : configurationState.getMappingStreams()) {
             final ConstraintMappingsType mapping = parseXmlMappings(xmlStream);
+
             Optional.of(mapping).map(this::toMappingProvider).ifPresent(addValidatorMappingProvider);
-            new XmlBuilder(mapping).forBeans().forEach(addBuilder::accept);
+
+            final Map<Class<?>, MetadataBuilder.ForBean<?>> builders = new XmlBuilder(mapping).forBeans();
+            if (Collections.disjoint(beanTypes, builders.keySet())) {
+                builders.forEach(addBuilder::accept);
+                beanTypes.addAll(builders.keySet());
+            } else {
+                Exceptions.raise(ValidationException::new,
+                    builders.keySet().stream().filter(beanTypes::contains).map(Class::getName).collect(Collectors
+                        .joining("bean classes specified multiple times for XML validation mapping: [", "; ", "]")));
+            }
         }
     }
 
@@ -102,7 +118,7 @@ public class ValidationMappingParser implements MetadataSource {
             final Class<? extends Annotation> annotationClass = clazz.asSubclass(Annotation.class);
 
             Exceptions.raiseIf(validatorMappings.containsKey(annotationClass), ValidationException::new,
-                "Constraint validator for %s already configured.", annotationClass);
+                "XML constraint validator(s) for %s already configured.", annotationClass);
 
             validatorMappings.put(annotationClass, constraintDefinition.getValidatedBy());
         }

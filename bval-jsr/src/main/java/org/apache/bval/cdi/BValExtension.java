@@ -52,6 +52,7 @@ import javax.validation.metadata.MethodType;
 
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.util.ExecutableTypes;
+import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
 /**
@@ -73,8 +74,8 @@ public class BValExtension implements Extension {
     private boolean validatorFactoryFound = Boolean.getBoolean("bval.in-container");
 
     private final Configuration<?> config;
-    private ValidatorFactory factory;
-    private Validator validator;
+    private Lazy<ValidatorFactory> factory;
+    private Lazy<Validator> validator;
 
     private Set<ExecutableType> globalExecutableTypes;
     private boolean isExecutableValidationEnabled;
@@ -106,9 +107,9 @@ public class BValExtension implements Extension {
             ((ConfigurationImpl) config).deferBootstrapOverrides();
         }
         if (factory == null) {
-            factory = config.buildValidatorFactory();
+            factory = new Lazy<>(config::buildValidatorFactory);
         }
-        validator = factory.getValidator();
+        validator = new Lazy<>(() -> factory.get().getValidator());
     }
 
     public Set<ExecutableType> getGlobalExecutableTypes() {
@@ -136,7 +137,7 @@ public class BValExtension implements Extension {
             try {
                 ensureFactoryValidator();
                 try {
-                    final BeanDescriptor classConstraints = validator.getConstraintsForClass(javaClass);
+                    final BeanDescriptor classConstraints = validator.get().getConstraintsForClass(javaClass);
 
                     final boolean validConstructors = globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS)
                         && !classConstraints.getConstrainedConstructors().isEmpty();
@@ -189,37 +190,30 @@ public class BValExtension implements Extension {
     }
 
     public void addBValBeans(final @Observes AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
-        if (factory != null) { // cleanup cache used to discover ValidateOnException before factory is recreated
-            factory.close();
+        if (factory != null && factory.optional().isPresent()) { // cleanup cache used to discover ValidateOnException before factory is recreated
+            factory.get().close();
         }
         if (config instanceof ConfigurationImpl) {
             ((ConfigurationImpl) config).releaseDeferredBootstrapOverrides();
         }
         if (!validatorFactoryFound) {
             try { // recreate the factory
-                afterBeanDiscovery.addBean(new ValidatorFactoryBean(factory = config.buildValidatorFactory()));
+                factory = new Lazy<>(config::buildValidatorFactory);
+                afterBeanDiscovery.addBean(new ValidatorFactoryBean(factory));
+                validatorFactoryFound = true;
+            } catch (final ValidationException ve) {
+                //throw ve;
             } catch (final Exception e) { // can throw an exception with custom providers
-                if (e instanceof ValidationException) {
-                    throw e;
-                }
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
-        if (!validatorFound) {
+        if (!validatorFound && validatorFactoryFound) {
             try {
-                if (validatorFactoryFound) {
-                    factory = config.buildValidatorFactory();
-                } // else fresh factory already created in previous if
-                if (factory != null) { // happens in TCKS
-                    afterBeanDiscovery.addBean(new ValidatorBean(factory, factory.getValidator()));
-                    validatorFound = true;
-                }
-            } catch (final Exception e) { // getValidator can throw an exception with custom providers
-                if (e instanceof ValidationException) {
-                    throw e;
-                }
-                afterBeanDiscovery.addBean(new ValidatorBean(factory, null));
+                afterBeanDiscovery.addBean(new ValidatorBean(() -> CDI.current().select(ValidatorFactory.class).get().getValidator()));
                 validatorFound = true;
+            } catch (final ValidationException ve) {
+                throw ve;
+            } catch (final Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
@@ -243,7 +237,7 @@ public class BValExtension implements Extension {
             it.inject(instance, context);
             it.postConstruct(instance);
 
-            return new Releasable<T>(context, it, instance);
+            return new Releasable<>(context, it, instance);
         } catch (final Exception | NoClassDefFoundError error) {
             // no-op
         }

@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * {@link ValidatorFactory} CDI {@link Bean}.
@@ -36,9 +37,9 @@ import java.util.Set;
 public class ValidatorFactoryBean implements Bean<ValidatorFactory>, PassivationCapable {
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
-    private final ValidatorFactory instance;
+    private final Supplier<ValidatorFactory> instance;
 
-    public ValidatorFactoryBean(final ValidatorFactory validatorFactory) {
+    public ValidatorFactoryBean(final Supplier<ValidatorFactory> validatorFactory) {
         this.instance = validatorFactory;
 
         final Set<Type> t = new HashSet<>();
@@ -99,7 +100,7 @@ public class ValidatorFactoryBean implements Bean<ValidatorFactory>, Passivation
 
     @Override
     public ValidatorFactory create(final CreationalContext<ValidatorFactory> context) {
-        return instance;
+        return instance.get();
     }
 
     @Override

@@ -24,12 +24,12 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
 import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * {@link Validator} CDI {@link Bean}.
@@ -37,11 +37,9 @@ import java.util.Set;
 public class ValidatorBean implements Bean<Validator>, PassivationCapable {
     private final Set<Type> types;
     private final Set<Annotation> qualifiers;
-    private final ValidatorFactory factory;
-    private volatile Validator instance;
+    private final Supplier<Validator> instance;
 
-    public ValidatorBean(final ValidatorFactory factory, final Validator validator) {
-        this.factory = factory;
+    public ValidatorBean(final Supplier<Validator> validator) {
         this.instance = validator;
 
         final Set<Type> t = new HashSet<>();
@@ -102,14 +100,7 @@ public class ValidatorBean implements Bean<Validator>, PassivationCapable {
 
     @Override
     public Validator create(final CreationalContext<Validator> context) {
-        if (instance == null) {
-            synchronized (this) {
-                if (instance == null) {
-                    instance = factory.getValidator();
-                }
-            }
-        }
-        return instance;
+        return instance == null ? null : instance.get();
     }
 
     @Override

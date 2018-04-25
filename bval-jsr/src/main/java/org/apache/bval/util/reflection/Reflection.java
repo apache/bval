@@ -41,6 +41,89 @@ import org.apache.commons.weaver.privilizer.Privilizing;
  * Security-agnostic "blueprint" class for reflection-related operations. Intended for use by Apache BVal code.
  */
 public class Reflection {
+    public static final class ClassHierarchy implements Iterable<Class<?>> {
+        private final Class<?> type;
+
+        public ClassHierarchy(Class<?> type) {
+            this.type = type;
+        }
+
+        @Override
+        public Iterator<Class<?>> iterator() {
+            return new Iterator<Class<?>>() {
+                Optional<Class<?>> next = Optional.of(type);
+
+                @Override
+                public boolean hasNext() {
+                    return next.isPresent();
+                }
+
+                @Override
+                public Class<?> next() {
+                    final Class<?> result = next.orElseThrow(NoSuchElementException::new);
+                    next = Optional.ofNullable(result.getSuperclass());
+                    return result;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+    }
+
+    public static final class FullHierarchy implements Iterable<Class<?>> {
+        private final Iterable<Class<?>> classes;
+
+        public FullHierarchy(Iterable<Class<?>> classes) {
+            this.classes = classes;
+        }
+
+        @Override
+        public Iterator<Class<?>> iterator() {
+            final Set<Class<?>> seenInterfaces = new HashSet<Class<?>>();
+            final Iterator<Class<?>> wrapped = classes.iterator();
+
+            return new Iterator<Class<?>>() {
+                Iterator<Class<?>> interfaces = Collections.emptyIterator();
+
+                @Override
+                public boolean hasNext() {
+                    return interfaces.hasNext() || wrapped.hasNext();
+                }
+
+                @Override
+                public Class<?> next() {
+                    if (interfaces.hasNext()) {
+                        final Class<?> nextInterface = interfaces.next();
+                        seenInterfaces.add(nextInterface);
+                        return nextInterface;
+                    }
+                    final Class<?> nextSuperclass = wrapped.next();
+                    final Set<Class<?>> currentInterfaces = new LinkedHashSet<>();
+                    walkInterfaces(currentInterfaces, nextSuperclass);
+                    interfaces = currentInterfaces.iterator();
+                    return nextSuperclass;
+                }
+
+                private void walkInterfaces(final Set<Class<?>> addTo, final Class<?> c) {
+                    for (final Class<?> iface : c.getInterfaces()) {
+                        if (!seenInterfaces.contains(iface)) {
+                            addTo.add(iface);
+                        }
+                        walkInterfaces(addTo, iface);
+                    }
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+    }
+
     /**
      * Inclusivity literals for {@link #hierarchy(Class, Interfaces)}.
      * Taken from commons-lang3.
@@ -375,79 +458,7 @@ public class Reflection {
         if (type == null) {
             return Collections.emptySet();
         }
-        final Iterable<Class<?>> classes = new Iterable<Class<?>>() {
-
-            @Override
-            public Iterator<Class<?>> iterator() {
-                return new Iterator<Class<?>>() {
-                    Optional<Class<?>> next = Optional.of(type);
-
-                    @Override
-                    public boolean hasNext() {
-                        return next.isPresent();
-                    }
-
-                    @Override
-                    public Class<?> next() {
-                        final Class<?> result = next.orElseThrow(NoSuchElementException::new);
-                        next = Optional.ofNullable(result.getSuperclass());
-                        return result;
-                    }
-
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-        };
-        if (interfacesBehavior != Interfaces.INCLUDE) {
-            return classes;
-        }
-        return new Iterable<Class<?>>() {
-
-            @Override
-            public Iterator<Class<?>> iterator() {
-                final Set<Class<?>> seenInterfaces = new HashSet<Class<?>>();
-                final Iterator<Class<?>> wrapped = classes.iterator();
-
-                return new Iterator<Class<?>>() {
-                    Iterator<Class<?>> interfaces = Collections.emptyIterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return interfaces.hasNext() || wrapped.hasNext();
-                    }
-
-                    @Override
-                    public Class<?> next() {
-                        if (interfaces.hasNext()) {
-                            final Class<?> nextInterface = interfaces.next();
-                            seenInterfaces.add(nextInterface);
-                            return nextInterface;
-                        }
-                        final Class<?> nextSuperclass = wrapped.next();
-                        final Set<Class<?>> currentInterfaces = new LinkedHashSet<>();
-                        walkInterfaces(currentInterfaces, nextSuperclass);
-                        interfaces = currentInterfaces.iterator();
-                        return nextSuperclass;
-                    }
-
-                    private void walkInterfaces(final Set<Class<?>> addTo, final Class<?> c) {
-                        for (final Class<?> iface : c.getInterfaces()) {
-                            if (!seenInterfaces.contains(iface)) {
-                                addTo.add(iface);
-                            }
-                            walkInterfaces(addTo, iface);
-                        }
-                    }
-
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-        };
+        final Iterable<Class<?>> classes = new ClassHierarchy(type);
+        return interfacesBehavior == Interfaces.INCLUDE ? new FullHierarchy(classes) : classes;
     }
 }

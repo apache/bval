@@ -49,12 +49,6 @@ grant codeBase "file://${user.home}/.m2/repository/org/objenesis/-"
   permission java.security.AllPermission;
 };
 
-// surefire booter;
-grant codeBase "file://${project.build.directory}/surefire/-"
-{
-  permission java.security.AllPermission;
-};
-
 // jaxb impl
 grant codeBase "file://${user.home}/.m2/repository/com/sun/xml/bind/jaxb-impl/-"
 {

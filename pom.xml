@@ -41,10 +41,8 @@
 
     <properties>
         <site.deploy.url>sftp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
-        <commons.weaver.version>1.3</commons.weaver.version>
-<!-- temporarily disable privilizer due to Java 8 incompatibility -->
-<!--         <privilizer.policy>DYNAMIC</privilizer.policy> -->
-        <privilizer.policy>NEVER</privilizer.policy>
+        <commons.weaver.version>1.4-SNAPSHOT</commons.weaver.version>
+        <privilizer.policy>DYNAMIC</privilizer.policy>
     </properties>
 
     <inceptionYear>2010</inceptionYear>

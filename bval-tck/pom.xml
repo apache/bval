@@ -173,6 +173,10 @@ under the License.
                             <suiteXmlFiles>
                                 <suiteXmlFile>${basedir}/src/test/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
+                            <environmentVariables>
+                                <!-- force english locale and UTF8 because the TCK checks the messages -->
+                                <LANG>en_EN.UTF-8</LANG>
+                            </environmentVariables>
                             <systemProperties>
                                 <property>
                                     <name>validation.provider</name>

@@ -33,10 +33,10 @@ public final class Methods {
             return false;
         }
         // TODO look for capital letter after verb?
-        if (Boolean.TYPE.equals(m.getReturnType()) && m.getName().startsWith("is")) {
+        if (Boolean.TYPE.equals(m.getReturnType()) && isGetter(m.getName())) {
             return true;
         }
-        return !Void.TYPE.equals(m.getReturnType()) && m.getName().startsWith("get");
+        return !Void.TYPE.equals(m.getReturnType()) && isGetter(m.getName());
     }
 
     public static boolean isGetter(String methodName) {
@@ -51,7 +51,7 @@ public final class Methods {
     }
 
     public static String propertyName(String methodName) {
-        Validate.isTrue(isGetter(methodName), "%s does not represent a property getter");
+        Validate.isTrue(isGetter(methodName), "%s does not represent a property getter", methodName);
         final String suffix = methodName.startsWith("is") ? methodName.substring(2) : methodName.substring(3);
         return Introspector.decapitalize(suffix);
     }

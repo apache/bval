@@ -33,10 +33,10 @@ public final class Methods {
             return false;
         }
         // TODO look for capital letter after verb?
-        if (Boolean.TYPE.equals(m.getReturnType()) && isGetter(m.getName())) {
+        if (Boolean.TYPE.equals(m.getReturnType()) && m.getName().length() > 2 && m.getName().startsWith("is")) {
             return true;
         }
-        return !Void.TYPE.equals(m.getReturnType()) && isGetter(m.getName());
+        return !Void.TYPE.equals(m.getReturnType()) && m.getName().length() > 3 && m.getName().startsWith("get");
     }
 
     public static boolean isGetter(String methodName) {

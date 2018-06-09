@@ -78,4 +78,13 @@ public class Book {
     @GroupSequence(value = { First.class, Second.class, Last.class })
     public interface All {
     }
+
+    /**
+     * a get() without any name blew up with a failure.
+     * See BVAL-157
+     */
+    public int get() {
+        return 42;
+    }
+
 }

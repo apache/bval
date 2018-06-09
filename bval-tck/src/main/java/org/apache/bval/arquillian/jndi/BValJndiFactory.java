@@ -26,9 +26,15 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Hashtable;
+import java.util.Locale;
 
 // mock a context to satisfy lookups
 public class BValJndiFactory implements InitialContextFactory {
+    public BValJndiFactory() {
+        // this is an ugly hack, but the TCK expects us to get english validation messages :(
+        Locale.setDefault(Locale.ENGLISH);
+    }
+
     public Context getInitialContext(final Hashtable<?, ?> environment) throws NamingException {
         return Context.class.cast(Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
             new Class<?>[] { Context.class }, new InvocationHandler() {

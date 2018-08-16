@@ -411,14 +411,20 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private BootstrapConfiguration createBootstrapConfiguration() {
         try {
             if (!ignoreXmlConfiguration) {
-                loader = ValidationParser.class.getClassLoader();
+                loader = Thread.currentThread().getContextClassLoader();
+                if (loader == null) {
+                    loader = ValidationParser.class.getClassLoader();
+                }
                 final BootstrapConfiguration xmlBootstrap =
                     ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
                 if (xmlBootstrap != null) {
                     return xmlBootstrap;
                 }
             }
-            loader = ApacheValidatorFactory.class.getClassLoader();
+            loader = Thread.currentThread().getContextClassLoader();
+            if (loader == null) {
+                loader = ApacheValidatorFactory.class.getClassLoader();
+            }
             return BootstrapConfigurationImpl.DEFAULT;
         } finally {
             participantFactory = new ParticipantFactory(loader);

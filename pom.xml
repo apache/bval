@@ -41,7 +41,7 @@
 
     <properties>
         <site.deploy.url>sftp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
-        <commons.weaver.version>1.4-SNAPSHOT</commons.weaver.version>
+        <commons.weaver.version>2.0</commons.weaver.version>
         <privilizer.policy>DYNAMIC</privilizer.policy>
     </properties>
 

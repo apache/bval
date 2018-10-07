@@ -23,7 +23,6 @@ import javax.xml.bind.UnmarshallerHandler;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
@@ -51,6 +50,6 @@ public class Demo {
         InputSource xml = new InputSource(getClass().getResourceAsStream("/sample-validation2.xml"));
         xr.parse(xml);
         JAXBElement<ValidationConfigType> result = (JAXBElement<ValidationConfigType>) unmarshallerHandler.getResult();
-        System.out.println(ToStringBuilder.reflectionToString(result.getValue()));
+        System.out.println(result.getValue());
     }
 }

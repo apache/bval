@@ -16,11 +16,7 @@
  */
 package org.apache.bval.jsr.util;
 
-import javax.validation.ValidationException;
-
-import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Validate;
-import org.apache.commons.lang3.StringEscapeUtils;
+import static org.apache.bval.util.Escapes.unescapeJava;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -29,7 +25,11 @@ import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
+
+import javax.validation.ValidationException;
+
+import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 
 /**
  * Defines a path navigation algorithm and a means of interacting with same.
@@ -142,18 +142,10 @@ public class PathNavigation {
         }
 
         protected void handleNextChar(CharSequence path, PathPosition pos, Writer target) throws IOException {
-            target.write(Character.toChars(Character.codePointAt(path, pos.getIndex())));
-            pos.next();
-        }
-    }
-
-    private static class FullQuotedStringParser extends QuotedStringParser {
-
-        @Override
-        protected void handleNextChar(CharSequence path, PathPosition pos, Writer target) throws IOException {
-            final int codePoints = StringEscapeUtils.UNESCAPE_JAVA.translate(path, pos.getIndex(), target);
+            final int codePoints = unescapeJava(path, pos.getIndex(), target);
             if (codePoints == 0) {
-                super.handleNextChar(path, pos, target);
+                target.write(Character.toChars(Character.codePointAt(path, pos.getIndex())));
+                pos.next();
             } else {
                 for (int i = 0; i < codePoints; i++) {
                     pos.plus(Character.charCount(Character.codePointAt(path, pos.getIndex())));
@@ -162,20 +154,7 @@ public class PathNavigation {
         }
     }
 
-    private static final Logger LOG = Logger.getLogger(PathNavigation.class.getName());
-
-    private static final QuotedStringParser QUOTED_STRING_PARSER;
-
-    static {
-        QuotedStringParser quotedStringParser;
-        try {
-            quotedStringParser = new FullQuotedStringParser();
-        } catch (Exception e) {
-            LOG.warning("Apache commons-lang3 is not on the classpath; Java escaping in quotes will not be available.");
-            quotedStringParser = new QuotedStringParser();
-        }
-        QUOTED_STRING_PARSER = quotedStringParser;
-    }
+    private static final QuotedStringParser QUOTED_STRING_PARSER = new QuotedStringParser();
 
     /**
      * Create a new PathNavigation instance.
@@ -262,8 +241,7 @@ public class PathNavigation {
 
     /**
      * Handles an index/key. If the text contained between [] is surrounded by a pair of " or ', it will be treated as a
-     * string which may contain Java escape sequences. This function is only available if commons-lang3 is available on
-     * the classpath!
+     * string which may contain Java escape sequences.
      * 
      * @param path
      * @param pos

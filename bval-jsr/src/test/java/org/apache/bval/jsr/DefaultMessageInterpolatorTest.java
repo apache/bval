@@ -17,15 +17,20 @@
 package org.apache.bval.jsr;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
+import java.lang.annotation.Annotation;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import javax.validation.MessageInterpolator;
 import javax.validation.Validator;
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.Pattern;
 import javax.validation.metadata.ConstraintDescriptor;
 
+import org.apache.bval.constraints.NotEmpty;
 import org.apache.bval.jsr.example.Author;
 import org.apache.bval.jsr.example.PreferredGuest;
 import org.junit.Before;
@@ -35,63 +40,60 @@ import org.junit.Test;
  * MessageResolverImpl Tester.
  */
 public class DefaultMessageInterpolatorTest {
+    private static Predicate<ConstraintDescriptor<?>> forConstraintType(Class<? extends Annotation> type) {
+        return d -> Objects.equals(type, d.getAnnotation().annotationType());
+    }
+
+    private static MessageInterpolator.Context context(Object validatedValue, Supplier<ConstraintDescriptor<?>> descriptor){
+        return new MessageInterpolator.Context() {
+            
+            @Override
+            public <T> T unwrap(Class<T> type) {
+                return null;
+            }
+            
+            @Override
+            public Object getValidatedValue() {
+                return validatedValue;
+            }
+            
+            @Override
+            public ConstraintDescriptor<?> getConstraintDescriptor() {
+                return descriptor.get();
+            }
+        };
+    }
 
     private DefaultMessageInterpolator interpolator;
+    private Validator validator;
 
     @Before
     public void setUp() throws Exception {
         interpolator = new DefaultMessageInterpolator();
         interpolator.setLocale(Locale.ENGLISH);
+        validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
     @Test
-    public void testCreateResolver() {
+    public void testInterpolateFromValidationResources() {
+        String msg = interpolator.interpolate("{validator.creditcard}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(PreferredGuest.class)
+                    .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().stream()
+                    .filter(forConstraintType(Digits.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing"))));
 
-        final Validator gvalidator = getValidator();
-
-        assertFalse(gvalidator.getConstraintsForClass(PreferredGuest.class)
-            .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().isEmpty());
-
-        MessageInterpolator.Context ctx = new MessageInterpolator.Context() {
-
-            @Override
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return gvalidator.getConstraintsForClass(PreferredGuest.class)
-                    .getConstraintsForProperty("guestCreditCardNumber").getConstraintDescriptors().iterator().next();
-            }
-
-            @Override
-            public Object getValidatedValue() {
-                return "12345678";
-            }
-
-            @Override
-            public <T> T unwrap(Class<T> type) {
-                return null;
-            }
-        };
-        String msg = interpolator.interpolate("{validator.creditcard}", ctx);
         assertEquals("credit card is not valid", msg);
+    }
 
-        ctx = new MessageInterpolator.Context() {
-            @Override
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return gvalidator.getConstraintsForClass(Author.class).getConstraintsForProperty("lastName")
-                    .getConstraintDescriptors().iterator().next();
-            }
+    @Test
+    public void testInterpolateFromDefaultResources() {
+        String msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}",
+            context("",
+                () -> validator.getConstraintsForClass(Author.class).getConstraintsForProperty("lastName")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(NotEmpty.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing"))));
 
-            @Override
-            public Object getValidatedValue() {
-                return "";
-            }
-
-            @Override
-            public <T> T unwrap(Class<T> type) {
-                return null;
-            }
-        };
-
-        msg = interpolator.interpolate("{org.apache.bval.constraints.NotEmpty.message}", ctx);
         assertEquals("may not be empty", msg);
     }
 
@@ -101,57 +103,25 @@ public class DefaultMessageInterpolatorTest {
      */
     @Test
     public void testReplacementWithSpecialChars() {
-
-        final Validator validator = getValidator();
-        MessageInterpolator.Context ctx;
-
         // Try to interpolate an annotation attribute containing $
-        ctx = new MessageInterpolator.Context() {
+        String idNumberResult = this.interpolator.interpolate("Id number should match {regexp}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing"))));
 
-            @Override
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                    .getConstraintDescriptors().iterator().next();
-            }
-
-            @Override
-            public Object getValidatedValue() {
-                return "12345678";
-            }
-
-            @Override
-            public <T> T unwrap(Class<T> type) {
-                return null;
-            }
-        };
-
-        String result = this.interpolator.interpolate("Id number should match {regexp}", ctx);
         assertEquals("Incorrect message interpolation when $ is in an attribute", "Id number should match ....$",
-            result);
+            idNumberResult);
 
         // Try to interpolate an annotation attribute containing \
-        ctx = new MessageInterpolator.Context() {
+        String otherIdResult = this.interpolator.interpolate("Other id should match {regexp}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("otherId")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing"))));
 
-            @Override
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return validator.getConstraintsForClass(Person.class).getConstraintsForProperty("otherId")
-                    .getConstraintDescriptors().iterator().next();
-            }
-
-            @Override
-            public Object getValidatedValue() {
-                return "12345678";
-            }
-
-            @Override
-            public <T> T unwrap(Class<T> type) {
-                return null;
-            }
-        };
-
-        result = this.interpolator.interpolate("Other id should match {regexp}", ctx);
         assertEquals("Incorrect message interpolation when \\ is in an attribute value", "Other id should match .\\n",
-            result);
+            otherIdResult);
     }
 
     public static class Person {
@@ -162,9 +132,5 @@ public class DefaultMessageInterpolatorTest {
         @Pattern(message = "Other id should match {regexp}", regexp = ".\\n")
         public String otherId;
 
-    }
-
-    private Validator getValidator() {
-        return ApacheValidatorFactory.getDefault().getValidator();
     }
 }

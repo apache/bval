@@ -16,23 +16,25 @@
  */
 package org.apache.bval.jsr;
 
-import org.apache.bval.el.MessageEvaluator;
-import org.apache.bval.util.reflection.Reflection;
-import org.apache.commons.weaver.privilizer.Privilizing;
-import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
-
-import javax.validation.MessageInterpolator;
-
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import javax.validation.MessageInterpolator;
+
+import org.apache.bval.el.MessageEvaluator;
+import org.apache.bval.jsr.util.LookBehindRegexHolder;
+import org.apache.bval.util.reflection.Reflection;
+import org.apache.commons.weaver.privilizer.Privilizing;
+import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
 /**
  * Description: Resource bundle backed message interpolator.
@@ -47,8 +49,11 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private static final String DEFAULT_VALIDATION_MESSAGES = "org.apache.bval.jsr.ValidationMessages";
     private static final String USER_VALIDATION_MESSAGES = "ValidationMessages";
 
-    /** Regular expression used to do message interpolation. */
-    private static final Pattern messageParameterPattern = Pattern.compile("(\\{[\\w\\.]+\\})");
+    /**
+     * {@link LookBehindRegexHolder} to match Bean Validation attribute patterns, considering character escaping.
+     */
+    private static final LookBehindRegexHolder MESSAGE_PARAMETER = new LookBehindRegexHolder(
+        "(?<!(?:^|[^\\\\])(?:\\\\\\\\){0,%1$d}\\\\)\\{((?:[\\w\\.]|\\\\[\\{\\$\\}\\\\])+)\\}", n -> (n - 4) / 2);
 
     /** The default locale for the current user. */
     private Locale defaultLocale;
@@ -153,11 +158,32 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             resolvedMessage = evaluator.interpolate(resolvedMessage, annotationParameters, validatedValue);
         }
 
-        // curly braces need to be scaped in the original msg, so unescape them now
-        resolvedMessage =
-            resolvedMessage.replace("\\{", "{").replace("\\}", "}").replace("\\\\", "\\").replace("\\$", "$");
+        return resolveEscapeSequences(resolvedMessage);
+    }
 
-        return resolvedMessage;
+    private String resolveEscapeSequences(String s) {
+        int pos = s.indexOf('\\');
+        if (pos < 0) {
+            return s;
+        }
+        StringBuilder result = new StringBuilder(s.length());
+ 
+        int prev = 0;
+        do {
+            if (pos + 1 >= s.length()) {
+                break;
+            }
+            if ("\\{}$".indexOf(s.charAt(pos + 1)) >= 0) {
+                result.append(s, prev, pos);
+                prev = pos + 1;
+            }
+            pos = s.indexOf('\\', pos + 2);
+        } while (pos > 0);
+
+        if (prev < s.length()) {
+            result.append(s, prev, s.length());
+        }
+        return result.toString();
     }
 
     private boolean hasReplacementTakenPlace(String origMessage, String newMessage) {
@@ -173,13 +199,13 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
         ResourceBundle rb;
         final ClassLoader classLoader = Reflection.getClassLoader(DefaultMessageInterpolator.class);
-        if (classLoader != null) {
-            rb = loadBundle(classLoader, locale, USER_VALIDATION_MESSAGES + " not found by thread local classloader");
-        } else {
-        // 2011-03-27 jw: No privileged action required.
-        // A class can always access the classloader of itself and of subclasses.
+        if (classLoader == null) {
+            // 2011-03-27 jw: No privileged action required.
+            // A class can always access the classloader of itself and of subclasses.
             rb = loadBundle(getClass().getClassLoader(), locale,
-                USER_VALIDATION_MESSAGES + " not found by validator classloader");
+            USER_VALIDATION_MESSAGES + " not found by validator classloader");
+        } else {
+            rb = loadBundle(classLoader, locale, USER_VALIDATION_MESSAGES + " not found by thread local classloader");
         }
         if (LOG_FINEST) {
             if (rb == null) {
@@ -197,85 +223,81 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             return ResourceBundle.getBundle(USER_VALIDATION_MESSAGES, locale, classLoader);
         } catch (final MissingResourceException e) {
             log.fine(message);
+            return null;
         }
-        return null;
     }
 
     private String replaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
-        final Matcher matcher = messageParameterPattern.matcher(message);
-        final StringBuffer sb = new StringBuffer(64);
+        final Matcher matcher = MESSAGE_PARAMETER.matcher(message);
+        final StringBuilder sb = new StringBuilder(64);
+        int prev = 0;
         while (matcher.find()) {
-            final String parameter = matcher.group(1);
-            String resolvedParameterValue = resolveParameter(parameter, bundle, locale, recurse);
-            matcher.appendReplacement(sb, sanitizeForAppendReplacement(resolvedParameterValue));
+            int start = matcher.start();
+            if (start > prev) {
+                sb.append(message, prev, start);
+            }
+            sb.append(resolveParameter(matcher.group(1), bundle, locale, recurse).orElseGet(matcher::group));
+            prev = matcher.end();
         }
-        matcher.appendTail(sb);
+        if (prev < message.length()) {
+            sb.append(message, prev, message.length());
+        }
         return sb.toString();
     }
 
     private String replaceAnnotationAttributes(final String message, final Map<String, Object> annotationParameters) {
-        Matcher matcher = messageParameterPattern.matcher(message);
-        StringBuffer sb = new StringBuffer(64);
+        final Matcher matcher = MESSAGE_PARAMETER.matcher(message);
+        final StringBuilder sb = new StringBuilder(64);
+        int prev = 0;
         while (matcher.find()) {
+            int start = matcher.start();
             String resolvedParameterValue;
             String parameter = matcher.group(1);
-            Object variable = annotationParameters.get(removeCurlyBrace(parameter));
-            if (variable != null) {
-                if (variable.getClass().isArray()) {
-                    resolvedParameterValue = Arrays.toString((Object[]) variable);
-                } else {
-                    resolvedParameterValue = variable.toString();
+            Object variable = annotationParameters.get(parameter);
+            if (variable == null) {
+                resolvedParameterValue = matcher.group();
+            } else if (Object[].class.isInstance(variable)) {
+                resolvedParameterValue = Arrays.toString((Object[]) variable);
+            } else if (variable.getClass().isArray()) {
+                try {
+                    resolvedParameterValue = (String) Reflection
+                        .getDeclaredMethod(Arrays.class, "toString", variable.getClass()).invoke(null, variable);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new IllegalStateException("Could not expand array " + variable);
                 }
             } else {
-                resolvedParameterValue = parameter;
+                resolvedParameterValue = variable.toString();
             }
-            matcher.appendReplacement(sb, sanitizeForAppendReplacement(resolvedParameterValue));
+            if (start > prev) {
+                sb.append(message, prev, start);
+            }
+            sb.append(resolvedParameterValue);
+            prev = matcher.end();
         }
-        matcher.appendTail(sb);
+        if (prev < message.length()) {
+            sb.append(message, prev, message.length());
+        }
         return sb.toString();
     }
 
-    private String resolveParameter(String parameterName, ResourceBundle bundle, Locale locale, boolean recurse) {
-        String parameterValue;
-        try {
-            if (bundle == null) {
-                parameterValue = parameterName;
-            } else {
-                parameterValue = bundle.getString(removeCurlyBrace(parameterName));
-                if (recurse) {
-                    parameterValue = replaceVariables(parameterValue, bundle, locale, recurse);
-                }
+    private Optional<String> resolveParameter(String parameterName, ResourceBundle bundle, Locale locale,
+        boolean recurse) {
+        return Optional.ofNullable(bundle).map(b -> {
+            try {
+                return b.getString(parameterName);
+            } catch (final MissingResourceException e) {
+                return null;
             }
-        } catch (final MissingResourceException e) {
-            // return parameter itself
-            parameterValue = parameterName;
-        }
-
-        return parameterValue;
-    }
-
-    private String removeCurlyBrace(String parameter) {
-        return parameter.substring(1, parameter.length() - 1);
+        }).map(v -> recurse ? replaceVariables(v, bundle, locale, recurse) : v);
     }
 
     private ResourceBundle findDefaultResourceBundle(Locale locale) {
-        ResourceBundle bundle = defaultBundlesMap.get(locale);
-        if (bundle == null) {
-            bundle = ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, locale);
-            defaultBundlesMap.put(locale, bundle);
-        }
-        return bundle;
+        return defaultBundlesMap.computeIfAbsent(locale,
+            k -> ResourceBundle.getBundle(DEFAULT_VALIDATION_MESSAGES, locale));
     }
 
     private ResourceBundle findUserResourceBundle(Locale locale) {
-        ResourceBundle bundle = userBundlesMap.get(locale);
-        if (bundle == null) {
-            bundle = getFileBasedResourceBundle(locale);
-            if (bundle != null) {
-                userBundlesMap.put(locale, bundle);
-            }
-        }
-        return bundle;
+        return userBundlesMap.computeIfAbsent(locale, this::getFileBasedResourceBundle);
     }
 
     /**
@@ -284,17 +306,5 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     public void setLocale(Locale locale) {
         defaultLocale = locale;
-    }
-
-    /**
-     * Escapes the string to comply with
-     * {@link Matcher#appendReplacement(StringBuffer, String)} requirements.
-     *
-     * @param src
-     *            The original string.
-     * @return The sanitized string.
-     */
-    private String sanitizeForAppendReplacement(String src) {
-        return src.replace("\\", "\\\\").replace("$", "\\$");
     }
 }

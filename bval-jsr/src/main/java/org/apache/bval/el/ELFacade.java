@@ -16,6 +16,11 @@
  */
 package org.apache.bval.el;
 
+import java.lang.reflect.Method;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.el.ArrayELResolver;
 import javax.el.BeanELResolver;
 import javax.el.CompositeELResolver;
@@ -28,41 +33,48 @@ import javax.el.MapELResolver;
 import javax.el.ResourceBundleELResolver;
 import javax.el.ValueExpression;
 import javax.el.VariableMapper;
-import java.lang.reflect.Method;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.Map;
+
+import org.apache.bval.jsr.util.LookBehindRegexHolder;
 
 // ELProcessor or JavaEE 7 would be perfect too but this impl can be used in javaee 6
 public final class ELFacade implements MessageEvaluator {
-    private static final ExpressionFactory EXPRESSION_FACTORY;
-    static {
-        ExpressionFactory ef;
-        try {
-            ef = ExpressionFactory.newInstance();
-        } catch (final Exception e) {
-            ef = null;
+    private enum EvaluationType {
+        IMMEDIATE("\\$"), DEFERRED("#");
+
+        /**
+         * {@link LookBehindRegexHolder} to recognize a non-escaped EL
+         * expression of this evaluation type, hallmarked by a trigger
+         * character.
+         */
+        private final LookBehindRegexHolder regex;
+
+        private EvaluationType(String trigger) {
+            this.regex = new LookBehindRegexHolder(
+                String.format("(?<!(?:^|[^\\\\])(?:\\\\\\\\){0,%%d}\\\\)%s\\{", trigger), n -> (n - 3) / 2);
         }
-        EXPRESSION_FACTORY = ef;
     }
+
     private static final ELResolver RESOLVER = initResolver();
+
+    private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
 
     @Override
     public String interpolate(final String message, final Map<String, Object> annotationParameters,
         final Object validatedValue) {
         try {
-            if (EXPRESSION_FACTORY != null) {
+            if (EvaluationType.IMMEDIATE.regex.matcher(message).find()) {
                 final BValELContext context = new BValELContext();
                 final VariableMapper variables = context.getVariableMapper();
                 annotationParameters.forEach(
-                    (k, v) -> variables.setVariable(k, EXPRESSION_FACTORY.createValueExpression(v, Object.class)));
+                    (k, v) -> variables.setVariable(k, expressionFactory.createValueExpression(v, Object.class)));
 
                 variables.setVariable("validatedValue",
-                    EXPRESSION_FACTORY.createValueExpression(validatedValue, Object.class));
+                    expressionFactory.createValueExpression(validatedValue, Object.class));
 
-                // #{xxx} shouldn't be evaluated
-                return EXPRESSION_FACTORY.createValueExpression(context, message.replace("#{", "\\#{"), String.class)
-                    .getValue(context).toString();
+                // Java Bean Validation does not support EL expressions that look like JSP "deferred" expressions
+                return expressionFactory.createValueExpression(context,
+                    EvaluationType.DEFERRED.regex.matcher(message).replaceAll("\\$0"), String.class).getValue(context)
+                    .toString();
             }
         } catch (final Exception e) {
             // no-op
@@ -81,7 +93,7 @@ public final class ELFacade implements MessageEvaluator {
         return resolver;
     }
 
-    private static class BValELContext extends ELContext {
+    private class BValELContext extends ELContext {
         private final FunctionMapper functions = new BValFunctionMapper();
         private final VariableMapper variables = new BValVariableMapper();
 
@@ -108,13 +120,13 @@ public final class ELFacade implements MessageEvaluator {
         }
     }
 
-    private static class BValVariableMapper extends VariableMapper {
+    private class BValVariableMapper extends VariableMapper {
         private final Map<String, ValueExpression> variables = new HashMap<String, ValueExpression>();
 
         @Override
         public ValueExpression resolveVariable(final String variable) {
             if ("formatter".equals(variable)) {
-                return EXPRESSION_FACTORY.createValueExpression(new BValFormatter(), Object.class);
+                return expressionFactory.createValueExpression(new BValFormatter(), Object.class);
             }
             return variables.get(variable);
         }

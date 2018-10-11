@@ -16,14 +16,25 @@
  */
 package org.apache.bval.jsr;
 
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import javax.el.ExpressionFactory;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validator;
 import javax.validation.constraints.Digits;
@@ -33,13 +44,33 @@ import javax.validation.metadata.ConstraintDescriptor;
 import org.apache.bval.constraints.NotEmpty;
 import org.apache.bval.jsr.example.Author;
 import org.apache.bval.jsr.example.PreferredGuest;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * MessageResolverImpl Tester.
  */
+@RunWith(Parameterized.class)
 public class DefaultMessageInterpolatorTest {
+    @Parameters(name="{0}")
+    public static List<Object[]> generateParameters(){
+        return Arrays.asList(new Object[] { "default", null },
+            new Object[] { "ri", "com.sun.el.ExpressionFactoryImpl" },
+            new Object[] { "tomcat", "org.apache.el.ExpressionFactoryImpl" },
+            new Object[] { "juel", "de.odysseus.el.ExpressionFactoryImpl" },
+            new Object[] { "invalid", "java.lang.Object" });
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        System.clearProperty(ExpressionFactory.class.getName());
+    }
+
     private static Predicate<ConstraintDescriptor<?>> forConstraintType(Class<? extends Annotation> type) {
         return d -> Objects.equals(type, d.getAnnotation().annotationType());
     }
@@ -64,14 +95,47 @@ public class DefaultMessageInterpolatorTest {
         };
     }
 
+    private String elImpl;
+    private String elFactory;
     private DefaultMessageInterpolator interpolator;
     private Validator validator;
+    private boolean elAvailable;
+    private ClassLoader originalClassLoader;
+
+    public DefaultMessageInterpolatorTest(String elImpl, String elFactory) {
+        this.elImpl = elImpl;
+        this.elFactory = elFactory;
+    }
 
     @Before
     public void setUp() throws Exception {
+        // store and replace CCL to sidestep EL factory caching
+        originalClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(new URLClassLoader(new URL[] {}, originalClassLoader));
+        
+        try {
+            Class<?> elFactoryClass;
+            if (elFactory == null) {
+                elFactoryClass = ExpressionFactory.class;
+                System.clearProperty(ExpressionFactory.class.getName());
+            } else {
+                elFactoryClass = Class.forName(elFactory);
+                System.setProperty(ExpressionFactory.class.getName(), elFactory);
+            }
+            assertTrue(elFactoryClass.isInstance(ExpressionFactory.newInstance()));
+            elAvailable = true;
+        } catch (Exception e) {
+            elAvailable = false;
+        }
         interpolator = new DefaultMessageInterpolator();
         interpolator.setLocale(Locale.ENGLISH);
         validator = ApacheValidatorFactory.getDefault().getValidator();
+    }
+
+    @After
+    public void tearDownEL() {
+        assumeTrue(originalClassLoader != null);
+        Thread.currentThread().setContextClassLoader(originalClassLoader);
     }
 
     @Test
@@ -124,6 +188,127 @@ public class DefaultMessageInterpolatorTest {
             otherIdResult);
     }
 
+    @Test
+    public void testRecursiveInterpolation() {
+        String msg = this.interpolator.interpolate("{recursive.interpolation.1}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing"))));
+
+        assertEquals("must match \"....$\"", msg);
+    }
+
+    @Test
+    public void testNoELAvailable() {
+        assumeThat(elImpl, equalTo("invalid"));
+        assertFalse(elAvailable);
+
+        assertEquals("${regexp.charAt(4)}", interpolator.interpolate("${regexp.charAt(4)}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+    }
+
+    @Test
+    public void testExpressionLanguageEvaluation() {
+        assumeTrue(elAvailable);
+        
+        assertEquals("Expected value of length 8 to match pattern",
+            interpolator.interpolate("Expected value of length ${validatedValue.length()} to match pattern",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+    }
+    
+    @Test
+    public void testMixedEvaluation() {
+        assumeTrue(elAvailable);
+
+        assertEquals("Expected value of length 8 to match pattern ....$",
+            interpolator.interpolate("Expected value of length ${validatedValue.length()} to match pattern {regexp}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+    }
+
+    @Test
+    public void testELEscapingTomcatJuel() {
+        assumeTrue(elAvailable);
+        assumeThat(elImpl, anyOf(equalTo("tomcat"), equalTo("juel")));
+
+        // not so much a test as an illustration that the specified EL implementations are seemingly confused by leading
+        // backslashes and treats the whole expression as literal. We could skip any literal text before the first
+        // non-escaped $, but that would only expose us to inconsistency for composite expressions containing more
+        // than one component EL expression
+
+        assertEquals("${regexp.charAt(4)}", interpolator.interpolate("\\${regexp.charAt(4)}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+
+        assertEquals("${regexp.charAt(4)}", interpolator.interpolate("\\\\${regexp.charAt(4)}",
+            context("12345678",
+                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+    }
+
+    @Test
+    public void testELEscapingRI() {
+        assumeTrue(elAvailable);
+        assumeThat(elImpl, equalTo("ri"));
+
+        assertEquals("returns literal", "${regexp.charAt(4)}",
+            interpolator.interpolate("\\${regexp.charAt(4)}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+
+        assertEquals("returns literal \\ followed by $, later interpreted as an escape sequence", "$",
+            interpolator.interpolate("\\\\${regexp.charAt(4)}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+
+        assertEquals("returns literal \\ followed by .", "\\.",
+            interpolator.interpolate("\\\\${regexp.charAt(3)}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+    }
+
+    @Test
+    public void testEscapedELPattern() {
+        assertEquals("$must match \"....$\"",
+            interpolator.interpolate("\\${javax.validation.constraints.Pattern.message}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+
+        assertEquals("$must match \"....$\"",
+            interpolator.interpolate("\\${javax.validation.constraints.Pattern.message}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+
+        assertEquals("\\$must match \"....$\"",
+            interpolator.interpolate("\\\\\\${javax.validation.constraints.Pattern.message}",
+                context("12345678",
+                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                    .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+    }
+
     public static class Person {
 
         @Pattern(message = "Id number should match {regexp}", regexp = "....$")
@@ -131,6 +316,5 @@ public class DefaultMessageInterpolatorTest {
 
         @Pattern(message = "Other id should match {regexp}", regexp = ".\\n")
         public String otherId;
-
     }
 }

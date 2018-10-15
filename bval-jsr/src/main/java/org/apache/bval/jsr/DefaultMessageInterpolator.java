@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
@@ -101,7 +102,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     /** {@inheritDoc} */
     @Override
-    public String interpolate(String message, Context context) {
+    public String interpolate(final String message, final Context context) {
         // probably no need for caching, but it could be done by parameters since the map
         // is immutable and uniquely built per Validation definition, the comparison has to be based on == and not equals though
         return interpolate(message, context, defaultLocale);
@@ -109,28 +110,11 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     /** {@inheritDoc} */
     @Override
-    public String interpolate(String message, Context context, Locale locale) {
-        return interpolateMessage(message, context.getConstraintDescriptor().getAttributes(), locale,
-            context.getValidatedValue());
-    }
+    public String interpolate(final String message, final Context context, final Locale locale) {
+        final ResourceBundle userResourceBundle = findUserResourceBundle(locale);
+        final ResourceBundle defaultResourceBundle = findDefaultResourceBundle(locale);
 
-    /**
-     * Runs the message interpolation according to algorithm specified in JSR 303.
-     * <br/>
-     * Note:
-     * <br/>
-     * Lookups in user bundles are recursive whereas lookups in default bundle are not!
-     *
-     * @param message              the message to interpolate
-     * @param annotationParameters the parameters of the annotation for which to interpolate this message
-     * @param locale               the <code>Locale</code> to use for the resource bundle.
-     * @return the interpolated message.
-     */
-    private String interpolateMessage(String message, Map<String, Object> annotationParameters, Locale locale,
-        Object validatedValue) {
-        ResourceBundle userResourceBundle = findUserResourceBundle(locale);
-        ResourceBundle defaultResourceBundle = findDefaultResourceBundle(locale);
-
+        final Map<String, Object> annotationParameters = context.getConstraintDescriptor().getAttributes();
         String userBundleResolvedMessage;
         String resolvedMessage = message;
         boolean evaluatedDefaultBundleOnce = false;
@@ -143,10 +127,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             if (evaluatedDefaultBundleOnce && !hasReplacementTakenPlace(userBundleResolvedMessage, resolvedMessage)) {
                 break;
             }
-
             // search the default bundle non recursive (step2)
             resolvedMessage = replaceVariables(userBundleResolvedMessage, defaultResourceBundle, locale, false);
-
             evaluatedDefaultBundleOnce = true;
         } while (true);
 
@@ -154,11 +136,30 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         resolvedMessage = replaceAnnotationAttributes(resolvedMessage, annotationParameters);
 
         // EL handling
-        if (evaluator != null) {
-            resolvedMessage = evaluator.interpolate(resolvedMessage, annotationParameters, validatedValue);
+        if (evaluateExpressionLanguage(message, context)) {
+            resolvedMessage = evaluator.interpolate(resolvedMessage, annotationParameters, context.getValidatedValue());
         }
-
         return resolveEscapeSequences(resolvedMessage);
+    }
+
+    private boolean evaluateExpressionLanguage(String template, Context context) {
+        if (evaluator != null) {
+            if (Objects.equals(template, context.getConstraintDescriptor().getMessageTemplate())) {
+                return true;
+            }
+            final Optional<ApacheMessageContext> apacheMessageContext = Optional.of(context).map(ctx -> {
+                try {
+                    return ctx.unwrap(ApacheMessageContext.class);
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+            return !apacheMessageContext.isPresent() || apacheMessageContext
+                .map(amc -> amc.getConfigurationProperty(
+                    ApacheValidatorConfiguration.Properties.CUSTOM_TEMPLATE_EXPRESSION_EVALUATION))
+                .filter(Boolean::parseBoolean).isPresent();
+        }
+        return false;
     }
 
     private String resolveEscapeSequences(String s) {

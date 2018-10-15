@@ -181,4 +181,8 @@ public class ApacheFactoryContext implements ValidatorContext {
     public ConstraintCached getConstraintsCache() {
         return factory.getConstraintsCache();
     }
+
+    public ApacheValidatorFactory getFactory() {
+        return factory;
+    }
 }

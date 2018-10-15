@@ -30,6 +30,8 @@ import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.CrossParameterDescriptor;
 
+import org.apache.bval.jsr.ApacheFactoryContext;
+import org.apache.bval.jsr.ApacheMessageContext;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.CrossParameterD;
@@ -43,7 +45,7 @@ import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
-public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorContext, MessageInterpolator.Context {
+public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorContext, ApacheMessageContext {
     public class ConstraintViolationBuilderImpl implements ConstraintValidatorContext.ConstraintViolationBuilder {
         private final String template;
         private final PathImpl path;
@@ -200,5 +202,10 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void addError(String messageTemplate, PathImpl propertyPath) {
         violations.get().add(((ValidationJob) frame.getJob()).createViolation(messageTemplate, this, propertyPath));
+    }
+
+    @Override
+    public String getConfigurationProperty(String propertyKey) {
+        return frame.context.getValidatorContext().getFactory().getProperties().get(propertyKey);
     }
 }

@@ -23,6 +23,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 import java.lang.annotation.Annotation;
 import java.net.URL;
@@ -42,6 +44,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.metadata.ConstraintDescriptor;
 
 import org.apache.bval.constraints.NotEmpty;
+import org.apache.bval.jsr.ApacheValidatorConfiguration;
 import org.apache.bval.jsr.example.Author;
 import org.apache.bval.jsr.example.PreferredGuest;
 import org.junit.After;
@@ -51,6 +54,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mockito;
 
 /**
  * MessageResolverImpl Tester.
@@ -73,26 +77,6 @@ public class DefaultMessageInterpolatorTest {
 
     private static Predicate<ConstraintDescriptor<?>> forConstraintType(Class<? extends Annotation> type) {
         return d -> Objects.equals(type, d.getAnnotation().annotationType());
-    }
-
-    private static MessageInterpolator.Context context(Object validatedValue, Supplier<ConstraintDescriptor<?>> descriptor){
-        return new MessageInterpolator.Context() {
-            
-            @Override
-            public <T> T unwrap(Class<T> type) {
-                return null;
-            }
-            
-            @Override
-            public Object getValidatedValue() {
-                return validatedValue;
-            }
-            
-            @Override
-            public ConstraintDescriptor<?> getConstraintDescriptor() {
-                return descriptor.get();
-            }
-        };
     }
 
     private String elImpl;
@@ -203,6 +187,23 @@ public class DefaultMessageInterpolatorTest {
     public void testNoELAvailable() {
         assumeThat(elImpl, equalTo("invalid"));
         assertFalse(elAvailable);
+        
+        ApacheMessageContext context = context("12345678",
+            () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+            .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+            .orElseThrow(() -> new AssertionError("expected constraint missing")));
+
+        when(context
+            .getConfigurationProperty(ApacheValidatorConfiguration.Properties.CUSTOM_TEMPLATE_EXPRESSION_EVALUATION))
+                .thenAnswer(invocation -> Boolean.toString(true));
+
+        assertEquals("${regexp.charAt(4)}", interpolator.interpolate("${regexp.charAt(4)}",
+            context));
+    }
+
+    @Test
+    public void testDisallowCustomTemplateExpressionEvaluationByDefault() {
+        assumeTrue(elAvailable);
 
         assertEquals("${regexp.charAt(4)}", interpolator.interpolate("${regexp.charAt(4)}",
             context("12345678",
@@ -215,24 +216,26 @@ public class DefaultMessageInterpolatorTest {
     public void testExpressionLanguageEvaluation() {
         assumeTrue(elAvailable);
         
-        assertEquals("Expected value of length 8 to match pattern",
-            interpolator.interpolate("Expected value of length ${validatedValue.length()} to match pattern",
-                context("12345678",
-                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                    .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                    .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+        final MessageInterpolator.Context context = context("12345678",
+            () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("anotherValue")
+            .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+            .orElseThrow(() -> new AssertionError("expected constraint missing")));
+        
+        assertEquals("Another value should match ....$",
+            interpolator.interpolate(context.getConstraintDescriptor().getMessageTemplate(), context));
     }
-    
+
     @Test
     public void testMixedEvaluation() {
         assumeTrue(elAvailable);
 
-        assertEquals("Expected value of length 8 to match pattern ....$",
-            interpolator.interpolate("Expected value of length ${validatedValue.length()} to match pattern {regexp}",
-                context("12345678",
-                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+        final MessageInterpolator.Context context = context("12345678",
+            () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("mixedMessageValue")
+            .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+            .orElseThrow(() -> new AssertionError("expected constraint missing")));
+        
+        assertEquals("Mixed message value of length 8 should match ....$",
+            interpolator.interpolate(context.getConstraintDescriptor().getMessageTemplate(), context));
     }
 
     @Test
@@ -245,17 +248,20 @@ public class DefaultMessageInterpolatorTest {
         // non-escaped $, but that would only expose us to inconsistency for composite expressions containing more
         // than one component EL expression
 
+        ApacheMessageContext context = context("12345678",
+            () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+            .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+            .orElseThrow(() -> new AssertionError("expected constraint missing")));
+
+        when(context
+            .getConfigurationProperty(ApacheValidatorConfiguration.Properties.CUSTOM_TEMPLATE_EXPRESSION_EVALUATION))
+                .thenAnswer(invocation -> Boolean.toString(true));
+
         assertEquals("${regexp.charAt(4)}", interpolator.interpolate("\\${regexp.charAt(4)}",
-            context("12345678",
-                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+            context));
 
         assertEquals("${regexp.charAt(4)}", interpolator.interpolate("\\\\${regexp.charAt(4)}",
-            context("12345678",
-                () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+            context));
     }
 
     @Test
@@ -263,26 +269,26 @@ public class DefaultMessageInterpolatorTest {
         assumeTrue(elAvailable);
         assumeThat(elImpl, equalTo("ri"));
 
+        ApacheMessageContext context = context("12345678",
+            () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
+                .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
+                .orElseThrow(() -> new AssertionError("expected constraint missing")));
+
+        when(context
+            .getConfigurationProperty(ApacheValidatorConfiguration.Properties.CUSTOM_TEMPLATE_EXPRESSION_EVALUATION))
+        .thenAnswer(invocation -> Boolean.toString(true));
+
         assertEquals("returns literal", "${regexp.charAt(4)}",
             interpolator.interpolate("\\${regexp.charAt(4)}",
-                context("12345678",
-                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+                context));
 
         assertEquals("returns literal \\ followed by $, later interpreted as an escape sequence", "$",
             interpolator.interpolate("\\\\${regexp.charAt(4)}",
-                context("12345678",
-                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+                context));
 
         assertEquals("returns literal \\ followed by .", "\\.",
             interpolator.interpolate("\\\\${regexp.charAt(3)}",
-                context("12345678",
-                    () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
-                        .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
-                        .orElseThrow(() -> new AssertionError("expected constraint missing")))));
+                context));
     }
 
     @Test
@@ -309,6 +315,16 @@ public class DefaultMessageInterpolatorTest {
                     .orElseThrow(() -> new AssertionError("expected constraint missing")))));
     }
 
+    @SuppressWarnings("unchecked")
+    private ApacheMessageContext context(Object validatedValue, Supplier<ConstraintDescriptor<?>> descriptor) {
+        final ApacheMessageContext result = Mockito.mock(ApacheMessageContext.class);
+        when(result.unwrap(any(Class.class)))
+            .thenAnswer(invocation -> invocation.getArgumentAt(0, Class.class).cast(result));
+        when(result.getValidatedValue()).thenReturn(validatedValue);
+        when(result.getConstraintDescriptor()).thenAnswer(invocation -> descriptor.get());
+        return result;
+    }
+
     public static class Person {
 
         @Pattern(message = "Id number should match {regexp}", regexp = "....$")
@@ -316,5 +332,11 @@ public class DefaultMessageInterpolatorTest {
 
         @Pattern(message = "Other id should match {regexp}", regexp = ".\\n")
         public String otherId;
+
+        @Pattern(message = "Another value should match ${regexp.intern()}", regexp = "....$")
+        public String anotherValue;
+        
+        @Pattern(message = "Mixed message value of length ${validatedValue.length()} should match {regexp}", regexp = "....$")
+        public String mixedMessageValue;
     }
 }

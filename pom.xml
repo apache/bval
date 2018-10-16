@@ -261,7 +261,6 @@
                     <source>1.8</source>
                     <links>
                         <link>http://docs.oracle.com/javase/8/docs/api</link>
-<!--                         <link>http://docs.oracle.com/javaee/7/api</link> -->
                     </links>
                 </configuration>
                 <reportSets>
@@ -269,6 +268,28 @@
                         <reports>
                             <report>javadoc</report>
                             <report>test-javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.1</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <doclint>none</doclint>
+                    <show>package</show>
+                    <quiet>true</quiet>
+                    <source>1.8</source>
+                    <links>
+                        <link>http://docs.oracle.com/javase/8/docs/api</link>
+                    </links>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>aggregate</report>
                         </reports>
                     </reportSet>
                 </reportSets>
@@ -412,17 +433,16 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.0.1</version>
                     <configuration>
                         <encoding>${project.build.sourceEncoding}</encoding>
                         <additionalparam>${javadoc.additionalparam}</additionalparam>
                         <aggregate>true</aggregate>
                         <doclint>none</doclint>
-                        <subpackages>org.apache</subpackages>
                         <verbose>false</verbose>
                         <maxmemory>512m</maxmemory>
                         <links>
                             <link>http://docs.oracle.com/javase/8/docs/api</link>
-<!--                             <link>http://docs.oracle.com/javaee/7/api</link> -->
                         </links>
                     </configuration>
                 </plugin>

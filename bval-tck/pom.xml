@@ -31,7 +31,7 @@ under the License.
     <description>Aggregates dependencies and runs the JSR-349 TCK</description>
 
     <properties>
-        <tck.version>2.0.3.Final</tck.version>
+        <tck.version>2.0.4.Final</tck.version>
         <owb.version>2.0.4</owb.version>
         <arquillian.version>1.1.11.Final</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>

@@ -62,7 +62,9 @@ public class ConstraintDefaults extends ClassLoadingValidatorMappingProvider {
         final ClassLoader classloader = getClassLoader();
         try (final InputStream stream = classloader.getResourceAsStream(resource)) {
             if (stream == null) {
-                log.log(Level.WARNING, String.format("Cannot find %s", resource));
+                if (log.isLoggable(Level.WARNING)) {
+                    log.log(Level.WARNING, String.format("Cannot find %s", resource));
+                }
             } else {
                 result.load(stream);
             }
@@ -86,5 +88,10 @@ public class ConstraintDefaults extends ClassLoadingValidatorMappingProvider {
                 (Class<ConstraintValidator<A, ?>>) (Class) ConstraintValidator.class,
                 e -> log.log(Level.SEVERE, "exception loading default constraint validators", e))
                     .collect(Collectors.toList()));
+    }
+
+    @Override
+    protected ClassLoader getClassLoader() {
+        return Reflection.loaderFromClassOrThread(ConstraintDefaults.class);
     }
 }

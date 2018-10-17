@@ -41,6 +41,7 @@ import org.apache.bval.jsr.BootstrapConfigurationImpl;
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.metadata.XmlBuilder;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -65,11 +66,22 @@ public class ValidationParser {
             "META-INF/validation-configuration-2.0.xsd")
         .build();
 
-    public static String getValidationXmlFile(String file) {
+    private static String getValidationXmlFile(String file) {
         return file == null ? DEFAULT_VALIDATION_XML_FILE : file;
     }
 
-    public static BootstrapConfiguration processValidationConfig(final String file,
+    private static Map<String, String> toMap(final List<PropertyType> property) {
+        return property == null || property.isEmpty() ? Collections.emptyMap()
+            : property.stream().collect(Collectors.toMap(PropertyType::getName, PropertyType::getValue));
+    }
+
+    private final ClassLoader loader;
+
+    public ValidationParser(ClassLoader loader) {
+        this.loader = Validate.notNull(loader, null);
+    }
+
+    public BootstrapConfiguration processValidationConfig(final String file,
         final ConfigurationImpl targetConfig) {
         final ValidationConfigType xmlConfig = parseXmlConfig(file);
         if (xmlConfig == null) {
@@ -99,28 +111,7 @@ public class ValidationParser {
             xmlConfig.getClockProvider(), new HashSet<>(xmlConfig.getValueExtractor()));
     }
 
-    private static Map<String, String> toMap(final List<PropertyType> property) {
-        return property == null || property.isEmpty() ? Collections.emptyMap()
-            : property.stream().collect(Collectors.toMap(PropertyType::getName, PropertyType::getValue));
-    }
-
-    @Privileged
-    private static ValidationConfigType parseXmlConfig(final String validationXmlFile) {
-        try (InputStream inputStream = getInputStream(getValidationXmlFile(validationXmlFile))) {
-            if (inputStream == null) {
-                log.log(Level.FINEST,
-                    String.format("No %s found. Using annotation based configuration only.", validationXmlFile));
-                return null;
-            }
-            log.log(Level.FINEST, String.format("%s found.", validationXmlFile));
-
-            return SCHEMA_MANAGER.unmarshal(new InputSource(inputStream), ValidationConfigType.class);
-        } catch (Exception e) {
-            throw Exceptions.create(ValidationException::new, e, "Unable to parse %s", validationXmlFile);
-        }
-    }
-
-    public static InputStream open(String mappingFileName) {
+    public InputStream open(String mappingFileName) {
         if (mappingFileName.charAt(0) == '/') {
             // Classloader needs a path without a starting /
             mappingFileName = mappingFileName.substring(1);
@@ -136,14 +127,26 @@ public class ValidationParser {
         }
     }
 
-    static InputStream getInputStream(final String path) throws IOException {
-        final ClassLoader loader = Reflection.getClassLoader(ValidationParser.class);
+    InputStream getInputStream(final String path) throws IOException {
         final List<URL> urls = Collections.list(loader.getResources(path));
         Exceptions.raiseIf(urls.stream().distinct().count() > 1, ValidationException::new,
             "More than one %s is found in the classpath", path);
         return urls.isEmpty() ? null : urls.get(0).openStream();
     }
 
-    private ValidationParser() {
+    @Privileged
+    private ValidationConfigType parseXmlConfig(final String validationXmlFile) {
+        try (InputStream inputStream = getInputStream(getValidationXmlFile(validationXmlFile))) {
+            if (inputStream == null) {
+                log.log(Level.FINEST,
+                    String.format("No %s found. Using annotation based configuration only.", validationXmlFile));
+                return null;
+            }
+            log.log(Level.FINEST, String.format("%s found.", validationXmlFile));
+
+            return SCHEMA_MANAGER.unmarshal(new InputSource(inputStream), ValidationConfigType.class);
+        } catch (Exception e) {
+            throw Exceptions.create(ValidationException::new, e, "Unable to parse %s", validationXmlFile);
+        }
     }
 }

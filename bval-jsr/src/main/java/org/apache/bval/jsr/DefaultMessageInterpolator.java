@@ -198,16 +198,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      * @return the resource bundle or <code>null</code> if none is found.
      */
     private ResourceBundle getFileBasedResourceBundle(Locale locale) {
-        ResourceBundle rb;
-        final ClassLoader classLoader = Reflection.getClassLoader(DefaultMessageInterpolator.class);
-        if (classLoader == null) {
-            // 2011-03-27 jw: No privileged action required.
-            // A class can always access the classloader of itself and of subclasses.
-            rb = loadBundle(getClass().getClassLoader(), locale,
-            USER_VALIDATION_MESSAGES + " not found by validator classloader");
-        } else {
-            rb = loadBundle(classLoader, locale, USER_VALIDATION_MESSAGES + " not found by thread local classloader");
-        }
+        final ClassLoader classLoader = Reflection.loaderFromThreadOrClass(DefaultMessageInterpolator.class);
+        ResourceBundle rb = loadBundle(classLoader, locale, USER_VALIDATION_MESSAGES);
         if (LOG_FINEST) {
             if (rb == null) {
                 log.log(Level.FINEST, String.format("%s not found. Delegating to %s", USER_VALIDATION_MESSAGES,

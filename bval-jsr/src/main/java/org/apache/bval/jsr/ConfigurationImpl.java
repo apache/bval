@@ -52,6 +52,7 @@ import org.apache.bval.jsr.xml.ValidationParser;
 import org.apache.bval.util.CloseableAble;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
+import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privileged;
 
 /**
@@ -156,6 +157,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private boolean ignoreXmlConfiguration = false;
 
     private ParticipantFactory participantFactory;
+    private ValidationParser validationParser;
 
     /**
      * Create a new ConfigurationImpl instance.
@@ -411,20 +413,17 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
     private BootstrapConfiguration createBootstrapConfiguration() {
         try {
             if (!ignoreXmlConfiguration) {
-                loader = Thread.currentThread().getContextClassLoader();
-                if (loader == null) {
-                    loader = ValidationParser.class.getClassLoader();
-                }
+                loader = Reflection.loaderFromThreadOrClass(ValidationParser.class);
+                validationParser = new ValidationParser(loader);
                 final BootstrapConfiguration xmlBootstrap =
-                    ValidationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
+                    validationParser.processValidationConfig(getProperties().get(Properties.VALIDATION_XML_PATH), this);
                 if (xmlBootstrap != null) {
                     return xmlBootstrap;
                 }
             }
-            loader = Thread.currentThread().getContextClassLoader();
-            if (loader == null) {
-                loader = ApacheValidatorFactory.class.getClassLoader();
-            }
+            validationParser =
+                new ValidationParser(loader = Reflection.loaderFromThreadOrClass(ApacheValidatorFactory.class));
+
             return BootstrapConfigurationImpl.DEFAULT;
         } finally {
             participantFactory = new ParticipantFactory(loader);
@@ -438,7 +437,7 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             this.providerClass = loadClass(bootstrapConfig.getDefaultProviderClassName());
         }
         bootstrapConfig.getProperties().forEach(this::addProperty);
-        bootstrapConfig.getConstraintMappingResourcePaths().stream().map(ValidationParser::open)
+        bootstrapConfig.getConstraintMappingResourcePaths().stream().map(validationParser::open)
             .forEach(this::addMapping);
 
         if (!beforeCdi) {

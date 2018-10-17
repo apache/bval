@@ -72,7 +72,7 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     /** Tries to load detect and load JPA. */
     @SuppressWarnings("unchecked")
     private void initJpa() {
-        final ClassLoader classLoader = Reflection.getClassLoader(DefaultTraversableResolver.class);
+        final ClassLoader classLoader = Reflection.loaderFromClassOrThread(DefaultTraversableResolver.class);
         try {
             Reflection.toClass(PERSISTENCE_UTIL_CLASSNAME, classLoader);
             if (LOG_FINEST) {

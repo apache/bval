@@ -214,7 +214,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * @return {@link Annotation}
      */
     public A createAnnotation() {
-        final ClassLoader classLoader = Reflection.getClassLoader(getType());
+        final ClassLoader classLoader = Reflection.loaderFromClassOrThread(getType());
         @SuppressWarnings("unchecked")
         final Class<A> proxyClass = (Class<A>) Proxy.getProxyClass(classLoader, getType());
         return doCreateAnnotation(proxyClass, new AnnotationProxy(this));

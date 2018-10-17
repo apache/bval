@@ -519,7 +519,7 @@ public class XmlBuilder {
 
     @SuppressWarnings("unchecked")
     private <T> Class<T> loadClass(final String fqn) {
-        ClassLoader loader = Reflection.getClassLoader(XmlBuilder.class);
+        ClassLoader loader = Reflection.loaderFromThreadOrClass(XmlBuilder.class);
         if (loader == null) {
             loader = getClass().getClassLoader();
         }

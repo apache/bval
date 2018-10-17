@@ -18,7 +18,9 @@ package org.apache.bval.jsr.extensions;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.List;
 
+import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
@@ -199,6 +201,12 @@ public class MethodValidatorImplTest extends TestCase {
             mv.validateParameters(um, classMethod, new Object[] { "", "valid", null }).size());
     }
 
+    public void testBVal158() throws NoSuchMethodException {
+        TypeWithPseudoAccessor target = new TypeWithPseudoAccessor();
+        Method m = TypeWithPseudoAccessor.class.getMethod("getAll");
+        assertTrue(getValidator().forExecutables().validateParameters(target, m, new Object[] {}).isEmpty());
+    }
+
     public static interface UserMethods {
         void findUser(String param1, String param2, Integer param3);
     }
@@ -207,6 +215,14 @@ public class MethodValidatorImplTest extends TestCase {
         @Override
         public void findUser(@Size(min = 1) String param1, @NotNull String param2, @NotNull Integer param3) {
             return;
+        }
+    }
+
+    public static class TypeWithPseudoAccessor {
+        @Valid
+        @NotNull
+        public List<Object> getAll() {
+            throw new IllegalStateException();
         }
     }
 

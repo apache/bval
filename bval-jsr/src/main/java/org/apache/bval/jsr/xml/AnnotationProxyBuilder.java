@@ -107,17 +107,6 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      *
      * @param elementName
      * @param value
-     */
-    @Deprecated
-    public Object putValue(String elementName, Object value) {
-        return elements.put(elementName, value);
-    }
-
-    /**
-     * Add an element to the configuration.
-     *
-     * @param elementName
-     * @param value
      * @return whether any change occurred
      */
     public boolean setValue(String elementName, Object value) {

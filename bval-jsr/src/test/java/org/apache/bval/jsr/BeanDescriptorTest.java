@@ -23,6 +23,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.annotation.Documented;
@@ -163,6 +166,19 @@ public class BeanDescriptorTest extends ValidationTestBase {
         //verify that changes to one ConstraintFinder don't affect the base:
         constraints = nameDescriptor.getConstraintDescriptors();
         assertEquals("Incorrect number of descriptors", 1, constraints.size());
+    }
+
+    @Test
+    public void testDescriptorCaching() {
+        // constrained
+        final BeanDescriptor personDescriptor = validator.getConstraintsForClass(Person.class);
+        assertNotNull(personDescriptor);
+        assertSame(personDescriptor, validator.getConstraintsForClass(Person.class));
+
+        // unconstrained
+        final BeanDescriptor objectDescriptor = validator.getConstraintsForClass(Object.class);
+        assertNotNull(objectDescriptor);
+        assertNotSame(objectDescriptor, validator.getConstraintsForClass(Object.class));
     }
 
     public static class Form {

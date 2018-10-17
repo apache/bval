@@ -16,8 +16,10 @@
  */
 package org.apache.bval.jsr.descriptor;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -26,11 +28,13 @@ import javax.validation.metadata.CascadableDescriptor;
 import javax.validation.metadata.ContainerDescriptor;
 import javax.validation.metadata.ElementDescriptor;
 import javax.validation.metadata.ExecutableDescriptor;
+import javax.validation.metadata.MethodType;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.AnnotationBehaviorMergeStrategy;
 import org.apache.bval.jsr.metadata.CompositeBuilder;
 import org.apache.bval.jsr.metadata.DualBuilder;
+import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.HierarchyBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.ReflectionBuilder;
@@ -55,6 +59,8 @@ public class DescriptorManager {
 
     private final ApacheValidatorFactory validatorFactory;
     private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
+    // synchronization unnecessary
+    private final Set<Class<?>> knownUnconstrainedTypes = new HashSet<>();
     private final ReflectionBuilder reflectionBuilder;
 
     public DescriptorManager(ApacheValidatorFactory validatorFactory) {
@@ -70,13 +76,19 @@ public class DescriptorManager {
         if (beanDescriptors.containsKey(beanClass)) {
             return beanDescriptors.get(beanClass);
         }
-        final MetadataReader.ForBean<T> reader =
-            new MetadataReader(validatorFactory, beanClass).forBean(builder(beanClass));
-        final BeanD<T> beanD = new BeanD<>(reader);
-        @SuppressWarnings("unchecked")
-        final BeanD<T> result =
-            Optional.ofNullable((BeanD<T>) beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
-        return result;
+        final MetadataBuilder.ForBean<T> builder =
+            knownUnconstrainedTypes.contains(beanClass) ? EmptyBuilder.instance().forBean() : builder(beanClass);
+        final BeanD<T> beanD = new BeanD<>(new MetadataReader(validatorFactory, beanClass).forBean(builder));
+
+        if (beanD.isBeanConstrained() || !(beanD.getConstrainedConstructors().isEmpty()
+            && beanD.getConstrainedMethods(MethodType.GETTER, MethodType.NON_GETTER).isEmpty())) {
+            @SuppressWarnings("unchecked")
+            final BeanD<T> result =
+                Optional.ofNullable((BeanD<T>) beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
+            return result;
+        }
+        knownUnconstrainedTypes.add(beanClass);
+        return beanD;
     }
 
     public void clear() {

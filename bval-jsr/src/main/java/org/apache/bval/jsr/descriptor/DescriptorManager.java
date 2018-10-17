@@ -76,16 +76,19 @@ public class DescriptorManager {
         if (beanDescriptors.containsKey(beanClass)) {
             return beanDescriptors.get(beanClass);
         }
-        final MetadataBuilder.ForBean<T> builder =
-            knownUnconstrainedTypes.contains(beanClass) ? EmptyBuilder.instance().forBean() : builder(beanClass);
+        final boolean constrained = !knownUnconstrainedTypes.contains(beanClass);
+        final MetadataBuilder.ForBean<T> builder = constrained ? builder(beanClass) : EmptyBuilder.instance().forBean();
         final BeanD<T> beanD = new BeanD<>(new MetadataReader(validatorFactory, beanClass).forBean(builder));
 
-        if (beanD.isBeanConstrained() || !(beanD.getConstrainedConstructors().isEmpty()
-            && beanD.getConstrainedMethods(MethodType.GETTER, MethodType.NON_GETTER).isEmpty())) {
-            @SuppressWarnings("unchecked")
-            final BeanD<T> result =
+        if (constrained) {
+            // if not previously known to be unconstrained, check:
+            if (beanD.isBeanConstrained() || !(beanD.getConstrainedConstructors().isEmpty()
+                    && beanD.getConstrainedMethods(MethodType.GETTER, MethodType.NON_GETTER).isEmpty())) {
+                @SuppressWarnings("unchecked")
+                final BeanD<T> result =
                 Optional.ofNullable((BeanD<T>) beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
-            return result;
+                return result;
+            }
         }
         knownUnconstrainedTypes.add(beanClass);
         return beanD;

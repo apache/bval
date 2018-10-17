@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
@@ -55,8 +56,8 @@ class ParticipantFactory implements Closeable {
 
     ParticipantFactory(ClassLoader... loaders) {
         super();
-        this.loaders = Collections.unmodifiableList(Arrays.asList(Validate
-            .noNullElements(loaders, "null %s specified at index %d", ClassLoader.class.getSimpleName()).clone()));
+        this.loaders = Arrays.asList(loaders).stream().filter(Objects::nonNull).collect(ToUnmodifiable.list());
+        Validate.validState(!this.loaders.isEmpty(), "no classloaders available");
     }
 
     @Override

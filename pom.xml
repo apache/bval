@@ -40,9 +40,11 @@
     <description>Apache BVal parent pom</description>
 
     <properties>
-        <site.deploy.url>sftp://people.apache.org/home/${user.name}/public_html/bval/${project.version}/staging-site</site.deploy.url>
         <commons.weaver.version>2.0</commons.weaver.version>
         <privilizer.policy>DYNAMIC</privilizer.policy>
+        <site.checkout>${user.home}/apache-bval-site</site.checkout>
+        <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
+        <site.server>bval.site</site.server>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -243,8 +245,9 @@
 
     <distributionManagement>
         <site>
-            <id>people.apache.org</id>
-            <url>${site.deploy.url}</url>
+            <id>bval.site</id>
+            <name>Apache BVal Site SVN</name>
+            <url>scm:svn:${site.url}</url>
         </site>
     </distributionManagement>
 
@@ -690,6 +693,43 @@
                   </goals>
                 </execution>
               </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <skipDeploy>true</skipDeploy>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>site-stage</id>
+                        <phase>post-site</phase>
+                        <goals>
+                            <goal>stage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-publish-plugin</artifactId>
+                <version>3.0.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <pubScmUrl>${site.url}</pubScmUrl>
+                    <checkoutDirectory>${site.checkout}</checkoutDirectory>
+                    <serverId>${site.server}</serverId>
+                    <tryUpdate>true</tryUpdate>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>scm-publish</id>
+                        <phase>site-deploy</phase><!-- deploy site with maven-scm-publish-plugin -->
+                        <goals>
+                            <goal>publish-scm</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <!-- Don't include in all builds for now
             <plugin>

@@ -25,12 +25,10 @@ import javax.validation.ClockProvider;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintViolation;
 import javax.validation.ElementKind;
-import javax.validation.MessageInterpolator;
 import javax.validation.ValidationException;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.CrossParameterDescriptor;
 
-import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ApacheMessageContext;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;

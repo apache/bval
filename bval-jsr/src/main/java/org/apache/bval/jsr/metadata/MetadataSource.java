@@ -20,12 +20,16 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.validation.ConstraintValidator;
+import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 
 /**
  * Service interface for user metadata customizations.
  */
 public interface MetadataSource {
+    interface FactoryDependent extends MetadataSource {
+        void setFactory(ValidatorFactory validatorFactory);
+    }
 
     /**
      * Add {@link ConstraintValidator} mappings and/or metadata builders.

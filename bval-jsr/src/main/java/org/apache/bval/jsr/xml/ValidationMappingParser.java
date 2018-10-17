@@ -30,8 +30,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.validation.ValidationException;
+import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
 
+import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
 import org.apache.bval.jsr.metadata.MetadataSource;
@@ -39,6 +41,7 @@ import org.apache.bval.jsr.metadata.ValidatorMappingProvider;
 import org.apache.bval.jsr.metadata.XmlBuilder;
 import org.apache.bval.jsr.metadata.XmlValidationMappingProvider;
 import org.apache.bval.util.Exceptions;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -48,7 +51,7 @@ import org.xml.sax.InputSource;
  * Uses JAXB to parse constraints.xml based on the validation-mapping XML schema.
  */
 @Privilizing(@CallTo(Reflection.class))
-public class ValidationMappingParser implements MetadataSource {
+public class ValidationMappingParser implements MetadataSource.FactoryDependent {
     private static final SchemaManager SCHEMA_MANAGER = new SchemaManager.Builder()
         .add(XmlBuilder.Version.v10.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
             "META-INF/validation-mapping-1.0.xsd")
@@ -58,9 +61,18 @@ public class ValidationMappingParser implements MetadataSource {
             "META-INF/validation-mapping-2.0.xsd")
         .build();
 
+    private ApacheValidatorFactory validatorFactory;
+
+    @Override
+    public void setFactory(ValidatorFactory validatorFactory) {
+        this.validatorFactory = Validate.notNull(validatorFactory).unwrap(ApacheValidatorFactory.class);
+    }
+
     @Override
     public void process(ConfigurationState configurationState,
         Consumer<ValidatorMappingProvider> addValidatorMappingProvider, BiConsumer<Class<?>, ForBean<?>> addBuilder) {
+        Validate.validState(validatorFactory != null, "validatorFactory unknown");
+
         if (configurationState.isIgnoreXmlConfiguration()) {
             return;
         }
@@ -70,7 +82,8 @@ public class ValidationMappingParser implements MetadataSource {
 
             Optional.of(mapping).map(this::toMappingProvider).ifPresent(addValidatorMappingProvider);
 
-            final Map<Class<?>, MetadataBuilder.ForBean<?>> builders = new XmlBuilder(mapping).forBeans();
+            final Map<Class<?>, MetadataBuilder.ForBean<?>> builders =
+                new XmlBuilder(validatorFactory, mapping).forBeans();
             if (Collections.disjoint(beanTypes, builders.keySet())) {
                 builders.forEach(addBuilder::accept);
                 beanTypes.addAll(builders.keySet());

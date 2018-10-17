@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import javax.validation.ClockProvider;
@@ -368,6 +369,11 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             getMetadataBuilders().registerCustomBuilder((Class) t, (MetadataBuilder.ForBean) b);
         };
         participantFactory.loadServices(MetadataSource.class)
-            .forEach(ms -> ms.process(configuration, getConstraintsCache()::add, addBuilder));
+            .forEach(ms -> {
+                Optional.of(ms).filter(MetadataSource.FactoryDependent.class::isInstance)
+                    .map(MetadataSource.FactoryDependent.class::cast).ifPresent(fd -> fd.setFactory(this));
+
+                ms.process(configuration, getConstraintsCache()::add, addBuilder);
+            });
     }
 }

@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.bval.jsr.xml;
+package org.apache.bval.jsr.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -24,8 +24,6 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.enterprise.util.AnnotationLiteral;
 import javax.validation.ConstraintTarget;
@@ -36,7 +34,7 @@ import javax.validation.groups.ConvertGroup;
 
 import org.apache.bval.cdi.EmptyAnnotationLiteral;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
-import org.apache.bval.jsr.util.AnnotationsManager;
+import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privileged;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -48,17 +46,6 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
  */
 @Privilizing(@CallTo(Reflection.class))
 public final class AnnotationProxyBuilder<A extends Annotation> {
-    private static final ConcurrentMap<Class<?>, Method[]> METHODS_CACHE = new ConcurrentHashMap<>();
-
-    public static <A> Method[] findMethods(final Class<A> annotationType) {
-        // cache only built-in constraints to avoid memory leaks:
-        // TODO use configurable cache size property?
-        if (annotationType.getName().startsWith("javax.validation.constraints.")) {
-            return METHODS_CACHE.computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
-        }
-        return Reflection.getDeclaredMethods(annotationType);
-    }
-
     private final Class<A> type;
     private final Map<String, Object> elements = new HashMap<>();
     private final Method[] methods;
@@ -68,21 +55,11 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * Create a new AnnotationProxyBuilder instance.
      *
      * @param annotationType
+     * @param cache
      */
-    public AnnotationProxyBuilder(final Class<A> annotationType) {
-        this.type = annotationType;
-        this.methods = findMethods(annotationType);
-    }
-
-    /**
-     * Create a new AnnotationProxyBuilder instance.
-     *
-     * @param annotationType
-     * @param elements
-     */
-    public AnnotationProxyBuilder(Class<A> annotationType, Map<String, Object> elements) {
-        this(annotationType);
-        elements.forEach(this.elements::put);
+    AnnotationProxyBuilder(final Class<A> annotationType, Map<Class<?>, Method[]> cache) {
+        this.type = Validate.notNull(annotationType, "annotationType");
+        this.methods = Validate.notNull(cache, "cache").computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
     }
 
     /**
@@ -91,10 +68,11 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * 
      * @param annot
      *            Annotation to be replicated.
+     * @param cache
      */
     @SuppressWarnings("unchecked")
-    public AnnotationProxyBuilder(A annot) {
-        this((Class<A>) annot.annotationType());
+    AnnotationProxyBuilder(A annot, Map<Class<?>, Method[]> cache) {
+        this((Class<A>) annot.annotationType(), cache);
         elements.putAll(AnnotationsManager.readAttributes(annot));
     }
 

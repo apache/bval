@@ -56,7 +56,6 @@ import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
 import org.apache.bval.jsr.metadata.Meta;
-import org.apache.bval.jsr.xml.AnnotationProxyBuilder;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.ObjectUtils;
@@ -107,8 +106,8 @@ public class AnnotationsManager {
         }
     }
 
-    private static class Composition {
-        static <A extends Annotation> Optional<ConstraintAnnotationAttributes.Worker<A>> validWorker(
+    private class Composition {
+        <A extends Annotation> Optional<ConstraintAnnotationAttributes.Worker<A>> validWorker(
             ConstraintAnnotationAttributes attr, Class<A> type) {
             return Optional.of(type).map(attr::analyze).filter(Worker::isValid);
         }
@@ -179,7 +178,7 @@ public class AnnotationsManager {
                 final int index =
                     constraintCounts.computeIfAbsent(c.annotationType(), k -> new AtomicInteger()).getAndIncrement();
 
-                final AnnotationProxyBuilder<Annotation> proxyBuilder = new AnnotationProxyBuilder<>(c);
+                final AnnotationProxyBuilder<Annotation> proxyBuilder = buildProxyFor(c);
 
                 proxyBuilder.setGroups(groups);
                 proxyBuilder.setPayload(payload);
@@ -281,7 +280,6 @@ public class AnnotationsManager {
         }
         return constraints.toArray(Annotation[]::new);
     }
-    
 
     private static Optional<AnnotatedElement> substitute(AnnotatedElement e) {
         if (e instanceof Parameter) {
@@ -310,19 +308,23 @@ public class AnnotationsManager {
 
     private final ApacheValidatorFactory validatorFactory;
     private final LRUCache<Class<? extends Annotation>, Composition> compositions;
+    private final LRUCache<Class<? extends Annotation>, Method[]> constraintAttributes;
 
     public AnnotationsManager(ApacheValidatorFactory validatorFactory) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory);
         final String cacheSize =
             validatorFactory.getProperties().get(ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
+        final int sz;
         try {
-            compositions = new LRUCache<>(Integer.parseInt(cacheSize));
+            sz = Integer.parseInt(cacheSize);
         } catch (NumberFormatException e) {
             throw Exceptions.create(IllegalStateException::new, e,
                 "Cannot parse value %s for configuration property %s", cacheSize,
                 ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
         }
+        compositions = new LRUCache<>(sz);
+        constraintAttributes = new LRUCache<>(sz);
     }
 
     public void validateConstraintDefinition(Class<? extends Annotation> type) {
@@ -412,6 +414,16 @@ public class AnnotationsManager {
         }
         return s.flatMap(Collection::stream)
             .collect(Collectors.toCollection(() -> EnumSet.noneOf(ValidationTarget.class)));
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <A extends Annotation> AnnotationProxyBuilder<A> buildProxyFor(Class<A> type) {
+        return new AnnotationProxyBuilder<>(type, (Map) constraintAttributes);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <A extends Annotation> AnnotationProxyBuilder<A> buildProxyFor(A instance) {
+        return new AnnotationProxyBuilder<>(instance, (Map) constraintAttributes);
     }
 
     private Composition getComposition(Class<? extends Annotation> annotationType) {

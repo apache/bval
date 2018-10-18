@@ -4,7 +4,7 @@ Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 
 About
 =====
-This is an implementation of the Java Bean Validation (JSRs 303, 349)
+This is an implementation of the Java Bean Validation (JSRs 303, 349, 380)
 specification for Java EE and Java SE.
 The technical objective is to provide a class level constraint declaration and
 validation facility for the Java application developer, as well as a constraint
@@ -28,14 +28,14 @@ Along with the developer mailing list archive:
 
 System Requirements
 ===================
-You need a platform that supports Java SE 6 or later.
-Most testing has been done with Java SE 7 on Mac OS X, Windows and Linux.
+You need a platform that supports Java SE 8 or later.
+Most testing has been done with Java SE 8 on Mac OS X, Windows and Linux.
 
 
 Building
 ==========================
 To build from source code:
-  - Sources require Java SE 6 or higher. 
+  - Sources require Java SE 8 or higher. 
   - The project is built with Apache Maven (suggested is at least 3.2.1).
     You need to download and install Maven from: http://maven.apache.org/
   - Invoke maven in the root directory or a module subdirectory:

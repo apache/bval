@@ -46,6 +46,7 @@
         <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
         <site.server>bval.site</site.server>
         <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+        <built.by>${user.name}</built.by>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -427,6 +428,7 @@
                                 <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             </manifest>
                             <manifestEntries>
+                                <Built-By>${built.by}</Built-By>
                                 <Implementation-Build>${buildNumber}</Implementation-Build>
                                 <Specification-Title>Bean Validation</Specification-Title>
                                 <Specification-Version>2.0</Specification-Version>

@@ -83,7 +83,7 @@ public class Exceptions {
     public static <E extends Exception> void raiseIf(boolean condition, Function<? super String, ? extends E> fn,
         String format, Consumer<FormatArgs> argsProvider) throws E {
         if (condition) {
-            raise(fn, message(format,argsProvider));
+            raise(fn, message(format, argsProvider));
         }
     }
 

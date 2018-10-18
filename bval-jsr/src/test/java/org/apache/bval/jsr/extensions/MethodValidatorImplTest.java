@@ -16,6 +16,11 @@
  */
 package org.apache.bval.jsr.extensions;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -31,10 +36,7 @@ import org.apache.bval.jsr.ApacheValidationProvider;
 import org.apache.bval.jsr.ValidatorImpl;
 import org.apache.bval.jsr.extensions.ExampleMethodService.Person;
 import org.junit.Ignore;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Test;
 
 /**
  * MethodValidatorImpl Tester.
@@ -44,15 +46,9 @@ import junit.framework.TestSuite;
  * @since <pre>11/11/2009</pre>
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class MethodValidatorImplTest extends TestCase {
-    public MethodValidatorImplTest(String name) {
-        super(name);
-    }
+public class MethodValidatorImplTest {
 
-    public static Test suite() {
-        return new TestSuite(MethodValidatorImplTest.class);
-    }
-
+    @Test
     public void testUnwrap() {
         Validator v = getValidator();
         ValidatorImpl cv = v.unwrap(ValidatorImpl.class);
@@ -61,6 +57,7 @@ public class MethodValidatorImplTest extends TestCase {
         assertNotNull(v.forExecutables());
     }
 
+    @Test
     public void testValidateMethodParameters() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
@@ -75,6 +72,7 @@ public class MethodValidatorImplTest extends TestCase {
         assertEquals(2, mv.validateParameters(service, method, params).size());
     }
 
+    @Test
     public void testValidateMoreMethodParameters() throws NoSuchMethodException {
 
         ExampleMethodService service = new ExampleMethodService();
@@ -101,6 +99,7 @@ public class MethodValidatorImplTest extends TestCase {
         assertEquals(1, mv.validateParameters(service, echoMethod, echoParams).size());
     }
 
+    @Test
     public void testValidateConstructorParameters() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
@@ -116,6 +115,7 @@ public class MethodValidatorImplTest extends TestCase {
         assertEquals(2, mv.validateConstructorParameters(constructor, params).size());
     }
 
+    @Test
     public void testValidateReturnValue() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
@@ -126,6 +126,7 @@ public class MethodValidatorImplTest extends TestCase {
         assertEquals(1, mv.validateReturnValue(service, method, "").size());
     }
 
+    @Test
     public void testValidateMoreReturnValue() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
@@ -141,6 +142,7 @@ public class MethodValidatorImplTest extends TestCase {
         assertTrue(mv.validateReturnValue(service, echoMethod, returnedValue).isEmpty());
     }
 
+    @Test
     public void testValidateValidParam() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
@@ -160,6 +162,7 @@ public class MethodValidatorImplTest extends TestCase {
             mv.validateParameters(service, personOp1, new Object[] { null }).isEmpty());
     }
 
+    @Test
     public void testValidateNotNullValidParam() throws NoSuchMethodException {
         ExampleMethodService service = new ExampleMethodService();
         ExecutableValidator mv = getValidator().unwrap(ExecutableValidator.class);
@@ -189,6 +192,7 @@ public class MethodValidatorImplTest extends TestCase {
      * <li>interface.class + impl.method</li>
      * </ul>
      */
+    @Test
     @Ignore("violates Liskov principle, forbidden by the spec - 4.5.5")
     public void validateImplementedMethod() throws NoSuchMethodException {
         UserMethodsImpl um = new UserMethodsImpl();
@@ -201,6 +205,7 @@ public class MethodValidatorImplTest extends TestCase {
             mv.validateParameters(um, classMethod, new Object[] { "", "valid", null }).size());
     }
 
+    @Test
     public void testBVal158() throws NoSuchMethodException {
         TypeWithPseudoAccessor target = new TypeWithPseudoAccessor();
         Method m = TypeWithPseudoAccessor.class.getMethod("getAll");

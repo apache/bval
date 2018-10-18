@@ -18,18 +18,22 @@
  */
 package org.apache.bval.jsr.groups;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.GroupDefinitionException;
 import javax.validation.groups.Default;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
  * @author Roman Stumm
  */
-public class DefaultGroupSequenceTest extends TestCase {
+public class DefaultGroupSequenceTest {
+    @Test
     public void testAssertDefaultGroupSequenceIsExpandableWithDefaultAtEndOfSequence() {
         // create a dummy sequence
         Group a = new Group(GroupA.class);
@@ -82,6 +86,7 @@ public class DefaultGroupSequenceTest extends TestCase {
         chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
     }
 
+    @Test
     public void testAssertDefaulGroupSequenceIsExpandableWithDefaultAtBeginningOfSequence() {
         // create a dummy sequence
         Group a = new Group(GroupA.class);

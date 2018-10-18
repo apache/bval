@@ -81,11 +81,11 @@ public class Groups {
 
     /**
      * Assert that the default group can be expanded to <code>defaultGroups</code>.
+     * Package-private method intended for unit tests.
      * 
      * @param defaultGroups
      */
-    @Deprecated
-    public void assertDefaultGroupSequenceIsExpandable(List<Group> defaultGroups) {
+    void assertDefaultGroupSequenceIsExpandable(List<Group> defaultGroups) {
         Consumer<List<Group>> action = (groupList) -> {
             final int idx = groupList.indexOf(Group.DEFAULT);
             if (idx >= 0) {

@@ -18,7 +18,19 @@
  */
 package org.apache.bval.jsr.groups;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+
 import org.apache.bval.jsr.DefaultMessageInterpolator;
 import org.apache.bval.jsr.example.Address;
 import org.apache.bval.jsr.example.Author;
@@ -29,19 +41,13 @@ import org.apache.bval.jsr.example.Employee;
 import org.apache.bval.jsr.example.Library;
 import org.apache.bval.jsr.example.Person;
 import org.apache.bval.jsr.util.TestUtils;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Description: <br/>
  */
-public class CollectionValidationTest extends TestCase {
+public class CollectionValidationTest {
     static ValidatorFactory factory;
 
     static {
@@ -57,9 +63,8 @@ public class CollectionValidationTest extends TestCase {
     /**
      * {@inheritDoc}
      */
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         validator = createValidator();
     }
 
@@ -72,6 +77,7 @@ public class CollectionValidationTest extends TestCase {
         return factory.getValidator();
     }
 
+    @Test
     public void testValidateList() {
         Author author = new Author();
         author.setFirstName("Peter");
@@ -116,6 +122,7 @@ public class CollectionValidationTest extends TestCase {
         assertNotNull(TestUtils.getViolation(violations, "addresses[2].addressline1"));
     }
 
+    @Test
     public void testValidateMapAndRedefinedDefaultGroupOnNonRootBean() {
         Library lib = new Library();
         lib.setLibraryName("Leibnitz Bibliothek");
@@ -174,6 +181,7 @@ public class CollectionValidationTest extends TestCase {
         assertNotNull(TestUtils.getViolation(violations, "taggedBooks[science].author.addresses[0].city"));
     }
 
+    @Test
     public void testValidateArray() {
         Library lib = new Library();
         lib.setLibraryName("Unibibliothek");

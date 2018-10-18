@@ -18,25 +18,31 @@
  */
 package org.apache.bval.jsr.groups.implicit;
 
-import junit.framework.TestCase;
-import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.util.TestUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import java.util.Set;
+
+import org.apache.bval.jsr.ApacheValidatorFactory;
+import org.apache.bval.jsr.util.TestUtils;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Description: test spec chapter 3.4.4. Implicit grouping<br/>
  */
-public class ImplicitGroupingTest extends TestCase {
+public class ImplicitGroupingTest {
     private Validator validator;
 
-    @Override
-    protected void setUp() {
+    @Before
+    public void setUp() {
         validator = ApacheValidatorFactory.getDefault().getValidator();
     }
 
+    @Test
     public void testValidateImplicitGrouping() {
         Order order = new Order();
         // When an Order object is validated on the Default group, ...

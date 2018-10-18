@@ -428,8 +428,7 @@
                             </manifest>
                             <manifestEntries>
                                 <Implementation-Build>${buildNumber}</Implementation-Build>
-                                <Specification-Title>JSR-380 Bean Validation</Specification-Title>
-                                <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                <Specification-Title>Bean Validation</Specification-Title>
                                 <Specification-Version>2.0</Specification-Version>
                             </manifestEntries>
                         </archive>

@@ -14,19 +14,16 @@ Content
 
 Overview
 ========
-This is an implementation of the Java Bean Validation (JSRs 303, 349)
+This is an implementation of the Java Bean Validation (JSRs 303, 349, 380)
 specification for Java EE and Java SE.
 The technical objective is to provide a class level constraint declaration and
 validation facility for the Java application developer, as well as a constraint
 metadata repository and query API.
 
-This implementation is based on the validation framework of Agimatec GmbH,
-which was contributed to the ASF under a software grant.
-
 
 Prerequisites
 =============
-You need a platform that supports Java SE 6 or later.
+You need a platform that supports Java SE 8 or later.
 
 
 Documentation
@@ -51,6 +48,27 @@ What are we looking for?
 How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
+
+
+Release Notes - BVal - Version 2.0.0
+==========================================
+
+** Bug
+    * [BVAL-108] - Prefer Thread context classloader or framework-relative as appropriate to task - addresses resource loading complaints with OSGI
+    * [BVAL-154] - avoid storing metamodel for unconstrained types using "negative cache"
+    * [BVAL-157] - method named get() blows up with illegal param name
+    * [BVAL-158] - ExecutableValidator invokes method if it looks like a getter
+
+** Improvement
+    * [BVAL-118] - improve efficiency by associating bean metadata with the factory rather than the context
+    * [BVAL-159] - Drop commons dependencies
+    * [BVAL-160] - Implement Bean Validation 2.0 (JSR 380)
+
+** Task
+    * [BVAL-161] - Redesign bean metadata model
+    * [BVAL-162] - Convert remaining JUnit 3 tests to JUnit 4
+    * [BVAL-163] - Remove Agimatech extensions
+    * [BVAL-164] - Merge core code into jsr module
 
 
 Release Notes - BVal - Version 1.1.2

@@ -290,9 +290,6 @@
                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                    <mainClass>org.apache.bval.util.BValVersion</mainClass>
                                 </manifest>
-                                <manifestEntries>
-                                    <Implementation-Build>${buildNumber}</Implementation-Build>
-                                </manifestEntries>
                             </archive>
                         </configuration>
                     </execution>

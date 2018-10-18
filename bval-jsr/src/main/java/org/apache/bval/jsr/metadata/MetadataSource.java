@@ -20,15 +20,19 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.validation.ConstraintValidator;
-import javax.validation.ValidatorFactory;
 import javax.validation.spi.ConfigurationState;
+
+import org.apache.bval.jsr.ApacheValidatorFactory;
 
 /**
  * Service interface for user metadata customizations.
  */
 public interface MetadataSource {
-    interface FactoryDependent extends MetadataSource {
-        void setFactory(ValidatorFactory validatorFactory);
+    /**
+     * Initialize the {@link MetadataSource}.
+     * @param validatorFactory
+     */
+    default void initialize(ApacheValidatorFactory validatorFactory) {
     }
 
     /**

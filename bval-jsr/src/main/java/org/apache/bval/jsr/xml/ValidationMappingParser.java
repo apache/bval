@@ -51,7 +51,7 @@ import org.xml.sax.InputSource;
  * Uses JAXB to parse constraints.xml based on the validation-mapping XML schema.
  */
 @Privilizing(@CallTo(Reflection.class))
-public class ValidationMappingParser implements MetadataSource.FactoryDependent {
+public class ValidationMappingParser implements MetadataSource {
     private static final SchemaManager SCHEMA_MANAGER = new SchemaManager.Builder()
         .add(XmlBuilder.Version.v10.getId(), "http://jboss.org/xml/ns/javax/validation/mapping",
             "META-INF/validation-mapping-1.0.xsd")
@@ -64,8 +64,8 @@ public class ValidationMappingParser implements MetadataSource.FactoryDependent 
     private ApacheValidatorFactory validatorFactory;
 
     @Override
-    public void setFactory(ValidatorFactory validatorFactory) {
-        this.validatorFactory = Validate.notNull(validatorFactory).unwrap(ApacheValidatorFactory.class);
+    public void initialize(ApacheValidatorFactory validatorFactory) {
+        this.validatorFactory = Validate.notNull(validatorFactory);
     }
 
     @Override

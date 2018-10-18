@@ -370,9 +370,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
         };
         participantFactory.loadServices(MetadataSource.class)
             .forEach(ms -> {
-                Optional.of(ms).filter(MetadataSource.FactoryDependent.class::isInstance)
-                    .map(MetadataSource.FactoryDependent.class::cast).ifPresent(fd -> fd.setFactory(this));
-
+                ms.initialize(this);
                 ms.process(configuration, getConstraintsCache()::add, addBuilder);
             });
     }

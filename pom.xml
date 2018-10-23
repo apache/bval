@@ -45,7 +45,6 @@
         <site.checkout>${user.home}/apache-bval-site</site.checkout>
         <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
         <site.server>bval.site</site.server>
-        <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
         <built.by>${user.name}</built.by>
     </properties>
 
@@ -732,14 +731,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <!-- don't attach source archives/push to Maven repositories -->
-                    <attach>false</attach>
-                </configuration>
             </plugin>
             <!-- Don't include in all builds for now
             <plugin>

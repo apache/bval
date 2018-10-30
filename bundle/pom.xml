@@ -63,7 +63,7 @@
                         <Implementation-Vendor>org.apache</Implementation-Vendor>
                         <Specification-Title>Java Bean Validation</Specification-Title>
                         <Specification-Vendor>Java Community Process</Specification-Vendor>
-                        <Specification-Version>1.1</Specification-Version>
+                        <Specification-Version>2.0</Specification-Version>
                         <Bundle-DocURL>${project.url}</Bundle-DocURL>
                         <Embed-Dependency>*;inline=true</Embed-Dependency>
                         <Private-Package />
@@ -113,6 +113,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>
-

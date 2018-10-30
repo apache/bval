@@ -229,7 +229,7 @@ public class SchemaManager {
     }
 
     static Schema loadSchema(String resource) {
-        final URL schemaUrl = Reflection.loaderFromThreadOrClass(SchemaManager.class).getResource(resource);
+        final URL schemaUrl = Reflection.loaderFromClassOrThread(SchemaManager.class).getResource(resource);
         try {
             return SCHEMA_FACTORY.newSchema(schemaUrl);
         } catch (SAXException e) {

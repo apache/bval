@@ -245,7 +245,7 @@ public class Reflection {
     }
 
     public static Class<?> toClass(String className) throws ClassNotFoundException {
-        return toClass(className, loaderFromClassOrThread(Reflection.class));
+        return toClass(className, loaderFromThreadOrClass(Reflection.class));
     }
 
     /**

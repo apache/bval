@@ -160,7 +160,7 @@ public class ValidationMappingParser implements MetadataSource {
 
     private Class<?> loadClass(final String className) {
         try {
-            return Reflection.toClass(className, Reflection.loaderFromClassOrThread(ValidationMappingParser.class));
+            return Reflection.toClass(className, Reflection.loaderFromThreadOrClass(ValidationMappingParser.class));
         } catch (ClassNotFoundException ex) {
             throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", className);
         }

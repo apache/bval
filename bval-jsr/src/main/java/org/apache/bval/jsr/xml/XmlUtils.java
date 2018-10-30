@@ -43,7 +43,7 @@ class XmlUtils {
     private static final SchemaFactory SCHEMA_FACTORY = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
     static Schema loadSchema(String resource) {
-        final URL schemaUrl = Reflection.loaderFromClassOrThread(XmlUtils.class).getResource(resource);
+        final URL schemaUrl = Reflection.loaderFromThreadOrClass(XmlUtils.class).getResource(resource);
         try {
             return SCHEMA_FACTORY.newSchema(schemaUrl);
         } catch (SAXException e) {

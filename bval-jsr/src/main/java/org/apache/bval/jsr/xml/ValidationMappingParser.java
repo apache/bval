@@ -140,7 +140,12 @@ public class ValidationMappingParser implements MetadataSource {
     }
 
     private Class<?> loadClass(String className, String defaultPackage) {
-        return loadClass(toQualifiedClassName(className, defaultPackage));
+        final String fqn = toQualifiedClassName(className, defaultPackage);
+        try {
+            return Reflection.toClass(fqn, Reflection.loaderFromThreadOrClass(ValidationMappingParser.class));
+        } catch (ClassNotFoundException ex) {
+            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", fqn);
+        }
     }
 
     private String toQualifiedClassName(String className, String defaultPackage) {
@@ -156,13 +161,5 @@ public class ValidationMappingParser implements MetadataSource {
 
     private boolean isQualifiedClass(String clazz) {
         return clazz.indexOf('.') >= 0;
-    }
-
-    private Class<?> loadClass(final String className) {
-        try {
-            return Reflection.toClass(className, Reflection.loaderFromThreadOrClass(ValidationMappingParser.class));
-        } catch (ClassNotFoundException ex) {
-            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", className);
-        }
     }
 }

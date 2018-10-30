@@ -100,7 +100,7 @@
         </developer>
         <developer>
             <id>carlosvara</id>
-            <name>Carlos Vara</name>
+            <name>Carlos Vara Callau</name>
             <email>carlosvara@apache.org</email>
             <roles>
                 <role>PMC Member</role>
@@ -148,7 +148,7 @@
             <email>kevan@apache.org</email>
             <organization>IBM</organization>
             <roles>
-                <role>PMC Member</role>
+                <role>PMC Member (Emeritus)</role>
             </roles>
         </developer>
         <developer>
@@ -236,9 +236,6 @@
       </contributor>
       <contributor>
         <name>Jörg Waßmer</name>
-      </contributor>
-      <contributor>
-        <name>Romain Manni-Bucau</name>
       </contributor>
       <contributor>
         <name>Sebastian Bazley</name>

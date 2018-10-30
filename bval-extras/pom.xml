@@ -34,7 +34,7 @@
     <name>Apache BVal :: bval-extras (optional)</name>
     <packaging>bundle</packaging>
 
-    <description>BVal - non-JSR303 routines and constraints</description>
+    <description>BVal - non-JSR380 routines and constraints</description>
 
     <dependencies>
         <dependency>

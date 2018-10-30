@@ -36,7 +36,7 @@
 
     <packaging>bundle</packaging>
 
-    <description>Apache BVal - Aggregate OSGi Bundle (bval-core + bval-jsr)</description>
+    <description>Apache BVal - OSGi Packaging of bval-jsr</description>
 
     <dependencies>
         <!-- JARs to include in aggregate JAR via maven-shade-plugin -->

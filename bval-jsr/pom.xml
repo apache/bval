@@ -31,7 +31,7 @@
     <name>Apache BVal :: bval-jsr</name>
     <packaging>jar</packaging>
 
-    <description>Implementation specific classes for JSR 349 Bean Validation 1.1</description>
+    <description>Implementation specific classes for JSR 380 Bean Validation 2.0</description>
 
     <properties>
         <jaxb.version>2.2.6</jaxb.version>

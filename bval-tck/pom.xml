@@ -178,6 +178,10 @@ under the License.
                                     <name>validation.provider</name>
                                     <value>${validation.provider}</value>
                                 </property>
+                                <property>
+                                    <name>includeJavaFXTests</name>
+                                    <value>true</value>
+                                </property>
                             </systemProperties>
                             <parallel>methods</parallel>
                             <threadCount>4</threadCount>

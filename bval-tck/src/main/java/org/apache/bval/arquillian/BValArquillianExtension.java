@@ -18,11 +18,35 @@
  */
 package org.apache.bval.arquillian;
 
+import java.util.logging.Logger;
+
+import org.jboss.arquillian.core.api.annotation.Observes;
 import org.jboss.arquillian.core.spi.LoadableExtension;
+import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.arquillian.test.spi.TestEnricher;
+import org.jboss.arquillian.test.spi.event.suite.AfterClass;
+import org.jboss.arquillian.test.spi.event.suite.BeforeClass;
 
 public class BValArquillianExtension implements LoadableExtension {
     public void register(final ExtensionBuilder builder) {
-        builder.service(TestEnricher.class, EJBEnricher.class);
+        builder.service(TestEnricher.class, EJBEnricher.class).observer(TestLogger.class);
+    }
+
+    public static class TestLogger {
+        private static final Logger LOGGER = Logger.getLogger(TestLogger.class.getName());
+
+        public void before(@Observes final BeforeClass beforeClass) {
+            LOGGER.info(() -> "Launching " + toName(beforeClass.getTestClass()));
+        }
+
+        public void after(@Observes final AfterClass beforeClass) {
+            LOGGER.info(() -> "Executed " + toName(beforeClass.getTestClass()));
+        }
+
+        private String toName(final TestClass testClass) {
+            return testClass.getJavaClass()
+                            .getName()
+                            .replace("org.hibernate.beanvalidation.tck.tests.", "o.h.b.t.t.");
+        }
     }
 }

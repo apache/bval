@@ -182,6 +182,10 @@ under the License.
                                     <name>includeJavaFXTests</name>
                                     <value>true</value>
                                 </property>
+                                <property>
+                                    <name>java.util.logging.config.file</name>
+                                    <value>${project.basedir}/src/test/resources/logging.properties</value>
+                                </property>
                             </systemProperties>
                             <parallel>methods</parallel>
                             <threadCount>4</threadCount>

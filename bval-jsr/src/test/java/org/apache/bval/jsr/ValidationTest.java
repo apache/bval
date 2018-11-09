@@ -38,6 +38,7 @@ import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
@@ -45,7 +46,7 @@ import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 
-import org.apache.bval.constraints.NotNullValidator;
+import org.apache.bval.constraints.NotEmptyValidatorForCharSequence;
 import org.apache.bval.jsr.example.AccessTestBusinessObject;
 import org.apache.bval.jsr.example.AccessTestBusinessObjectSub;
 import org.apache.bval.jsr.example.Address;
@@ -252,6 +253,8 @@ public class ValidationTest extends ValidationTestBase {
     @Test
     public void testGroups() {
         final Author author = new Author();
+        author.setFirstName("Wile");
+        author.setLastName("Coyote");
         author.setCompany("ACME");
         final Book book = new Book();
         book.setTitle("");
@@ -262,7 +265,7 @@ public class ValidationTest extends ValidationTestBase {
         // assuming an english locale, the interpolated message is returned
         for (ConstraintViolation<Book> constraintViolation : constraintViolations) {
             if (Book.class.equals(constraintViolation.getRootBean().getClass())) {
-                assertEquals("may not be empty", constraintViolation.getMessage());
+                assertEquals("must not be empty", constraintViolation.getMessage());
                 assertSame(book, constraintViolation.getRootBean());
 
                 // the offending property
@@ -649,21 +652,20 @@ public class ValidationTest extends ValidationTestBase {
         // property with no constraint
         assertNull(bookBeanDescriptor.getConstraintsForProperty("description"));
         PropertyDescriptor propertyDescriptor = bookBeanDescriptor.getConstraintsForProperty("title");
-        assertEquals(2, propertyDescriptor.getConstraintDescriptors().size());
+        assertEquals(1, propertyDescriptor.getConstraintDescriptors().size());
         assertEquals("title", propertyDescriptor.getPropertyName());
         // assuming the implementation returns the NotEmpty constraint first
         Iterator<ConstraintDescriptor<?>> iter = propertyDescriptor.getConstraintDescriptors().iterator();
         ConstraintDescriptor<?> constraintDescriptor = null;
         while (iter.hasNext()) {
             constraintDescriptor = iter.next();
-            if (constraintDescriptor.getAnnotation().annotationType().equals(NotNull.class)) {
+            if (constraintDescriptor.getAnnotation().annotationType().equals(NotEmpty.class)) {
                 break;
             }
-
         }
         assertNotNull(constraintDescriptor);
         assertEquals(1, constraintDescriptor.getGroups().size()); // "first"
-        assertEquals(NotNullValidator.class, constraintDescriptor.getConstraintValidatorClasses().get(0));
+        assertTrue(constraintDescriptor.getConstraintValidatorClasses().contains(NotEmptyValidatorForCharSequence.class));
         // assuming the implementation returns the Size constraint first
         propertyDescriptor = bookBeanDescriptor.getConstraintsForProperty("subtitle");
         Iterator<ConstraintDescriptor<?>> iterator = propertyDescriptor.getConstraintDescriptors().iterator();

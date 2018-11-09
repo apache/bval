@@ -115,7 +115,7 @@ public class GroupSequenceTest extends ValidationTestBase {
         constraintViolations = validator.validate(book, First.class, Second.class, Last.class);
         ConstraintViolation<?> constraintViolation = constraintViolations.iterator().next();
         assertEquals(1, constraintViolations.size());
-        assertEquals("may not be empty", constraintViolation.getMessage());
+        assertEquals("must not be empty", constraintViolation.getMessage());
         assertEquals(book, constraintViolation.getRootBean());
         assertEquals(book.getTitle(), constraintViolation.getInvalidValue());
         assertEquals("title", constraintViolation.getPropertyPath().toString());
@@ -165,7 +165,7 @@ public class GroupSequenceTest extends ValidationTestBase {
         constraintViolations = validator.validate(book, Book.All.class);
         ConstraintViolation<?> constraintViolation = constraintViolations.iterator().next();
         assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolation.getMessage());
+        assertEquals("must not be empty", constraintViolation.getMessage());
         assertEquals(book, constraintViolation.getRootBean());
         assertEquals(book.getTitle(), constraintViolation.getInvalidValue());
         assertEquals("title", constraintViolation.getPropertyPath().toString());

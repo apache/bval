@@ -30,6 +30,6 @@ public class NotEmptyValidatorForCollection
 
     @Override
     public boolean isValid(Collection<?> value, ConstraintValidatorContext context) {
-        return value == null || !value.isEmpty();
+        return !(value == null || value.isEmpty());
     }
 }

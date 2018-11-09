@@ -29,6 +29,6 @@ public class NotEmptyValidatorForCharSequence
 
     @Override
     public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-        return value == null || value.length() > 0;
+        return value != null && value.length() > 0;
     }
 }

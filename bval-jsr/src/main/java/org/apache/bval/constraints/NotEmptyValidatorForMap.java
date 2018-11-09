@@ -29,6 +29,6 @@ public class NotEmptyValidatorForMap implements ConstraintValidator<javax.valida
 
     @Override
     public boolean isValid(Map<?, ?> value, ConstraintValidatorContext context) {
-        return value == null || !value.isEmpty();
+        return !(value == null || value.isEmpty());
     }
 }

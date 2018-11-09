@@ -18,16 +18,14 @@
  */
 package org.apache.bval.jsr.example;
 
-import org.apache.bval.constraints.NotEmpty;
-
 import javax.validation.GroupSequence;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @GroupSequence({ First.class, Second.class, Book.class, Last.class })
 public class Book {
-    @NotNull(groups = First.class)
     @NotEmpty(groups = First.class)
     private String title;
 

@@ -134,7 +134,7 @@ public class CollectionValidationTest {
         book1.setSubtitle("How it really works");
         Author hawking = new Author();
         hawking.setFirstName("Stephen");
-        hawking.setFirstName("Hawking");
+        hawking.setLastName("Hawking");
         hawking.setAddresses(new ArrayList<Address>(1));
         Address adr = new Address();
         adr.setAddressline1("Street 1");

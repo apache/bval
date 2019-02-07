@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiPredicate;
 
 import javax.annotation.Priority;
@@ -96,6 +97,7 @@ public class BValInterceptor implements Serializable {
     private BValExtension globalConfiguration;
 
     private transient volatile ExecutableValidator executableValidator;
+    private transient volatile ConcurrentMap<Class<?>, Class<?>> classMapping;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @AroundConstruct // TODO: see previous one
@@ -134,7 +136,7 @@ public class BValInterceptor implements Serializable {
     @AroundInvoke
     public Object invoke(final InvocationContext context) throws Exception {
         final Method method = context.getMethod();
-        final Class<?> targetClass = Proxies.classFor(context.getTarget().getClass());
+        final Class<?> targetClass = getTargetClass(context);
 
         if (!isExecutableValidated(targetClass, method, this::computeIsMethodValidated)) {
             return context.proceed();
@@ -167,8 +169,24 @@ public class BValInterceptor implements Serializable {
         return result;
     }
 
-    private <T> boolean isConstructorValidated(final Constructor<T> constructor)
-        {
+    private Class<?> getTargetClass(final InvocationContext context) {
+        final Class<?> key = context.getTarget().getClass();
+        if (classMapping == null) {
+            synchronized (this) {
+                if (classMapping == null) {
+                    classMapping = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        Class<?> mapped = classMapping.get(key);
+        if (mapped == null) {
+            mapped = Proxies.classFor(key);
+            classMapping.putIfAbsent(key, mapped);
+        }
+        return mapped;
+    }
+
+    private <T> boolean isConstructorValidated(final Constructor<T> constructor) {
         return isExecutableValidated(constructor.getDeclaringClass(), constructor, this::computeIsConstructorValidated);
     }
 

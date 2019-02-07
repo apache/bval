@@ -31,8 +31,8 @@ public final class Proxies {
         KNOWN_PROXY_CLASSNAMES = Collections.unmodifiableSet(s);
     }
 
-    // get rid of proxies which probably contains wrong annotation metamodel
-    public static <T> Class<?> classFor(final Class<?> clazz) { // TODO: do we want a SPI with impl for guice, owb, openejb, ...?
+    // get rid of proxies which probably contains wrong annotation metamodel - note: it is "slow", cache the result!
+    public static Class<?> classFor(final Class<?> clazz) { // TODO: do we want a SPI with impl for guice, owb, openejb, ...?
         if (isProxyClass(clazz)) {
             final Class<?> parent = clazz.getSuperclass();
             if (parent != null) {

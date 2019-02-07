@@ -38,7 +38,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintViolation;
 import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
@@ -577,8 +576,14 @@ public abstract class ValidationJob<T> {
 
     @SuppressWarnings("unchecked")
     private <O> BeanD<O> getBeanDescriptor(Object bean) {
-        final Class<? extends Object> t = Proxies.classFor(Validate.notNull(bean, "bean").getClass());
-        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(t);
+        final Class<?> beanClass = Validate.notNull(bean, "bean").getClass();
+        final Map<Class<?>, Class<?>> classCache = validatorContext.getFactory().getUnwrappedClassCache();
+        Class<?> unwrappedClass = classCache.get(beanClass);
+        if (unwrappedClass == null) {
+            unwrappedClass = Proxies.classFor(beanClass);
+            classCache.putIfAbsent(beanClass, unwrappedClass);
+        }
+        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(unwrappedClass);
     }
 
     final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,

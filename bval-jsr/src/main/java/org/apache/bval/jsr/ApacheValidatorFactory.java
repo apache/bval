@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import javax.validation.ClockProvider;
@@ -100,6 +101,7 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private final DescriptorManager descriptorManager = new DescriptorManager(this);
     private final MetadataBuilders metadataBuilders = new MetadataBuilders();
     private final ConstraintCached constraintsCache = new ConstraintCached();
+    private final Map<Class<?>, Class<?>> unwrappedClassCache = new ConcurrentHashMap<>();
     private final Collection<Closeable> toClose = new ArrayList<>();
     private final GroupsComputer groupsComputer = new GroupsComputer();
     private final ParticipantFactory participantFactory;
@@ -135,6 +137,10 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
 
         annotationsManager = new AnnotationsManager(this);
         loadAndVerifyUserCustomizations(configuration);
+    }
+
+    public Map<Class<?>, Class<?>> getUnwrappedClassCache() {
+        return unwrappedClassCache;
     }
 
     /**

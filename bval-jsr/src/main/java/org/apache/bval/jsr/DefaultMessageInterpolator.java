@@ -16,8 +16,13 @@
  */
 package org.apache.bval.jsr;
 
+import static java.util.Collections.emptyEnumeration;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -25,6 +30,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -56,6 +62,18 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private static final LookBehindRegexHolder MESSAGE_PARAMETER = new LookBehindRegexHolder(
         "(?<!(?:^|[^\\\\])(?:\\\\\\\\){0,%1$d}\\\\)\\{((?:[\\w\\.]|\\\\[\\{\\$\\}\\\\])+)\\}", n -> (n - 4) / 2);
 
+    private static final ResourceBundle EMPTY_BUNDLE = new ResourceBundle() {
+        @Override
+        protected Object handleGetObject(final String key) {
+            return null;
+        }
+
+        @Override
+        public Enumeration<String> getKeys() {
+            return emptyEnumeration();
+        }
+    };
+
     /** The default locale for the current user. */
     private Locale defaultLocale;
 
@@ -64,6 +82,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     /** Builtin resource bundles hashed against their locale. */
     private final Map<Locale, ResourceBundle> defaultBundlesMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<MessageKey, String> cachedMessages = new ConcurrentHashMap<>();
 
     private final MessageEvaluator evaluator;
 
@@ -208,7 +228,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
                 log.log(Level.FINEST, String.format("%s found", USER_VALIDATION_MESSAGES));
             }
         }
-        return rb;
+        return rb == null ? EMPTY_BUNDLE : rb;
     }
 
     private ResourceBundle loadBundle(ClassLoader classLoader, Locale locale, String message) {
@@ -221,6 +241,17 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     private String replaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
+        final MessageKey key = new MessageKey(locale, message, bundle);
+        final String cached = cachedMessages.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        final String value = doReplaceVariables(message, bundle, locale, recurse);
+        cachedMessages.putIfAbsent(key, value);
+        return value;
+    }
+
+    private String doReplaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
         final Matcher matcher = MESSAGE_PARAMETER.matcher(message);
         final StringBuilder sb = new StringBuilder(64);
         int prev = 0;
@@ -275,13 +306,12 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
 
     private Optional<String> resolveParameter(String parameterName, ResourceBundle bundle, Locale locale,
         boolean recurse) {
-        return Optional.ofNullable(bundle).map(b -> {
-            try {
-                return b.getString(parameterName);
-            } catch (final MissingResourceException e) {
-                return null;
-            }
-        }).map(v -> recurse ? replaceVariables(v, bundle, locale, recurse) : v);
+        try {
+            final String string = bundle.getString(parameterName);
+            return of(recurse ? replaceVariables(string, bundle, locale, recurse) : string);
+        } catch (final MissingResourceException e) {
+            return empty();
+        }
     }
 
     private ResourceBundle findDefaultResourceBundle(Locale locale) {
@@ -299,5 +329,36 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     public void setLocale(Locale locale) {
         defaultLocale = locale;
+    }
+
+    private static class MessageKey {
+        private final Locale locale;
+        private final String key;
+        private final ResourceBundle bundle;
+        private final int hash;
+
+        private MessageKey(final Locale locale, final String key, final ResourceBundle bundle) {
+            this.locale = locale;
+            this.key = key;
+            this.bundle = bundle;
+            this.hash = Objects.hash(locale, key, bundle);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final MessageKey that = MessageKey.class.cast(o);
+            return locale.equals(that.locale) && key.equals(that.key) && bundle.equals(that.bundle);
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
     }
 }

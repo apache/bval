@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintDefinitionException;
@@ -35,6 +37,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.constraintvalidation.SupportedValidationTarget;
 import javax.validation.constraintvalidation.ValidationTarget;
 
+import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.metadata.AnnotationDeclaredValidatorMappingProvider;
 import org.apache.bval.jsr.metadata.CompositeValidatorMappingProvider;
 import org.apache.bval.jsr.metadata.DualValidationMappingProvider;
@@ -98,10 +101,16 @@ public class ConstraintCached {
 
     private final Map<Class<? extends Annotation>, Set<ConstraintValidatorInfo<?>>> constraintValidatorInfo =
         new HashMap<>();
+    private final ConcurrentMap<ConstraintD<?>, ConstraintValidator<?, ?>> validators =
+        new ConcurrentHashMap<>();
 
     private final List<ValidatorMappingProvider> customValidatorMappingProviders = new ArrayList<>();
     private final Lazy<ValidatorMappingProvider> validatorMappingProvider =
         new Lazy<>(this::createValidatorMappingProvider);
+
+    public ConcurrentMap<ConstraintD<?>, ConstraintValidator<?, ?>> getValidators() {
+        return validators;
+    }
 
     public void add(ValidatorMappingProvider validatorMappingProvider) {
         customValidatorMappingProviders.add(validatorMappingProvider);

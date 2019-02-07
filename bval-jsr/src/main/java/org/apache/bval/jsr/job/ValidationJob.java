@@ -38,6 +38,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintViolation;
 import javax.validation.ElementKind;
 import javax.validation.MessageInterpolator;
@@ -79,6 +80,7 @@ import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public abstract class ValidationJob<T> {
+    private static final ConstraintValidator NOOP_VALIDATOR = (o, ctx) -> true;
 
     public abstract class Frame<D extends ElementD<?, ?>> {
         protected final Frame<?> parent;
@@ -195,30 +197,32 @@ public abstract class ValidationJob<T> {
 
         @SuppressWarnings({ "rawtypes" })
         private ConstraintValidator getConstraintValidator(ConstraintD<?> constraint) {
-            final Class<? extends ConstraintValidator> constraintValidatorClass =
-                new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
-                    getValidationTarget(), computeValidatedType(constraint)).get();
+            return validatorContext.getOrComputeConstraintValidator(constraint, () -> {
+                final Class<? extends ConstraintValidator> constraintValidatorClass =
+                        new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
+                                getValidationTarget(), computeValidatedType(constraint)).get();
 
-            if (constraintValidatorClass == null) {
-                if (constraint.getComposingConstraints().isEmpty()) {
-                    Exceptions.raise(UnexpectedTypeException::new, "No %s type located for non-composed constraint %s",
-                        ConstraintValidator.class.getSimpleName(), constraint);
+                if (constraintValidatorClass == null) {
+                    if (constraint.getComposingConstraints().isEmpty()) {
+                        Exceptions.raise(UnexpectedTypeException::new, "No %s type located for non-composed constraint %s",
+                                ConstraintValidator.class.getSimpleName(), constraint);
+                    }
+                    return NOOP_VALIDATOR;
                 }
-                return null;
-            }
-            ConstraintValidator constraintValidator = null;
-            Exception cause = null;
-            try {
-                constraintValidator =
-                    validatorContext.getConstraintValidatorFactory().getInstance(constraintValidatorClass);
-            } catch (Exception e) {
-                cause = e;
-            }
-            if (constraintValidator == null) {
-                Exceptions.raise(ValidationException::new, cause, "Unable to get %s instance from %s",
-                    constraintValidatorClass.getName(), validatorContext.getConstraintValidatorFactory());
-            }
-            return constraintValidator;
+                ConstraintValidator constraintValidator = null;
+                Exception cause = null;
+                try {
+                    constraintValidator =
+                            validatorContext.getConstraintValidatorFactory().getInstance(constraintValidatorClass);
+                } catch (Exception e) {
+                    cause = e;
+                }
+                if (constraintValidator == null) {
+                    Exceptions.raise(ValidationException::new, cause, "Unable to get %s instance from %s",
+                            constraintValidatorClass.getName(), validatorContext.getConstraintValidatorFactory());
+                }
+                return constraintValidator;
+            });
         }
 
         private Class<?> computeValidatedType(ConstraintD<?> constraint) {

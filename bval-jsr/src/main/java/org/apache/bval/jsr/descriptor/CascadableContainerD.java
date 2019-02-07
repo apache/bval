@@ -35,13 +35,14 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     private final boolean cascaded;
     private final Set<GroupConversion> groupConversions;
-    private final Set<ContainerElementTypeD> containerElementTypes;
+    private final Set<ContainerElementTypeDescriptor> containerElementTypes;
 
     protected CascadableContainerD(MetadataReader.ForContainer<E> reader, P parent) {
         super(reader, parent);
         cascaded = reader.isCascaded();
         groupConversions = reader.getGroupConversions();
-        containerElementTypes = reader.getContainerElementTypes(this);
+        containerElementTypes = reader.getContainerElementTypes(this).stream().filter(DescriptorManager::isConstrained)
+                .collect(ToUnmodifiable.set());
     }
 
     @Override
@@ -62,7 +63,6 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     @Override
     public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
-        return containerElementTypes.stream().filter(DescriptorManager::isConstrained)
-            .collect(ToUnmodifiable.set());
+        return containerElementTypes;
     }
 }

@@ -21,6 +21,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Locale;
@@ -84,6 +85,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private final Map<Locale, ResourceBundle> defaultBundlesMap = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<MessageKey, String> cachedMessages = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, Method> toStringMethods = new ConcurrentHashMap<>();
+    private final ConcurrentMap<MessageWithParamsKey, String> interpolations = new ConcurrentHashMap<>();
 
     private final MessageEvaluator evaluator;
 
@@ -270,38 +273,62 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     private String replaceAnnotationAttributes(final String message, final Map<String, Object> annotationParameters) {
-        final Matcher matcher = MESSAGE_PARAMETER.matcher(message);
-        final StringBuilder sb = new StringBuilder(64);
-        int prev = 0;
-        while (matcher.find()) {
-            int start = matcher.start();
-            String resolvedParameterValue;
-            String parameter = matcher.group(1);
-            Object variable = annotationParameters.get(parameter);
-            if (variable == null) {
-                resolvedParameterValue = matcher.group();
-            } else if (Object[].class.isInstance(variable)) {
-                resolvedParameterValue = Arrays.toString((Object[]) variable);
-            } else if (variable.getClass().isArray()) {
-                try {
-                    resolvedParameterValue = (String) Reflection
-                        .getDeclaredMethod(Arrays.class, "toString", variable.getClass()).invoke(null, variable);
-                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    throw new IllegalStateException("Could not expand array " + variable);
-                }
+        final MessageWithParamsKey key = new MessageWithParamsKey(message, annotationParameters);
+        String result = interpolations.get(key);
+        if (result == null) {
+            final Matcher matcher = MESSAGE_PARAMETER.matcher(message);
+            if (!matcher.find()) {
+                result = message;
             } else {
-                resolvedParameterValue = variable.toString();
+                final StringBuilder sb = new StringBuilder(64);
+                int prev = 0;
+                do {
+                    int start = matcher.start();
+                    String resolvedParameterValue;
+                    String parameter = matcher.group(1);
+                    Object variable = annotationParameters.get(parameter);
+                    if (variable == null) {
+                        resolvedParameterValue = matcher.group();
+                    } else if (Object[].class.isInstance(variable)) {
+                        resolvedParameterValue = Arrays.toString((Object[]) variable);
+                    } else if (variable.getClass().isArray()) {
+                        try {
+                            resolvedParameterValue = (String) getToStringMethod(variable).invoke(null, variable);
+                        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                            throw new IllegalStateException("Could not expand array " + variable);
+                        }
+                    } else {
+                        resolvedParameterValue = variable.toString();
+                    }
+                    if (start > prev) {
+                        sb.append(message, prev, start);
+                    }
+                    sb.append(resolvedParameterValue);
+                    prev = matcher.end();
+                } while (matcher.find());
+                if (prev < message.length()) {
+                    sb.append(message, prev, message.length());
+                }
+                result = sb.toString();
             }
-            if (start > prev) {
-                sb.append(message, prev, start);
-            }
-            sb.append(resolvedParameterValue);
-            prev = matcher.end();
+            interpolations.putIfAbsent(key, result);
         }
-        if (prev < message.length()) {
-            sb.append(message, prev, message.length());
+        return result;
+    }
+
+    public void clearCache() {
+        cachedMessages.clear();
+        interpolations.clear();
+    }
+
+    private Method getToStringMethod(final Object variable) {
+        final Class<?> variableClass = variable.getClass();
+        Method method = toStringMethods.get(variableClass);
+        if (method == null) {
+            method = Reflection.getDeclaredMethod(Arrays.class, "toString", variableClass);;
+            toStringMethods.putIfAbsent(variableClass, method);
         }
-        return sb.toString();
+        return method;
     }
 
     private Optional<String> resolveParameter(String parameterName, ResourceBundle bundle, Locale locale,
@@ -329,6 +356,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
      */
     public void setLocale(Locale locale) {
         defaultLocale = locale;
+        clearCache(); // cause there is a probability of 50% the old cache will be replaced by the new locale
     }
 
     private static class MessageKey {
@@ -354,6 +382,35 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             }
             final MessageKey that = MessageKey.class.cast(o);
             return locale.equals(that.locale) && key.equals(that.key) && bundle.equals(that.bundle);
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+    }
+
+    private static class MessageWithParamsKey {
+        private final String message;
+        private final Map<String, Object> annotationParameters;
+        private final int hash;
+
+        private MessageWithParamsKey(final String message, final Map<String, Object> annotationParameters) {
+            this.message = message;
+            this.annotationParameters = annotationParameters;
+            this.hash = Objects.hash(message, annotationParameters);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final MessageWithParamsKey that = MessageWithParamsKey.class.cast(o);
+            return message.equals(that.message) && annotationParameters.equals(that.annotationParameters);
         }
 
         @Override

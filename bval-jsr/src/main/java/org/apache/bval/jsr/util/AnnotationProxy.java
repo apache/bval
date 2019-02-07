@@ -43,8 +43,6 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
 
     /** Serialization version */
     private static final long serialVersionUID = 1L;
-    
-    private Signature EQUALS = new Signature("equals", Object.class);
 
     private final Class<? extends Annotation> annotationType;
     private final SortedMap<String, Object> values;
@@ -80,10 +78,11 @@ class AnnotationProxy implements Annotation, InvocationHandler, Serializable {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if (values.containsKey(method.getName())) {
-            return values.get(method.getName());
+        final Object value = values.get(method.getName());
+        if (value != null) {
+            return value;
         }
-        if (EQUALS.equals(Signature.of(method))) {
+        if (method.getName().equals("equals")) { // this is an annotation, no need to be more fancy (and slower)
             return equalTo(args[0]);
         }
         return method.invoke(this, args);

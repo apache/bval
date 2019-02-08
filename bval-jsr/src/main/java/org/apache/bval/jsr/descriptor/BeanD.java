@@ -73,12 +73,12 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public boolean isBeanConstrained() {
-        return hasConstraints() || properties.stream().anyMatch(DescriptorManager::isConstrained);
+        return hasConstraints() || !properties.isEmpty();
     }
 
     @Override
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
-        return Optional.ofNullable(getProperty(propertyName)).filter(DescriptorManager::isConstrained).orElse(null);
+        return Optional.ofNullable(getProperty(propertyName)).filter(properties::contains).orElse(null);
     }
 
     @Override

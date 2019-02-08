@@ -43,7 +43,7 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
 
     @Override
     public Integer getTypeArgumentIndex() {
-        return Integer.valueOf(key.getTypeArgumentIndex());
+        return key.getTypeArgumentIndex();
     }
 
     public ContainerElementKey getKey() {

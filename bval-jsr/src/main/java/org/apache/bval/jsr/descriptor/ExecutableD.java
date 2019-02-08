@@ -33,6 +33,8 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
     private final ReturnValueD<SELF, E> returnValue;
     private final List<ParameterD<SELF>> parameters;
     private final CrossParameterD<SELF, E> crossParameter;
+    private final boolean parametersAreConstrained;
+    private final boolean returnValueIsConstrained;
 
     @SuppressWarnings("unchecked")
     protected ExecutableD(R reader, BeanD<?> parent) {
@@ -43,6 +45,8 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
         returnValue = reader.getReturnValueDescriptor((SELF) this);
         parameters = reader.getParameterDescriptors((SELF) this);
         crossParameter = reader.getCrossParameterDescriptor((SELF) this);
+        parametersAreConstrained = parameters.stream().anyMatch(DescriptorManager::isConstrained) || crossParameter.hasConstraints();
+        returnValueIsConstrained = DescriptorManager.isConstrained(returnValue);
     }
 
     @Override
@@ -68,11 +72,11 @@ public abstract class ExecutableD<E extends Executable, R extends MetadataReader
 
     @Override
     public final boolean hasConstrainedParameters() {
-        return parameters.stream().anyMatch(DescriptorManager::isConstrained) || getCrossParameterDescriptor().hasConstraints();
+        return parametersAreConstrained;
     }
 
     @Override
     public final boolean hasConstrainedReturnValue() {
-        return DescriptorManager.isConstrained(returnValue);
+        return returnValueIsConstrained;
     }
 }

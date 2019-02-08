@@ -19,7 +19,9 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +35,7 @@ import javax.validation.metadata.PropertyDescriptor;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.ToUnmodifiable;
+import org.apache.bval.util.CollectionSet;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.StringUtils;
 
@@ -44,6 +47,9 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     private final Map<Signature, ConstructorD<T>> constructors;
     private final Map<Signature, MethodD> methods;
     private final GroupStrategy groupStrategy;
+    
+    private final Set<ConstructorDescriptor> constrainedConstructors;
+    private final Map<Set<MethodType>, Set<MethodDescriptor>> methodCache = new HashMap<>();
 
     BeanD(MetadataReader.ForBean<T> reader) {
         super(reader);
@@ -51,9 +57,13 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
         groupStrategy = reader.getGroupStrategy();
         propertiesMap = reader.getProperties(this);
-        properties = propertiesMap.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
+        properties =
+            propertiesMap.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
         constructors = reader.getConstructors(this);
         methods = reader.getMethods(this);
+        
+        constrainedConstructors =
+            constructors.isEmpty() ? Collections.emptySet() : new CollectionSet<>(constructors.values());
     }
 
     @Override
@@ -85,8 +95,15 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
-        final EnumSet<MethodType> filter = EnumSet.of(methodType, methodTypes);
-        return methods.values().stream().filter(m -> filter.contains(m.getMethodType())).collect(ToUnmodifiable.set());
+        return methodCache.computeIfAbsent(EnumSet.of(methodType, methodTypes), k -> {
+            if (methods.isEmpty() || k.isEmpty()) {
+                return Collections.emptySet();
+            }
+            if (k.size() == MethodType.values().length) {
+                return new CollectionSet<>(methods.values());
+            }
+            return methods.values().stream().filter(m -> k.contains(m.getMethodType())).collect(ToUnmodifiable.set());
+        });
     }
 
     @Override
@@ -96,7 +113,7 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public Set<ConstructorDescriptor> getConstrainedConstructors() {
-        return constructors.values().stream().collect(ToUnmodifiable.set());
+        return constrainedConstructors;
     }
 
     public PropertyDescriptor getProperty(String propertyName) {

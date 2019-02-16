@@ -61,6 +61,7 @@ public final class ELFacade implements MessageEvaluator {
     @Override
     public String interpolate(final String message, final Map<String, Object> annotationParameters,
         final Object validatedValue) {
+        // BVAL-170: simple pre-check to improve performance
         if (message.contains("${") || message.contains("#{")) {
             try {
                 if (EvaluationType.IMMEDIATE.regex.matcher(message).find()) {

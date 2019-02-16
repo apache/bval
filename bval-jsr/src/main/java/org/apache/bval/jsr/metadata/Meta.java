@@ -231,6 +231,7 @@ public abstract class Meta<E extends AnnotatedElement> {
             return getHost().getAnnotatedType();
         }
 
+        @Override
         public String getName() {
             return name;
         }
@@ -290,7 +291,7 @@ public abstract class Meta<E extends AnnotatedElement> {
         }
 
         public Integer getTypeArgumentIndex() {
-            return Integer.valueOf(key.getTypeArgumentIndex());
+            return key.getTypeArgumentIndex();
         }
 
         @Override

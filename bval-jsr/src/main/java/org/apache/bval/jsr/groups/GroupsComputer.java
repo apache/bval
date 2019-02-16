@@ -70,6 +70,10 @@ public class GroupsComputer {
     @SafeVarargs
     public final Groups computeGroups(Class<?>... groups) {
         Exceptions.raiseIf(groups == null, IllegalArgumentException::new, "null validation groups specified");
+
+        if (groups.length == 0 || (groups.length == 1 && groups[0] == Default.class)) {
+            return DEFAULT_GROUPS;
+        }
         return computeGroups(Arrays.asList(groups));
     }
 
@@ -131,7 +135,7 @@ public class GroupsComputer {
     public Groups computeGroups(Collection<Class<?>> groups) {
         Validate.notNull(groups, "groups");
 
-        if (groups.isEmpty() || Arrays.asList(DEFAULT_GROUP).equals(new ArrayList<>(groups))) {
+        if (groups.isEmpty() || (groups.size() == 1 && groups.contains(Default.class))) {
             return DEFAULT_GROUPS;
         }
         return computeGroups(groups.stream());

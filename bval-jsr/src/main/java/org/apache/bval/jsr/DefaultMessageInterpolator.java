@@ -325,7 +325,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         final Class<?> variableClass = variable.getClass();
         Method method = toStringMethods.get(variableClass);
         if (method == null) {
-            method = Reflection.getDeclaredMethod(Arrays.class, "toString", variableClass);;
+            method = Reflection.getDeclaredMethod(Arrays.class, "toString", variableClass);
             toStringMethods.putIfAbsent(variableClass, method);
         }
         return method;

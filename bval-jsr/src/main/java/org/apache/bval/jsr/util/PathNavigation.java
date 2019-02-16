@@ -94,7 +94,7 @@ public class PathNavigation {
         private final List<Callback<?>> delegates;
 
         public CompositeCallbackProcedure(Callback<?>... delegates) {
-            this(new ArrayList<>(Arrays.asList(delegates)));
+            this(Arrays.asList(delegates.clone()));
         }
 
         public CompositeCallbackProcedure(List<Callback<?>> delegates) {

@@ -134,6 +134,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     /** {@inheritDoc} */
     @Override
     public String interpolate(final String message, final Context context, final Locale locale) {
+        if (!message.contains("{")) {
+            return resolveEscapeSequences(message);
+        }
+
         final ResourceBundle userResourceBundle = findUserResourceBundle(locale);
         final ResourceBundle defaultResourceBundle = findDefaultResourceBundle(locale);
 

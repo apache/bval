@@ -29,7 +29,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.bval.jsr.util.ToUnmodifiable;
-import org.apache.bval.util.Validate;
 
 /**
  * Group strategy interface.
@@ -78,8 +77,6 @@ public interface GroupStrategy {
         protected final boolean ordered;
 
         public Composite(Collection<? extends GroupStrategy> components, boolean ordered) {
-            Validate.isTrue(Validate.notNull(components).stream().noneMatch(Objects::isNull),
-                "null component not permitted");
             this.components = new LinkedHashSet<>(components);
             this.ordered = ordered;
         }
@@ -155,8 +152,6 @@ public interface GroupStrategy {
     };
 
     public static GroupStrategy redefining(GroupStrategy source, Map<Group, ? extends GroupStrategy> redefinitions) {
-        Validate.notNull(source, "source");
-
         if (!(redefinitions == null || redefinitions.isEmpty())) {
             if (redefinitions.containsValue(null)) {
                 redefinitions = redefinitions.entrySet().stream().filter(e -> e.getValue() != null)
@@ -174,7 +169,6 @@ public interface GroupStrategy {
     }
 
     public static GroupStrategy simple(Collection<? extends Group> coll) {
-        Validate.notNull(coll);
         if (coll.size() == 1) {
             return coll.iterator().next();
         }

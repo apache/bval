@@ -257,7 +257,6 @@ public class ValueExtractors {
     }
 
     public void add(ValueExtractor<?> extractor) {
-        Validate.notNull(extractor);
         final ContainerElementKey key = ContainerElementKey.forValueExtractor(extractor);
         if (key == null) {
             Exceptions.raise(IllegalStateException::new, "Computed null %s for %s",

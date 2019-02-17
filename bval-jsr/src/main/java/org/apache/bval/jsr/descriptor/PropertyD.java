@@ -28,7 +28,6 @@ import javax.validation.metadata.PropertyDescriptor;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;
 import org.apache.bval.jsr.util.PathImpl;
-import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -94,7 +93,6 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
     }
 
     public final Stream<GraphContext> read(GraphContext context) {
-        Validate.notNull(context);
         if (context.getValue() == null) {
             return Stream.empty();
         }

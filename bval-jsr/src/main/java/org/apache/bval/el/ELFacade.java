@@ -62,22 +62,20 @@ public final class ELFacade implements MessageEvaluator {
     public String interpolate(final String message, final Map<String, Object> annotationParameters,
         final Object validatedValue) {
         // BVAL-170: simple pre-check to improve performance
-        if (message.contains("${") || message.contains("#{")) {
+        if (message.contains("${")) {
             try {
-                if (EvaluationType.IMMEDIATE.regex.matcher(message).find()) {
-                    final BValELContext context = new BValELContext();
-                    final VariableMapper variables = context.getVariableMapper();
-                    annotationParameters.forEach(
-                        (k, v) -> variables.setVariable(k, expressionFactory.createValueExpression(v, Object.class)));
-    
-                    variables.setVariable("validatedValue",
-                        expressionFactory.createValueExpression(validatedValue, Object.class));
-    
-                    // Java Bean Validation does not support EL expressions that look like JSP "deferred" expressions
-                    return expressionFactory.createValueExpression(context,
-                        EvaluationType.DEFERRED.regex.matcher(message).replaceAll("\\$0"), String.class).getValue(context)
-                        .toString();
-                }
+                final BValELContext context = new BValELContext();
+                final VariableMapper variables = context.getVariableMapper();
+                annotationParameters.forEach(
+                    (k, v) -> variables.setVariable(k, expressionFactory.createValueExpression(v, Object.class)));
+
+                variables.setVariable("validatedValue",
+                    expressionFactory.createValueExpression(validatedValue, Object.class));
+
+                // Java Bean Validation does not support EL expressions that look like JSP "deferred" expressions
+                return expressionFactory.createValueExpression(context,
+                    EvaluationType.DEFERRED.regex.matcher(message).replaceAll("\\$0"), String.class).getValue(context)
+                    .toString();
             } catch (final Exception e) {
                 // no-op
             }

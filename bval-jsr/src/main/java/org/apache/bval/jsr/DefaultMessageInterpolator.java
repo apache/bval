@@ -84,7 +84,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     /** Builtin resource bundles hashed against their locale. */
     private final Map<Locale, ResourceBundle> defaultBundlesMap = new ConcurrentHashMap<>();
 
-    private final ConcurrentMap<MessageKey, String> cachedMessages = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ComputedMessageKey, String> interpolatedMessages = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Method> toStringMethods = new ConcurrentHashMap<>();
     private final ConcurrentMap<MessageWithParamsKey, String> interpolations = new ConcurrentHashMap<>();
 
@@ -138,28 +138,10 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             return resolveEscapeSequences(message);
         }
 
-        final ResourceBundle userResourceBundle = findUserResourceBundle(locale);
-        final ResourceBundle defaultResourceBundle = findDefaultResourceBundle(locale);
-
-        final Map<String, Object> annotationParameters = context.getConstraintDescriptor().getAttributes();
-        String userBundleResolvedMessage;
-        String resolvedMessage = message;
-        boolean evaluatedDefaultBundleOnce = false;
-        do {
-            // search the user bundle recursive (step1)
-            userBundleResolvedMessage = replaceVariables(resolvedMessage, userResourceBundle, locale, true);
-
-            // exit condition - we have at least tried to validate against the default bundle and there were no
-            // further replacements
-            if (evaluatedDefaultBundleOnce && !hasReplacementTakenPlace(userBundleResolvedMessage, resolvedMessage)) {
-                break;
-            }
-            // search the default bundle non recursive (step2)
-            resolvedMessage = replaceVariables(userBundleResolvedMessage, defaultResourceBundle, locale, false);
-            evaluatedDefaultBundleOnce = true;
-        } while (true);
+        String resolvedMessage = getSharedInterpolatedMessage(message, locale);
 
         // resolve annotation attributes (step 4)
+        final Map<String, Object> annotationParameters = context.getConstraintDescriptor().getAttributes();
         resolvedMessage = replaceAnnotationAttributes(resolvedMessage, annotationParameters);
 
         // EL handling
@@ -167,6 +149,35 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             resolvedMessage = evaluator.interpolate(resolvedMessage, annotationParameters, context.getValidatedValue());
         }
         return resolveEscapeSequences(resolvedMessage);
+    }
+
+    private String getSharedInterpolatedMessage(final String message, final Locale locale) {
+        final ComputedMessageKey key = new ComputedMessageKey(locale, message);
+        String value = interpolatedMessages.get(key);
+        if (value == null) {
+            final ResourceBundle userResourceBundle = findUserResourceBundle(locale);
+            final ResourceBundle defaultResourceBundle = findDefaultResourceBundle(locale);
+
+            String userBundleResolvedMessage;
+            String resolvedMessage = message;
+            boolean evaluatedDefaultBundleOnce = false;
+            do {
+                // search the user bundle recursive (step1)
+                userBundleResolvedMessage = doReplaceVariables(resolvedMessage, userResourceBundle, locale, true);
+
+                // exit condition - we have at least tried to validate against the default bundle and there were no
+                // further replacements
+                if (evaluatedDefaultBundleOnce && !hasReplacementTakenPlace(userBundleResolvedMessage, resolvedMessage)) {
+                    break;
+                }
+                // search the default bundle non recursive (step2)
+                resolvedMessage = doReplaceVariables(userBundleResolvedMessage, defaultResourceBundle, locale, false);
+                evaluatedDefaultBundleOnce = true;
+            } while (true);
+            value = resolvedMessage;
+            interpolatedMessages.putIfAbsent(key, value);
+        }
+        return value;
     }
 
     private boolean evaluateExpressionLanguage(String template, Context context) {
@@ -247,17 +258,6 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         }
     }
 
-    private String replaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
-        final MessageKey key = new MessageKey(locale, message, bundle);
-        final String cached = cachedMessages.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        final String value = doReplaceVariables(message, bundle, locale, recurse);
-        cachedMessages.putIfAbsent(key, value);
-        return value;
-    }
-
     private String doReplaceVariables(String message, ResourceBundle bundle, Locale locale, boolean recurse) {
         final Matcher matcher = MESSAGE_PARAMETER.matcher(message);
         final StringBuilder sb = new StringBuilder(64);
@@ -321,7 +321,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     }
 
     public void clearCache() {
-        cachedMessages.clear();
+        interpolatedMessages.clear();
         interpolations.clear();
     }
 
@@ -339,7 +339,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         boolean recurse) {
         try {
             final String string = bundle.getString(parameterName);
-            return of(recurse ? replaceVariables(string, bundle, locale, recurse) : string);
+            return of(recurse ? doReplaceVariables(string, bundle, locale, recurse) : string);
         } catch (final MissingResourceException e) {
             return empty();
         }
@@ -363,17 +363,15 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         clearCache(); // cause there is a probability of 50% the old cache will be replaced by the new locale
     }
 
-    private static class MessageKey {
+    private static class ComputedMessageKey {
         private final Locale locale;
         private final String key;
-        private final ResourceBundle bundle;
         private final int hash;
 
-        private MessageKey(final Locale locale, final String key, final ResourceBundle bundle) {
+        private ComputedMessageKey(final Locale locale, final String key) {
             this.locale = locale;
             this.key = key;
-            this.bundle = bundle;
-            this.hash = Objects.hash(locale, key, bundle);
+            this.hash = Objects.hash(locale, key);
         }
 
         @Override
@@ -384,8 +382,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final MessageKey that = MessageKey.class.cast(o);
-            return locale.equals(that.locale) && key.equals(that.key) && bundle.equals(that.bundle);
+            final ComputedMessageKey that = ComputedMessageKey.class.cast(o);
+            return locale.equals(that.locale) && key.equals(that.key);
         }
 
         @Override

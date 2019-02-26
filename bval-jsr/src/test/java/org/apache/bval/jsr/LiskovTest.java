@@ -18,25 +18,17 @@
  */
 package org.apache.bval.jsr;
 
-import java.lang.reflect.Method;
-
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
-import javax.validation.executable.ExecutableValidator;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("requires some revisiting of Liskov impl - discuss in progress")
 public class LiskovTest {
-    @Test // this test was throwing a Liskov exception, here to ensure it is not the case
-    public void validateParams() throws NoSuchMethodException {
-        final Api service = new Impl();
+    @Test
+    public void testBVal167() {
         try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-            final ExecutableValidator validator = factory.getValidator().forExecutables();
-            final Method method = Api.class.getMethod("read", String.class);
-            validator.validateParameters(service, method, new Object[]{""});
+            factory.getValidator().getConstraintsForClass(Impl.class);
         }
     }
 
@@ -44,16 +36,18 @@ public class LiskovTest {
         String read(@NotNull String key);
     }
 
-    public static abstract class Base {
+    public interface Api2 extends Api {
+        @Override
+        String read(String key);
+    }
+
+    public static abstract class Base implements Api {
+        @Override
         public String read(final String key) {
             return null;
         }
     }
 
-    public static class Impl extends Base implements Api {
-        @Override
-        public String read(final String key) {
-            return super.read(key);
-        }
+    public static class Impl extends Base implements Api2 {
     }
 }

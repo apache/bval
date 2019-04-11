@@ -18,18 +18,22 @@
  */
 package org.apache.bval.cdi;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AnnotatedCallable;
+import javax.enterprise.inject.spi.AfterDeploymentValidation;
+import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -41,14 +45,14 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessBean;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.Configuration;
+import javax.validation.Constraint;
+import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.MethodType;
 
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.util.ExecutableTypes;
@@ -75,10 +79,12 @@ public class BValExtension implements Extension {
 
     private final Configuration<?> config;
     private Lazy<ValidatorFactory> factory;
-    private Lazy<Validator> validator;
 
     private Set<ExecutableType> globalExecutableTypes;
     private boolean isExecutableValidationEnabled;
+
+    private final Collection<Class<?>> potentiallyBValAnnotation = new HashSet<>();
+    private final Collection<Class<?>> notBValAnnotation = new HashSet<>();
 
     public BValExtension() { // read the config, could be done in a quicker way but this let us get defaults without duplicating code
         config = Validation.byDefaultProvider().configure();
@@ -95,21 +101,6 @@ public class BValExtension implements Extension {
             globalExecutableTypes = Collections.emptySet();
             isExecutableValidationEnabled = false;
         }
-    }
-
-    // lazily to get a small luck to have CDI in place
-    private void ensureFactoryValidator() {
-        if (validator != null) {
-            return;
-        }
-        if (config instanceof ConfigurationImpl) {
-            // ignore parts of the config relying on CDI since we didn't start yet
-            ((ConfigurationImpl) config).deferBootstrapOverrides();
-        }
-        if (factory == null) {
-            factory = new Lazy<>(config::buildValidatorFactory);
-        }
-        validator = new Lazy<>(() -> factory.get().getValidator());
     }
 
     public Set<ExecutableType> getGlobalExecutableTypes() {
@@ -133,41 +124,25 @@ public class BValExtension implements Extension {
         }
         final Class<A> javaClass = annotatedType.getJavaClass();
         final int modifiers = javaClass.getModifiers();
-        if (!javaClass.isInterface() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
+        if (!javaClass.isInterface() && !javaClass.isAnonymousClass() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
             try {
-                ensureFactoryValidator();
-                try {
-                    final BeanDescriptor classConstraints = validator.get().getConstraintsForClass(javaClass);
-
-                    final boolean validConstructors = globalExecutableTypes.contains(ExecutableType.CONSTRUCTORS)
-                        && !classConstraints.getConstrainedConstructors().isEmpty();
-                    final boolean validBusinessMethods =
-                        globalExecutableTypes.contains(ExecutableType.NON_GETTER_METHODS)
-                            && !classConstraints.getConstrainedMethods(MethodType.NON_GETTER).isEmpty();
-                    final boolean validGetterMethods = globalExecutableTypes.contains(ExecutableType.GETTER_METHODS)
-                        && !classConstraints.getConstrainedMethods(MethodType.GETTER).isEmpty();
-
-                    if (annotatedType.isAnnotationPresent(ValidateOnExecution.class)
-                        || hasValidationAnnotation(annotatedType.getMethods())
-                        || hasValidationAnnotation(annotatedType.getConstructors()) || validConstructors
-                        || validBusinessMethods || validGetterMethods) {
-                        pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
-                    }
-                } catch (final NoClassDefFoundError ncdfe) {
-                    // skip
+                if (hasValidation(annotatedType)
+                    || hasValidationAnnotation(annotatedType.getMethods())
+                    || hasValidationAnnotation(annotatedType.getConstructors())
+                    || Stream.concat(annotatedType.getMethods().stream(), annotatedType.getConstructors().stream())
+                        .flatMap(it -> it.getParameters().stream())
+                        .anyMatch(this::hasValidation)) {
+                    pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
                 }
             } catch (final Exception e) {
                 if (e instanceof ValidationException) {
                     throw e;
                 }
                 LOGGER.log(Level.INFO, e.getMessage());
+            } catch (final NoClassDefFoundError ncdfe) {
+                // skip
             }
         }
-    }
-
-    private static <A> boolean hasValidationAnnotation(
-        final Collection<? extends AnnotatedCallable<? super A>> methods) {
-        return methods.stream().anyMatch(m -> m.isAnnotationPresent(ValidateOnExecution.class));
     }
 
     public <A> void processBean(final @Observes ProcessBean<A> processBeanEvent) {
@@ -217,6 +192,73 @@ public class BValExtension implements Extension {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
+    }
+
+    public void afterStart(@Observes final AfterDeploymentValidation clearEvent) {
+        potentiallyBValAnnotation.clear();
+        notBValAnnotation.clear();
+    }
+
+    private boolean hasValidationAnnotation(final Collection<? extends Annotated> annotateds) {
+        return annotateds.stream().anyMatch(this::hasValidation);
+    }
+
+    private boolean hasValidation(final Annotated m) {
+        return m.getAnnotations().stream()
+                .anyMatch(it -> {
+                    final Class<? extends Annotation> type = it.annotationType();
+                    if (type == ValidateOnExecution.class || type == Valid.class) {
+                        return true;
+                    }
+                    if (isSkippedAnnotation(type)) {
+                        return false;
+                    }
+                    if (type.getName().startsWith("javax.validation.constraints")) {
+                        return true;
+                    }
+                    if (notBValAnnotation.contains(type)) { // more likely so faster first
+                        return false;
+                    }
+                    if (potentiallyBValAnnotation.contains(type)) {
+                        return true;
+                    }
+                    cacheIsBvalAnnotation(type);
+                    return potentiallyBValAnnotation.contains(type);
+                });
+    }
+
+    private boolean isSkippedAnnotation(final Class<? extends Annotation> type) {
+        if (type.getName().startsWith("java.")) {
+            return true;
+        }
+        if (type.getName().startsWith("javax.enterprise.")) {
+            return true;
+        }
+        if (type.getName().startsWith("javax.inject.")) {
+            return true;
+        }
+        return false;
+    }
+
+    private void cacheIsBvalAnnotation(final Class<? extends Annotation> type) {
+        if (flattenAnnotations(type, new HashSet<>()).anyMatch(it -> it == Constraint.class)) {
+            potentiallyBValAnnotation.add(type);
+        } else {
+            notBValAnnotation.add(type);
+        }
+    }
+
+    private Stream<Class<?>> flattenAnnotations(final Class<? extends Annotation> type, final Set<Class<?>> seen) {
+        seen.add(type);
+        return Stream.of(type)
+                     .flatMap(it -> Stream.concat(
+                             Stream.of(it),
+                             Stream.of(it.getAnnotations())
+                                   .map(Annotation::annotationType)
+                                   .distinct()
+                                   .filter(a -> !isSkippedAnnotation(a))
+                                   .filter(seen::add)
+                                   .flatMap(a -> flattenAnnotations(a, seen))));
     }
 
     /**

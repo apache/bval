@@ -59,7 +59,9 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      */
     AnnotationProxyBuilder(final Class<A> annotationType, Map<Class<?>, Method[]> cache) {
         this.type = Validate.notNull(annotationType, "annotationType");
-        this.methods = Validate.notNull(cache, "cache").computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
+        synchronized (annotationType) { // cache is not thread safe generally
+            this.methods = Validate.notNull(cache, "cache").computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
+        }
     }
 
     /**

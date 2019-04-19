@@ -23,9 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,8 +97,8 @@ public class ConstraintCached {
         }
     }
 
-    private final Map<Class<? extends Annotation>, Set<ConstraintValidatorInfo<?>>> constraintValidatorInfo =
-        new HashMap<>();
+    private final ConcurrentMap<Class<? extends Annotation>, Set<ConstraintValidatorInfo<?>>> constraintValidatorInfo =
+        new ConcurrentHashMap<>();
     private final ConcurrentMap<ConstraintD<?>, ConstraintValidator<?, ?>> validators =
         new ConcurrentHashMap<>();
 

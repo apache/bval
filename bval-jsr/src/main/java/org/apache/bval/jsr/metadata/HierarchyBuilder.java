@@ -334,8 +334,10 @@ public class HierarchyBuilder extends CompositeBuilder {
             return (MetadataBuilder.ForBean<T>) delegates.get(0);
         }
         // pretend:
-        return delegates.stream().<MetadataBuilder.ForBean<T>> map(MetadataBuilder.ForBean.class::cast)
-            .collect(compose());
+        // note: stream split for java 11 compilation
+        final Stream<MetadataBuilder.ForBean<T>> forBeanStream = delegates.stream()
+                .map(MetadataBuilder.ForBean.class::cast);
+        return forBeanStream.collect(compose());
     }
 
     @Override
@@ -345,7 +347,7 @@ public class HierarchyBuilder extends CompositeBuilder {
         @SuppressWarnings("unchecked")
         final Function<MetadataBuilder.ForElement<E>, Meta<E>> keyMapper =
             d -> Optional.of(d).filter(HierarchyDelegate.class::isInstance).map(HierarchyDelegate.class::cast)
-                .map(HierarchyDelegate::getHierarchyElement).orElse(meta);
+                .map(HierarchyDelegate::getHierarchyElement).map(Meta.class::cast).orElse(meta);
 
         return composite.delegates.stream().collect(Collectors.toMap(keyMapper, d -> d.getDeclaredConstraints(meta),
             (u, v) -> Stream.of(u, v).flatMap(Stream::of).toArray(Annotation[]::new), LinkedHashMap::new));

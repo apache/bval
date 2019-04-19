@@ -37,6 +37,33 @@
         <jaxb.version>2.2.6</jaxb.version>
     </properties>
     <profiles>
+
+        <profile>
+            <id>java11</id>
+            <activation>
+                <jdk>11</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                    <version>2.3.1</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-core</artifactId>
+                    <version>2.3.1</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>11</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
         <!--
             default profile using geronimo-validation_2.0_spec.jar active when
             property "ri" is not present.

@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -51,7 +53,6 @@ import javax.validation.ValidationException;
 import javax.validation.constraintvalidation.ValidationTarget;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
-import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes.Worker;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
@@ -307,24 +308,14 @@ public class AnnotationsManager {
     }
 
     private final ApacheValidatorFactory validatorFactory;
-    private final LRUCache<Class<? extends Annotation>, Composition> compositions;
-    private final LRUCache<Class<? extends Annotation>, Method[]> constraintAttributes;
+    private final ConcurrentMap<Class<?>, Composition> compositions;
+    private final ConcurrentMap<Class<?>, Method[]> constraintAttributes;
 
     public AnnotationsManager(ApacheValidatorFactory validatorFactory) {
         super();
         this.validatorFactory = Validate.notNull(validatorFactory);
-        final String cacheSize =
-            validatorFactory.getProperties().get(ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
-        final int sz;
-        try {
-            sz = Integer.parseInt(cacheSize);
-        } catch (NumberFormatException e) {
-            throw Exceptions.create(IllegalStateException::new, e,
-                "Cannot parse value %s for configuration property %s", cacheSize,
-                ConfigurationImpl.Properties.CONSTRAINTS_CACHE_SIZE);
-        }
-        compositions = new LRUCache<>(sz);
-        constraintAttributes = new LRUCache<>(sz);
+        compositions = new ConcurrentHashMap<>();
+        constraintAttributes = new ConcurrentHashMap<>();
     }
 
     public void validateConstraintDefinition(Class<? extends Annotation> type) {
@@ -418,12 +409,12 @@ public class AnnotationsManager {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <A extends Annotation> AnnotationProxyBuilder<A> buildProxyFor(Class<A> type) {
-        return new AnnotationProxyBuilder<>(type, (Map) constraintAttributes);
+        return new AnnotationProxyBuilder<>(type, constraintAttributes);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <A extends Annotation> AnnotationProxyBuilder<A> buildProxyFor(A instance) {
-        return new AnnotationProxyBuilder<>(instance, (Map) constraintAttributes);
+        return new AnnotationProxyBuilder<>(instance, constraintAttributes);
     }
 
     private Composition getComposition(Class<? extends Annotation> annotationType) {

@@ -39,14 +39,12 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
 
     protected CascadableContainerD(MetadataReader.ForContainer<E> reader, P parent) {
         super(reader, parent);
-        synchronized (reader.meta.getHost()) { // cache is not thread safe for runtime perf so ensure we lock properly
-            cascaded = reader.isCascaded();
-            groupConversions = reader.getGroupConversions();
-            containerElementTypes = reader.getContainerElementTypes(this)
-                                          .stream()
-                                          .filter(DescriptorManager::isConstrained)
-                                          .collect(ToUnmodifiable.set());
-        }
+        cascaded = reader.isCascaded();
+        groupConversions = reader.getGroupConversions();
+        containerElementTypes = reader.getContainerElementTypes(this)
+                                      .stream()
+                                      .filter(DescriptorManager::isConstrained)
+                                      .collect(ToUnmodifiable.set());
     }
 
     @Override

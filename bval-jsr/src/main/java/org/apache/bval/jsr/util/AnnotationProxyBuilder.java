@@ -24,6 +24,7 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.enterprise.util.AnnotationLiteral;
 import javax.validation.ConstraintTarget;
@@ -57,11 +58,9 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * @param annotationType
      * @param cache
      */
-    AnnotationProxyBuilder(final Class<A> annotationType, Map<Class<?>, Method[]> cache) {
+    AnnotationProxyBuilder(final Class<A> annotationType, ConcurrentMap<Class<?>, Method[]> cache) {
         this.type = Validate.notNull(annotationType, "annotationType");
-        synchronized (annotationType) { // cache is not thread safe generally
-            this.methods = Validate.notNull(cache, "cache").computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
-        }
+        this.methods = Validate.notNull(cache, "cache").computeIfAbsent(annotationType, Reflection::getDeclaredMethods);
     }
 
     /**
@@ -73,7 +72,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
      * @param cache
      */
     @SuppressWarnings("unchecked")
-    AnnotationProxyBuilder(A annot, Map<Class<?>, Method[]> cache) {
+    AnnotationProxyBuilder(A annot, ConcurrentMap<Class<?>, Method[]> cache) {
         this((Class<A>) annot.annotationType(), cache);
         elements.putAll(AnnotationsManager.readAttributes(annot));
     }

@@ -46,11 +46,6 @@ public interface ApacheValidatorConfiguration extends Configuration<ApacheValida
         String VALIDATOR_FACTORY_CLASSNAME = "apache.bval.validator-factory-classname";
 
         /**
-         * Size to use for caching of constraint-related information. Default is {@code 50}.
-         */
-        String CONSTRAINTS_CACHE_SIZE = "apache.bval.constraints-cache-size";
-
-        /**
          * Specifies whether EL evaluation is permitted in non-default message
          * templates. By default this feature is disabled; if you enable it you
          * should ensure that no constraint validator builds violations using

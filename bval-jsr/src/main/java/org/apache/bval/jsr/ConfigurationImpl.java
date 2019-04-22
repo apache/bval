@@ -179,7 +179,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
             this.provider = aProvider;
             this.providerResolver = null;
         }
-        initializePropertyDefaults();
     }
 
     /**
@@ -464,10 +463,6 @@ public class ConfigurationImpl implements ApacheValidatorConfiguration, Configur
         } catch (final ClassNotFoundException ex) {
             throw new ValidationException(ex);
         }
-    }
-
-    private void initializePropertyDefaults() {
-        properties.put(Properties.CONSTRAINTS_CACHE_SIZE, Integer.toString(50));
     }
 
     private ValidationProvider<?> findProvider() {

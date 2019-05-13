@@ -159,7 +159,7 @@ public class BValInterceptor implements Serializable {
         }
         final Object result = context.proceed();
 
-        if (constraintsForMethod.hasConstrainedReturnValue()) {
+        if (!method.getReturnType().equals(Void.TYPE) && constraintsForMethod.hasConstrainedReturnValue()) {
             final Set<ConstraintViolation<Object>> violations =
                 executableValidator.validateReturnValue(context.getTarget(), method, result);
             if (!violations.isEmpty()) {

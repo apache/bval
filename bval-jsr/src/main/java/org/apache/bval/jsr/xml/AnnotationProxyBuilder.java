@@ -100,16 +100,12 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
         this((Class<A>) annot.annotationType());
         // Obtain the "elements" of the annotation
         for (Method m : methods) {
-            final boolean mustUnset = Reflection.setAccessible(m, true);
+            Reflection.makeAccessible(m);
             try {
                 Object value = m.invoke(annot);
                 this.elements.put(m.getName(), value);
             } catch (Exception e) {
                 throw new ValidationException("Cannot access annotation " + annot + " element: " + m.getName(), e);
-            } finally {
-                if (mustUnset) {
-                    Reflection.setAccessible(m, false);
-                }
             }
         }
     }
@@ -211,7 +207,7 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
     private A doCreateAnnotation(final Class<A> proxyClass, final InvocationHandler handler) {
         try {
             Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
-            Reflection.setAccessible(constructor, true); // java 8
+            Reflection.makeAccessible(constructor); // java 8
             return constructor.newInstance(handler);
         } catch (Exception e) {
             throw new ValidationException("Unable to create annotation for configured constraint", e);

@@ -132,14 +132,8 @@ public class PropertyAccess extends AccessStrategy {
         if (readMethod == null) {
             throw new NoSuchMethodException(toString());
         }
-        final boolean unset = Reflection.setAccessible(readMethod, true);
-        try {
-            return readMethod.invoke(bean);
-        } finally {
-            if (unset) {
-                Reflection.setAccessible(readMethod, false);
-            }
-        }
+        Reflection.makeAccessible(readMethod);
+        return readMethod.invoke(bean);
     }
 
     /**
@@ -231,14 +225,8 @@ public class PropertyAccess extends AccessStrategy {
     }
 
     private static Object readField(Field field, Object bean) throws IllegalAccessException {
-        final boolean mustUnset = Reflection.setAccessible(field, true);
-        try {
-            return field.get(bean);
-        } finally {
-            if (mustUnset) {
-                Reflection.setAccessible(field, false);
-            }
-        }
+    	Reflection.makeAccessible(field);
+    	return field.get(bean);
     }
 
     /**

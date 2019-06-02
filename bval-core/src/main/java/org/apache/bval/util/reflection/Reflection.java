@@ -109,14 +109,8 @@ public class Reflection {
             // do nothing
             return null;
         }
-        final boolean mustUnset = setAccessible(valueMethod, true);
-        try {
-            return valueMethod.invoke(annotation);
-        } finally {
-            if (mustUnset) {
-                setAccessible(valueMethod, false);
-            }
-        }
+        makeAccessible(valueMethod);
+        return valueMethod.invoke(annotation);
     }
 
     /**
@@ -309,28 +303,21 @@ public class Reflection {
     }
 
     /**
-     * Set the accessibility of {@code o} to {@code accessible}. If running without a {@link SecurityManager}
-     * and {@code accessible == false}, this call is ignored (because any code could reflectively make any
-     * object accessible at any time).
+     * Set the accessibility of {@code o} to true.
      * @param o
-     * @param accessible
-     * @return whether a change was made.
      */
-    public static boolean setAccessible(final AccessibleObject o, boolean accessible) {
-        if (o == null || o.isAccessible() == accessible) {
-            return false;
-        }
-        if (!accessible && System.getSecurityManager() == null) {
-            return false;
+    public static void makeAccessible(final AccessibleObject o) {
+        if (o == null || o.isAccessible()) {
+        	return;
         }
         final Member m = (Member) o;
 
         // For public members whose declaring classes are public, we need do nothing:
         if (Modifier.isPublic(m.getModifiers()) && Modifier.isPublic(m.getDeclaringClass().getModifiers())) {
-            return false;
+            return;
         }
-        o.setAccessible(accessible);
-        return true;
+        o.setAccessible(true);
     }
-
+   
+    
 }

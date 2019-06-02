@@ -45,15 +45,11 @@ public class FieldAccess extends AccessStrategy {
      */
     @Override
     public Object get(final Object instance) {
-        final boolean mustUnset = Reflection.setAccessible(field, true);
+        Reflection.makeAccessible(field);
         try {
             return field.get(instance);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
-        } finally {
-            if (mustUnset) {
-                Reflection.setAccessible(field, false);
-            }
         }
     }
 

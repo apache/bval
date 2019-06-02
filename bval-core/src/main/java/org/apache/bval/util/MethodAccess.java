@@ -86,17 +86,13 @@ public class MethodAccess extends AccessStrategy {
      */
     @Override
     public Object get(final Object instance) {
-        final boolean mustUnset = Reflection.setAccessible(method, true);
+        Reflection.makeAccessible(method);
         try {
             return method.invoke(instance);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(e);
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e);
-        } finally {
-            if (mustUnset) {
-                Reflection.setAccessible(method, false);
-            }
         }
     }
 

@@ -316,15 +316,11 @@ public class ClassValidator implements CascadingPropertyValidator, ExecutableVal
         if (cons == null) {
             throw new ValidationException("Cannot instantiate " + cls);
         }
-        final boolean mustUnset = Reflection.setAccessible(cons, true);
+        Reflection.makeAccessible(cons);
         try {
             return cons.newInstance(factoryContext);
         } catch (final Exception ex) {
             throw new ValidationException("Cannot instantiate " + cls, ex);
-        } finally {
-            if (mustUnset) {
-                Reflection.setAccessible(cons, false);
-            }
         }
     }
 

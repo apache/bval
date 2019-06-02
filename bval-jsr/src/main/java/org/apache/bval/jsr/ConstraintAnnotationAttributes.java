@@ -207,15 +207,11 @@ public enum ConstraintAnnotationAttributes {
         }
 
         private Object doInvoke(final Annotation constraint) {
-            final boolean unset = Reflection.setAccessible(method, true);
+            Reflection.makeAccessible(method);
             try {
                 return method.invoke(constraint);
             } catch (Exception e) {
                 throw new RuntimeException(e);
-            } finally {
-                if (unset) {
-                    Reflection.setAccessible(method, false);
-                }
             }
         }
     }

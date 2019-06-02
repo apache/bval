@@ -52,6 +52,14 @@ How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
+Release Notes - BVal - Version 1.1.3
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-176] - Remove resetting of accessible flag. This does not work in multithreaded applications and is not compatible with other frameworks. 
+
 
 Release Notes - BVal - Version 1.1.2
 ==========================================

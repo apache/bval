@@ -49,15 +49,11 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public Object getValue(Object parent) throws Exception {
-            final boolean mustUnset = Reflection.setAccessible(getTarget(), true);
+            Reflection.makeAccessible(getTarget());
             try {
                 return getTarget().get(parent);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException(e);
-            } finally {
-                if (mustUnset) {
-                    Reflection.setAccessible(getTarget(), false);
-                }
             }
         }
     }
@@ -75,15 +71,11 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public Object getValue(Object parent) throws Exception {
-            final boolean mustUnset = Reflection.setAccessible(getTarget(), true);
+            Reflection.makeAccessible(getTarget());
             try {
                 return getTarget().invoke(parent);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new IllegalArgumentException(e);
-            } finally {
-                if (mustUnset) {
-                    Reflection.setAccessible(getTarget(), false);
-                }
             }
         }
     }

@@ -209,15 +209,11 @@ public class AnnotationsManager {
 
         Stream.of(Reflection.getDeclaredMethods(a.annotationType())).filter(m -> m.getParameterCount() == 0)
             .forEach(m -> {
-                final boolean mustUnset = Reflection.setAccessible(m, true);
+                Reflection.makeAccessible(m);
                 try {
                     result.get().put(m.getName(), m.invoke(a));
                 } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     Exceptions.raise(ValidationException::new, e, "Caught exception reading attributes of %s", a);
-                } finally {
-                    if (mustUnset) {
-                        Reflection.setAccessible(m, false);
-                    }
                 }
             });
         return result.optional().map(Collections::unmodifiableMap).orElseGet(Collections::emptyMap);

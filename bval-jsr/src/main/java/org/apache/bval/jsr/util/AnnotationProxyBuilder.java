@@ -192,15 +192,8 @@ public final class AnnotationProxyBuilder<A extends Annotation> {
     private A doCreateAnnotation(final Class<A> proxyClass, final InvocationHandler handler) {
         try {
             final Constructor<A> constructor = proxyClass.getConstructor(InvocationHandler.class);
-            final boolean mustUnset = Reflection.setAccessible(constructor, true); // java
-                                                                                   // 8
-            try {
-                return constructor.newInstance(handler);
-            } finally {
-                if (mustUnset) {
-                    Reflection.setAccessible(constructor, false);
-                }
-            }
+            Reflection.makeAccessible(constructor); // java 8
+            return constructor.newInstance(handler);
         } catch (Exception e) {
             throw new ValidationException("Unable to create annotation for configured constraint", e);
         }

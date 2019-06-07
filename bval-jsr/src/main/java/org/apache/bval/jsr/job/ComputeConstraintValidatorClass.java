@@ -18,9 +18,7 @@ package org.apache.bval.jsr.job;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -40,6 +38,7 @@ import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;
+import org.apache.bval.util.ValidatorUtils;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
 import org.apache.bval.util.reflection.TypeUtils;
@@ -76,28 +75,6 @@ class ComputeConstraintValidatorClass<A extends Annotation>
     }
 
     private static final String CV = ConstraintValidator.class.getSimpleName();
-    private static final WildcardType UNBOUNDED = TypeUtils.wildcardType().build();
-
-    private static Class<?> getValidatedType(Class<? extends ConstraintValidator<?, ?>> validatorType) {
-        final Type result = TypeUtils.getTypeArguments(validatorType, ConstraintValidator.class)
-            .get(ConstraintValidator.class.getTypeParameters()[1]);
-        if (!isSupported(result)) {
-            Exceptions.raise(ConstraintDefinitionException::new, "Validated type %s declared by %s %s is unsupported",
-                result, CV, validatorType.getName());
-        }
-        return TypeUtils.getRawType(result, null);
-    }
-
-    private static boolean isSupported(Type validatedType) {
-        if (validatedType instanceof Class<?>) {
-            return true;
-        }
-        if (validatedType instanceof ParameterizedType) {
-            return Stream.of(((ParameterizedType) validatedType).getActualTypeArguments())
-                .allMatch(arg -> TypeUtils.equals(arg, UNBOUNDED));
-        }
-        return false;
-    }
 
     private final ConstraintCached constraintsCache;
     private final ConstraintD<?> descriptor;
@@ -146,7 +123,7 @@ class ComputeConstraintValidatorClass<A extends Annotation>
             "%d cross-parameter %ss found for constraint type %s", size, CV, constraintType);
 
         final Class<? extends ConstraintValidator<A, ?>> result = set.iterator().next().getType();
-        if (!TypeUtils.isAssignable(Object[].class, getValidatedType(result))) {
+        if (!TypeUtils.isAssignable(Object[].class, ValidatorUtils.getValidatedType(result))) {
             Exceptions.raise(ConstraintDefinitionException::new,
                 "Cross-parameter %s %s does not support the validation of an object array", CV, result.getName());
         }
@@ -159,7 +136,7 @@ class ComputeConstraintValidatorClass<A extends Annotation>
         final Map<Class<?>, Class<? extends ConstraintValidator<?, ?>>> validators = infos.stream()
             .filter(info -> info.getSupportedTargets().contains(ValidationTarget.ANNOTATED_ELEMENT))
             .map(ConstraintValidatorInfo::getType).collect(
-                Collectors.toMap(ComputeConstraintValidatorClass::getValidatedType, Function.identity(), (v1, v2) -> {
+                Collectors.toMap(ValidatorUtils::getValidatedType, Function.identity(), (v1, v2) -> {
                     Exceptions.raiseUnless(Objects.equals(v1, v2), UnexpectedTypeException::new,
                         "Detected collision of constraint and target type between %s and %s", v1, v2);
                     return v1;

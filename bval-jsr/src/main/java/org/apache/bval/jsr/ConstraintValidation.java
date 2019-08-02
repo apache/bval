@@ -155,11 +155,12 @@ public class ConstraintValidation<T extends Annotation> implements Validation, C
             synchronized (this) {
                 if (validator == null) {
                     try {
-                        validator = getConstraintValidator(context.getConstraintValidatorFactory(), annotation,
-                            validatorClasses, owner, access);
-                        if (validator != null) {
-                            validator.initialize(annotation);
+                        ConstraintValidator<T, ? super T> constraintValidator = getConstraintValidator(
+                                context.getConstraintValidatorFactory(), annotation, validatorClasses, owner, access);
+                        if (constraintValidator != null) {
+                            constraintValidator.initialize(annotation);
                         }
+                        validator = constraintValidator;
                     } catch (final RuntimeException re) {
                         if (ValidationException.class.isInstance(re)) {
                             throw re;

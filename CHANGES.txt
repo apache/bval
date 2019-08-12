@@ -50,21 +50,69 @@ How do I Contribute?
   * Bugs and other issues can be posted on the project JIRA.
 
 
+Release Notes - BVal - Version 2.0.3
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-170] - BVAL 2.x is very very slow
+    * [BVAL-172] - ConcurrentModificationException during validation
+    * [BVAL-176] - setAccessible handling is broken for multithreaded apps with SecurityManager
+
+Improvement
+-----------
+
+    * [BVAL-174] - Return Parameter Validation Ignore void methods
+
+
+Release Notes - BVal - Version 2.0.2
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-170] - BVAL 2.x is very very slow
+
+
+Release Notes - BVal - Version 2.0.1
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-165] - Wrong classloader used to load user classes
+    * [BVAL-167] - ConstraintDeclarationException: Illegal strengthening: overridden [constraints] in inheritance hierarchy
+    * [BVAL-168] - CharSequence @NotEmpty validation not according to spec
+    * [BVAL-171] - Compatibility with hv benchmark
+
+Task
+-----------
+
+    * [BVAL-166] - update OSGi bundle specification version
+
+
 Release Notes - BVal - Version 2.0.0
 ==========================================
 
-** Bug
+Bug
+-----------
+
     * [BVAL-108] - Prefer Thread context classloader or framework-relative as appropriate to task - addresses resource loading complaints with OSGI
     * [BVAL-154] - avoid storing metamodel for unconstrained types using "negative cache"
     * [BVAL-157] - method named get() blows up with illegal param name
     * [BVAL-158] - ExecutableValidator invokes method if it looks like a getter
 
-** Improvement
+Improvement
+-----------
+
     * [BVAL-118] - improve efficiency by associating bean metadata with the factory rather than the context
     * [BVAL-159] - Drop commons dependencies
     * [BVAL-160] - Implement Bean Validation 2.0 (JSR 380)
 
-** Task
+Task
+-----------
+
     * [BVAL-161] - Redesign bean metadata model
     * [BVAL-162] - Convert remaining JUnit 3 tests to JUnit 4
     * [BVAL-163] - Remove Agimatech extensions

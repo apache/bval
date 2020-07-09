@@ -50,6 +50,19 @@ How do I Contribute?
   * Bugs and other issues can be posted on the project JIRA.
 
 
+Release Notes - BVal - Version 2.0.4
+==========================================
+
+Bug
+-----------
+
+
+Improvement
+-----------
+
+    * [BVAL-180] - Add shaded jakarta jar
+
+
 Release Notes - BVal - Version 2.0.3
 ==========================================
 

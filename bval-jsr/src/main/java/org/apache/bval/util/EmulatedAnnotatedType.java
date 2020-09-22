@@ -43,6 +43,11 @@ public class EmulatedAnnotatedType<T extends Type> implements AnnotatedType {
         public AnnotatedType[] getAnnotatedActualTypeArguments() {
             return wrapArray(wrapped.getActualTypeArguments());
         }
+
+        @Override
+        public AnnotatedType getAnnotatedOwnerType() {
+            return null;
+        }
     }
 
     private static class Variable extends EmulatedAnnotatedType<TypeVariable<?>> implements AnnotatedTypeVariable {
@@ -54,6 +59,11 @@ public class EmulatedAnnotatedType<T extends Type> implements AnnotatedType {
         @Override
         public AnnotatedType[] getAnnotatedBounds() {
             return wrapped.getAnnotatedBounds();
+        }
+
+        @Override
+        public AnnotatedType getAnnotatedOwnerType() {
+            return null;
         }
     }
 
@@ -71,6 +81,11 @@ public class EmulatedAnnotatedType<T extends Type> implements AnnotatedType {
         @Override
         public AnnotatedType[] getAnnotatedUpperBounds() {
             return wrapArray(wrapped.getUpperBounds());
+        }
+
+        @Override
+        public AnnotatedType getAnnotatedOwnerType() {
+            return null;
         }
     }
 

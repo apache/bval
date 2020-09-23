@@ -48,6 +48,7 @@
                     <groupId>org.apache.geronimo.specs</groupId>
                     <artifactId>geronimo-activation_1.1_spec</artifactId>
                     <version>1.1</version>
+                    <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>javax.xml.bind</groupId>
@@ -272,22 +273,26 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>6.1.5.Final</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
             <version>1.25.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
             <version>1.25.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.biboudis</groupId>
             <artifactId>jmh-profilers</artifactId>
             <version>0.1.4</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

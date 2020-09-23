@@ -61,13 +61,13 @@ public class Jsr303Benchmark {
             .include(Jsr303Benchmark.class.getSimpleName())
 
             .forks(1)
-            .threads(5)
+            .threads(10)
 
             .measurementIterations(1)
-            .measurementTime(TimeValue.seconds(20))
+            .measurementTime(TimeValue.seconds(30))
 
             .warmupIterations(2)
-            .warmupTime(TimeValue.seconds(5))
+            .warmupTime(TimeValue.seconds(10))
 
             .addProfiler(JavaFlightRecorderProfiler.class)
 

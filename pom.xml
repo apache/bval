@@ -756,6 +756,7 @@
         <module>bval-extras</module>
         <module>bval-tck</module>
         <module>bundle</module>
+        <module>bval-perf</module>
     </modules>
 
 </project>

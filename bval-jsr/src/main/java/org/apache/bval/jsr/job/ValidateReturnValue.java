@@ -141,7 +141,8 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     protected boolean hasWork() {
-        return describe() != null;
+        final ExecutableDescriptor descriptor = describe();
+        return descriptor != null && descriptor.hasConstrainedReturnValue();
     }
 
     protected abstract ExecutableDescriptor describe();

@@ -185,7 +185,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     @Override
     protected boolean hasWork() {
-        return describe() != null;
+        final ExecutableDescriptor descriptor = describe();
+        return descriptor != null && descriptor.hasConstrainedParameters();
     }
 
     protected abstract ExecutableDescriptor describe();

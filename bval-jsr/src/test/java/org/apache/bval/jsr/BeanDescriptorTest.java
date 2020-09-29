@@ -178,7 +178,7 @@ public class BeanDescriptorTest extends ValidationTestBase {
         // unconstrained
         final BeanDescriptor objectDescriptor = validator.getConstraintsForClass(Object.class);
         assertNotNull(objectDescriptor);
-        assertNotSame(objectDescriptor, validator.getConstraintsForClass(Object.class));
+        assertSame(objectDescriptor, validator.getConstraintsForClass(Object.class));
     }
 
     public static class Form {

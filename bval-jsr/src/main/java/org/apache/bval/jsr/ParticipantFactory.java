@@ -72,7 +72,7 @@ class ParticipantFactory implements Closeable {
         return newInstance(loadClass(classname));
     }
 
-    <T> Set<T> loadServices(Class<T> type) {
+    <T> Set<T> loadServices(Class<T> type) { // todo: enable somehow to cache shared classloader (think tomcat/tomee)
         Validate.notNull(type);
         final Set<URL> resources = new LinkedHashSet<>();
         final String resourceName = META_INF_SERVICES + type.getName();
@@ -85,7 +85,7 @@ class ParticipantFactory implements Closeable {
                 log.log(Level.SEVERE, "Error searching for resource(s) " + resourceName, e);
             }
         }
-        return resources.stream().map(this::read).flatMap(Collection::stream).<T> map(this::create)
+        return resources.stream().distinct().map(this::read).flatMap(Collection::stream).<T> map(this::create)
             .collect(ToUnmodifiable.set());
     }
 

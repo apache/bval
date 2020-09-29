@@ -561,7 +561,6 @@ public abstract class ValidationJob<T> {
             final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
 
             completedValidations = new ConcurrentHashMap<>();
-
             try {
                 baseFrame.process(groups.asStrategy(), sink);
             } finally {

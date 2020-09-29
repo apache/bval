@@ -60,7 +60,6 @@ public class DescriptorManager {
     private final ApacheValidatorFactory validatorFactory;
     private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
     // synchronization unnecessary
-    private final Set<Class<?>> knownUnconstrainedTypes = new HashSet<>();
     private final ReflectionBuilder reflectionBuilder;
 
     public DescriptorManager(ApacheValidatorFactory validatorFactory) {
@@ -73,25 +72,13 @@ public class DescriptorManager {
         Validate.notNull(beanClass, IllegalArgumentException::new, "beanClass");
 
         // cannot use computeIfAbsent due to recursion being the usual case:
-        if (beanDescriptors.containsKey(beanClass)) {
-            return beanDescriptors.get(beanClass);
+        final BeanD<?> existing = beanDescriptors.get(beanClass);
+        if (existing != null) {
+            return existing;
         }
-        final boolean constrained = !knownUnconstrainedTypes.contains(beanClass);
-        final MetadataBuilder.ForBean<T> builder = constrained ? builder(beanClass) : EmptyBuilder.instance().forBean();
-        final BeanD<T> beanD = new BeanD<>(new MetadataReader(validatorFactory, beanClass).forBean(builder));
-
-        if (constrained) {
-            // if not previously known to be unconstrained, check:
-            if (beanD.isBeanConstrained() || !(beanD.getConstrainedConstructors().isEmpty()
-                    && beanD.getConstrainedMethods(MethodType.GETTER, MethodType.NON_GETTER).isEmpty())) {
-                @SuppressWarnings("unchecked")
-                final BeanD<T> result =
-                Optional.ofNullable((BeanD<T>) beanDescriptors.putIfAbsent(beanClass, beanD)).orElse(beanD);
-                return result;
-            }
-        }
-        knownUnconstrainedTypes.add(beanClass);
-        return beanD;
+        final BeanD<?> value = new BeanD<>(new MetadataReader(validatorFactory, beanClass).forBean(builder(beanClass)));
+        final BeanD<?> previous = beanDescriptors.putIfAbsent(beanClass, value);
+        return previous == null ? value : previous;
     }
 
     public void clear() {

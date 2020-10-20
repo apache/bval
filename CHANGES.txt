@@ -49,6 +49,20 @@ How do I Contribute?
   * To discuss BVal topics, check out the mailing lists.
   * Bugs and other issues can be posted on the project JIRA.
 
+Release Notes - BVal - Version 2.0.5
+==========================================
+
+Bug
+-----------
+
+    * [BVAL-183] - Memory leak on ValueExtractors
+
+Improvement
+-----------
+
+
+Release Notes - BVal - Version 2.0.3
+==========================================
 
 Release Notes - BVal - Version 2.0.4
 ==========================================

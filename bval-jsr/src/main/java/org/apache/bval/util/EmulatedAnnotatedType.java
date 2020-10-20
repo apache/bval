@@ -44,7 +44,7 @@ public class EmulatedAnnotatedType<T extends Type> implements AnnotatedType {
             return wrapArray(wrapped.getActualTypeArguments());
         }
 
-        @Override
+        //@Override - Java8 build compatibility
         public AnnotatedType getAnnotatedOwnerType() {
             return null;
         }
@@ -61,7 +61,7 @@ public class EmulatedAnnotatedType<T extends Type> implements AnnotatedType {
             return wrapped.getAnnotatedBounds();
         }
 
-        @Override
+        //@Override - Java8 build compatibility
         public AnnotatedType getAnnotatedOwnerType() {
             return null;
         }
@@ -83,7 +83,7 @@ public class EmulatedAnnotatedType<T extends Type> implements AnnotatedType {
             return wrapArray(wrapped.getUpperBounds());
         }
 
-        @Override
+        //@Override - Java8 build compatibility
         public AnnotatedType getAnnotatedOwnerType() {
             return null;
         }

@@ -21,6 +21,8 @@ package org.apache.bval.jsr.xml;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -59,7 +61,7 @@ import org.xml.sax.helpers.XMLFilterImpl;
  */
 public class SchemaManager {
     public static class Builder {
-        private final SortedMap<Key, Lazy<Schema>> data = new TreeMap<>();
+        private final Map<Key, Lazy<Schema>> data = new LinkedHashMap<>();
 
         public Builder add(String version, String ns, String resource) {
             data.put(new Key(version, ns), new Lazy<>(() -> SchemaManager.loadSchema(resource)));
@@ -67,7 +69,7 @@ public class SchemaManager {
         }
 
         public SchemaManager build() {
-            return new SchemaManager(new TreeMap<>(data));
+            return new SchemaManager(data);
         }
     }
 
@@ -132,7 +134,7 @@ public class SchemaManager {
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
             if (getContentHandler() == ch) {
-                final String version = Objects.toString(atts.getValue("version"), data.firstKey().getVersion());
+                final String version = Objects.toString(atts.getValue("version"), data.keySet().iterator().next().getVersion());
                 final Key schemaKey = new Key(version, uri);
                 Exceptions.raiseUnless(data.containsKey(schemaKey), ValidationException::new,
                     "Unknown validation schema %s", schemaKey);
@@ -181,7 +183,7 @@ public class SchemaManager {
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
             final Key schemaKey =
-                new Key(Objects.toString(atts.getValue("version"), data.firstKey().getVersion()), uri);
+                new Key(Objects.toString(atts.getValue("version"), data.keySet().iterator().next().getVersion()), uri);
 
             if (!target.equals(schemaKey) && data.containsKey(schemaKey)) {
                 uri = target.ns;
@@ -244,13 +246,13 @@ public class SchemaManager {
     }
 
     private final Key target;
-    private final SortedMap<Key, Lazy<Schema>> data;
+    private final Map<Key, Lazy<Schema>> data;
     private final String description;
 
-    private SchemaManager(SortedMap<Key, Lazy<Schema>> data) {
+    private SchemaManager(Map<Key, Lazy<Schema>> data) {
         super();
-        this.data = Collections.unmodifiableSortedMap(data);
-        this.target = data.lastKey();
+        this.data = Collections.unmodifiableMap(data);
+        this.target = data.keySet().stream().skip(data.size() - 1).findFirst().orElseThrow(IllegalStateException::new);
         this.description = target.ns.substring(target.ns.lastIndexOf('/') + 1);
     }
 

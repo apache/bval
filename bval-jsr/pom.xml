@@ -392,7 +392,7 @@ build.timestamp=${timestamp}
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.2.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -405,6 +405,38 @@ build.timestamp=${timestamp}
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer implementation="io.yupiik.maven.shade.transformer.RelocationTransformer">
+                                    <delegates>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/valueextraction/DefaultExtractors.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/DefaultConstraints.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/ValidationMessages.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/ValidationMessages_de.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/ValidationMessages_en.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/ValidationMessages_es.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.properties.PropertiesTransformer">
+                                            <resource>org/apache/bval/jsr/ValidationMessages_it.properties</resource>
+                                            <ordinalKey>ordinal</ordinalKey>
+                                        </transformer>
+                                    </delegates>
+                                </transformer>
                             </transformers>
                             <artifactSet> <!-- don't include transitive deps -->
                                 <includes>
@@ -448,6 +480,13 @@ build.timestamp=${timestamp}
                         </configuration>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.yupiik.maven</groupId>
+                        <artifactId>maven-shade-transformers</artifactId>
+                        <version>0.0.1</version>
+                    </dependency>
+                </dependencies>
            </plugin>
         </plugins>
     </build>

@@ -31,6 +31,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
 
+import javax.validation.BootstrapConfiguration;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
@@ -86,19 +87,34 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
     @Test
     public void testParse() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        validationParser.processValidationConfig("sample-validation.xml", config);
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
     }
 
     @Test
     public void testParseV11() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        validationParser.processValidationConfig("sample-validation11.xml", config);
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation11.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
+
     }
 
     @Test
     public void testParseV20() {
         ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
-        validationParser.processValidationConfig("sample-validation2.xml", config);
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation2.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
+    }
+
+    @Test
+    public void testParseV30() {
+        ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation3.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
     }
 
     @Test

@@ -25,8 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -178,24 +176,35 @@ public class SchemaManager {
     }
 
     private class SchemaRewriter extends XMLFilterImpl {
+
         private boolean root = true;
+        private Key rootSchemaKey = null;
 
         @Override
         public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-            final Key schemaKey =
-                new Key(Objects.toString(atts.getValue("version"), data.keySet().iterator().next().getVersion()), uri);
 
-            if (!target.equals(schemaKey) && data.containsKey(schemaKey)) {
+            // if no version attribute is available, we pick up the first known version (aka 1.1 most likely)
+            // not sure if that is either possible and correct
+            if (root) {
+                rootSchemaKey = new Key(
+                    Objects.toString(atts.getValue("version"), data.keySet().iterator().next().getVersion()),
+                    uri);
+            }
+
+            // no matter what we see now, if the namespace from the root element is different, we override the namespace
+            // the root version attribute gets also overridden for the root element only
+            if (!target.equals(rootSchemaKey)) {
                 uri = target.ns;
                 if (root) {
-                    atts = rewrite(atts);
+                    atts = rewriteVersion(atts);
                     root = false;
                 }
             }
+
             super.startElement(uri, localName, qName, atts);
         }
 
-        private Attributes rewrite(Attributes atts) {
+        private Attributes rewriteVersion(Attributes atts) {
             final AttributesImpl result;
             if (atts instanceof AttributesImpl) {
                 result = (AttributesImpl) atts;

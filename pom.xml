@@ -755,6 +755,7 @@
         <module>bval-jsr</module>
         <module>bval-extras</module>
         <module>bval-tck</module>
+        <module>bval-tck-jakarta</module>
         <module>bundle</module>
         <module>bval-perf</module>
     </modules>

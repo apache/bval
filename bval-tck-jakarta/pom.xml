@@ -31,8 +31,9 @@ under the License.
     <description>Aggregates dependencies and runs the JSR-380 TCK with Jakarta Bean Validation 3.0</description>
 
     <properties>
+        <suite>${project.basedir}/src/test/beanvalidation-tck-tests-suite.xml</suite>
         <tck.version>3.0.0</tck.version>
-        <owb.version>2.0.27-SNAPSHOT</owb.version>
+        <owb.version>2.0.28-SNAPSHOT</owb.version>
         <arquillian.version>1.7.0.Alpha10</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
         <tomcat-jakarta.version>10.0.21</tomcat-jakarta.version>
@@ -108,7 +109,16 @@ under the License.
                     <groupId>org.apache.openwebbeans</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <exclusion> <!-- use jakarta one which uses the same package -->
+                    <groupId>org.jboss.arquillian.testenricher</groupId>
+                    <artifactId>arquillian-testenricher-cdi</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.testenricher</groupId>
+            <artifactId>arquillian-testenricher-cdi-jakarta</artifactId>
+            <version>1.7.0.Alpha10</version>
         </dependency>
         <dependency>
             <groupId>org.apache.openwebbeans</groupId>
@@ -217,7 +227,7 @@ under the License.
                         <configuration>
                             <argLine>-Duser.language=en</argLine>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
+                                <suiteXmlFile>${suite}</suiteXmlFile>
                             </suiteXmlFiles>
                             <systemProperties>
                                 <property>

@@ -21,7 +21,7 @@ think to add -Dvalidation.provider=org.apache.bval.jsr.ApacheValidationProvider 
 <suite name="tmp" verbose="1">
   <test name="tmp">
     <classes>
-       <class name="org.hibernate.beanvalidation.tck.tests.xmlconfiguration.constraintdeclaration.containerelementlevel.ContainerElementTypeConstraintsForParameterXmlMappingTest"/>
+       <class name="org.hibernate.beanvalidation.tck.tests.integration.cdi.defaultinjection.DefaultInjectionTest"/>
 <!--      <class name="org.hibernate.beanvalidation.tck.tests.bootstrap.BootstrapConfigurationTest"/>-->
 <!--
       <class name="org.hibernate.beanvalidation.tck.tests.util.ConstraintViolationAssertTest"/>

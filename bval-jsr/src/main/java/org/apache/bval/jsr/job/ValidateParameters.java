@@ -167,7 +167,7 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         super(validatorContext, groups, meta);
         this.object = object;
         this.parameterValues =
-            Validate.notNull(parameterValues, IllegalArgumentException::new, "null parameter values").clone();
+            Validate.notNull(parameterValues, IllegalArgumentException::new, "null parameter values");
 
         final Type[] genericParameterTypes = executable.getGenericParameterTypes();
         Exceptions.raiseUnless(parameterValues.length == genericParameterTypes.length, IllegalArgumentException::new,

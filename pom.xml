@@ -46,6 +46,7 @@
         <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
         <site.server>bval.site</site.server>
         <built.by>${user.name}</built.by>
+        <plugin.javadoc.version>3.3.2</plugin.javadoc.version>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -255,7 +256,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>${plugin.javadoc.version}</version>
                 <configuration>
                     <doclint>none</doclint>
                     <show>package</show>
@@ -277,7 +278,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>${plugin.javadoc.version}</version>
                 <inherited>false</inherited>
                 <configuration>
                     <doclint>none</doclint>
@@ -435,13 +436,14 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.0.1</version>
+                    <version>${plugin.javadoc.version}</version>
                     <configuration>
                         <encoding>${project.build.sourceEncoding}</encoding>
                         <additionalparam>${javadoc.additionalparam}</additionalparam>
                         <aggregate>true</aggregate>
                         <doclint>none</doclint>
                         <verbose>false</verbose>
+                        <source>1.8</source>
                         <maxmemory>512m</maxmemory>
                         <links>
                             <link>http://docs.oracle.com/javase/8/docs/api</link>

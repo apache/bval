@@ -54,8 +54,8 @@
     <url>http://bval.apache.org/</url>
 
     <scm>
-        <connection>scm:git:http://gitbix.apache.org/repos/asf/bval</connection>
-        <developerConnection>scm:git:https://gitbix.apache.org/repos/asf/bval</developerConnection>
+        <connection>scm:git:http://gitbox.apache.org/repos/asf/bval</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/bval</developerConnection>
         <url>http://gitbox.apache.org/repos/asf/bval</url>
         <tag>HEAD</tag>
     </scm>

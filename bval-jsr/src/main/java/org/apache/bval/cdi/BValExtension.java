@@ -109,7 +109,7 @@ public class BValExtension implements Extension {
 
     public void addBvalBinding(final @Observes BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
         beforeBeanDiscovery.addInterceptorBinding(BValBinding.class);
-        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class));
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(BValInterceptor.class), "BValInterceptor");
     }
 
     // @WithAnnotations(ValidateOnExecution.class) doesn't check interfaces so not enough

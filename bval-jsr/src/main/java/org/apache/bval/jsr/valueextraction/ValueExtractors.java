@@ -25,12 +25,12 @@ import org.apache.bval.util.reflection.Reflection;
 import org.apache.bval.util.reflection.Reflection.Interfaces;
 import org.apache.bval.util.reflection.TypeUtils;
 
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.metadata.ValidateUnwrappedValue;
-import javax.validation.valueextraction.UnwrapByDefault;
-import javax.validation.valueextraction.ValueExtractor;
-import javax.validation.valueextraction.ValueExtractorDeclarationException;
-import javax.validation.valueextraction.ValueExtractorDefinitionException;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.metadata.ValidateUnwrappedValue;
+import jakarta.validation.valueextraction.UnwrapByDefault;
+import jakarta.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ValueExtractorDeclarationException;
+import jakarta.validation.valueextraction.ValueExtractorDefinitionException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;

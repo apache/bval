@@ -36,15 +36,14 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import javax.el.ExpressionFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validator;
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.Pattern;
-import javax.validation.metadata.ConstraintDescriptor;
+import jakarta.el.ExpressionFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.metadata.ConstraintDescriptor;
 
 import org.apache.bval.constraints.NotEmpty;
-import org.apache.bval.jsr.ApacheValidatorConfiguration;
 import org.apache.bval.jsr.example.Author;
 import org.apache.bval.jsr.example.PreferredGuest;
 import org.junit.After;
@@ -64,10 +63,10 @@ public class DefaultMessageInterpolatorTest {
     @Parameters(name="{0}")
     public static List<Object[]> generateParameters(){
         return Arrays.asList(new Object[] { "default", null },
-            new Object[] { "ri", "com.sun.el.ExpressionFactoryImpl" },
+            new Object[] { "ri", "org.glassfish.expressly.ExpressionFactoryImpl" },
             new Object[] { "tomcat", "org.apache.el.ExpressionFactoryImpl" },
-            new Object[] { "juel", "de.odysseus.el.ExpressionFactoryImpl" },
-            new Object[] { "invalid", "java.lang.Object" });
+            // new Object[] { "juel", "de.odysseus.el.ExpressionFactoryImpl" },
+            new Object[] { "invalid", "java.lang.String" });
     }
 
     @AfterClass
@@ -106,6 +105,8 @@ public class DefaultMessageInterpolatorTest {
                 elFactoryClass = Class.forName(elFactory);
                 System.setProperty(ExpressionFactory.class.getName(), elFactory);
             }
+            // todo clarify why we would get a different instance while the service loader will always pick up the first
+            // in the classpath. As we have 3 implementations, we will always get the same one
             assertTrue(elFactoryClass.isInstance(ExpressionFactory.newInstance()));
             elAvailable = true;
         } catch (Exception e) {
@@ -294,21 +295,21 @@ public class DefaultMessageInterpolatorTest {
     @Test
     public void testEscapedELPattern() {
         assertEquals("$must match \"....$\"",
-            interpolator.interpolate("\\${javax.validation.constraints.Pattern.message}",
+            interpolator.interpolate("\\${jakarta.validation.constraints.Pattern.message}",
                 context("12345678",
                     () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
                         .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
                         .orElseThrow(() -> new AssertionError("expected constraint missing")))));
 
         assertEquals("$must match \"....$\"",
-            interpolator.interpolate("\\${javax.validation.constraints.Pattern.message}",
+            interpolator.interpolate("\\${jakarta.validation.constraints.Pattern.message}",
                 context("12345678",
                     () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
                     .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()
                     .orElseThrow(() -> new AssertionError("expected constraint missing")))));
 
         assertEquals("\\$must match \"....$\"",
-            interpolator.interpolate("\\\\\\${javax.validation.constraints.Pattern.message}",
+            interpolator.interpolate("\\\\\\${jakarta.validation.constraints.Pattern.message}",
                 context("12345678",
                     () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")
                     .getConstraintDescriptors().stream().filter(forConstraintType(Pattern.class)).findFirst()

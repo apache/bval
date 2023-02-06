@@ -18,9 +18,9 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.Configuration;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ConfigurationState;
+import jakarta.validation.Configuration;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.ConfigurationState;
 
 /**
  * Description: Uniquely identify Apache BVal in the Bean Validation bootstrap

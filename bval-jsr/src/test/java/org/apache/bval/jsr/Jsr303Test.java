@@ -31,14 +31,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintViolation;
-import javax.validation.UnexpectedTypeException;
-import javax.validation.constraints.Max;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.UnexpectedTypeException;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.constraints.SizeValidator;
 import org.apache.bval.jsr.example.Address;

@@ -18,9 +18,9 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.constraints.NotNull;
 
 /** valid when object is NOT null */
 public class NotNullValidator implements ConstraintValidator<NotNull, Object> {

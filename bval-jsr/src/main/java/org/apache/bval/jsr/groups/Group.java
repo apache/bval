@@ -29,8 +29,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.validation.GroupDefinitionException;
-import javax.validation.groups.Default;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.groups.Default;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.ObjectWrapper;

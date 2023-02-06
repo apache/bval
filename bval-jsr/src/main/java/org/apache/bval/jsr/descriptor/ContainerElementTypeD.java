@@ -20,7 +20,7 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.AnnotatedType;
 
-import javax.validation.metadata.ContainerElementTypeDescriptor;
+import jakarta.validation.metadata.ContainerElementTypeDescriptor;
 
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.util.Validate;

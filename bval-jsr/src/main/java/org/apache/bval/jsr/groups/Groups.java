@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import javax.validation.GroupDefinitionException;
+import jakarta.validation.GroupDefinitionException;
 
 import org.apache.bval.util.Exceptions;
 

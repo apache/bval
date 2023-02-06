@@ -20,9 +20,9 @@ package org.apache.bval.jsr;
 
 import org.apache.bval.cdi.BValExtension;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.ValidationException;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.ValidationException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;

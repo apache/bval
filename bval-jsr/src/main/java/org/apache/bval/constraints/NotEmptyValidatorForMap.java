@@ -18,14 +18,14 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Map;
 
 /**
  * Description: <br/>
  */
-public class NotEmptyValidatorForMap implements ConstraintValidator<javax.validation.constraints.NotEmpty, Map<?, ?>> {
+public class NotEmptyValidatorForMap implements ConstraintValidator<jakarta.validation.constraints.NotEmpty, Map<?, ?>> {
 
     @Override
     public boolean isValid(Map<?, ?> value, ConstraintValidatorContext context) {

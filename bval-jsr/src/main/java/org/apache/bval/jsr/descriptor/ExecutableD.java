@@ -21,10 +21,10 @@ package org.apache.bval.jsr.descriptor;
 import java.lang.reflect.Executable;
 import java.util.List;
 
-import javax.validation.metadata.CrossParameterDescriptor;
-import javax.validation.metadata.ExecutableDescriptor;
-import javax.validation.metadata.ParameterDescriptor;
-import javax.validation.metadata.ReturnValueDescriptor;
+import jakarta.validation.metadata.CrossParameterDescriptor;
+import jakarta.validation.metadata.ExecutableDescriptor;
+import jakarta.validation.metadata.ParameterDescriptor;
+import jakarta.validation.metadata.ReturnValueDescriptor;
 
 public abstract class ExecutableD<E extends Executable, R extends MetadataReader.ForExecutable<E, R>, SELF extends ExecutableD<E, R, SELF>>
     extends ElementD.NonRoot<BeanD<?>, E, R> implements ExecutableDescriptor {

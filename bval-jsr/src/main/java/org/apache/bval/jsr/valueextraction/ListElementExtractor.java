@@ -20,8 +20,8 @@ package org.apache.bval.jsr.valueextraction;
 
 import java.util.List;
 
-import javax.validation.valueextraction.ExtractedValue;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ExtractedValue;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 public class ListElementExtractor implements ValueExtractor<List<@ExtractedValue ?>> {
 

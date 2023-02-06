@@ -18,8 +18,8 @@
  */
 package org.apache.bval.extras.constraints.net;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

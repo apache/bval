@@ -29,12 +29,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Set;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.Payload;
-import javax.validation.constraints.Min;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintDefinitionException;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
 
 import org.apache.bval.constraints.NotNullValidator;
 import org.junit.Test;

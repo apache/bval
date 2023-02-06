@@ -18,11 +18,11 @@
  */
 package org.apache.bval.jsr.example;
 
-import javax.validation.GroupSequence;
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @GroupSequence({ First.class, Second.class, Book.class, Last.class })
 public class Book {

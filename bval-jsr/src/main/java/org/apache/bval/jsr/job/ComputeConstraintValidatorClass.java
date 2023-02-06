@@ -28,10 +28,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintValidator;
-import javax.validation.UnexpectedTypeException;
-import javax.validation.constraintvalidation.ValidationTarget;
+import jakarta.validation.ConstraintDefinitionException;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.UnexpectedTypeException;
+import jakarta.validation.constraintvalidation.ValidationTarget;
 
 import org.apache.bval.jsr.ConstraintCached;
 import org.apache.bval.jsr.ConstraintCached.ConstraintValidatorInfo;

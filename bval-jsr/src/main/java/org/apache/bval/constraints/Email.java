@@ -18,9 +18,9 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.Constraint;
-import javax.validation.OverridesAttribute;
-import javax.validation.Payload;
+import jakarta.validation.Constraint;
+import jakarta.validation.OverridesAttribute;
+import jakarta.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -44,16 +44,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Deprecated
 @Documented
 @Constraint(validatedBy = {})
-@javax.validation.constraints.Email
+@jakarta.validation.constraints.Email
 @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE })
 @Retention(RUNTIME)
 public @interface Email {
-    @OverridesAttribute(constraint = javax.validation.constraints.Email.class, name = "groups")
+    @OverridesAttribute(constraint = jakarta.validation.constraints.Email.class, name = "groups")
     Class<?>[] groups() default {};
 
-    @OverridesAttribute(constraint = javax.validation.constraints.Email.class, name = "message")
+    @OverridesAttribute(constraint = jakarta.validation.constraints.Email.class, name = "message")
     String message() default "{org.apache.bval.constraints.Email.message}";
 
-    @OverridesAttribute(constraint = javax.validation.constraints.Email.class, name = "payload")
+    @OverridesAttribute(constraint = jakarta.validation.constraints.Email.class, name = "payload")
     Class<? extends Payload>[] payload() default {};
 }

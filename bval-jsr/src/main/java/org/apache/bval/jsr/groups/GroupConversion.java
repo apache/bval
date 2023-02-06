@@ -19,7 +19,7 @@ package org.apache.bval.jsr.groups;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.validation.metadata.GroupConversionDescriptor;
+import jakarta.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.LazyInt;

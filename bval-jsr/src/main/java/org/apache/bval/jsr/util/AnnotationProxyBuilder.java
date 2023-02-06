@@ -26,12 +26,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.enterprise.util.AnnotationLiteral;
-import javax.validation.ConstraintTarget;
-import javax.validation.Payload;
-import javax.validation.Valid;
-import javax.validation.ValidationException;
-import javax.validation.groups.ConvertGroup;
+import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.validation.ConstraintTarget;
+import jakarta.validation.Payload;
+import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
+import jakarta.validation.groups.ConvertGroup;
 
 import org.apache.bval.cdi.EmptyAnnotationLiteral;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;

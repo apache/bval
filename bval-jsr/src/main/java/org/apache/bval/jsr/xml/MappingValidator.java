@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;
 import org.apache.bval.jsr.metadata.ContainerElementKey;

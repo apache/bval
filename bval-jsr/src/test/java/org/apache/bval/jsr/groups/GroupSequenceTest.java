@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.GroupDefinitionException;
-import javax.validation.GroupSequence;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.constraints.NotNull;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ValidationTestBase;

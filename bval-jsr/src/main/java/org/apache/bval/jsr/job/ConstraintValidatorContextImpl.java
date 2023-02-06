@@ -21,13 +21,13 @@ package org.apache.bval.jsr.job;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.validation.ClockProvider;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.ConstraintViolation;
-import javax.validation.ElementKind;
-import javax.validation.ValidationException;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.CrossParameterDescriptor;
+import jakarta.validation.ClockProvider;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ElementKind;
+import jakarta.validation.ValidationException;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.CrossParameterDescriptor;
 
 import org.apache.bval.jsr.ApacheMessageContext;
 import org.apache.bval.jsr.descriptor.ComposedD;

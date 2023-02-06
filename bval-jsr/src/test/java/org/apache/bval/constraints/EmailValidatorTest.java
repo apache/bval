@@ -21,7 +21,7 @@ package org.apache.bval.constraints;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.example.Customer;

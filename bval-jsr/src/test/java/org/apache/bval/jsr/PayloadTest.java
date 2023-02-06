@@ -24,9 +24,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Payload;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotNull;
 
 import org.apache.bval.jsr.util.TestUtils;
 import org.junit.Test;

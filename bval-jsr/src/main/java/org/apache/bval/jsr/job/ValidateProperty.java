@@ -30,16 +30,16 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidationException;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.CascadableDescriptor;
-import javax.validation.metadata.ContainerDescriptor;
-import javax.validation.metadata.ContainerElementTypeDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-import javax.validation.valueextraction.ValueExtractor;
-import javax.validation.valueextraction.ValueExtractor.ValueReceiver;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.CascadableDescriptor;
+import jakarta.validation.metadata.ContainerDescriptor;
+import jakarta.validation.metadata.ContainerElementTypeDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
+import jakarta.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ValueExtractor.ValueReceiver;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;

@@ -30,10 +30,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ElementKind;
-import javax.validation.Valid;
-import javax.validation.executable.ValidateOnExecution;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.ElementKind;
+import jakarta.validation.Valid;
+import jakarta.validation.executable.ValidateOnExecution;
 
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ContainerDelegate;
 import org.apache.bval.jsr.metadata.HierarchyBuilder.ElementDelegate;

@@ -18,14 +18,14 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 /**
  * Description: <br/>
  */
 public class NotEmptyValidatorForCharSequence
-    implements ConstraintValidator<javax.validation.constraints.NotEmpty, CharSequence> {
+    implements ConstraintValidator<jakarta.validation.constraints.NotEmpty, CharSequence> {
 
     @Override
     public boolean isValid(CharSequence value, ConstraintValidatorContext context) {

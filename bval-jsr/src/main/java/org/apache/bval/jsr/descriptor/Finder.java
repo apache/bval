@@ -30,13 +30,13 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.GroupDefinitionException;
-import javax.validation.GroupSequence;
-import javax.validation.groups.Default;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.ElementDescriptor.ConstraintFinder;
-import javax.validation.metadata.Scope;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.groups.Default;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.ElementDescriptor.ConstraintFinder;
+import jakarta.validation.metadata.Scope;
 
 import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.Groups;

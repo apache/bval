@@ -22,8 +22,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
-import javax.validation.ValidationException;
-import javax.validation.metadata.PropertyDescriptor;
+import jakarta.validation.ValidationException;
+import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;

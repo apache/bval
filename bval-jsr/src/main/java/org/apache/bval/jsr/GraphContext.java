@@ -23,8 +23,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.validation.Path;
-import javax.validation.ValidationException;
+import jakarta.validation.Path;
+import jakarta.validation.ValidationException;
 
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;

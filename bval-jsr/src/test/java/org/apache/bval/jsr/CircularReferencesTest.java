@@ -23,9 +23,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 
 import org.junit.Test;
 

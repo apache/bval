@@ -25,12 +25,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.validation.executable.ExecutableValidator;
+import jakarta.validation.Valid;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.executable.ExecutableValidator;
 
 import org.apache.bval.jsr.ApacheValidationProvider;
 import org.apache.bval.jsr.ValidatorImpl;

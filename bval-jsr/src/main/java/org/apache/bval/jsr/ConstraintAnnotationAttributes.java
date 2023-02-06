@@ -27,9 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintTarget;
-import javax.validation.Payload;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintTarget;
+import jakarta.validation.Payload;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.ObjectUtils;
@@ -150,7 +150,7 @@ public enum ConstraintAnnotationAttributes {
     }
 
     public <C extends Annotation> Worker<C> analyze(final Class<C> clazz) {
-        if (clazz.getName().startsWith("javax.validation.constraint.")) { // cache only APIs classes to avoid memory leaks
+        if (clazz.getName().startsWith("jakarta.validation.constraint.")) { // cache only APIs classes to avoid memory leaks
             @SuppressWarnings({ "unchecked", "rawtypes" })
             final Worker<C> w = (Worker<C>) WORKER_CACHE.computeIfAbsent(clazz, c -> new Worker((c)));
             return w;

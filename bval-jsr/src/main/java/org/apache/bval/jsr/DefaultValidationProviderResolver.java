@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import javax.validation.ValidationException;
-import javax.validation.ValidationProviderResolver;
-import javax.validation.spi.ValidationProvider;
+import jakarta.validation.ValidationException;
+import jakarta.validation.ValidationProviderResolver;
+import jakarta.validation.spi.ValidationProvider;
 
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
@@ -36,7 +36,7 @@ import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 public class DefaultValidationProviderResolver implements ValidationProviderResolver {
 
     //TODO - Spec recommends caching per classloader
-    private static final String SPI_CFG = "META-INF/services/javax.validation.spi.ValidationProvider";
+    private static final String SPI_CFG = "META-INF/services/jakarta.validation.spi.ValidationProvider";
 
     private static ClassLoader getCurrentClassLoader() {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();

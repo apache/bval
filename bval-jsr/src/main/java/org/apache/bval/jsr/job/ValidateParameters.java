@@ -29,10 +29,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ParameterNameProvider;
-import javax.validation.constraintvalidation.ValidationTarget;
-import javax.validation.metadata.ExecutableDescriptor;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.constraintvalidation.ValidationTarget;
+import jakarta.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;

@@ -16,12 +16,12 @@
  */
 package org.apache.bval.jsr.resolver;
 
-import javax.persistence.Persistence;
-import javax.validation.Path;
-import javax.validation.TraversableResolver;
+import jakarta.persistence.Persistence;
+import jakarta.validation.Path;
+import jakarta.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 
-/** @see javax.validation.TraversableResolver */
+/** @see jakarta.validation.TraversableResolver */
 public class JPATraversableResolver implements TraversableResolver, CachingRelevant {
 
     /**

@@ -23,8 +23,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import javax.validation.Path;
-import javax.validation.Path.Node;
+import jakarta.validation.Path;
+import jakarta.validation.Path.Node;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.metadata.Meta;

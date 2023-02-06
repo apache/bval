@@ -16,10 +16,10 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 
 import java.util.Set;
 
@@ -45,7 +45,7 @@ public interface CascadingPropertyValidator extends Validator {
      * @param propertyName property to validate (i.e. field and getter constraints). Nested
      *                     properties may be referenced (e.g. prop[2].subpropA.subpropB)
      * @param groups       group or list of groups targeted for validation (default to
-     *                     {@link javax.validation.groups.Default})
+     *                     {@link jakarta.validation.groups.Default})
      * @return constraint violations or an empty {@link Set} if none
      * @throws IllegalArgumentException if {@code object} is {@code null}, if {@code propertyName null},
      *                                  empty or not a valid object property or if {@code null} is
@@ -65,14 +65,14 @@ public interface CascadingPropertyValidator extends Validator {
      *                     properties may be referenced (e.g. prop[2].subpropA.subpropB)
      * @param cascade      whether to cascade along {@link Valid} properties
      * @param groups       group or list of groups targeted for validation (default to
-     *                     {@link javax.validation.groups.Default})
+     *                     {@link jakarta.validation.groups.Default})
      * @return constraint violations or an empty {@link Set} if none
      * @throws IllegalArgumentException if {@code object} is {@code null}, if {@code propertyName null},
      *                                  empty or not a valid object property or if {@code null} is
      *                                  passed to the varargs {@code groups}
      * @throws ValidationException      if a non recoverable error happens during the validation process
      */
-    <T> Set<javax.validation.ConstraintViolation<T>> validateProperty(T object, String propertyName, boolean cascade,
+    <T> Set<jakarta.validation.ConstraintViolation<T>> validateProperty(T object, String propertyName, boolean cascade,
         Class<?>... groups);
 
     /**
@@ -86,7 +86,7 @@ public interface CascadingPropertyValidator extends Validator {
      * @param propertyName property to validate
      * @param value        property value to validate
      * @param groups       group or list of groups targeted for validation (default to
-     *                     {@link javax.validation.groups.Default})
+     *                     {@link jakarta.validation.groups.Default})
      * @return constraint violations or an empty {@link Set} if none
      * @throws IllegalArgumentException if {@code beanType} is {@code null}, if
      *                                  {@code propertyName null}, empty or not a valid object
@@ -110,13 +110,13 @@ public interface CascadingPropertyValidator extends Validator {
      * @param propertyName property to validate
      * @param value        property value to validate
      * @param groups       group or list of groups targeted for validation (default to
-     *                     {@link javax.validation.groups.Default})
+     *                     {@link jakarta.validation.groups.Default})
      * @return constraint violations or an empty {@link Set} if none
      * @throws IllegalArgumentException if {@code beanType} is {@code null}, if
      *                                  {@code propertyName null}, empty or not a valid object
      *                                  property or if {@code null} is passed to the varargs {@code groups}
      * @throws ValidationException      if a non recoverable error happens during the validation process
      */
-    <T> Set<javax.validation.ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
+    <T> Set<jakarta.validation.ConstraintViolation<T>> validateValue(Class<T> beanType, String propertyName, Object value,
         boolean cascade, Class<?>... groups);
 }

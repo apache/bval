@@ -51,11 +51,11 @@
                  max=10
            )
       -->
-      <constraint annotation="javax.validation.constraints.Size">
+      <constraint annotation="jakarta.validation.constraints.Size">
         <message>Size is limited</message>
         <groups>
           <value>org.apache.bval.jsr.example.First</value>
-          <value>javax.validation.groups.Default</value>
+          <value>jakarta.validation.groups.Default</value>
         </groups>
         <element name="max">10</element>
       </constraint>
@@ -64,7 +64,7 @@
 
   </bean>
 
-  <constraint-definition annotation="javax.validation.constraints.Size">
+  <constraint-definition annotation="jakarta.validation.constraints.Size">
       <validated-by include-existing-validators="false">
           <value>org.apache.bval.constraints.SizeValidator$ForCharSequence</value>
       </validated-by>

@@ -24,13 +24,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.validation.metadata.CascadableDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ContainerDescriptor;
-import javax.validation.metadata.ContainerElementTypeDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.GroupConversionDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
+import jakarta.validation.metadata.CascadableDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ContainerDescriptor;
+import jakarta.validation.metadata.ContainerElementTypeDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.GroupConversionDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.util.ToUnmodifiable;

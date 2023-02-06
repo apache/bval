@@ -21,9 +21,9 @@ package org.apache.bval.constraints;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.DecimalMin;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.constraints.DecimalMin;
 
 public abstract class DecimalMinValidator<T> implements ConstraintValidator<DecimalMin, T> {
     public static class ForString extends DecimalMinValidator<String> {

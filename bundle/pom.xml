@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>2.0.7-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <!-- use fully qualified naming for OSGi bundles -->
@@ -69,9 +69,9 @@
                         <Private-Package />
                         <Export-Package>org.apache.bval.*</Export-Package>
                         <Import-Package>
-                            javax.annotation.*;resolution:=optional,javax.interceptor.*;resolution:=optional,
-                            javax.inject.*;resolution:=optional,javax.enterprise.*;resolution:=optional,javax.persistence.*;resolution:=optional,
-                            org.apache.bval.xml.*;resolution:=optional,javax.validation.*;resolution:=optional,
+                            jakarta.annotation.*;resolution:=optional,jakarta.interceptor.*;resolution:=optional,
+                            jakarta.inject.*;resolution:=optional,jakarta.enterprise.*;resolution:=optional,jakarta.persistence.*;resolution:=optional,
+                            org.apache.bval.xml.*;resolution:=optional,jakarta.validation.*;resolution:=optional,
                             !org.apache.commons.weaver.*,
                             *
                         </Import-Package>

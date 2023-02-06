@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>21</version>
+        <version>27</version>
         <relativePath />
     </parent>
 
@@ -35,18 +35,17 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache BVal :: bval-parent (Parent POM)</name>
     <packaging>pom</packaging>
-    <version>2.0.7-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <description>Apache BVal parent pom</description>
 
     <properties>
         <commons.weaver.version>2.0</commons.weaver.version>
-        <privilizer.policy>DYNAMIC</privilizer.policy>
         <site.checkout>${user.home}/apache-bval-site</site.checkout>
         <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
         <site.server>bval.site</site.server>
         <built.by>${user.name}</built.by>
-        <plugin.javadoc.version>3.3.2</plugin.javadoc.version>
+        <plugin.javadoc.version>3.4.1</plugin.javadoc.version>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -261,9 +260,9 @@
                     <doclint>none</doclint>
                     <show>package</show>
                     <quiet>true</quiet>
-                    <source>1.8</source>
+                    <release>11</release>
                     <links>
-                        <link>http://docs.oracle.com/javase/8/docs/api</link>
+                        <link>http://docs.oracle.com/javase/11/docs/api</link>
                     </links>
                 </configuration>
                 <reportSets>
@@ -284,9 +283,9 @@
                     <doclint>none</doclint>
                     <show>package</show>
                     <quiet>true</quiet>
-                    <source>1.8</source>
+                    <release>11</release>
                     <links>
-                        <link>http://docs.oracle.com/javase/8/docs/api</link>
+                        <link>http://docs.oracle.com/javase/11/docs/api</link>
                     </links>
                 </configuration>
                 <reportSets>
@@ -300,7 +299,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jdepend-maven-plugin</artifactId>
-                <version>2.0-beta-2</version>
+                <version>2.0</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -316,26 +315,26 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-validation_2.0_spec</artifactId>
-                <version>1.0</version>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>3.0.2</version>
             </dependency>
             <!-- Optional profile to use Spec RI API -->
             <dependency>
-                <groupId>javax.validation</groupId>
+                <groupId>jakarta.validation</groupId>
                 <artifactId>validation-api</artifactId>
                 <version>2.0.1.Final</version>
             </dependency>
             <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
-                <groupId>org.apache.geronimo.specs</groupId>
-                <artifactId>geronimo-jpa_2.0_spec</artifactId>
-                <version>1.1</version>
+                <groupId>jakarta.persistence</groupId>
+                <artifactId>jakarta.persistence-api</artifactId>
+                <version>3.1.0</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.13.1</version>
+                <version>4.13.2</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
@@ -363,28 +362,12 @@
             <dependency>
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
-                <version>2.3.23</version>
-            </dependency>
-            <!-- Optional - only used by bval-guice -->
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.inject</groupId>
-                <artifactId>guice</artifactId>
-                <version>3.0-rc2</version>
-            </dependency>
-            <dependency>
-                <groupId>aopalliance</groupId>
-                <artifactId>aopalliance</artifactId>
-                <version>1.0</version>
+                <version>2.3.31</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-el-api</artifactId>
-                <version>9.0.58</version>
+                <version>10.1.4</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
@@ -411,8 +394,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
+                        <release>11</release>
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
                 </plugin>
@@ -443,10 +425,10 @@
                         <aggregate>true</aggregate>
                         <doclint>none</doclint>
                         <verbose>false</verbose>
-                        <source>1.8</source>
+                        <release>11</release>
                         <maxmemory>512m</maxmemory>
                         <links>
-                            <link>http://docs.oracle.com/javase/8/docs/api</link>
+                            <link>http://docs.oracle.com/javase/11/docs/api</link>
                         </links>
                     </configuration>
                 </plugin>
@@ -475,7 +457,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>jdepend-maven-plugin</artifactId>
-                    <version>2.0-beta-2</version>
+                    <version>2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
@@ -509,7 +491,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.11</version>
+                    <version>0.14</version>
                     <executions>
                         <execution>
                             <phase>verify</phase>
@@ -548,7 +530,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>3.1.1</version>
                     <dependencies>
                         <dependency>
                             <groupId>org.codehaus.plexus</groupId>
@@ -574,7 +556,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.2</version>
+                    <version>3.0.0-M7</version>
                     <configuration>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
@@ -598,38 +580,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>2.1.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-weaver-maven-plugin</artifactId>
-                    <version>${commons.weaver.version}</version>
-                    <configuration>
-                        <verbose>true</verbose>
-                        <weaverConfig>
-                            <privilizer.policy>${privilizer.policy}</privilizer.policy>
-                        </weaverConfig>
-                    </configuration>
-                    <executions>
-                        <execution>
-                        	<id>weaver-prepare</id>
-                            <goals>
-                                <goal>prepare</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                        	<id>weaver-weave</id>
-                            <goals>
-                                <goal>weave</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.commons</groupId>
-                            <artifactId>commons-weaver-privilizer</artifactId>
-                            <version>${commons.weaver.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -757,7 +707,6 @@
         <module>bval-jsr</module>
         <module>bval-extras</module>
         <module>bval-tck</module>
-        <module>bval-tck-jakarta</module>
         <module>bundle</module>
         <module>bval-perf</module>
     </modules>

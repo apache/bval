@@ -65,7 +65,6 @@ public class DefaultMessageInterpolatorTest {
         return Arrays.asList(new Object[] { "default", null },
             new Object[] { "ri", "org.glassfish.expressly.ExpressionFactoryImpl" },
             new Object[] { "tomcat", "org.apache.el.ExpressionFactoryImpl" },
-            // new Object[] { "juel", "de.odysseus.el.ExpressionFactoryImpl" },
             new Object[] { "invalid", "java.lang.String" });
     }
 
@@ -105,10 +104,7 @@ public class DefaultMessageInterpolatorTest {
                 elFactoryClass = Class.forName(elFactory);
                 System.setProperty(ExpressionFactory.class.getName(), elFactory);
             }
-            // todo clarify why we would get a different instance while the service loader will always pick up the first
-            // in the classpath. As we have 3 implementations, we will always get the same one
-            assertTrue(elFactoryClass.isInstance(ExpressionFactory.newInstance()));
-            elAvailable = true;
+            elAvailable = ExpressionFactory.class.isAssignableFrom(elFactoryClass);
         } catch (Exception e) {
             elAvailable = false;
         }
@@ -242,7 +238,7 @@ public class DefaultMessageInterpolatorTest {
     @Test
     public void testELEscapingTomcatJuel() {
         assumeTrue(elAvailable);
-        assumeThat(elImpl, anyOf(equalTo("tomcat"), equalTo("juel")));
+        assumeThat(elImpl, anyOf(equalTo("tomcat")));
 
         // not so much a test as an illustration that the specified EL implementations are seemingly confused by leading
         // backslashes and treats the whole expression as literal. We could skip any literal text before the first

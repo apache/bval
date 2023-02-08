@@ -93,15 +93,16 @@ public class DefaultMessageInterpolatorTest {
         Thread.currentThread().setContextClassLoader(new URLClassLoader(new URL[] {}, originalClassLoader));
 
         try {
-            Class<?> elFactoryClass;
             if (elFactory == null) {
-                elFactoryClass = ExpressionFactory.class;
                 System.clearProperty(ExpressionFactory.class.getName());
             } else {
-                elFactoryClass = Class.forName(elFactory);
+                Class<?> elFactoryClass = Class.forName(elFactory);
                 System.setProperty(ExpressionFactory.class.getName(), elFactory);
+
+                Class<? extends ExpressionFactory> usedImpl =
+                        ((DelegateExpressionFactory) ExpressionFactory.newInstance()).getWrapped().getClass();
+                assertTrue(elFactoryClass == usedImpl);
             }
-            assertTrue(elFactoryClass.isInstance(ExpressionFactory.newInstance()));
             elAvailable = true;
         } catch (Exception e) {
             elAvailable = false;

@@ -29,10 +29,7 @@ import static org.mockito.Mockito.when;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -94,7 +91,7 @@ public class DefaultMessageInterpolatorTest {
         // store and replace CCL to sidestep EL factory caching
         originalClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(new URLClassLoader(new URL[] {}, originalClassLoader));
-        
+
         try {
             Class<?> elFactoryClass;
             if (elFactory == null) {
@@ -104,7 +101,8 @@ public class DefaultMessageInterpolatorTest {
                 elFactoryClass = Class.forName(elFactory);
                 System.setProperty(ExpressionFactory.class.getName(), elFactory);
             }
-            elAvailable = ExpressionFactory.class.isAssignableFrom(elFactoryClass);
+            assertTrue(elFactoryClass.isInstance(ExpressionFactory.newInstance()));
+            elAvailable = true;
         } catch (Exception e) {
             elAvailable = false;
         }

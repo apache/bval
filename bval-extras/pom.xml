@@ -31,7 +31,7 @@
     </parent>
 
     <artifactId>bval-extras</artifactId>
-    <name>Apache BVal :: bval-extras (optional)</name>
+    <name>Apache BVal :: Extras</name>
     <packaging>bundle</packaging>
 
     <description>BVal - non-JSR380 routines and constraints</description>

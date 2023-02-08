@@ -33,7 +33,7 @@
 
     <groupId>org.apache.bval</groupId>
     <artifactId>bval-parent</artifactId>
-    <name>Apache BVal :: bval-parent (Parent POM)</name>
+    <name>Apache BVal</name>
     <packaging>pom</packaging>
     <version>3.0.0-SNAPSHOT</version>
 
@@ -215,6 +215,14 @@
             <id>simonetripodi</id>
             <name>Simone Tripodi</name>
             <email>simonetripodi@apache.org</email>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>tandraschko</id>
+            <name>Thomas Andraschko</name>
+            <email>tandraschko@apache.org</email>
             <roles>
                 <role>PMC Member</role>
             </roles>
@@ -707,7 +715,7 @@
         <module>bval-jsr</module>
         <module>bval-extras</module>
         <module>bval-tck</module>
-        <module>bundle</module>
+        <module>bval-bundle</module>
         <module>bval-perf</module>
     </modules>
 

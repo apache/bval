@@ -27,7 +27,7 @@ under the License.
     </parent>
 
     <artifactId>bval-tck-runner</artifactId>
-    <name>Apache BVal :: bval-tck (TCK Runner)</name>
+    <name>Apache BVal :: TCK Runner</name>
     <description>Aggregates dependencies and runs the JSR-380 TCK</description>
 
     <properties>

@@ -32,7 +32,7 @@
 
     <!-- use fully qualified naming for OSGi bundles -->
     <artifactId>org.apache.bval.bundle</artifactId>
-    <name>Apache BVal :: org.apache.bval.bundle</name>
+    <name>Apache BVal :: Bundle</name>
 
     <packaging>bundle</packaging>
 

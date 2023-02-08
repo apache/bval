@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>bval-jsr</artifactId>
-    <name>Apache BVal :: bval-jsr</name>
+    <name>Apache BVal :: Implementation</name>
     <packaging>jar</packaging>
 
     <description>Implementation specific classes for JSR 380 Bean Validation 2.0</description>

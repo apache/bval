@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>bval-perf</artifactId>
-  <name>Apache BVal :: bval-perf</name>
+  <name>Apache BVal :: Performance</name>
   <packaging>jar</packaging>
 
   <description>Some small micro benchmarks</description>

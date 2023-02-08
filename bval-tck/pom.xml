@@ -31,9 +31,9 @@ under the License.
     <description>Aggregates dependencies and runs the JSR-380 TCK</description>
 
     <properties>
-        <tck.version>2.0.5</tck.version>
+        <tck.version>3.0.0</tck.version>
         <owb.version>4.0.0-SNAPSHOT</owb.version>
-        <arquillian.version>1.1.11.Final</arquillian.version>
+        <arquillian.version>1.7.0.Alpha14</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
 
@@ -64,7 +64,7 @@ under the License.
         <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
-            <version>2.1.0</version>
+            <version>2.1.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -76,7 +76,7 @@ under the License.
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>4.0.0</version>
+            <version>4.0.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -136,19 +136,10 @@ under the License.
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.beanvalidation.tck</groupId>
+            <groupId>jakarta.validation</groupId>
             <artifactId>beanvalidation-tck-tests</artifactId>
             <version>${tck.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>jakarta.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.jboss.spec.jakarta.interceptor</groupId>
-                    <artifactId>jboss-interceptors-api_1.2_spec</artifactId>
-                </exclusion>
-            </exclusions>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.testng</groupId>
@@ -158,7 +149,7 @@ under the License.
         </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.protocol</groupId>
-            <artifactId>arquillian-protocol-servlet</artifactId>
+            <artifactId>arquillian-protocol-servlet-jakarta</artifactId>
             <version>${arquillian.version}</version>
             <scope>test</scope>
         </dependency>
@@ -166,7 +157,7 @@ under the License.
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.8.21</version>
+            <version>7.7.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -247,9 +238,10 @@ under the License.
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.0.0</version>
                         <executions>
                             <execution>
-                                <id>extract-sigsfile</id>
+                                <id>copy-tck-bv-api-signature-file</id>
                                 <phase>generate-test-sources</phase>
                                 <goals>
                                     <goal>unpack</goal>
@@ -257,11 +249,14 @@ under the License.
                                 <configuration>
                                     <artifactItems>
                                         <artifactItem>
-                                            <groupId>org.hibernate.beanvalidation.tck</groupId>
+                                            <groupId>jakarta.validation</groupId>
                                             <artifactId>beanvalidation-tck-tests</artifactId>
-                                            <version>${tck.version}</version>
+                                            <version>${bval-tck.version}</version>
+                                            <type>jar</type>
+                                            <overWrite>false</overWrite>
                                         </artifactItem>
                                     </artifactItems>
+                                    <!-- We just need the signature file and nothing else -->
                                     <includes>**/*.sig</includes>
                                     <outputDirectory>${project.build.directory}/api-signature</outputDirectory>
                                 </configuration>
@@ -271,22 +266,21 @@ under the License.
                     <plugin>
                         <groupId>org.netbeans.tools</groupId>
                         <artifactId>sigtest-maven-plugin</artifactId>
+                        <version>1.0</version>
                         <executions>
                             <execution>
-                                <id>sigtest</id>
-                                <phase>test</phase>
                                 <goals>
-                                   <goal>check</goal>
+                                    <goal>check</goal>
                                 </goals>
-                                <configuration>
-                                    <packages>jakarta.validation,jakarta.validation.bootstrap,jakarta.validation.constraints,
-                                        jakarta.validation.constraintvalidation,jakarta.validation.executable,jakarta.validation.groups,
-                                        jakarta.validation.metadata,jakarta.validation.spi,jakarta.validation.valueextraction
-                                    </packages>
-                                    <sigfile>${project.build.directory}/api-signature/validation-api-java11.sig</sigfile>
-                                </configuration>
                             </execution>
                         </executions>
+                        <configuration>
+                            <packages>jakarta.validation,jakarta.validation.bootstrap,jakarta.validation.constraints,
+                                jakarta.validation.constraintvalidation,jakarta.validation.executable,jakarta.validation.groups,
+                                jakarta.validation.metadata,jakarta.validation.spi,jakarta.validation.valueextraction
+                            </packages>
+                            <sigfile>${project.build.directory}/api-signature/validation-api-java8.sig</sigfile>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

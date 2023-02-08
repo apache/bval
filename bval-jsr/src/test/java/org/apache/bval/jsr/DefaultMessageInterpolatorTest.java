@@ -264,7 +264,7 @@ public class DefaultMessageInterpolatorTest {
     @Test
     public void testELEscapingRI() {
         assumeTrue(elAvailable);
-        assumeThat(elImpl, equalTo("ri"));
+            assumeThat(elImpl, equalTo("ri"));
 
         ApacheMessageContext context = context("12345678",
             () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("idNumber")

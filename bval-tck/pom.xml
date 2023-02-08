@@ -180,14 +180,39 @@ under the License.
                             <skip>true</skip>
                         </configuration>
                     </plugin>
-
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.10</version>
+                        <executions>
+                            <execution>
+                                <id>copy-tck-test-suite-file</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <stripVersion>true</stripVersion>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>jakarta.validation</groupId>
+                                            <artifactId>beanvalidation-tck-tests</artifactId>
+                                            <type>xml</type>
+                                            <classifier>suite</classifier>
+                                            <overWrite>false</overWrite>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <argLine>-Duser.language=en</argLine>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
+                                <suiteXmlFile>${project.build.directory}/dependency/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                             <systemProperties>
                                 <property>
@@ -203,8 +228,9 @@ under the License.
                                     <value>${project.basedir}/src/test/resources/logging.properties</value>
                                 </property>
                             </systemProperties>
-                            <parallel>methods</parallel>
-                            <threadCount>4</threadCount>
+                            <parallel>classes</parallel>
+                            <threadCount>1</threadCount>
+                            <reuseForks>false</reuseForks>
                         </configuration>
                     </plugin>
 
@@ -251,7 +277,7 @@ under the License.
                                         <artifactItem>
                                             <groupId>jakarta.validation</groupId>
                                             <artifactId>beanvalidation-tck-tests</artifactId>
-                                            <version>${bval-tck.version}</version>
+                                            <version>${tck.version}</version>
                                             <type>jar</type>
                                             <overWrite>false</overWrite>
                                         </artifactItem>

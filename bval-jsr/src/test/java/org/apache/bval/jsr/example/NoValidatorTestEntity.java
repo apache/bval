@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.example;
 
-import javax.validation.constraints.Max;
+import jakarta.validation.constraints.Max;
 
 /**
  * Description: <br/>

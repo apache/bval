@@ -36,7 +36,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.apache.bval.cdi.BValExtension;
 import org.apache.bval.jsr.util.ToUnmodifiable;

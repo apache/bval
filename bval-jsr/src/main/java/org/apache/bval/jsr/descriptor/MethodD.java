@@ -20,8 +20,8 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.Method;
 
-import javax.validation.metadata.MethodDescriptor;
-import javax.validation.metadata.MethodType;
+import jakarta.validation.metadata.MethodDescriptor;
+import jakarta.validation.metadata.MethodType;
 
 import org.apache.bval.jsr.util.Methods;
 

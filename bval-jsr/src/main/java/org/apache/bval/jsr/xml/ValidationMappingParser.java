@@ -29,9 +29,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.validation.ValidationException;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ConfigurationState;
+import jakarta.validation.ValidationException;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.ConfigurationState;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.MetadataBuilder;

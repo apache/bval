@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.validation.ElementKind;
-import javax.validation.ParameterNameProvider;
+import jakarta.validation.ElementKind;
+import jakarta.validation.ParameterNameProvider;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.groups.GroupConversion;

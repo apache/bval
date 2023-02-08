@@ -22,9 +22,9 @@ import static org.junit.Assert.assertFalse;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 
 import org.apache.bval.jsr.ValidationTestBase;
 import org.junit.Test;

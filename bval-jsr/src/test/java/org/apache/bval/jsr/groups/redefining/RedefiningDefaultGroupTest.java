@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.GroupDefinitionException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.GroupDefinitionException;
 
 import org.apache.bval.jsr.ValidationTestBase;
 import org.apache.bval.jsr.util.TestUtils;

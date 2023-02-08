@@ -30,10 +30,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintValidator;
-import javax.validation.constraintvalidation.SupportedValidationTarget;
-import javax.validation.constraintvalidation.ValidationTarget;
+import jakarta.validation.ConstraintDefinitionException;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.constraintvalidation.SupportedValidationTarget;
+import jakarta.validation.constraintvalidation.ValidationTarget;
 
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.metadata.AnnotationDeclaredValidatorMappingProvider;

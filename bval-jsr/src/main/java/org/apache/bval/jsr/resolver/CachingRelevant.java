@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.resolver;
 
-import javax.validation.TraversableResolver;
+import jakarta.validation.TraversableResolver;
 
 /**
  * Description: indicator interface to let the implementation choose

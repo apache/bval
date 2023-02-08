@@ -21,8 +21,8 @@ package org.apache.bval.jsr.groups.inheritance;
 import org.apache.bval.jsr.groups.Billable;
 import org.apache.bval.jsr.groups.BillableCreditCard;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 /**
  * Description: <br/>

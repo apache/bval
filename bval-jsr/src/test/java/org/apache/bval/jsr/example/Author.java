@@ -20,9 +20,9 @@ package org.apache.bval.jsr.example;
 
 import org.apache.bval.constraints.NotEmpty;
 
-import javax.validation.GroupSequence;
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 @GroupSequence({ First.class, Author.class, Last.class })

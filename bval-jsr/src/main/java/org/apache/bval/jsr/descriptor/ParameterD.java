@@ -24,7 +24,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 
-import javax.validation.metadata.ParameterDescriptor;
+import jakarta.validation.metadata.ParameterDescriptor;
 
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.util.Validate;

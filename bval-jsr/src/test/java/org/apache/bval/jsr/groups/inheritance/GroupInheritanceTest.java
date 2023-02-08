@@ -23,8 +23,8 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.util.TestUtils;

@@ -20,17 +20,17 @@ package org.apache.bval.jsr;
 
 import static org.hamcrest.CoreMatchers.isA;
 
-import javax.validation.ClockProvider;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ParameterNameProvider;
-import javax.validation.TraversableResolver;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorContext;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ConfigurationState;
+import jakarta.validation.ClockProvider;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorContext;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.ConfigurationState;
 
 import org.junit.Rule;
 import org.junit.Test;

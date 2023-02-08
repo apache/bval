@@ -19,10 +19,10 @@
 package org.apache.bval.jsr.issues;
 
 import java.lang.reflect.Method;
-import javax.validation.UnexpectedTypeException;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.metadata.MethodDescriptor;
+import jakarta.validation.UnexpectedTypeException;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.metadata.MethodDescriptor;
 import org.apache.bval.jsr.ApacheValidationProvider;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;

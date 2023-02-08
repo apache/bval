@@ -24,10 +24,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.constraints.Size;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
 
 import org.apache.bval.jsr.example.CompanyAddress;
 import org.apache.bval.jsr.example.FrenchAddress;

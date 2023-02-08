@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.validation.ValidationException;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.ValidationException;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.metadata.ContainerElementKey;

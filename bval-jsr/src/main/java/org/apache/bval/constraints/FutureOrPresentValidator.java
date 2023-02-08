@@ -39,8 +39,8 @@ import java.util.GregorianCalendar;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.constraints.FutureOrPresent;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.constraints.FutureOrPresent;
 
 /**
  * Defines built-in {@link ConstraintValidator} implementations for {@link FutureOrPresent}.

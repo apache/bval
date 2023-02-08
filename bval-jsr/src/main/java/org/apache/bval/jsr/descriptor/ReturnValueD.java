@@ -23,11 +23,11 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
-import javax.validation.ConstraintValidator;
-import javax.validation.UnexpectedTypeException;
-import javax.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.UnexpectedTypeException;
+import jakarta.validation.metadata.ConstraintDescriptor;
 
-import javax.validation.metadata.ReturnValueDescriptor;
+import jakarta.validation.metadata.ReturnValueDescriptor;
 import org.apache.bval.util.ValidatorUtils;
 import org.apache.bval.util.reflection.TypeUtils;
 

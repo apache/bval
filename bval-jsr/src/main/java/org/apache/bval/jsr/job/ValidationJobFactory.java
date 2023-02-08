@@ -21,9 +21,9 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.executable.ExecutableValidator;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.validation.executable.ExecutableValidator;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.util.Validate;

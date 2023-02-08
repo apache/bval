@@ -43,13 +43,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ConstraintTarget;
-import javax.validation.GroupSequence;
-import javax.validation.ParameterNameProvider;
-import javax.validation.Valid;
-import javax.validation.constraintvalidation.ValidationTarget;
-import javax.validation.groups.ConvertGroup;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.ConstraintTarget;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.Valid;
+import jakarta.validation.constraintvalidation.ValidationTarget;
+import jakarta.validation.groups.ConvertGroup;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;

@@ -23,9 +23,9 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 
-import javax.validation.valueextraction.ExtractedValue;
-import javax.validation.valueextraction.UnwrapByDefault;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ExtractedValue;
+import jakarta.validation.valueextraction.UnwrapByDefault;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 public abstract class OptionalExtractor {
     public static class ForObject implements ValueExtractor<Optional<@ExtractedValue ?>> {

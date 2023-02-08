@@ -33,9 +33,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.validation.BootstrapConfiguration;
-import javax.validation.ValidationException;
-import javax.validation.executable.ExecutableType;
+import jakarta.validation.BootstrapConfiguration;
+import jakarta.validation.ValidationException;
+import jakarta.validation.executable.ExecutableType;
 
 import org.apache.bval.jsr.BootstrapConfigurationImpl;
 import org.apache.bval.jsr.ConfigurationImpl;
@@ -57,15 +57,18 @@ public class ValidationParser {
     private static final String DEFAULT_VALIDATION_XML_FILE = "META-INF/validation.xml";
     private static final Logger log = Logger.getLogger(ValidationParser.class.getName());
 
+    /*
+    The order is very important because the last entry is used to override all schema location before parsing
+     */
     private static final SchemaManager SCHEMA_MANAGER = new SchemaManager.Builder()
         .add(XmlBuilder.Version.v10.getId(), "http://jboss.org/xml/ns/javax/validation/configuration",
             "META-INF/validation-configuration-1.0.xsd")
         .add(XmlBuilder.Version.v11.getId(), "http://jboss.org/xml/ns/javax/validation/configuration",
             "META-INF/validation-configuration-1.1.xsd")
-        .add(XmlBuilder.Version.v30.getId(), "https://jakarta.ee/xml/ns/validation/configuration",
-                "META-INF/validation-configuration-3.0.xsd")
         .add(XmlBuilder.Version.v20.getId(), "http://xmlns.jcp.org/xml/ns/validation/configuration",
             "META-INF/validation-configuration-2.0.xsd")
+        .add(XmlBuilder.Version.v30.getId(), "https://jakarta.ee/xml/ns/validation/configuration",
+                "META-INF/validation-configuration-3.0.xsd")
         .build();
 
     private static String getValidationXmlFile(String file) {

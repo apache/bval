@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr.groups.implicit;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Represents an order in the system

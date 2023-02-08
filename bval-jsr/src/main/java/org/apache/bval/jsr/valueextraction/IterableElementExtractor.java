@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr.valueextraction;
 
-import javax.validation.valueextraction.ExtractedValue;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ExtractedValue;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 public class IterableElementExtractor implements ValueExtractor<Iterable<@ExtractedValue ?>> {
 

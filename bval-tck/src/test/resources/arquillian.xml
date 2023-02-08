@@ -22,7 +22,7 @@
   <container qualifier="owb" default="true">
     <configuration>
       <property name="useOnlyArchiveResources">true</property>
-      <property name="useOnlyArchiveResourcesExcludes">META-INF/services/javax.validation.spi.ValidationProvider</property>
+      <property name="useOnlyArchiveResourcesExcludes">META-INF/services/jakarta.validation.spi.ValidationProvider</property>
     </configuration>
   </container>
 </arquillian>

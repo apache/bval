@@ -21,9 +21,9 @@ package org.apache.bval.jsr.valueextraction;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
-import javax.validation.valueextraction.ExtractedValue;
-import javax.validation.valueextraction.UnwrapByDefault;
-import javax.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ExtractedValue;
+import jakarta.validation.valueextraction.UnwrapByDefault;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 import org.apache.bval.util.reflection.Reflection;
 

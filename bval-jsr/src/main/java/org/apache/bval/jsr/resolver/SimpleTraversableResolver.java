@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr.resolver;
 
-import javax.validation.Path;
-import javax.validation.TraversableResolver;
+import jakarta.validation.Path;
+import jakarta.validation.TraversableResolver;
 import java.lang.annotation.ElementType;
 
 /**

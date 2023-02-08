@@ -18,15 +18,15 @@
  */
 package org.apache.bval.jsr.util;
 
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.ContainerElementNodeBuilderCustomizableContext;
-import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder.ContainerElementNodeBuilderCustomizableContext;
+import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext;
 
 import org.apache.bval.jsr.job.ConstraintValidatorContextImpl;
 
 /**
  * Description: implementation of
- * {@link javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
+ * {@link jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext}.<br/>
  */
 public final class NodeBuilderCustomizableContextImpl
     implements ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext {

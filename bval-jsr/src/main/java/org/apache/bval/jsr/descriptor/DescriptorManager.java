@@ -23,12 +23,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.CascadableDescriptor;
-import javax.validation.metadata.ContainerDescriptor;
-import javax.validation.metadata.ElementDescriptor;
-import javax.validation.metadata.ExecutableDescriptor;
-import javax.validation.metadata.MethodType;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.CascadableDescriptor;
+import jakarta.validation.metadata.ContainerDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.ExecutableDescriptor;
+import jakarta.validation.metadata.MethodType;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.metadata.AnnotationBehaviorMergeStrategy;

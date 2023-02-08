@@ -23,8 +23,8 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.BootstrapConfiguration;
-import javax.validation.executable.ExecutableType;
+import jakarta.validation.BootstrapConfiguration;
+import jakarta.validation.executable.ExecutableType;
 
 import org.apache.bval.jsr.util.ExecutableTypes;
 

@@ -29,30 +29,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AfterDeploymentValidation;
-import javax.enterprise.inject.spi.Annotated;
-import javax.enterprise.inject.spi.AnnotatedType;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.BeforeBeanDiscovery;
-import javax.enterprise.inject.spi.CDI;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.InjectionTarget;
-import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.enterprise.inject.spi.ProcessBean;
-import javax.validation.BootstrapConfiguration;
-import javax.validation.Configuration;
-import javax.validation.Constraint;
-import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.executable.ExecutableType;
-import javax.validation.executable.ValidateOnExecution;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
+import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
+import jakarta.enterprise.inject.spi.Annotated;
+import jakarta.enterprise.inject.spi.AnnotatedType;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanAttributes;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeforeBeanDiscovery;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.enterprise.inject.spi.Extension;
+import jakarta.enterprise.inject.spi.InjectionTarget;
+import jakarta.enterprise.inject.spi.ProcessAnnotatedType;
+import jakarta.enterprise.inject.spi.ProcessBean;
+import jakarta.validation.BootstrapConfiguration;
+import jakarta.validation.Configuration;
+import jakarta.validation.Constraint;
+import jakarta.validation.Valid;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.executable.ExecutableType;
+import jakarta.validation.executable.ValidateOnExecution;
 
 import org.apache.bval.jsr.ConfigurationImpl;
 import org.apache.bval.jsr.util.ExecutableTypes;
@@ -214,7 +215,7 @@ public class BValExtension implements Extension {
                     if (isSkippedAnnotation(type)) {
                         return false;
                     }
-                    if (type.getName().startsWith("javax.validation.constraints")) {
+                    if (type.getName().startsWith("jakarta.validation.constraints")) {
                         return true;
                     }
                     if (notBValAnnotation.contains(type)) { // more likely so faster first
@@ -232,10 +233,10 @@ public class BValExtension implements Extension {
         if (type.getName().startsWith("java.")) {
             return true;
         }
-        if (type.getName().startsWith("javax.enterprise.")) {
+        if (type.getName().startsWith("jakarta.enterprise.")) {
             return true;
         }
-        if (type.getName().startsWith("javax.inject.")) {
+        if (type.getName().startsWith("jakarta.inject.")) {
             return true;
         }
         return false;
@@ -274,7 +275,7 @@ public class BValExtension implements Extension {
                 return null;
             }
             final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
-            final InjectionTarget<T> it = beanManager.createInjectionTarget(annotatedType);
+            final InjectionTarget<T> it = beanManager.getInjectionTargetFactory(annotatedType).createInjectionTarget(null);
             final CreationalContext<T> context = beanManager.createCreationalContext(null);
             final T instance = it.produce(context);
             it.inject(instance, context);

@@ -21,12 +21,12 @@ package org.apache.bval.constraints;
 import java.lang.annotation.Annotation;
 import java.util.function.IntPredicate;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.Negative;
-import javax.validation.constraints.NegativeOrZero;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.constraints.Negative;
+import jakarta.validation.constraints.NegativeOrZero;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import org.apache.bval.util.Validate;
 

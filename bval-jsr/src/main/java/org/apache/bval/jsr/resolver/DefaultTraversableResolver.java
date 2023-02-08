@@ -20,21 +20,21 @@ import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
 
-import javax.validation.Path;
-import javax.validation.TraversableResolver;
+import jakarta.validation.Path;
+import jakarta.validation.TraversableResolver;
 
 import java.lang.annotation.ElementType;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** @see javax.validation.TraversableResolver */
+/** @see jakarta.validation.TraversableResolver */
 @Privilizing(@CallTo(Reflection.class))
 public class DefaultTraversableResolver implements TraversableResolver, CachingRelevant {
     private static final Logger log = Logger.getLogger(DefaultTraversableResolver.class.getName());
     private static final boolean LOG_FINEST = log.isLoggable(Level.FINEST);
 
     /** Class to load to check whether JPA 2 is on the classpath. */
-    private static final String PERSISTENCE_UTIL_CLASSNAME = "javax.persistence.PersistenceUtil";
+    private static final String PERSISTENCE_UTIL_CLASSNAME = "jakarta.persistence.PersistenceUtil";
 
     /** Class to instantiate in case JPA 2 is on the classpath. */
     private static final String JPA_AWARE_TRAVERSABLE_RESOLVER_CLASSNAME =

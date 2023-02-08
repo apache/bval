@@ -31,15 +31,15 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.validation.ElementKind;
-import javax.validation.Path;
-import javax.validation.Path.BeanNode;
-import javax.validation.Path.ConstructorNode;
-import javax.validation.Path.ContainerElementNode;
-import javax.validation.Path.MethodNode;
-import javax.validation.Path.Node;
-import javax.validation.Path.ParameterNode;
-import javax.validation.Path.PropertyNode;
+import jakarta.validation.ElementKind;
+import jakarta.validation.Path;
+import jakarta.validation.Path.BeanNode;
+import jakarta.validation.Path.ConstructorNode;
+import jakarta.validation.Path.ContainerElementNode;
+import jakarta.validation.Path.MethodNode;
+import jakarta.validation.Path.Node;
+import jakarta.validation.Path.ParameterNode;
+import jakarta.validation.Path.PropertyNode;
 
 import org.apache.bval.util.Comparators;
 import org.apache.bval.util.Exceptions;

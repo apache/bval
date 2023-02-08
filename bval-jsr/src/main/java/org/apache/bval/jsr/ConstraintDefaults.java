@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidator;
 
 import org.apache.bval.jsr.metadata.ClassLoadingValidatorMappingProvider;
 import org.apache.bval.jsr.metadata.ValidatorMapping;

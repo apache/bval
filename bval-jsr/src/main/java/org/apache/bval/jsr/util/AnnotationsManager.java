@@ -43,14 +43,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintTarget;
-import javax.validation.OverridesAttribute;
-import javax.validation.Payload;
-import javax.validation.ValidationException;
-import javax.validation.constraintvalidation.ValidationTarget;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.ConstraintDefinitionException;
+import jakarta.validation.ConstraintTarget;
+import jakarta.validation.OverridesAttribute;
+import jakarta.validation.Payload;
+import jakarta.validation.ValidationException;
+import jakarta.validation.constraintvalidation.ValidationTarget;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;

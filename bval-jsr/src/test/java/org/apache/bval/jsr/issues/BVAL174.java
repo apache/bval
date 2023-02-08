@@ -25,9 +25,9 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 import java.util.Set;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.Payload;
 
 public class BVAL174 {
 
@@ -42,7 +42,7 @@ public class BVAL174 {
     }
 
     @Documented
-    @javax.validation.Constraint(validatedBy = {Audience.Constraint.class})
+    @jakarta.validation.Constraint(validatedBy = {Audience.Constraint.class})
     @Target({METHOD, ANNOTATION_TYPE})
     @Retention(RUNTIME)
     public @interface Audience {

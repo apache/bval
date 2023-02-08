@@ -18,15 +18,15 @@
  */
 package org.apache.bval.constraints;
 
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.Pattern.Flag;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.constraints.Pattern.Flag;
 
 import org.apache.bval.routines.EMailValidationUtils;
 
 /**
  * Description: <br/>
  */
-public class EmailValidator extends AbstractPatternValidator<javax.validation.constraints.Email, CharSequence> {
+public class EmailValidator extends AbstractPatternValidator<jakarta.validation.constraints.Email, CharSequence> {
 
     public EmailValidator() {
         super(email -> new PatternDescriptor() {

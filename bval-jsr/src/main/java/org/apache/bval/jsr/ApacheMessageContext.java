@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.MessageInterpolator;
-import javax.validation.MessageInterpolator.Context;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.MessageInterpolator.Context;
 
 /**
  * Vendor-specific {@link MessageInterpolator.Context} interface extension to

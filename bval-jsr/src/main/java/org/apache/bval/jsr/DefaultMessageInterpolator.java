@@ -36,7 +36,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
-import javax.validation.MessageInterpolator;
+import jakarta.validation.MessageInterpolator;
 
 import org.apache.bval.el.MessageEvaluator;
 import org.apache.bval.jsr.util.LookBehindRegexHolder;

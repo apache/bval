@@ -18,9 +18,9 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.constraints.NotNull;
 
 import org.junit.Test;
 

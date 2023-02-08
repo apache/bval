@@ -29,11 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.GroupDefinitionException;
-import javax.validation.GroupSequence;
-import javax.validation.ValidationException;
-import javax.validation.groups.Default;
-import javax.validation.metadata.GroupConversionDescriptor;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.ValidationException;
+import jakarta.validation.groups.Default;
+import jakarta.validation.metadata.GroupConversionDescriptor;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;

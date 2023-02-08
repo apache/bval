@@ -44,15 +44,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.GroupDefinitionException;
-import javax.validation.GroupSequence;
-import javax.validation.ParameterNameProvider;
-import javax.validation.Valid;
-import javax.validation.groups.ConvertGroup;
-import javax.validation.groups.Default;
-import javax.validation.metadata.PropertyDescriptor;
-import javax.validation.metadata.Scope;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
+import jakarta.validation.metadata.PropertyDescriptor;
+import jakarta.validation.metadata.Scope;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;

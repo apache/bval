@@ -20,8 +20,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.stream.Stream;
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintValidator;
+import jakarta.validation.ConstraintDefinitionException;
+import jakarta.validation.ConstraintValidator;
 import org.apache.bval.util.reflection.TypeUtils;
 
 public class ValidatorUtils {

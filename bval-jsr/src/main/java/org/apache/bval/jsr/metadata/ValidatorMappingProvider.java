@@ -22,8 +22,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-import javax.validation.ConstraintDefinitionException;
-import javax.validation.ConstraintValidator;
+import jakarta.validation.ConstraintDefinitionException;
+import jakarta.validation.ConstraintValidator;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.reflection.TypeUtils;

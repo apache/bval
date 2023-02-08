@@ -26,7 +26,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.util.Exceptions;

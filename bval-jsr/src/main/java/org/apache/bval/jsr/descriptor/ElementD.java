@@ -25,8 +25,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
 
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.GroupsComputer;

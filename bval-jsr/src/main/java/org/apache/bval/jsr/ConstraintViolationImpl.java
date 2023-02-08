@@ -16,10 +16,10 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Path;
-import javax.validation.ValidationException;
-import javax.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Path;
+import jakarta.validation.ValidationException;
+import jakarta.validation.metadata.ConstraintDescriptor;
 
 import org.apache.bval.util.Exceptions;
 

@@ -21,9 +21,9 @@ package org.apache.bval.constraints;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.DecimalMax;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.constraints.DecimalMax;
 
 public abstract class DecimalMaxValidator<T> implements ConstraintValidator<DecimalMax, T> {
     public static class ForString extends DecimalMaxValidator<String> {

@@ -37,9 +37,9 @@ import java.util.logging.Logger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.validation.valueextraction.ExtractedValue;
-import javax.validation.valueextraction.ValueExtractor;
-import javax.validation.valueextraction.ValueExtractorDefinitionException;
+import jakarta.validation.valueextraction.ExtractedValue;
+import jakarta.validation.valueextraction.ValueExtractor;
+import jakarta.validation.valueextraction.ValueExtractorDefinitionException;
 
 import org.apache.bval.util.EmulatedAnnotatedType;
 import org.apache.bval.util.Exceptions;

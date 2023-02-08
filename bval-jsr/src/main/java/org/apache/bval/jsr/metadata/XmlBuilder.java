@@ -38,12 +38,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.validation.ConstraintDeclarationException;
-import javax.validation.ConstraintTarget;
-import javax.validation.Payload;
-import javax.validation.ValidationException;
-import javax.validation.groups.Default;
-import javax.xml.bind.JAXBElement;
+import jakarta.validation.ConstraintDeclarationException;
+import jakarta.validation.ConstraintTarget;
+import jakarta.validation.Payload;
+import jakarta.validation.ValidationException;
+import jakarta.validation.groups.Default;
+import jakarta.xml.bind.JAXBElement;
 
 import org.apache.bval.jsr.ApacheValidatorFactory;
 import org.apache.bval.jsr.ConstraintAnnotationAttributes;

@@ -23,8 +23,8 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.validation.GroupDefinitionException;
-import javax.validation.groups.Default;
+import jakarta.validation.GroupDefinitionException;
+import jakarta.validation.groups.Default;
 
 import org.junit.Test;
 

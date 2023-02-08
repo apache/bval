@@ -31,12 +31,12 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
 
-import javax.validation.BootstrapConfiguration;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.BootstrapConfiguration;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import org.apache.bval.jsr.ApacheValidationProvider;
 import org.apache.bval.jsr.ApacheValidatorConfiguration;

@@ -23,10 +23,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.ToIntFunction;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.ValidationException;
-import javax.validation.constraints.Size;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.ValidationException;
+import jakarta.validation.constraints.Size;
 
 /**
  * Description: Abstract validator impl. for @Size annotation.

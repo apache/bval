@@ -18,12 +18,12 @@
  */
 package org.apache.bval.jsr;
 
-import javax.validation.Configuration;
-import javax.validation.ValidationException;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.BootstrapState;
-import javax.validation.spi.ConfigurationState;
-import javax.validation.spi.ValidationProvider;
+import jakarta.validation.Configuration;
+import jakarta.validation.ValidationException;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.BootstrapState;
+import jakarta.validation.spi.ConfigurationState;
+import jakarta.validation.spi.ValidationProvider;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.reflection.Reflection;
@@ -69,7 +69,7 @@ public class ApacheValidationProvider implements ValidationProvider<ApacheValida
     /**
      * {@inheritDoc}
      * 
-     * @throws javax.validation.ValidationException
+     * @throws jakarta.validation.ValidationException
      *             if the ValidatorFactory cannot be built
      */
     @Override

@@ -19,7 +19,7 @@ package org.apache.bval.extras.constraints.net;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.validation.Payload;
+import jakarta.validation.Payload;
 import java.lang.annotation.Annotation;
 
 import static org.junit.Assert.assertFalse;

@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Validate;

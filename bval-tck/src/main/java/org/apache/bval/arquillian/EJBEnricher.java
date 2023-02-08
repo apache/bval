@@ -20,11 +20,11 @@ package org.apache.bval.arquillian;
 
 import org.jboss.arquillian.test.spi.TestEnricher;
 
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import jakarta.annotation.Resource;
+import jakarta.ejb.EJB;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 

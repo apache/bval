@@ -18,7 +18,7 @@ package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.Executable;
 
-import javax.validation.metadata.CrossParameterDescriptor;
+import jakarta.validation.metadata.CrossParameterDescriptor;
 
 public class CrossParameterD<P extends ExecutableD<?, ?, P>, E extends Executable>
     extends ElementD.NonRoot<P, E, MetadataReader.ForElement<E, ?>> implements CrossParameterDescriptor {

@@ -20,7 +20,7 @@ package org.apache.bval.jsr.example;
 
 import org.apache.bval.constraints.HasValue;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * Description: <br/>

@@ -21,7 +21,7 @@ package org.apache.bval.arquillian.jndi;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
-import javax.validation.Validation;
+import jakarta.validation.Validation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;

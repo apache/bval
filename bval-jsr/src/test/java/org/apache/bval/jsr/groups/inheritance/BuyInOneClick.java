@@ -20,7 +20,7 @@ package org.apache.bval.jsr.groups.inheritance;
 
 import org.apache.bval.jsr.groups.Billable;
 
-import javax.validation.groups.Default;
+import jakarta.validation.groups.Default;
 
 /**
  * Customer can buy without harrassing checking process.

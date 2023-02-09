@@ -109,11 +109,17 @@ public class ValidationParser {
                 .map(DefaultValidatedExecutableTypesType::getExecutableType).map(EnumSet::copyOf)
                 .orElse(EnumSet.noneOf(ExecutableType.class));
         }
+
+        Set<String> constraintMappings = xmlConfig.getConstraintMapping().stream()
+                .map(s -> s.trim())
+                .collect(Collectors.toSet());
+        String clockProvider = xmlConfig.getClockProvider() == null ? null : xmlConfig.getClockProvider().trim();
+
         return new BootstrapConfigurationImpl(xmlConfig.getDefaultProvider(), xmlConfig.getConstraintValidatorFactory(),
             xmlConfig.getMessageInterpolator(), xmlConfig.getTraversableResolver(),
-            xmlConfig.getParameterNameProvider(), new HashSet<>(xmlConfig.getConstraintMapping()),
+            xmlConfig.getParameterNameProvider(), constraintMappings,
             executableValidationEnabled, defaultValidatedExecutableTypes, toMap(xmlConfig.getProperty()),
-            xmlConfig.getClockProvider(), new HashSet<>(xmlConfig.getValueExtractor()));
+            clockProvider, new HashSet<>(xmlConfig.getValueExtractor()));
     }
 
     public InputStream open(String mappingFileName) {
@@ -121,7 +127,6 @@ public class ValidationParser {
             // Classloader needs a path without a starting /
             mappingFileName = mappingFileName.substring(1);
         }
-        mappingFileName = mappingFileName.trim();
         try {
             final InputStream in = getInputStream(mappingFileName);
             Exceptions.raiseIf(in == null, ValidationException::new,

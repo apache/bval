@@ -113,13 +113,21 @@ public class ValidationParser {
         Set<String> constraintMappings = xmlConfig.getConstraintMapping().stream()
                 .map(s -> s.trim())
                 .collect(Collectors.toSet());
+        Set<String> valueExtractor = xmlConfig.getValueExtractor().stream()
+                .map(s -> s.trim())
+                .collect(Collectors.toSet());
         String clockProvider = xmlConfig.getClockProvider() == null ? null : xmlConfig.getClockProvider().trim();
+        String messageInterpolator = xmlConfig.getMessageInterpolator() == null ? null : xmlConfig.getMessageInterpolator().trim();
+        String parameterNameProvider = xmlConfig.getParameterNameProvider() == null ? null : xmlConfig.getParameterNameProvider().trim();
+        String traversableResolver = xmlConfig.getTraversableResolver() == null ? null : xmlConfig.getTraversableResolver().trim();
+        String constraintValidatorFactory = xmlConfig.getConstraintValidatorFactory() == null ? null : xmlConfig.getConstraintValidatorFactory().trim();
+        String defaultProvider = xmlConfig.getDefaultProvider() == null ? null : xmlConfig.getDefaultProvider().trim();
 
-        return new BootstrapConfigurationImpl(xmlConfig.getDefaultProvider(), xmlConfig.getConstraintValidatorFactory(),
-            xmlConfig.getMessageInterpolator(), xmlConfig.getTraversableResolver(),
-            xmlConfig.getParameterNameProvider(), constraintMappings,
+        return new BootstrapConfigurationImpl(defaultProvider, constraintValidatorFactory,
+            messageInterpolator, traversableResolver,
+            parameterNameProvider, constraintMappings,
             executableValidationEnabled, defaultValidatedExecutableTypes, toMap(xmlConfig.getProperty()),
-            clockProvider, new HashSet<>(xmlConfig.getValueExtractor()));
+            clockProvider, valueExtractor);
     }
 
     public InputStream open(String mappingFileName) {

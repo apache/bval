@@ -82,7 +82,7 @@ under the License.
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-base</artifactId>
-            <version>11</version>
+            <version>19.0.2.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

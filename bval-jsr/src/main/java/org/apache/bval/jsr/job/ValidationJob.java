@@ -251,6 +251,7 @@ public abstract class ValidationJob<T> {
             this.realContext = context;
         }
 
+        @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
             final Lazy<Set<Frame<?>>> propertyFrames = new Lazy<>(this::propertyFrames);
@@ -620,7 +621,7 @@ public abstract class ValidationJob<T> {
         return maybeResults.isPresent() ? maybeResults.get().size() : 0;
     }
 
-    private final String interpolate(String messageTemplate, MessageInterpolator.Context context) {
+    private String interpolate(String messageTemplate, MessageInterpolator.Context context) {
         try {
             return validatorContext.getMessageInterpolator().interpolate(messageTemplate, context);
         } catch (ValidationException e) {

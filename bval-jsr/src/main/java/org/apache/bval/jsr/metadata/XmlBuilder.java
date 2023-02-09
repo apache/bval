@@ -520,15 +520,18 @@ public class XmlBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<T> loadClass(final String fqn) {
+    private <T> Class<T> loadClass(String fqn) {
         ClassLoader loader = Reflection.loaderFromThreadOrClass(XmlBuilder.class);
         if (loader == null) {
             loader = getClass().getClassLoader();
         }
         try {
+            if (fqn != null) {
+                fqn = fqn.replace("\n", "").replace("\r", "").replaceAll("\\s", "").trim();
+            }
             return (Class<T>) Class.forName(fqn, true, loader);
         } catch (ClassNotFoundException ex) {
-            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %d", fqn);
+            throw Exceptions.create(ValidationException::new, ex, "Unable to load class: %s", fqn);
         }
     }
 

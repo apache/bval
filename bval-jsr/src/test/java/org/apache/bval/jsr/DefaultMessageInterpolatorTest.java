@@ -315,7 +315,7 @@ public class DefaultMessageInterpolatorTest {
     private ApacheMessageContext context(Object validatedValue, Supplier<ConstraintDescriptor<?>> descriptor) {
         final ApacheMessageContext result = Mockito.mock(ApacheMessageContext.class);
         when(result.unwrap(any(Class.class)))
-            .thenAnswer(invocation -> invocation.getArgumentAt(0, Class.class).cast(result));
+            .thenAnswer(invocation -> invocation.getArgument(0, Class.class).cast(result));
         when(result.getValidatedValue()).thenReturn(validatedValue);
         when(result.getConstraintDescriptor()).thenAnswer(invocation -> descriptor.get());
         return result;

@@ -35,7 +35,7 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache BVal</name>
     <packaging>pom</packaging>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0</version>
 
     <description>Apache BVal parent pom</description>
 
@@ -56,7 +56,7 @@
         <connection>scm:git:http://gitbox.apache.org/repos/asf/bval</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/bval</developerConnection>
         <url>http://gitbox.apache.org/repos/asf/bval</url>
-        <tag>HEAD</tag>
+        <tag>3.0.0</tag>
     </scm>
 
     <mailingLists>

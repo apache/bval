@@ -354,11 +354,12 @@ public abstract class Meta<E extends AnnotatedElement> {
         if (!obj.getClass().equals(getClass())) {
             return false;
         }
-        return Objects.equals(((Meta<?>) obj).getHost(), getHost());
+        return Objects.equals(((Meta<?>) obj).getHost(), getHost())
+                && Objects.equals(((Meta<?>) obj).getParent(), getParent());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getHost());
+        return Objects.hash(getHost(), getParent());
     }
 }

@@ -26,17 +26,17 @@ import java.lang.reflect.Field;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class ContainerElementKeyTest {
     public static abstract class HasList {
-        public List<String> strings;
+        public Set<String> strings;
     }
 
-    public static abstract class BoundListType implements List<String> {
+    public static abstract class BoundListType implements Set<String> {
     }
 
     private Field stringsField;
@@ -51,7 +51,7 @@ public class ContainerElementKeyTest {
         final ContainerElementKey containerElementKey =
             new ContainerElementKey(stringsField.getAnnotatedType(), Integer.valueOf(0));
 
-        assertEquals(List.class, containerElementKey.getContainerClass());
+        assertEquals(Set.class, containerElementKey.getContainerClass());
         assertEquals(0, containerElementKey.getTypeArgumentIndex().intValue());
         assertEquals(String.class, containerElementKey.getAnnotatedType().getType());
     }
@@ -87,7 +87,7 @@ public class ContainerElementKeyTest {
         {
             assertTrue(iterator.hasNext());
             final ContainerElementKey assignableKey = iterator.next();
-            assertEquals(List.class, assignableKey.getContainerClass());
+            assertEquals(Set.class, assignableKey.getContainerClass());
             assertEquals(0, assignableKey.getTypeArgumentIndex().intValue());
         }
         {
@@ -111,7 +111,7 @@ public class ContainerElementKeyTest {
         final ContainerElementKey containerElementKey =
             new ContainerElementKey(stringsField.getAnnotatedType(), Integer.valueOf(0));
 
-        assertTrue(containerElementKey.represents(List.class.getTypeParameters()[0]));
+        assertTrue(containerElementKey.represents(Set.class.getTypeParameters()[0]));
         assertTrue(containerElementKey.represents(Collection.class.getTypeParameters()[0]));
         assertTrue(containerElementKey.represents(Iterable.class.getTypeParameters()[0]));
     }

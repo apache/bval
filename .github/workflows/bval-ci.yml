@@ -50,16 +50,19 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        jdk: [ '11', '17', '21' ]
 
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Set up JDK 11
+      - name: Set up JDK ${{ matrix.jdk }}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: ${{ matrix.jdk }}
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:

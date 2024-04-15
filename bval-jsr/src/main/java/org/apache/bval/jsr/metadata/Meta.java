@@ -345,20 +345,4 @@ public abstract class Meta<E extends AnnotatedElement> {
     public String describeHost() {
         return host.toString();
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!obj.getClass().equals(getClass())) {
-            return false;
-        }
-        return Objects.equals(((Meta<?>) obj).getHost(), getHost());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getHost());
-    }
 }

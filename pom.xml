@@ -719,4 +719,28 @@
         <module>bval-perf</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>jdk16+</id>
+
+            <activation>
+                <jdk>[16,)</jdk>
+            </activation>
+
+            <!-- IANAL plugin is broken on jdk 16+ because of JEP 396 -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>ianal-maven-plugin</artifactId>
+
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

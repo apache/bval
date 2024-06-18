@@ -31,7 +31,7 @@ under the License.
     <description>Aggregates dependencies and runs the JSR-380 TCK</description>
 
     <properties>
-        <tck.version>3.0.1</tck.version>
+        <tck.version>3.1.1</tck.version>
         <owb.version>4.0.2</owb.version>
         <arquillian.version>1.8.0.Final</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
@@ -137,7 +137,7 @@ under the License.
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
-            <artifactId>beanvalidation-tck-tests</artifactId>
+            <artifactId>validation-tck-tests</artifactId>
             <version>${tck.version}</version>
             <scope>test</scope>
         </dependency>
@@ -196,7 +196,7 @@ under the License.
                                     <artifactItems>
                                         <artifactItem>
                                             <groupId>jakarta.validation</groupId>
-                                            <artifactId>beanvalidation-tck-tests</artifactId>
+                                            <artifactId>validation-tck-tests</artifactId>
                                             <type>xml</type>
                                             <classifier>suite</classifier>
                                             <overWrite>false</overWrite>
@@ -212,7 +212,7 @@ under the License.
                         <configuration>
                             <argLine>-Duser.language=en --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${project.build.directory}/dependency/beanvalidation-tck-tests-suite.xml</suiteXmlFile>
+                                <suiteXmlFile>${project.build.directory}/dependency/validation-tck-tests-suite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                             <systemProperties>
                                 <property>
@@ -276,7 +276,7 @@ under the License.
                                     <artifactItems>
                                         <artifactItem>
                                             <groupId>jakarta.validation</groupId>
-                                            <artifactId>beanvalidation-tck-tests</artifactId>
+                                            <artifactId>validation-tck-tests</artifactId>
                                             <version>${tck.version}</version>
                                             <type>jar</type>
                                             <overWrite>false</overWrite>
@@ -305,11 +305,25 @@ under the License.
                                 jakarta.validation.constraintvalidation,jakarta.validation.executable,jakarta.validation.groups,
                                 jakarta.validation.metadata,jakarta.validation.spi,jakarta.validation.valueextraction
                             </packages>
-                            <sigfile>${project.build.directory}/api-signature/validation-api-java8.sig</sigfile>
+                            <sigfile>${project.build.directory}/api-signature/validation-api-jdk17.sig</sigfile>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
     </profiles>
+
+    <!-- TODO remove once validation TCK is released and synced to maven central -->
+    <repositories>
+        <repository>
+            <id>jakarta-oss-staging</id>
+            <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

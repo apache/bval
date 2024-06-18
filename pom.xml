@@ -325,14 +325,9 @@
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
             </dependency>
-            <!-- Optional profile to use Spec RI API -->
-            <dependency>
-                <groupId>jakarta.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <version>2.0.1.Final</version>
-            </dependency>
+
             <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
                 <groupId>jakarta.persistence</groupId>
@@ -375,7 +370,7 @@
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-el-api</artifactId>
-                <version>10.1.24</version>
+                <version>11.0.0-M21</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>

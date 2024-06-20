@@ -132,8 +132,6 @@ under the License.
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jasper-el</artifactId>
-            <version>11.0.0-M21</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

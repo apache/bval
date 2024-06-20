@@ -209,8 +209,6 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jasper-el</artifactId>
-            <version>11.0.0-M21</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- TODO update to 6.0.0 once released -->

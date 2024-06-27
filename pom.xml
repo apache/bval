@@ -35,7 +35,7 @@
     <artifactId>bval-parent</artifactId>
     <name>Apache BVal</name>
     <packaging>pom</packaging>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
 
     <description>Apache BVal parent pom</description>
 
@@ -325,14 +325,9 @@
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
             </dependency>
-            <!-- Optional profile to use Spec RI API -->
-            <dependency>
-                <groupId>jakarta.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <version>2.0.1.Final</version>
-            </dependency>
+
             <!-- JPA2 spec required for JPA TraversableResolver support -->
             <dependency>
                 <groupId>jakarta.persistence</groupId>
@@ -361,22 +356,19 @@
                 <version>${commons.weaver.version}</version>
                 <scope>provided</scope>
             </dependency>
-            <dependency>
-                <groupId>com.thoughtworks.xstream</groupId>
-                <artifactId>xstream</artifactId>
-                <version>1.4.20</version>
-            </dependency>
-            <!-- Optional - only used by bval-json -->
-            <dependency>
-                <groupId>org.freemarker</groupId>
-                <artifactId>freemarker</artifactId>
-                <version>2.3.32</version>
-            </dependency>
+
+            <!-- TODO upgrade to 11.0.x once released -->
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-el-api</artifactId>
-                <version>10.1.24</version>
+                <version>10.1.25</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-jasper-el</artifactId>
+                <version>10.1.25</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -402,7 +394,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <release>11</release>
+                        <release>17</release>
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
                 </plugin>
@@ -417,8 +409,8 @@
                             <manifestEntries>
                                 <Built-By>${built.by}</Built-By>
                                 <Implementation-Build>${buildNumber}</Implementation-Build>
-                                <Specification-Title>Bean Validation</Specification-Title>
-                                <Specification-Version>2.0</Specification-Version>
+                                <Specification-Title>Jakarta Validation</Specification-Title>
+                                <Specification-Version>3.1</Specification-Version>
                             </manifestEntries>
                         </archive>
                     </configuration>
@@ -479,22 +471,6 @@
                             <Bundle-DocURL>${project.url}</Bundle-DocURL>
                         </instructions>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>ianal-maven-plugin</artifactId>
-                    <version>1.0-alpha-1</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>verify-legal-files</goal>
-                            </goals>
-                            <configuration>
-                                <!-- Fail the build if any artifacts are missing legal files -->
-                                <strict>true</strict>
-                            </configuration>
-                        </execution>
-                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.rat</groupId>
@@ -614,11 +590,8 @@
                         </goals>
                         <configuration>
                             <rules>
-                                <requireMavenVersion>
-                                    <version>[2.2.1,)</version>
-                                </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>[1.8,)</version>
+                                    <version>[17,)</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -632,10 +605,6 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>ianal-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -718,29 +687,5 @@
         <module>bval-bundle</module>
         <module>bval-perf</module>
     </modules>
-
-    <profiles>
-        <profile>
-            <id>jdk16+</id>
-
-            <activation>
-                <jdk>[16,)</jdk>
-            </activation>
-
-            <!-- IANAL plugin is broken on jdk 16+ because of JEP 396 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>ianal-maven-plugin</artifactId>
-
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

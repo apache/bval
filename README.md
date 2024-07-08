@@ -31,6 +31,10 @@ See: https://beanvalidation.org/
 
 Jakarta Validation 3.1 implementation
 
+### 3.0.x
+
+Bean Validation 3.0 implementation
+
 ### 2.x
 
 Bean Validation 2.x implementation

@@ -581,7 +581,7 @@
                 <plugin>
                     <groupId>org.netbeans.tools</groupId>
                     <artifactId>sigtest-maven-plugin</artifactId>
-                    <version>1.0</version>
+                    <version>1.7</version>
                 </plugin>
             </plugins>
         </pluginManagement>

@@ -25,8 +25,7 @@ on:
     branches:
       - master
       - main
-      - bval-1.1.x
-      - bval-2.x
+      - bval-*
     paths-ignore:
       - '**.md'
       - '.travis.yml'
@@ -35,8 +34,7 @@ on:
     branches:
       - master
       - main
-      - bval-1.1.x
-      - bval-2.x
+      - bval-*
     paths-ignore:
       - '**.md'
       - '.travis.yml'

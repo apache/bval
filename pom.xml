@@ -227,6 +227,14 @@
                 <role>PMC Member</role>
             </roles>
         </developer>
+        <developer>
+            <id>jungm</id>
+            <name>Markus Jung</name>
+            <email>jungm@apache.org</email>
+            <roles>
+                <role>Committer</role>
+            </roles>
+        </developer>
     </developers>
 
     <contributors>

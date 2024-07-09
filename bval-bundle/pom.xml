@@ -61,9 +61,9 @@
                         <Implementation-Title>Apache BVal</Implementation-Title>
                         <Implementation-Build>${buildNumber}</Implementation-Build>
                         <Implementation-Vendor>org.apache</Implementation-Vendor>
-                        <Specification-Title>Java Bean Validation</Specification-Title>
-                        <Specification-Vendor>Java Community Process</Specification-Vendor>
-                        <Specification-Version>2.0</Specification-Version>
+                        <Specification-Title>Jakarta Validation</Specification-Title>
+                        <Specification-Vendor>Eclipse Foundation</Specification-Vendor>
+                        <Specification-Version>3.1</Specification-Version>
                         <Bundle-DocURL>${project.url}</Bundle-DocURL>
                         <Embed-Dependency>*;inline=true</Embed-Dependency>
                         <Private-Package />

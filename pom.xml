@@ -519,18 +519,6 @@
                         </excludes>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.codehaus.plexus</groupId>
-                            <artifactId>plexus-velocity</artifactId>
-                            <version>2.1.0</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
                 <!-- inherited from apache-10.pom, but need config updates -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

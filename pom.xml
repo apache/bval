@@ -375,7 +375,7 @@
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-jasper-el</artifactId>
-                <version>10.1.25</version>
+                <version>10.1.26</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

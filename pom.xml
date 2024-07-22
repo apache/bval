@@ -45,7 +45,7 @@
         <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
         <site.server>bval.site</site.server>
         <built.by>${user.name}</built.by>
-        <plugin.javadoc.version>3.7.0</plugin.javadoc.version>
+        <plugin.javadoc.version>3.8.0</plugin.javadoc.version>
     </properties>
 
     <inceptionYear>2010</inceptionYear>

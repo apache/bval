@@ -304,18 +304,4 @@ under the License.
             </build>
         </profile>
     </profiles>
-
-    <!-- TODO remove once validation TCK is released and synced to maven central -->
-    <repositories>
-        <repository>
-            <id>jakarta-oss-staging</id>
-            <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>

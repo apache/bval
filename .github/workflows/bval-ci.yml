@@ -19,53 +19,27 @@
 # NOTE https://infra.apache.org/github-actions-secrets.html
 
 name: BVal CI
-
-on:
-  push:
-    branches:
-      - master
-      - main
-      - bval-*
-    paths-ignore:
-      - '**.md'
-      - '.travis.yml'
-      - 'Jenkinsfile'
-  pull_request:
-    branches:
-      - master
-      - main
-      - bval-*
-    paths-ignore:
-      - '**.md'
-      - '.travis.yml'
-      - 'Jenkinsfile'
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 permissions:
   contents: read
   
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    name: Build (Java ${{ matrix.jdk }})
     strategy:
       matrix:
         jdk: [ '17', '21', '23' ]
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
       - name: Set up JDK ${{ matrix.jdk }}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.jdk }}
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          cache: 'maven'
       - name: Build with Maven
         run: mvn clean install

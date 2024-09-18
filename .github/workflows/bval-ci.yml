@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        jdk: [ '17', '21' ]
+        jdk: [ '17', '21', '23' ]
 
     steps:
       - uses: actions/checkout@v4

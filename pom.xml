@@ -45,7 +45,10 @@
         <site.url>scm:svn:https://svn.apache.org/repos/infra/websites/production/bval/content/mvnsite</site.url>
         <site.server>bval.site</site.server>
         <built.by>${user.name}</built.by>
-        <plugin.javadoc.version>3.10.0</plugin.javadoc.version>
+
+        <version.plugin.javadoc>3.10.0</version.plugin.javadoc>
+        <!-- TODO upgrade to 11.0.x once stable version is released -->
+        <version.tomcat>10.1.30</version.tomcat> <!-- used for EL API + EL impl in tests -->
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -271,7 +274,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${plugin.javadoc.version}</version>
+                <version>${version.plugin.javadoc}</version>
                 <configuration>
                     <doclint>none</doclint>
                     <show>package</show>
@@ -293,7 +296,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${plugin.javadoc.version}</version>
+                <version>${version.plugin.javadoc}</version>
                 <inherited>false</inherited>
                 <configuration>
                     <doclint>none</doclint>
@@ -359,17 +362,16 @@
                 <scope>provided</scope>
             </dependency>
 
-            <!-- TODO upgrade to 11.0.x once released -->
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-el-api</artifactId>
-                <version>10.1.30</version>
+                <version>${version.tomcat}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-jasper-el</artifactId>
-                <version>10.1.30</version>
+                <version>${version.tomcat}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -420,7 +422,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${plugin.javadoc.version}</version>
+                    <version>${version.plugin.javadoc}</version>
                     <configuration>
                         <encoding>${project.build.sourceEncoding}</encoding>
                         <additionalparam>${javadoc.additionalparam}</additionalparam>

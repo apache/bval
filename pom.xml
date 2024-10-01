@@ -46,7 +46,7 @@
         <site.server>bval.site</site.server>
         <built.by>${user.name}</built.by>
 
-        <version.plugin.javadoc>3.10.0</version.plugin.javadoc>
+        <version.plugin.javadoc>3.10.1</version.plugin.javadoc>
         <!-- TODO upgrade to 11.0.x once stable version is released -->
         <version.tomcat>10.1.30</version.tomcat> <!-- used for EL API + EL impl in tests -->
     </properties>

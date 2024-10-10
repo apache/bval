@@ -47,8 +47,7 @@
         <built.by>${user.name}</built.by>
 
         <version.plugin.javadoc>3.10.1</version.plugin.javadoc>
-        <!-- TODO upgrade to 11.0.x once stable version is released -->
-        <version.tomcat>10.1.30</version.tomcat> <!-- used for EL API + EL impl in tests -->
+        <version.tomcat>11.0.0</version.tomcat> <!-- used for EL API + EL impl in tests -->
     </properties>
 
     <inceptionYear>2010</inceptionYear>

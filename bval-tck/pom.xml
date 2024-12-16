@@ -32,7 +32,7 @@ under the License.
 
     <properties>
         <tck.version>3.1.1</tck.version>
-        <owb.version>4.0.2</owb.version>
+        <owb.version>4.0.3</owb.version>
         <arquillian.version>1.8.1.Final</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>

@@ -47,7 +47,11 @@
         <built.by>${user.name}</built.by>
 
         <version.plugin.javadoc>3.11.2</version.plugin.javadoc>
+
+        <!-- Testing dependencies -->
         <version.tomcat>11.0.2</version.tomcat> <!-- used for EL API + EL impl in tests -->
+        <version.owb>4.0.2</version.owb>
+        <version.arquillian>1.8.0.Final</version.arquillian>
     </properties>
 
     <inceptionYear>2010</inceptionYear>

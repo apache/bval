@@ -66,7 +66,7 @@ import org.apache.bval.util.Validate;
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
-    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
+    public static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
         annotatedType -> !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
 
     private static AnnotatedTypeFilter annotatedTypeFilter = DEFAULT_ANNOTATED_TYPE_FILTER;

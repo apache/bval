@@ -218,8 +218,8 @@ public class BValExtension implements Extension {
     }
 
     private boolean hasValidation(final AnnotatedElement[] elements) {
-        for (int i = 0; i < elements.length; i++) {
-            if (hasValidation(elements[i])) {
+        for (AnnotatedElement element : elements) {
+            if (hasValidation(element)) {
                 return true;
             }
         }
@@ -228,10 +228,9 @@ public class BValExtension implements Extension {
     }
 
     private boolean hasParamsWithValidation(Executable[] executables) {
-        for (int i = 0; i < executables.length; i++) {
-            Parameter[] params = executables[i].getParameters();
-            for (int j = 0; j < params.length; j++) {
-                if (hasValidation(params[j])) {
+        for (Executable executable : executables) {
+            for (Parameter param : executable.getParameters()) {
+                if (hasValidation(param)) {
                     return true;
                 }
             }
@@ -241,9 +240,8 @@ public class BValExtension implements Extension {
     }
 
     private boolean hasValidation(final AnnotatedElement element) {
-        Annotation[] annotations = element.getAnnotations();
-        for (int i = 0; i < annotations.length; i++) {
-            final Class<? extends Annotation> type = annotations[i].annotationType();
+        for (Annotation annotation : element.getAnnotations()) {
+            final Class<? extends Annotation> type = annotation.annotationType();
             if (type == ValidateOnExecution.class || type == Valid.class) {
                 return true;
             }

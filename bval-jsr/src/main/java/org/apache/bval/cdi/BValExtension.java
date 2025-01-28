@@ -137,9 +137,12 @@ public class BValExtension implements Extension {
 
                 while (!toProcess.isEmpty()) {
                     Class<?> now = toProcess.poll();
+                    Executable[] methods = now.getMethods();
+                    Executable[] constructors = now.getConstructors();
+
                     if (hasValidation(now)
-                            || hasValidation(now.getMethods()) || hasValidation(now.getConstructors())
-                            || hasParamsWithValidation(now.getMethods()) || hasParamsWithValidation(now.getConstructors())) {
+                            || hasValidation(methods) || hasValidation(constructors)
+                            || hasParamsWithValidation(methods) || hasParamsWithValidation(constructors)) {
                         pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
 
                         break;

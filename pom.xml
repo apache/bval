@@ -50,7 +50,7 @@
 
         <!-- Testing dependencies -->
         <version.tomcat>11.0.2</version.tomcat> <!-- used for EL API + EL impl in tests -->
-        <version.owb>4.0.2</version.owb>
+         <version.owb>4.0.3</version.owb>
         <version.arquillian>1.8.0.Final</version.arquillian>
     </properties>
 

@@ -32,8 +32,6 @@ under the License.
 
     <properties>
         <tck.version>3.1.1</tck.version>
-        <owb.version>4.0.3</owb.version>
-        <arquillian.version>1.8.1.Final</arquillian.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
 
@@ -109,18 +107,18 @@ under the License.
         <dependency>
             <groupId>org.jboss.arquillian.container</groupId>
             <artifactId>arquillian-container-test-spi</artifactId>
-            <version>${arquillian.version}</version>
+            <version>${version.arquillian}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.openwebbeans.arquillian</groupId>
             <artifactId>owb-arquillian-standalone</artifactId>
-            <version>${owb.version}</version>
+            <version>${version.owb}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.openwebbeans</groupId>
             <artifactId>openwebbeans-impl</artifactId>
-            <version>${owb.version}</version>
+            <version>${version.owb}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -136,13 +134,13 @@ under the License.
         <dependency>
             <groupId>org.jboss.arquillian.testng</groupId>
             <artifactId>arquillian-testng-container</artifactId>
-            <version>${arquillian.version}</version>
+            <version>${version.arquillian}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.protocol</groupId>
             <artifactId>arquillian-protocol-servlet-jakarta</artifactId>
-            <version>${arquillian.version}</version>
+            <version>${version.arquillian}</version>
             <scope>test</scope>
         </dependency>
 

@@ -22,7 +22,7 @@
     xmlns:xjc="https://jakarta.ee/xml/ns/jaxb"
     version="3.0">
 
-  <jxb:bindings schemaLocation="../xsd/validation-mapping-3.0.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="../xsd/validation-mapping-3.1.xsd" node="/xs:schema">
     <jxb:globalBindings>
       <!-- adapter attribute not supported anymore
       <xjc:javaType name="java.lang.String" xmlType="xs:string"
@@ -34,7 +34,7 @@
     </jxb:bindings>
   </jxb:bindings>
 
-  <jxb:bindings schemaLocation="../xsd/validation-configuration-3.0.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="../xsd/validation-configuration-3.1.xsd" node="/xs:schema">
     <jxb:bindings node="//xs:element[@name='executable-type']">
       <jxb:javaType name="jakarta.validation.executable.ExecutableType"
                     parseMethod="jakarta.validation.executable.ExecutableType.valueOf"/>

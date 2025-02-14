@@ -118,6 +118,14 @@ public class ValidationParserTest implements ApacheValidatorConfiguration.Proper
     }
 
     @Test
+    public void testParseV31() {
+        ConfigurationImpl config = new ConfigurationImpl(null, new ApacheValidationProvider());
+        final BootstrapConfiguration configuration =
+            validationParser.processValidationConfig("sample-validation31.xml", config);
+        assertEquals("org.apache.bval.jsr.xml.TestMessageInterpolator", configuration.getMessageInterpolatorClassName());
+    }
+
+    @Test
     public void testConfigureFromXml() {
         ValidatorFactory factory = getFactory();
         assertThat(factory.getMessageInterpolator(), instanceOf(TestMessageInterpolator.class));

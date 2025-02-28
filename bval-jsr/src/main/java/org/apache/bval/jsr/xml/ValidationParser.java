@@ -69,6 +69,8 @@ public class ValidationParser {
             "META-INF/validation-configuration-2.0.xsd")
         .add(XmlBuilder.Version.v30.getId(), "https://jakarta.ee/xml/ns/validation/configuration",
                 "META-INF/validation-configuration-3.0.xsd")
+        .add(XmlBuilder.Version.v31.getId(), "https://jakarta.ee/xml/ns/validation/configuration",
+                "META-INF/validation-configuration-3.1.xsd")
         .build();
 
     private static String getValidationXmlFile(String file) {

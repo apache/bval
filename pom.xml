@@ -49,7 +49,7 @@
         <version.plugin.javadoc>3.11.2</version.plugin.javadoc>
 
         <!-- Testing dependencies -->
-        <version.tomcat>11.0.4</version.tomcat> <!-- used for EL API + EL impl in tests -->
+        <version.tomcat>11.0.5</version.tomcat> <!-- used for EL API + EL impl in tests -->
          <version.owb>4.0.3</version.owb>
         <version.arquillian>1.8.0.Final</version.arquillian>
     </properties>

@@ -19,11 +19,17 @@
 package org.apache.bval.cdi;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,10 +39,8 @@ import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
-import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.AnnotatedType;
 import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanAttributes;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.BeforeBeanDiscovery;
 import jakarta.enterprise.inject.spi.CDI;
@@ -66,7 +70,7 @@ import org.apache.bval.util.Validate;
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
-    private static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
+    public static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
         annotatedType -> !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
 
     private static AnnotatedTypeFilter annotatedTypeFilter = DEFAULT_ANNOTATED_TYPE_FILTER;
@@ -128,13 +132,28 @@ public class BValExtension implements Extension {
         final int modifiers = javaClass.getModifiers();
         if (!javaClass.isInterface() && !javaClass.isAnonymousClass() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
             try {
-                if (hasValidation(annotatedType)
-                    || hasValidationAnnotation(annotatedType.getMethods())
-                    || hasValidationAnnotation(annotatedType.getConstructors())
-                    || Stream.concat(annotatedType.getMethods().stream(), annotatedType.getConstructors().stream())
-                        .flatMap(it -> it.getParameters().stream())
-                        .anyMatch(this::hasValidation)) {
-                    pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
+                Queue<Class<?>> toProcess = new LinkedList<>();
+                toProcess.add(annotatedType.getJavaClass());
+
+                while (!toProcess.isEmpty()) {
+                    Class<?> now = toProcess.poll();
+                    Executable[] methods = now.getMethods();
+                    Executable[] constructors = now.getConstructors();
+
+                    if (hasValidation(now)
+                            || hasValidation(methods) || hasValidation(constructors)
+                            || hasParamsWithValidation(methods) || hasParamsWithValidation(constructors)) {
+                        pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
+
+                        break;
+                    }
+
+                    // Nothing found, collect superclass/interface and repeat (See BVAL-222)
+                    if (now.getSuperclass() != Object.class) {
+                        toProcess.add(now.getSuperclass());
+                    }
+
+                    toProcess.addAll(Arrays.asList(now.getInterfaces()));
                 }
             } catch (final Exception e) {
                 if (e instanceof ValidationException) {
@@ -201,32 +220,53 @@ public class BValExtension implements Extension {
         notBValAnnotation.clear();
     }
 
-    private boolean hasValidationAnnotation(final Collection<? extends Annotated> annotateds) {
-        return annotateds.stream().anyMatch(this::hasValidation);
+    private boolean hasValidation(final AnnotatedElement[] elements) {
+        for (AnnotatedElement element : elements) {
+            if (hasValidation(element)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private boolean hasValidation(final Annotated m) {
-        return m.getAnnotations().stream()
-                .anyMatch(it -> {
-                    final Class<? extends Annotation> type = it.annotationType();
-                    if (type == ValidateOnExecution.class || type == Valid.class) {
-                        return true;
-                    }
-                    if (isSkippedAnnotation(type)) {
-                        return false;
-                    }
-                    if (type.getName().startsWith("jakarta.validation.constraints")) {
-                        return true;
-                    }
-                    if (notBValAnnotation.contains(type)) { // more likely so faster first
-                        return false;
-                    }
-                    if (potentiallyBValAnnotation.contains(type)) {
-                        return true;
-                    }
-                    cacheIsBvalAnnotation(type);
-                    return potentiallyBValAnnotation.contains(type);
-                });
+    private boolean hasParamsWithValidation(Executable[] executables) {
+        for (Executable executable : executables) {
+            for (Parameter param : executable.getParameters()) {
+                if (hasValidation(param)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasValidation(final AnnotatedElement element) {
+        for (Annotation annotation : element.getAnnotations()) {
+            final Class<? extends Annotation> type = annotation.annotationType();
+            if (type == ValidateOnExecution.class || type == Valid.class) {
+                return true;
+            }
+            if (isSkippedAnnotation(type)) {
+                continue;
+            }
+            if (type.getName().startsWith("jakarta.validation.constraints")) {
+                return true;
+            }
+            if (notBValAnnotation.contains(type)) { // more likely so faster first
+                continue;
+            }
+            if (potentiallyBValAnnotation.contains(type)) {
+                return true;
+            }
+            cacheIsBvalAnnotation(type);
+            if (potentiallyBValAnnotation.contains(type)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isSkippedAnnotation(final Class<? extends Annotation> type) {

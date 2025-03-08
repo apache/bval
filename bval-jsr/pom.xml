@@ -224,6 +224,25 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <scope>test</scope>
+            <version>${version.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.openwebbeans.arquillian</groupId>
+            <artifactId>owb-arquillian-standalone</artifactId>
+            <version>${version.owb}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.openwebbeans</groupId>
+            <artifactId>openwebbeans-impl</artifactId>
+            <version>${version.owb}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

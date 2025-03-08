@@ -46,6 +46,10 @@
         <site.server>bval.site</site.server>
         <built.by>${user.name}</built.by>
         <plugin.javadoc.version>3.6.3</plugin.javadoc.version>
+
+        <!-- testing dependencies -->
+        <version.owb>4.0.3</version.owb>
+        <version.arquillian>1.8.0.Final</version.arquillian>
     </properties>
 
     <inceptionYear>2010</inceptionYear>

@@ -149,7 +149,7 @@ public class BValExtension implements Extension {
                     }
 
                     // Nothing found, collect superclass/interface and repeat (See BVAL-222)
-                    if (now.getSuperclass() != Object.class) {
+                    if (now.getSuperclass() != Object.class && now.getSuperclass() != null) {
                         toProcess.add(now.getSuperclass());
                     }
 

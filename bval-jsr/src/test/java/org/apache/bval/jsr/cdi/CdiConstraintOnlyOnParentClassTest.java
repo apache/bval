@@ -33,13 +33,15 @@ import org.junit.Test;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 
+import java.io.Serializable;
+
 @RunWith(Arquillian.class)
 public class CdiConstraintOnlyOnParentClassTest {
     @ClassRule
     public static ExternalResource allowMyServiceImplType = new ExternalResource() {
         @Override
         protected void before() throws Throwable {
-            BValExtension.setAnnotatedTypeFilter(at -> at.getJavaClass() == GreetingServiceImpl.class);
+            BValExtension.setAnnotatedTypeFilter(at -> at.getJavaClass() == LastGreetingService.class);
         }
 
         @Override
@@ -54,7 +56,7 @@ public class CdiConstraintOnlyOnParentClassTest {
     @Deployment
     public static JavaArchive createDeployment() {
         return ShrinkWrap.create(JavaArchive.class)
-                .addClasses(GreetingService.class, GreetingServiceImpl.class);
+                .addClasses(GreetingService.class, GreetingServiceImpl.class, IntermediateGreetingService.class, LastGreetingService.class);
     }
 
     @Test
@@ -66,10 +68,16 @@ public class CdiConstraintOnlyOnParentClassTest {
         void greet(@NotNull String name);
     }
 
-    @ApplicationScoped
     public static class GreetingServiceImpl implements GreetingService {
         @Override
         public void greet(String name) {
         }
+    }
+
+    public static class IntermediateGreetingService extends GreetingServiceImpl {
+    }
+
+    @ApplicationScoped
+    public static class LastGreetingService extends IntermediateGreetingService implements Serializable {
     }
 }

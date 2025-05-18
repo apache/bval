@@ -19,12 +19,8 @@
 package org.apache.bval.cdi;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,6 +35,11 @@ import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
+import jakarta.enterprise.inject.spi.Annotated;
+import jakarta.enterprise.inject.spi.AnnotatedCallable;
+import jakarta.enterprise.inject.spi.AnnotatedConstructor;
+import jakarta.enterprise.inject.spi.AnnotatedMethod;
+import jakarta.enterprise.inject.spi.AnnotatedParameter;
 import jakarta.enterprise.inject.spi.AnnotatedType;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -70,7 +71,8 @@ import org.apache.bval.util.Validate;
 public class BValExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(BValExtension.class.getName());
 
-    public static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
+    // protected so can be accessed in tests
+    protected static final AnnotatedTypeFilter DEFAULT_ANNOTATED_TYPE_FILTER =
         annotatedType -> !annotatedType.getJavaClass().getName().startsWith("org.apache.bval.");
 
     private static AnnotatedTypeFilter annotatedTypeFilter = DEFAULT_ANNOTATED_TYPE_FILTER;
@@ -119,7 +121,7 @@ public class BValExtension implements Extension {
     }
 
     // @WithAnnotations(ValidateOnExecution.class) doesn't check interfaces so not enough
-    public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat) {
+    public <A> void processAnnotatedType(final @Observes ProcessAnnotatedType<A> pat, BeanManager beanManager) {
         if (!isExecutableValidationEnabled) {
             return;
         }
@@ -132,28 +134,31 @@ public class BValExtension implements Extension {
         final int modifiers = javaClass.getModifiers();
         if (!javaClass.isInterface() && !javaClass.isAnonymousClass() && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers)) {
             try {
-                Queue<Class<?>> toProcess = new LinkedList<>();
-                toProcess.add(annotatedType.getJavaClass());
+                Queue<AnnotatedType<?>> toProcess = new LinkedList<>();
+                toProcess.add(annotatedType);
 
                 while (!toProcess.isEmpty()) {
-                    Class<?> now = toProcess.poll();
-                    Executable[] methods = now.getMethods();
-                    Executable[] constructors = now.getConstructors();
+                    AnnotatedType<?> now = toProcess.poll();
+                    Set<? extends AnnotatedMethod<?>> methods = now.getMethods();
+                    Set<? extends AnnotatedConstructor<?>> constructors = now.getConstructors();
 
                     if (hasValidation(now)
-                            || hasValidation(methods) || hasValidation(constructors)
-                            || hasParamsWithValidation(methods) || hasParamsWithValidation(constructors)) {
+                            || methods.stream().anyMatch(this::hasValidation)
+                            || constructors.stream().anyMatch(this::hasValidation)
+                            || methods.stream().anyMatch(this::hasParamsWithValidation)
+                            || constructors.stream().anyMatch(this::hasParamsWithValidation)) {
                         pat.setAnnotatedType(new BValAnnotatedType<>(annotatedType));
-
                         break;
                     }
 
-                    // Nothing found, collect superclass/interface and repeat (See BVAL-222)
-                    if (now.getSuperclass() != Object.class && now.getSuperclass() != null) {
-                        toProcess.add(now.getSuperclass());
+                    Class<?> superclass = now.getJavaClass().getSuperclass();
+                    if (superclass != Object.class && superclass != null) {
+                        toProcess.add(beanManager.createAnnotatedType(superclass));
                     }
 
-                    toProcess.addAll(Arrays.asList(now.getInterfaces()));
+                    for (Class<?> iface : now.getJavaClass().getInterfaces()) {
+                        toProcess.add(beanManager.createAnnotatedType(iface));
+                    }
                 }
             } catch (final Exception e) {
                 if (e instanceof ValidationException) {
@@ -165,7 +170,6 @@ public class BValExtension implements Extension {
             }
         }
     }
-
     public <A> void processBean(final @Observes ProcessBean<A> processBeanEvent) {
         if (validatorFound && validatorFactoryFound) {
             return;
@@ -220,9 +224,9 @@ public class BValExtension implements Extension {
         notBValAnnotation.clear();
     }
 
-    private boolean hasValidation(final AnnotatedElement[] elements) {
-        for (AnnotatedElement element : elements) {
-            if (hasValidation(element)) {
+    private boolean hasParamsWithValidation(AnnotatedCallable<?> callable) {
+        for (AnnotatedParameter<?> param : callable.getParameters()) {
+            if (hasValidation(param)) {
                 return true;
             }
         }
@@ -230,19 +234,7 @@ public class BValExtension implements Extension {
         return false;
     }
 
-    private boolean hasParamsWithValidation(Executable[] executables) {
-        for (Executable executable : executables) {
-            for (Parameter param : executable.getParameters()) {
-                if (hasValidation(param)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private boolean hasValidation(final AnnotatedElement element) {
+    private boolean hasValidation(final Annotated element) {
         for (Annotation annotation : element.getAnnotations()) {
             final Class<? extends Annotation> type = annotation.annotationType();
             if (type == ValidateOnExecution.class || type == Valid.class) {

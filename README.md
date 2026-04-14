@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://bval.apache.org/images/bval-logo.png" width="300" />
+<img src="https://bval.apache.org/resources/images/logo.png" width="300" />
 </div>
 <br>
 
@@ -12,23 +12,19 @@ Apache's implementation of the Jakarta Validation specification for Jakarta EE a
 ## Branches
 
 ### master / 3.1.x
-Jakarta Validation 3.1 implementation (Jakarta EE 11)  
-Requires Java 17+
+Jakarta Validation 3.1 implementation (Jakarta EE 11), requires Java 17+.  
 
 ### 3.0.x
 ![3.0.x](https://img.shields.io/maven-central/v/org.apache.bval/bval-jsr?versionPrefix=3.0&color=cyan)  
-Jakarta Bean Validation 3.0 implementation (Jakarta EE 10)  
-Requires Java 11+
+Jakarta Bean Validation 3.0 implementation (Jakarta EE 10), requires Java 11+.  
 
 ### 2.x
 ![2.x](https://img.shields.io/maven-central/v/org.apache.bval/bval-jsr?versionPrefix=2.&color=cyan)  
-Bean Validation 2.0 (JSR-380) implementation (Java EE 8)  
-Requires Java 8+
+Bean Validation 2.0 (JSR-380) implementation (Java EE 8), requires Java 8+.  
 
 ### 1.1.x
 ![1.1.x](https://img.shields.io/maven-central/v/org.apache.bval/bval-jsr?versionPrefix=1.1&color=cyan)  
-Bean Validation 1.1 (JSR-349) implementation (Java EE 7)  
-Requires Java 6+
+Bean Validation 1.1 (JSR-349) implementation (Java EE 7), requires Java 6+.  
 
 ## Minimum Requirements (master)
 

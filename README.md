@@ -4,8 +4,9 @@
 <br>
 
 ![Maven Central](https://img.shields.io/maven-central/v/org.apache.bval/bval-jsr)
-[![ASF Build Status](https://github.com/apache/bval/workflows/BVal%20CI/badge.svg)](https://github.com/apache/bval/actions/workflows/bval-ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://github.com/apache/openwebbeans/workflows/CI/badge.svg)](https://github.com/apache/openwebbeans/actions)
+[![Build Status ASF](https://github.com/apache/bval/workflows/BVal%20CI/badge.svg)](https://github.com/apache/bval/actions/workflows/bval-ci.yml)
 
 Apache's implementation of the Jakarta Validation specification for Jakarta EE and Java SE
 

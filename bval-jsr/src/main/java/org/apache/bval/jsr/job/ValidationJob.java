@@ -23,7 +23,9 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,6 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintValidator;
@@ -48,6 +49,8 @@ import jakarta.validation.constraintvalidation.ValidationTarget;
 import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.CascadableDescriptor;
 import jakarta.validation.metadata.ContainerDescriptor;
+import jakarta.validation.metadata.ContainerElementTypeDescriptor;
+import jakarta.validation.metadata.GroupConversionDescriptor;
 import jakarta.validation.metadata.PropertyDescriptor;
 import jakarta.validation.metadata.ValidateUnwrappedValue;
 import jakarta.validation.valueextraction.ValueExtractor;
@@ -282,25 +285,31 @@ public abstract class ValidationJob<T> {
         }
 
         private Set<Frame<?>> propertyFrames() {
-            final Stream<PropertyD<?>> properties = descriptor.getConstrainedProperties().stream()
-                    .flatMap(d -> ComposedD.unwrap(d, PropertyD.class)).map(d -> (PropertyD<?>) d);
-
             final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
-
-            final Stream<PropertyD<?>> reachableProperties = properties.filter(d -> {
-                final PathImpl p = realContext.getPath();
-                p.addProperty(d.getPropertyName());
-                try {
-                    return traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
-                            p, d.getElementType());
-                } catch (ValidationException ve) {
-                    throw ve;
-                } catch (Exception e) {
-                    throw new ValidationException(e);
-                }
-            });
-            return reachableProperties.flatMap(d -> d.read(realContext).filter(context -> !context.isRecursive())
-                    .map(child -> propertyFrame(d, child))).collect(Collectors.toSet());
+            final Set<Frame<?>> frames = new HashSet<>();
+            for (final PropertyDescriptor pd : descriptor.getConstrainedProperties()) {
+                ComposedD.forEachUnwrapped(pd, PropertyD.class, d -> {
+                    final PathImpl p = realContext.getPath();
+                    p.addProperty(d.getPropertyName());
+                    try {
+                        if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                                p, d.getElementType())) {
+                            return;
+                        }
+                    } catch (ValidationException ve) {
+                        throw ve;
+                    } catch (Exception e) {
+                        throw new ValidationException(e);
+                    }
+                    for (final Iterator<GraphContext> it = d.read(realContext).iterator(); it.hasNext();) {
+                        final GraphContext child = it.next();
+                        if (!child.isRecursive()) {
+                            frames.add(propertyFrame(d, child));
+                        }
+                    }
+                });
+            }
+            return frames;
         }
     }
 
@@ -318,18 +327,22 @@ public abstract class ValidationJob<T> {
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             super.validateDescriptorConstraints(groups, sink);
             if (context.getValue() != null) {
-                descriptor.getConstrainedContainerElementTypes().stream()
-                        .flatMap(d -> ComposedD.unwrap(d, ContainerElementTypeD.class)).forEach(d -> {
-                            if (constraintsFor(d, groups).findFirst().isPresent()
-                                    || !d.getConstrainedContainerElementTypes().isEmpty()) {
-                                final ValueExtractor<?> declaredTypeValueExtractor =
-                                        context.getValidatorContext().getValueExtractors().find(d.getKey());
-                                ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor).stream()
-                                        .filter(e -> !e.isRecursive())
-                                        .map(e -> new ContainerElementConstraintsFrame(this, d, e))
-                                        .forEach(f -> f.validateDescriptorConstraints(groups, sink));
+                for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
+                    ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
+                        if (!constraintsFor(d, groups).findFirst().isPresent()
+                                && d.getConstrainedContainerElementTypes().isEmpty()) {
+                            return;
+                        }
+                        final ValueExtractor<?> declaredTypeValueExtractor =
+                                context.getValidatorContext().getValueExtractors().find(d.getKey());
+                        for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
+                            if (!e.isRecursive()) {
+                                new ContainerElementConstraintsFrame(this, d, e)
+                                        .validateDescriptorConstraints(groups, sink);
                             }
-                        });
+                        }
+                    });
+                }
             }
         }
 
@@ -338,23 +351,30 @@ public abstract class ValidationJob<T> {
             if (context.getValue() == null || !DescriptorManager.isCascaded(descriptor)) {
                 return;
             }
-            final Map<Group, GroupStrategy> conversions =
-                    descriptor.getGroupConversions().stream().collect(Collectors.toMap(gc -> Group.of(gc.getFrom()),
-                            gc -> validatorContext.getGroupsComputer().computeGroups(gc.getTo()).asStrategy()));
+            final Map<Group, GroupStrategy> conversions = new HashMap<>();
+            for (final GroupConversionDescriptor gc : descriptor.getGroupConversions()) {
+                conversions.put(Group.of(gc.getFrom()),
+                        validatorContext.getGroupsComputer().computeGroups(gc.getTo()).asStrategy());
+            }
 
             GroupStrategy.redefining(groups, conversions).applyTo(noViolations(gs -> cascade(gs, sink)));
         }
 
         private void cascade(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            descriptor.getConstrainedContainerElementTypes().stream()
-                    .filter(d -> d.isCascaded() || !d.getConstrainedContainerElementTypes().isEmpty())
-                    .flatMap(d -> ComposedD.unwrap(d, ContainerElementTypeD.class)).forEach(d -> {
-                        final ValueExtractor<?> runtimeTypeValueExtractor =
-                                context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
-                        ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor).stream()
-                                .filter(e -> !e.isRecursive()).map(e -> new ContainerElementCascadeFrame(this, d, e))
-                                .forEach(f -> f.recurse(groups, sink));
-                    });
+            for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
+                ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
+                    if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
+                        return;
+                    }
+                    final ValueExtractor<?> runtimeTypeValueExtractor =
+                            context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
+                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
+                        if (!e.isRecursive()) {
+                            new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
+                        }
+                    }
+                });
+            }
             if (!descriptor.isCascaded()) {
                 return;
             }
@@ -378,48 +398,58 @@ public abstract class ValidationJob<T> {
                     throw new ValidationException(e);
                 }
             }
-            multiplex().filter(context -> context.getValue() != null && !context.isRecursive())
-                    .map(context -> new BeanFrame<>(this, context)).forEach(b -> b.process(groups, sink));
+            multiplexEach(cx -> {
+                if (cx.getValue() != null && !cx.isRecursive()) {
+                    new BeanFrame<>(this, cx).process(groups, sink);
+                }
+            });
         }
 
         protected GraphContext getMultiplexContext() {
             return context;
         }
 
-        private Stream<GraphContext> multiplex() {
+        private void multiplexEach(Consumer<GraphContext> consumer) {
             final GraphContext multiplexContext = getMultiplexContext();
             final Object value = multiplexContext.getValue();
             if (value == null) {
-                return Stream.empty();
+                return;
             }
             if (value.getClass().isArray()) {
                 // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
                 final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
-                return IntStream.range(0, Array.getLength(value)).mapToObj(
-                        i -> multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                for (int i = 0, n = Array.getLength(value); i < n; i++) {
+                    consumer.accept(
+                            multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                }
+                return;
             }
             if (Map.class.isInstance(value)) {
-                return ((Map<?, ?>) value).entrySet().stream()
-                        .map(e -> multiplexContext.child(
-                                setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
-                                e.getValue()));
+                for (final Map.Entry<?, ?> e : ((Map<?, ?>) value).entrySet()) {
+                    consumer.accept(multiplexContext.child(
+                            setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
+                            e.getValue()));
+                }
+                return;
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
-                return IntStream.range(0, l.size())
-                        .mapToObj(i -> multiplexContext.child(
-                                setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                                l.get(i)));
+                for (int i = 0, n = l.size(); i < n; i++) {
+                    consumer.accept(multiplexContext.child(
+                            setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
+                            l.get(i)));
+                }
+                return;
             }
             if (Iterable.class.isInstance(value)) {
-                final Stream.Builder<Object> b = Stream.builder();
-                ((Iterable<?>) value).forEach(b);
-                return b.build()
-                        .map(o -> multiplexContext.child(
-                                setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                                o));
+                for (final Object o : (Iterable<?>) value) {
+                    consumer.accept(multiplexContext.child(
+                            setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
+                            o));
+                }
+                return;
             }
-            return Stream.of(multiplexContext);
+            consumer.accept(multiplexContext);
         }
 
         // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type

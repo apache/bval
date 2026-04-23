@@ -27,6 +27,7 @@ import jakarta.validation.ConstraintValidatorFactory;
 import jakarta.validation.MessageInterpolator;
 import jakarta.validation.ParameterNameProvider;
 import jakarta.validation.TraversableResolver;
+import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorContext;
 import jakarta.validation.valueextraction.ValueExtractor;
@@ -191,17 +192,25 @@ public class ApacheFactoryContext implements ValidatorContext {
         return factory;
     }
 
+    /**
+     * Create (if missing) and cache a {@link ConstraintValidator} for this constraint, and call
+     * {@link ConstraintValidator#initialize} once. Per BV usage, a cached instance is reused; initialize is not
+     * repeated on every {@code isValid} invocation.
+     */
     public ConstraintValidator getOrComputeConstraintValidator(final ConstraintD<?> constraint, final Supplier<ConstraintValidator> computer) {
         final ConcurrentMap<ConstraintD<?>, ConstraintValidator<?, ?>> constraintsCache = factory.getConstraintsCache().getValidators();
-        final ConstraintValidator<?, ?> validator = constraintsCache.get(constraint); // constraints are cached so we can query per instance
-        if (validator != null) {
-            return validator;
-        }
-        ConstraintValidator<?, ?> instance = computer.get();
-        final ConstraintValidator<?, ?> existing = constraintsCache.putIfAbsent(constraint, instance);
-        if (existing != null) {
-            instance = existing;
-        }
-        return instance;
+        return constraintsCache.computeIfAbsent(constraint, c -> {
+            final ConstraintValidator instance = computer.get();
+            if (instance != null) {
+                try {
+                    instance.initialize(c.getAnnotation());
+                } catch (ValidationException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
+                }
+            }
+            return instance;
+        });
     }
 }

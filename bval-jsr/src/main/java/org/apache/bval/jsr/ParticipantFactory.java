@@ -54,6 +54,11 @@ class ParticipantFactory implements Closeable {
     private final Collection<BValExtension.Releasable<?>> releasables = new CopyOnWriteArrayList<>();
     private final List<ClassLoader> loaders;
 
+    // Cache whether CDI is available to avoid repeatedly triggering the (slow) NoClassDefFoundError /
+    // IllegalStateException thrown by CDI.current() on every instantiation when running outside a CDI
+    // container. Mirrors the guard already used by DefaultConstraintValidatorFactory.
+    private volatile Boolean useCdi;
+
     ParticipantFactory(ClassLoader... loaders) {
         super();
         this.loaders = Arrays.asList(loaders).stream().filter(Objects::nonNull).collect(ToUnmodifiable.list());
@@ -111,11 +116,24 @@ class ParticipantFactory implements Closeable {
 
     @Privileged
     private <T> T newInstance(final Class<T> cls) {
-        try {
-            final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
-            releasables.add(releasable);
-            return releasable.getInstance();
-        } catch (Exception | NoClassDefFoundError e) {
+        if (useCdi == null) {
+            synchronized (this) {
+                if (useCdi == null) {
+                    try {
+                        useCdi = BValExtension.getBeanManager() != null;
+                    } catch (final NoClassDefFoundError | Exception error) {
+                        useCdi = Boolean.FALSE;
+                    }
+                }
+            }
+        }
+        if (useCdi.booleanValue()) {
+            try {
+                final BValExtension.Releasable<T> releasable = BValExtension.inject(cls);
+                releasables.add(releasable);
+                return releasable.getInstance();
+            } catch (Exception | NoClassDefFoundError e) {
+            }
         }
         try {
             return cls.getConstructor().newInstance();

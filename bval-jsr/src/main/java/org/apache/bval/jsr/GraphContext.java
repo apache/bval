@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import jakarta.validation.Path;
 import jakarta.validation.ValidationException;
@@ -59,6 +60,16 @@ public class GraphContext {
         return PathImpl.copy(path);
     }
 
+    /**
+     * Return this context's own path instance <b>without copying</b>. A {@link GraphContext}'s path is never
+     * mutated after construction (all mutating operations go through {@link #getPath()} or {@link #child}, which
+     * copy first), so the returned instance is safe to read, compare, or use as a map key. Callers <b>must not</b>
+     * mutate it. Use this instead of {@link #getPath()} on hot read-only paths to avoid a defensive copy.
+     */
+    public PathImpl pathReference() {
+        return path;
+    }
+
     public Object getValue() {
         return value;
     }
@@ -75,6 +86,16 @@ public class GraphContext {
         final PathImpl impl = PathImpl.of(p);
         // Validate.isTrue(impl.isSubPathOf(path), "%s is not a subpath of %s", p, path);
         return new GraphContext(validatorContext, impl == p ? PathImpl.copy(impl) : impl, value, this);
+    }
+
+    /**
+     * Create a child context whose path is this context's path with {@code pathMutation} applied. This copies
+     * the path exactly once, avoiding the copy-then-copy-again pattern of {@code child(getPath().mutate(), value)}.
+     */
+    public GraphContext child(Consumer<PathImpl> pathMutation, Object value) {
+        final PathImpl p = PathImpl.copy(path);
+        pathMutation.accept(p);
+        return new GraphContext(validatorContext, p, value, this);
     }
 
     public boolean isRoot() {
@@ -110,7 +131,7 @@ public class GraphContext {
             return false;
         }
         final GraphContext other = (GraphContext) obj;
-        return other.validatorContext == validatorContext && other.value == value && other.getPath().equals(path);
+        return other.validatorContext == validatorContext && other.value == value && other.path.equals(path);
     }
 
     @Override

@@ -119,24 +119,27 @@ public abstract class ValidationJob<T> {
         abstract Object getBean();
 
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            constraintsFor(descriptor, groups)
-                    .forEach(c -> unwrap(c.getValueUnwrapping()).forEach(f -> f.validate(c, sink)));
+            constraintsFor(descriptor, groups).forEach(c -> validateUnwrapped(c, sink));
         }
 
-        private Stream<Frame<D>> unwrap(ValidateUnwrappedValue valueUnwrapping) {
+        // Visit each (possibly unwrapped) frame for this constraint without allocating a Stream per constraint;
+        // the common case is no unwrapping, i.e. a direct validate(this).
+        private void validateUnwrapped(ConstraintD<?> constraint, Consumer<ConstraintViolation<T>> sink) {
+            final ValidateUnwrappedValue valueUnwrapping = constraint.getValueUnwrapping();
             if (valueUnwrapping != ValidateUnwrappedValue.SKIP && context.getValue() != null) {
-                final Optional<ValueExtractors.UnwrappingInfo> valueExtractorAndAssociatedContainerElementKey =
+                final Optional<ValueExtractors.UnwrappingInfo> unwrappingInfo =
                         validatorContext.getValueExtractors().findUnwrappingInfo(context.getValue().getClass(),
                                 valueUnwrapping);
-
-                if (valueExtractorAndAssociatedContainerElementKey.isPresent()) {
-                    return ExtractValues
-                            .extract(context, valueExtractorAndAssociatedContainerElementKey.get().containerElementKey,
-                                    valueExtractorAndAssociatedContainerElementKey.get().valueExtractor)
-                            .stream().map(child -> new UnwrappedElementConstraintValidationPseudoFrame<>(this, child));
+                if (unwrappingInfo.isPresent()) {
+                    for (final GraphContext child : ExtractValues.extract(context,
+                            unwrappingInfo.get().containerElementKey, unwrappingInfo.get().valueExtractor)) {
+                        final Frame<D> frame = new UnwrappedElementConstraintValidationPseudoFrame<>(this, child);
+                        frame.validate(constraint, sink);
+                    }
+                    return;
                 }
             }
-            return Stream.of(this);
+            validate(constraint, sink);
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })

@@ -144,8 +144,10 @@ public abstract class ValidationJob<T> {
             // Use the same path ordering/equality as before (ConcurrentSkipListMap): comparator-based, not Path#equals.
             final Map<Path, Set<Object>> pathMap = completedValidations.computeIfAbsent(constraint,
                     k -> new TreeMap<>(PathImpl.PATH_COMPARATOR));
+            // Read-only use as a comparator-based map key for the duration of this validation; no copy needed.
             final Set<Object> objectSet =
-                    pathMap.computeIfAbsent(context.getPath(), p -> Collections.newSetFromMap(new IdentityHashMap<>()));
+                    pathMap.computeIfAbsent(context.pathReference(),
+                            p -> Collections.newSetFromMap(new IdentityHashMap<>()));
             if (!objectSet.add(context.getValue())) {
                 return true;
             }
@@ -249,7 +251,7 @@ public abstract class ValidationJob<T> {
 
         BeanFrame(Frame<?> parent, GraphContext context) {
             super(parent, getBeanDescriptor(context.getValue()),
-                    context.child(context.getPath().addBean(), context.getValue()));
+                    context.child(PathImpl::addBean, context.getValue()));
             this.realContext = context;
         }
 

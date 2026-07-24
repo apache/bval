@@ -28,7 +28,6 @@ import jakarta.validation.valueextraction.ValueExtractor;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
-import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
 import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
@@ -76,10 +75,11 @@ public final class ExtractValues {
         }
 
         private void addChild(NodeImpl node, Object value) {
-            final PathImpl path = context.getPath();
-            path.addNode(
-                node.inContainer(containerElementKey.getContainerClass(), containerElementKey.getTypeArgumentIndex()));
-            result.get().add(context.child(path, value));
+            // child(NodeImpl, ...) copies the path exactly once; building the path here and passing it to
+            // child(Path, ...) would copy it a second time.
+            result.get().add(context.child(
+                node.inContainer(containerElementKey.getContainerClass(), containerElementKey.getTypeArgumentIndex()),
+                value));
         }
     }
 

@@ -78,6 +78,34 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         return 0;
     }).thenComparing((Function<Object, String>) Objects::toString));
 
+    // Per-kind node comparators are stateless and constant; hoisted to static finals so they are not
+    // re-allocated on every compareSpecificNodeInfo/compareIterability call (both are hot during path
+    // comparison, e.g. violation de-duplication).
+    private static final Comparator<Node> KEY_NODE_COMPARATOR = comparing(Node::getKey, KEY_COMPARATOR);
+
+    private static final Comparator<Node> BEAN_NODE_COMPARATOR =
+        comparing(to(BeanNode.class), comparing(BeanNode::getContainerClass, CLASS_COMPARATOR)
+            .thenComparing(BeanNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+
+    private static final Comparator<Node> PROPERTY_NODE_COMPARATOR =
+        comparing(to(PropertyNode.class), comparing(PropertyNode::getContainerClass, CLASS_COMPARATOR)
+            .thenComparing(PropertyNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+
+    private static final Comparator<Node> CONTAINER_ELEMENT_NODE_COMPARATOR =
+        comparing(to(ContainerElementNode.class), comparing(ContainerElementNode::getContainerClass, CLASS_COMPARATOR)
+            .thenComparing(ContainerElementNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+
+    private static final Comparator<Node> CONSTRUCTOR_NODE_COMPARATOR =
+        comparing(to(ConstructorNode.class).andThen(ConstructorNode::getParameterTypes),
+            Comparators.comparingIterables(CLASS_COMPARATOR));
+
+    private static final Comparator<Node> METHOD_NODE_COMPARATOR =
+        comparing(to(MethodNode.class).andThen(MethodNode::getParameterTypes),
+            Comparators.comparingIterables(CLASS_COMPARATOR));
+
+    private static final Comparator<Node> PARAMETER_NODE_COMPARATOR =
+        comparing(to(ParameterNode.class).andThen(ParameterNode::getParameterIndex));
+
     private static final char INDEX_OPEN = '[';
     private static final char INDEX_CLOSE = ']';
 
@@ -144,7 +172,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         if (quid.isInIterable()) {
             if (quo.isInIterable()) {
                 if (quid.getKey() != null) {
-                    return Comparator.comparing(Node::getKey, KEY_COMPARATOR).compare(quid, quo);
+                    return KEY_NODE_COMPARATOR.compare(quid, quo);
                 }
                 if (quo.getKey() != null) {
                     return -1;
@@ -173,28 +201,22 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         final Comparator<Node> cmp;
         switch (kind) {
         case BEAN:
-            cmp = comparing(to(BeanNode.class), comparing(BeanNode::getContainerClass, CLASS_COMPARATOR)
-                .thenComparing(BeanNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            cmp = BEAN_NODE_COMPARATOR;
             break;
         case PROPERTY:
-            cmp = comparing(to(PropertyNode.class), comparing(PropertyNode::getContainerClass, CLASS_COMPARATOR)
-                .thenComparing(PropertyNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            cmp = PROPERTY_NODE_COMPARATOR;
             break;
         case CONTAINER_ELEMENT:
-            cmp = comparing(to(ContainerElementNode.class),
-                comparing(ContainerElementNode::getContainerClass, CLASS_COMPARATOR)
-                    .thenComparing(ContainerElementNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            cmp = CONTAINER_ELEMENT_NODE_COMPARATOR;
             break;
         case CONSTRUCTOR:
-            cmp = comparing(to(ConstructorNode.class).andThen(ConstructorNode::getParameterTypes),
-                Comparators.comparingIterables(CLASS_COMPARATOR));
+            cmp = CONSTRUCTOR_NODE_COMPARATOR;
             break;
         case METHOD:
-            cmp = comparing(to(MethodNode.class).andThen(MethodNode::getParameterTypes),
-                Comparators.comparingIterables(CLASS_COMPARATOR));
+            cmp = METHOD_NODE_COMPARATOR;
             break;
         case PARAMETER:
-            cmp = comparing(to(ParameterNode.class).andThen(ParameterNode::getParameterIndex));
+            cmp = PARAMETER_NODE_COMPARATOR;
             break;
         default:
             return 0;

@@ -559,12 +559,25 @@ public abstract class ValidationJob<T> {
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
 
     private static Stream<ConstraintD<?>> constraintsFor(ElementD<?, ?> descriptor, GroupStrategy groups) {
+        // Resolve the target groups once per call rather than once per constraint: GroupStrategy.getGroups()
+        // may allocate (a singleton for a plain Group, a fully streamed-and-collected set for a Composite),
+        // and it is invariant across the constraints being filtered.
+        final Set<Group> targetGroups = groups.getGroups();
         return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
-                .filter(c -> {
-                    final Set<Class<?>> constraintGroups = c.getGroups();
-                    return groups.getGroups().stream().map(Group::getGroup).anyMatch(g -> constraintGroups.contains(g)
-                            || constraintGroups.contains(Default.class) && c.getDeclaringClass().equals(g));
-                });
+                .filter(c -> matchesGroups(c, targetGroups));
+    }
+
+    private static boolean matchesGroups(ConstraintD<?> constraint, Set<Group> targetGroups) {
+        final Set<Class<?>> constraintGroups = constraint.getGroups();
+        final boolean impliesDefault = constraintGroups.contains(Default.class);
+        for (final Group target : targetGroups) {
+            final Class<?> g = target.getGroup();
+            if (constraintGroups.contains(g)
+                    || impliesDefault && constraint.getDeclaringClass().equals(g)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected final ApacheFactoryContext validatorContext;

@@ -222,6 +222,12 @@ public class ValueExtractors {
     private final ValueExtractors parent;
     private final Map<ContainerElementKey, ValueExtractor<?>> valueExtractors = new ConcurrentHashMap<>();
     private final Map<ContainerElementKey, ValueExtractor<?>> searchCache = new ConcurrentHashMap<>();
+    // Memoize findUnwrappingInfo() per container class: it is queried once per constraint per validated
+    // value at runtime and otherwise re-walks the whole extractor set (map + streams) only to usually
+    // return an empty result. Separate maps avoid allocating a composite key on each lookup. Invalidated
+    // together with searchCache whenever an extractor is added.
+    private final Map<Class<?>, Optional<UnwrappingInfo>> unwrapDefaultCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Optional<UnwrappingInfo>> unwrapForcedCache = new ConcurrentHashMap<>();
     private final OnDuplicateContainerElementKey onDuplicateContainerElementKey;
 
     public ValueExtractors() {
@@ -271,6 +277,8 @@ public class ValueExtractors {
             m.put(key, extractor);
         }
         searchCache.clear();
+        unwrapDefaultCache.clear();
+        unwrapForcedCache.clear();
     }
 
     public Map<ContainerElementKey, ValueExtractor<?>> getValueExtractors() {
@@ -285,8 +293,10 @@ public class ValueExtractors {
             return cacheHit;
         }
         final Map<ContainerElementKey, ValueExtractor<?>> allValueExtractors = getValueExtractors();
-        if (allValueExtractors.containsKey(key)) {
-            return allValueExtractors.get(key);
+        final ValueExtractor<?> directHit = allValueExtractors.get(key);
+        if (directHit != null) {
+            searchCache.put(key, directHit);
+            return directHit;
         }
         final Map<ValueExtractor<?>, ContainerElementKey> candidates = Stream
             .concat(Stream.of(key), key.getAssignableKeys().stream()).filter(allValueExtractors::containsKey).collect(
@@ -307,6 +317,15 @@ public class ValueExtractors {
         if (valueUnwrapping == ValidateUnwrappedValue.SKIP) {
             return Optional.empty();
         }
+        final Map<Class<?>, Optional<UnwrappingInfo>> cache =
+            valueUnwrapping == ValidateUnwrappedValue.UNWRAP ? unwrapForcedCache : unwrapDefaultCache;
+        // computeIfAbsent does not cache a thrown exception, so the UNWRAP "not found" error below is
+        // re-evaluated on each call for that (rare, misconfigured) case rather than being memoized.
+        return cache.computeIfAbsent(containerClass, k -> computeUnwrappingInfo(k, valueUnwrapping));
+    }
+
+    private Optional<UnwrappingInfo> computeUnwrappingInfo(Class<?> containerClass,
+        ValidateUnwrappedValue valueUnwrapping) {
         final Map<ContainerElementKey, ValueExtractor<?>> allValueExtractors = getValueExtractors();
 
         final Set<UnwrappingInfo> unwrapping = allValueExtractors.entrySet().stream()

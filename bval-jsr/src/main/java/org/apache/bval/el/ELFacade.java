@@ -35,6 +35,7 @@ import jakarta.el.ValueExpression;
 import jakarta.el.VariableMapper;
 
 import org.apache.bval.jsr.util.LookBehindRegexHolder;
+import org.apache.bval.util.Lazy;
 
 // ELProcessor or JavaEE 7 would be perfect too but this impl can be used in javaee 6
 public final class ELFacade implements MessageEvaluator {
@@ -56,7 +57,10 @@ public final class ELFacade implements MessageEvaluator {
 
     private static final ELResolver RESOLVER = initResolver();
 
-    private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
+    // Lazily initialized: ExpressionFactory.newInstance() performs a relatively expensive
+    // ServiceLoader lookup, and most validations never evaluate an EL expression (default
+    // constraint messages use no ${...} syntax). Deferring it keeps bootstrap cheap.
+    private final Lazy<ExpressionFactory> expressionFactory = new Lazy<>(ExpressionFactory::newInstance);
 
     @Override
     public String interpolate(final String message, final Map<String, Object> annotationParameters,
@@ -64,6 +68,7 @@ public final class ELFacade implements MessageEvaluator {
         // BVAL-170: simple pre-check to improve performance
         if (message.contains("${")) {
             try {
+                final ExpressionFactory expressionFactory = this.expressionFactory.get();
                 final BValELContext context = new BValELContext();
                 final VariableMapper variables = context.getVariableMapper();
                 annotationParameters.forEach(
@@ -126,7 +131,7 @@ public final class ELFacade implements MessageEvaluator {
         @Override
         public ValueExpression resolveVariable(final String variable) {
             if ("formatter".equals(variable)) {
-                return expressionFactory.createValueExpression(new BValFormatter(), Object.class);
+                return expressionFactory.get().createValueExpression(new BValFormatter(), Object.class);
             }
             return variables.get(variable);
         }

@@ -36,20 +36,28 @@ import org.apache.bval.util.reflection.TypeUtils;
 public class GraphContext {
 
     private final ApacheFactoryContext validatorContext;
-    private final PathImpl path;
+    // Lazily materialized. A child context stores only how its path is derived from its parent (append pendingNode,
+    // or apply pendingMutation) and builds the actual PathImpl the first time it is read. Validating a valid bean
+    // reads the path only when a violation occurs, so most contexts (e.g. leaf-property values) never build one.
+    private PathImpl path;
+    private final NodeImpl pendingNode;
+    private final Consumer<PathImpl> pendingMutation;
     private final Object value;
     private final GraphContext parent;
 
     public GraphContext(ApacheFactoryContext validatorContext, PathImpl path, Object value) {
-        this(validatorContext, path, value, null);
+        this(validatorContext, path, value, null, null, null);
     }
 
-    private GraphContext(ApacheFactoryContext validatorContext, PathImpl path, Object value, GraphContext parent) {
+    private GraphContext(ApacheFactoryContext validatorContext, PathImpl path, Object value, GraphContext parent,
+        NodeImpl pendingNode, Consumer<PathImpl> pendingMutation) {
         super();
         this.validatorContext = validatorContext;
         this.path = path;
         this.value = value;
         this.parent = parent;
+        this.pendingNode = pendingNode;
+        this.pendingMutation = pendingMutation;
     }
 
     public ApacheFactoryContext getValidatorContext() {
@@ -57,17 +65,27 @@ public class GraphContext {
     }
 
     public PathImpl getPath() {
-        return PathImpl.copy(path);
+        return PathImpl.copy(pathReference());
     }
 
     /**
-     * Return this context's own path instance <b>without copying</b>. A {@link GraphContext}'s path is never
-     * mutated after construction (all mutating operations go through {@link #getPath()} or {@link #child}, which
-     * copy first), so the returned instance is safe to read, compare, or use as a map key. Callers <b>must not</b>
-     * mutate it. Use this instead of {@link #getPath()} on hot read-only paths to avoid a defensive copy.
+     * Return this context's own path instance <b>without copying</b>, materializing it (and, transitively, its
+     * ancestors') on first access. A {@link GraphContext}'s path is never mutated after materialization (all
+     * mutating operations go through {@link #getPath()} or {@link #child}, which copy first), so the returned
+     * instance is safe to read, compare, or use as a map key. Callers <b>must not</b> mutate it.
      */
     public PathImpl pathReference() {
-        return path;
+        PathImpl p = path;
+        if (p == null) {
+            p = PathImpl.copy(parent.pathReference());
+            if (pendingNode != null) {
+                p.addNode(pendingNode);
+            } else {
+                pendingMutation.accept(p);
+            }
+            path = p;
+        }
+        return p;
     }
 
     public Object getValue() {
@@ -75,27 +93,22 @@ public class GraphContext {
     }
 
     public GraphContext child(NodeImpl node, Object value) {
-        // Validate.notNull(node, "node");
-        final PathImpl p = PathImpl.copy(path);
-        p.addNode(node);
-        return new GraphContext(validatorContext, p, value, this);
+        return new GraphContext(validatorContext, null, value, this, node, null);
     }
 
     public GraphContext child(Path p, Object value) {
         // Validate.notNull(p, "Path");
         final PathImpl impl = PathImpl.of(p);
         // Validate.isTrue(impl.isSubPathOf(path), "%s is not a subpath of %s", p, path);
-        return new GraphContext(validatorContext, impl == p ? PathImpl.copy(impl) : impl, value, this);
+        return new GraphContext(validatorContext, impl == p ? PathImpl.copy(impl) : impl, value, this, null, null);
     }
 
     /**
-     * Create a child context whose path is this context's path with {@code pathMutation} applied. This copies
-     * the path exactly once, avoiding the copy-then-copy-again pattern of {@code child(getPath().mutate(), value)}.
+     * Create a child context whose path is this context's path with {@code pathMutation} applied. The mutation is
+     * deferred and applied to a single copy of the parent path only if/when this context's path is materialized.
      */
     public GraphContext child(Consumer<PathImpl> pathMutation, Object value) {
-        final PathImpl p = PathImpl.copy(path);
-        pathMutation.accept(p);
-        return new GraphContext(validatorContext, p, value, this);
+        return new GraphContext(validatorContext, null, value, this, null, pathMutation);
     }
 
     public boolean isRoot() {
@@ -119,9 +132,9 @@ public class GraphContext {
 
     @Override
     public String toString() {
-        return String.format("%s: %s at '%s'", getClass().getSimpleName(), value, path);
+        return String.format("%s: %s at '%s'", getClass().getSimpleName(), value, pathReference());
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -131,12 +144,13 @@ public class GraphContext {
             return false;
         }
         final GraphContext other = (GraphContext) obj;
-        return other.validatorContext == validatorContext && other.value == value && other.path.equals(path);
+        return other.validatorContext == validatorContext && other.value == value
+            && other.pathReference().equals(pathReference());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(validatorContext, value, path);
+        return Objects.hash(validatorContext, value, pathReference());
     }
 
     public ContainerElementKey runtimeKey(ContainerElementKey key) {

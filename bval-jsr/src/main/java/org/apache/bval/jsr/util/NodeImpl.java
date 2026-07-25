@@ -421,7 +421,9 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     public static class ParameterNodeImpl extends NodeImpl implements Path.ParameterNode {
         public ParameterNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.ParameterNode.class, cast).ifPresent(n -> setParameterIndex(n.getParameterIndex()));
+            if (cast instanceof Path.ParameterNode) {
+                setParameterIndex(((Path.ParameterNode) cast).getParameterIndex());
+            }
         }
 
         public ParameterNodeImpl(final String name, final int idx) {
@@ -439,7 +441,9 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     public static class ConstructorNodeImpl extends NodeImpl implements Path.ConstructorNode {
         public ConstructorNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.ConstructorNode.class, cast).ifPresent(n -> setParameterTypes(n.getParameterTypes()));
+            if (cast instanceof Path.ConstructorNode) {
+                setParameterTypes(((Path.ConstructorNode) cast).getParameterTypes());
+            }
         }
 
         public ConstructorNodeImpl(final String simpleName, List<Class<?>> paramTypes) {
@@ -473,7 +477,9 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     public static class MethodNodeImpl extends NodeImpl implements Path.MethodNode {
         public MethodNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.MethodNode.class, cast).ifPresent(n -> setParameterTypes(n.getParameterTypes()));
+            if (cast instanceof Path.MethodNode) {
+                setParameterTypes(((Path.MethodNode) cast).getParameterTypes());
+            }
         }
 
         public MethodNodeImpl(final String name, final List<Class<?>> classes) {
@@ -511,8 +517,11 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
         public PropertyNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.PropertyNode.class, cast)
-                .ifPresent(n -> inContainer(n.getContainerClass(), n.getTypeArgumentIndex()));
+            // direct instanceof rather than optional(...) to avoid allocating an Optional per node copy
+            if (cast instanceof Path.PropertyNode) {
+                final Path.PropertyNode n = (Path.PropertyNode) cast;
+                inContainer(n.getContainerClass(), n.getTypeArgumentIndex());
+            }
         }
 
         @Override
@@ -529,8 +538,10 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
         public BeanNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.BeanNode.class, cast)
-                .ifPresent(n -> inContainer(n.getContainerClass(), n.getTypeArgumentIndex()));
+            if (cast instanceof Path.BeanNode) {
+                final Path.BeanNode n = (Path.BeanNode) cast;
+                inContainer(n.getContainerClass(), n.getTypeArgumentIndex());
+            }
         }
 
         @Override
@@ -553,8 +564,10 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
         public ContainerElementNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.ContainerElementNode.class, cast)
-                .ifPresent(n -> inContainer(n.getContainerClass(), n.getTypeArgumentIndex()));
+            if (cast instanceof Path.ContainerElementNode) {
+                final Path.ContainerElementNode n = (Path.ContainerElementNode) cast;
+                inContainer(n.getContainerClass(), n.getTypeArgumentIndex());
+            }
         }
 
         @Override

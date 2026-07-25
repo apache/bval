@@ -166,11 +166,57 @@ public class PathImpl implements Path, Serializable {
 
     private final LinkedList<NodeImpl> nodeList = new LinkedList<>();
 
+    // Copy-on-write for the leaf node. copy() of another PathImpl shares node references instead of deep-copying
+    // (nodes are effectively immutable once they are interior; only the current leaf is ever mutated in place).
+    // When the leaf may be shared with another path, it is copied before any in-place mutation. See unshareLeaf().
+    private boolean sharedLeaf;
+
     private PathImpl() {
     }
 
-    private PathImpl(Iterable<? extends Node> nodes) {
-        nodes.forEach(n -> nodeList.add(newNode(n)));
+    private PathImpl(Path path) {
+        if (path instanceof PathImpl) {
+            final PathImpl source = (PathImpl) path;
+            // share node references; the leaf will be copied on first mutation by whichever path mutates it
+            nodeList.addAll(source.nodeList);
+            if (!nodeList.isEmpty()) {
+                sharedLeaf = true;
+                // the source now shares its leaf with this copy, so it must copy-on-write too
+                source.sharedLeaf = true;
+            }
+        } else {
+            path.forEach(n -> nodeList.add(newNode(n)));
+        }
+    }
+
+    /**
+     * Ensure the leaf node is not shared with another path before it is mutated in place, copying it if needed.
+     *
+     * @return the (now exclusively owned) leaf node, or {@code null} if this path is empty
+     */
+    private NodeImpl unshareLeaf() {
+        if (nodeList.isEmpty()) {
+            sharedLeaf = false;
+            return null;
+        }
+        final int last = nodeList.size() - 1;
+        NodeImpl leaf = nodeList.get(last);
+        if (sharedLeaf) {
+            leaf = newNode(leaf);
+            nodeList.set(last, leaf);
+        }
+        sharedLeaf = false;
+        return leaf;
+    }
+
+    /**
+     * Return the leaf node for in-place mutation, copying it first if it may be shared with another path. Callers
+     * that only read the leaf should use {@link #getLeafNode()} to avoid the defensive copy.
+     *
+     * @return the mutable leaf node, or {@code null} if this path is empty
+     */
+    public NodeImpl mutableLeafNode() {
+        return unshareLeaf();
     }
 
     /**
@@ -200,6 +246,8 @@ public class PathImpl implements Path, Serializable {
             nodeList.pop();
         }
         nodeList.add(impl);
+        // the appended node is caller-owned/fresh, so the new leaf is exclusively owned
+        sharedLeaf = false;
         return this;
     }
 
@@ -218,6 +266,9 @@ public class PathImpl implements Path, Serializable {
                     removeLeafNode();
                     addNode(tmp);
                     leaf = tmp;
+                } else {
+                    // about to mutate the leaf in place; make sure it is not shared with another path
+                    leaf = unshareLeaf();
                 }
                 leaf.setName(name);
                 return this;
@@ -251,6 +302,10 @@ public class PathImpl implements Path, Serializable {
         } finally {
             if (nodeList.isEmpty()) {
                 nodeList.add(new NodeImpl.BeanNodeImpl());
+                sharedLeaf = false;
+            } else {
+                // the newly exposed leaf was previously interior and may be shared
+                sharedLeaf = true;
             }
         }
     }

@@ -86,7 +86,7 @@ public final class NodeBuilderCustomizableContextImpl
     @Override
     public NodeBuilderCustomizableContext inContainer(Class<?> containerClass, Integer typeArgumentIndex) {
         builder.ofLegalState();
-        path.getLeafNode().inContainer(containerClass, typeArgumentIndex);
+        path.mutableLeafNode().inContainer(containerClass, typeArgumentIndex);
         return this;
     }
 

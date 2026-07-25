@@ -24,14 +24,12 @@ import java.lang.reflect.TypeVariable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -144,16 +142,12 @@ public abstract class ValidationJob<T> {
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
         private boolean validate(ConstraintD<?> constraint, Consumer<ConstraintViolation<T>> sink) {
-            // Use the same path ordering/equality as before (ConcurrentSkipListMap): comparator-based, not Path#equals.
-            final Map<Path, Set<Object>> pathMap = completedValidations.computeIfAbsent(constraint,
-                    k -> new TreeMap<>(PathImpl.PATH_COMPARATOR));
-            // Read-only use as a comparator-based map key for the duration of this validation; no copy needed.
-            final Set<Object> objectSet =
-                    pathMap.computeIfAbsent(context.pathReference(),
-                            p -> Collections.newSetFromMap(new IdentityHashMap<>()));
-            if (!objectSet.add(context.getValue())) {
-                return true;
-            }
+            // No per-(constraint, path, value) de-duplication is performed here. It is not needed: groups are
+            // validated in a single pass (see GroupStrategy usage in process()), so a given constraint at a
+            // given path/value is reached exactly once, even when it belongs to several targeted groups or a
+            // redefined Default sequence. Distinct locations (e.g. the same shared object cascaded via two
+            // properties) are distinct paths and must each be reported. Cycles are handled separately via
+            // GraphContext#isRecursive(), not by tracking completed validations.
             final ConstraintValidator constraintValidator = getConstraintValidator(constraint);
             final ConstraintValidatorContextImpl<T> constraintValidatorContext =
                     new ConstraintValidatorContextImpl<>(this, constraint);
@@ -590,9 +584,6 @@ public abstract class ValidationJob<T> {
 
     private final Lazy<Set<ConstraintViolation<T>>> results = new Lazy<>(LinkedHashSet::new);
 
-    /** Filled only during single-threaded {@link #getResults()} for one validation. */
-    private Map<ConstraintD<?>, Map<Path, Set<Object>>> completedValidations;
-
     ValidationJob(ApacheFactoryContext validatorContext, Class<?>[] groups) {
         super();
         this.validatorContext = Validate.notNull(validatorContext, "validatorContext");
@@ -609,12 +600,7 @@ public abstract class ValidationJob<T> {
 
             final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
 
-            completedValidations = new HashMap<>();
-            try {
-                baseFrame.process(groups.asStrategy(), sink);
-            } finally {
-                completedValidations = null;
-            }
+            baseFrame.process(groups.asStrategy(), sink);
             if (results.optional().isPresent()) {
                 return Collections.unmodifiableSet(results.get());
             }

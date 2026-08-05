@@ -113,6 +113,13 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     private ClockProvider clockProvider;
 
     /**
+     * Lazily created default validator for {@link #getValidator()} (factory default settings, no
+     * {@link #usingContext()} customization). Safe to use concurrently; {@link Validator} is thread-safe.
+     * Not copied on {@link #clone()}; the clone gets its own instance on first use.
+     */
+    private volatile Validator defaultValidator;
+
+    /**
      * Create a new ApacheValidatorFactory instance.
      */
     public ApacheValidatorFactory(ConfigurationState configuration) {
@@ -152,13 +159,24 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     }
 
     /**
-     * Shortcut method to create a new Validator instance with factory's settings
-     *
-     * @return the new validator instance
+     * Return a {@link Validator} for this factory's default settings (as if from {@link #usingContext()} with no
+     * customization). The same instance may be returned on every call, which is allowed by the specification and
+     * avoids allocating a new {@link ApacheFactoryContext} and {@link Validator} each time. Use
+     * {@code usingContext()....getValidator()} when a distinct {@link Validator} with customized context is required.
      */
     @Override
     public Validator getValidator() {
-        return usingContext().getValidator();
+        Validator v = defaultValidator;
+        if (v == null) {
+            synchronized (this) {
+                v = defaultValidator;
+                if (v == null) {
+                    v = new ApacheFactoryContext(this).getValidator();
+                    defaultValidator = v;
+                }
+            }
+        }
+        return v;
     }
 
     /**
@@ -177,7 +195,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
     @Override
     public synchronized ApacheValidatorFactory clone() {
         try {
-            return (ApacheValidatorFactory) super.clone();
+            final ApacheValidatorFactory copy = (ApacheValidatorFactory) super.clone();
+            copy.defaultValidator = null;
+            return copy;
         } catch (CloneNotSupportedException e) {
             throw new InternalError(); // VM bug.
         }

@@ -39,13 +39,13 @@ public class LeafNodeBuilderCustomizableContextImpl
 
         @Override
         public LeafNodeBuilderDefinedContext atKey(Object key) {
-            path.getLeafNode().setKey(key);
+            path.mutableLeafNode().setKey(key);
             return definedContext;
         }
 
         @Override
         public LeafNodeBuilderDefinedContext atIndex(Integer index) {
-            path.getLeafNode().setIndex(index);
+            path.mutableLeafNode().setIndex(index);
             return definedContext;
         }
 
@@ -67,7 +67,7 @@ public class LeafNodeBuilderCustomizableContextImpl
     @Override
     public LeafNodeContextBuilder inIterable() {
         builder.ofLegalState();
-        path.getLeafNode().setInIterable(true);
+        path.mutableLeafNode().setInIterable(true);
         return new LeafNodeContextBuilderImpl();
     }
 
@@ -79,7 +79,7 @@ public class LeafNodeBuilderCustomizableContextImpl
     @Override
     public LeafNodeBuilderCustomizableContext inContainer(Class<?> containerType, Integer typeArgumentIndex) {
         builder.ofLegalState();
-        path.getLeafNode().inContainer(containerType, typeArgumentIndex);
+        path.mutableLeafNode().inContainer(containerType, typeArgumentIndex);
         return this;
     }
 }

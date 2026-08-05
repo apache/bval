@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import jakarta.validation.metadata.BeanDescriptor;
@@ -44,6 +43,8 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     private final Class<T> beanClass;
     private final Map<String, PropertyDescriptor> propertiesMap;
     private final Set<PropertyDescriptor> properties;
+    /** Constrained properties only, by name — hot path for {@link #getConstraintsForProperty(String)}. */
+    private final Map<String, PropertyDescriptor> constraintsForPropertyByName;
     private final Map<Signature, ConstructorD<T>> constructors;
     private final Map<Signature, MethodD> methods;
     private final GroupStrategy groupStrategy;
@@ -59,6 +60,11 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
         propertiesMap = reader.getProperties(this);
         properties =
             propertiesMap.values().stream().filter(DescriptorManager::isConstrained).collect(ToUnmodifiable.set());
+        final Map<String, PropertyDescriptor> cfpn = new HashMap<>();
+        for (PropertyDescriptor p : properties) {
+            cfpn.put(p.getPropertyName(), p);
+        }
+        constraintsForPropertyByName = Map.copyOf(cfpn);
         constructors = reader.getConstructors(this);
         methods = reader.getMethods(this);
         
@@ -78,7 +84,9 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
 
     @Override
     public PropertyDescriptor getConstraintsForProperty(String propertyName) {
-        return Optional.ofNullable(getProperty(propertyName)).filter(properties::contains).orElse(null);
+        Exceptions.raiseIf(StringUtils.isBlank(propertyName), IllegalArgumentException::new,
+            "propertyName was null/empty/blank");
+        return constraintsForPropertyByName.get(propertyName);
     }
 
     @Override

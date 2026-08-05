@@ -49,7 +49,7 @@ public final class NodeContextBuilderImpl
      */
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atKey(Object key) {
-        path.getLeafNode().setKey(key);
+        path.mutableLeafNode().setKey(key);
         return new NodeBuilderDefinedContextImpl(path, builder);
     }
 
@@ -58,7 +58,7 @@ public final class NodeContextBuilderImpl
      */
     @Override
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderDefinedContext atIndex(Integer index) {
-        path.getLeafNode().setIndex(index);
+        path.mutableLeafNode().setIndex(index);
         return new NodeBuilderDefinedContextImpl(path, builder);
     }
 

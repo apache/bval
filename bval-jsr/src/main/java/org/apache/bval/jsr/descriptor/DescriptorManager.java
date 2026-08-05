@@ -59,6 +59,8 @@ public class DescriptorManager {
 
     private final ApacheValidatorFactory validatorFactory;
     private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
+    /** Same meaning as {@link BeanDescriptor#isBeanConstrained()} — avoids loading metadata on repeat {@code hasWork} checks. */
+    private final ConcurrentMap<Class<?>, Boolean> beanConstrainedByType = new ConcurrentHashMap<>();
     // synchronization unnecessary
     private final ReflectionBuilder reflectionBuilder;
 
@@ -68,21 +70,32 @@ public class DescriptorManager {
         this.reflectionBuilder = new ReflectionBuilder(validatorFactory);
     }
 
+    /**
+     * @return cached result of {@link BeanDescriptor#isBeanConstrained()} for this class, or {@code null} if unknown
+     */
+    public Boolean getCachedBeanConstrained(Class<?> beanClass) {
+        return beanConstrainedByType.get(beanClass);
+    }
+
     public <T> BeanDescriptor getBeanDescriptor(Class<T> beanClass) {
         Validate.notNull(beanClass, IllegalArgumentException::new, "beanClass");
 
         // cannot use computeIfAbsent due to recursion being the usual case:
         final BeanD<?> existing = beanDescriptors.get(beanClass);
         if (existing != null) {
+            beanConstrainedByType.put(beanClass, existing.isBeanConstrained());
             return existing;
         }
         final BeanD<?> value = new BeanD<>(new MetadataReader(validatorFactory, beanClass).forBean(builder(beanClass)));
         final BeanD<?> previous = beanDescriptors.putIfAbsent(beanClass, value);
-        return previous == null ? value : previous;
+        final BeanD<?> result = previous == null ? value : previous;
+        beanConstrainedByType.put(beanClass, result.isBeanConstrained());
+        return result;
     }
 
     public void clear() {
         beanDescriptors.clear();
+        beanConstrainedByType.clear();
     }
 
     private <T> MetadataBuilder.ForBean<T> builder(Class<T> beanClass) {

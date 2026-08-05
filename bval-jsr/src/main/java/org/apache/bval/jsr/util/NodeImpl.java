@@ -78,6 +78,34 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         return 0;
     }).thenComparing((Function<Object, String>) Objects::toString));
 
+    // Per-kind node comparators are stateless and constant; hoisted to static finals so they are not
+    // re-allocated on every compareSpecificNodeInfo/compareIterability call (both are hot during path
+    // comparison, e.g. violation de-duplication).
+    private static final Comparator<Node> KEY_NODE_COMPARATOR = comparing(Node::getKey, KEY_COMPARATOR);
+
+    private static final Comparator<Node> BEAN_NODE_COMPARATOR =
+        comparing(to(BeanNode.class), comparing(BeanNode::getContainerClass, CLASS_COMPARATOR)
+            .thenComparing(BeanNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+
+    private static final Comparator<Node> PROPERTY_NODE_COMPARATOR =
+        comparing(to(PropertyNode.class), comparing(PropertyNode::getContainerClass, CLASS_COMPARATOR)
+            .thenComparing(PropertyNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+
+    private static final Comparator<Node> CONTAINER_ELEMENT_NODE_COMPARATOR =
+        comparing(to(ContainerElementNode.class), comparing(ContainerElementNode::getContainerClass, CLASS_COMPARATOR)
+            .thenComparing(ContainerElementNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+
+    private static final Comparator<Node> CONSTRUCTOR_NODE_COMPARATOR =
+        comparing(to(ConstructorNode.class).andThen(ConstructorNode::getParameterTypes),
+            Comparators.comparingIterables(CLASS_COMPARATOR));
+
+    private static final Comparator<Node> METHOD_NODE_COMPARATOR =
+        comparing(to(MethodNode.class).andThen(MethodNode::getParameterTypes),
+            Comparators.comparingIterables(CLASS_COMPARATOR));
+
+    private static final Comparator<Node> PARAMETER_NODE_COMPARATOR =
+        comparing(to(ParameterNode.class).andThen(ParameterNode::getParameterIndex));
+
     private static final char INDEX_OPEN = '[';
     private static final char INDEX_CLOSE = ']';
 
@@ -144,7 +172,7 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         if (quid.isInIterable()) {
             if (quo.isInIterable()) {
                 if (quid.getKey() != null) {
-                    return Comparator.comparing(Node::getKey, KEY_COMPARATOR).compare(quid, quo);
+                    return KEY_NODE_COMPARATOR.compare(quid, quo);
                 }
                 if (quo.getKey() != null) {
                     return -1;
@@ -173,28 +201,22 @@ public abstract class NodeImpl implements Path.Node, Serializable {
         final Comparator<Node> cmp;
         switch (kind) {
         case BEAN:
-            cmp = comparing(to(BeanNode.class), comparing(BeanNode::getContainerClass, CLASS_COMPARATOR)
-                .thenComparing(BeanNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            cmp = BEAN_NODE_COMPARATOR;
             break;
         case PROPERTY:
-            cmp = comparing(to(PropertyNode.class), comparing(PropertyNode::getContainerClass, CLASS_COMPARATOR)
-                .thenComparing(PropertyNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            cmp = PROPERTY_NODE_COMPARATOR;
             break;
         case CONTAINER_ELEMENT:
-            cmp = comparing(to(ContainerElementNode.class),
-                comparing(ContainerElementNode::getContainerClass, CLASS_COMPARATOR)
-                    .thenComparing(ContainerElementNode::getTypeArgumentIndex, nullsFirst(naturalOrder())));
+            cmp = CONTAINER_ELEMENT_NODE_COMPARATOR;
             break;
         case CONSTRUCTOR:
-            cmp = comparing(to(ConstructorNode.class).andThen(ConstructorNode::getParameterTypes),
-                Comparators.comparingIterables(CLASS_COMPARATOR));
+            cmp = CONSTRUCTOR_NODE_COMPARATOR;
             break;
         case METHOD:
-            cmp = comparing(to(MethodNode.class).andThen(MethodNode::getParameterTypes),
-                Comparators.comparingIterables(CLASS_COMPARATOR));
+            cmp = METHOD_NODE_COMPARATOR;
             break;
         case PARAMETER:
-            cmp = comparing(to(ParameterNode.class).andThen(ParameterNode::getParameterIndex));
+            cmp = PARAMETER_NODE_COMPARATOR;
             break;
         default:
             return 0;
@@ -399,7 +421,9 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     public static class ParameterNodeImpl extends NodeImpl implements Path.ParameterNode {
         public ParameterNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.ParameterNode.class, cast).ifPresent(n -> setParameterIndex(n.getParameterIndex()));
+            if (cast instanceof Path.ParameterNode) {
+                setParameterIndex(((Path.ParameterNode) cast).getParameterIndex());
+            }
         }
 
         public ParameterNodeImpl(final String name, final int idx) {
@@ -417,7 +441,9 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     public static class ConstructorNodeImpl extends NodeImpl implements Path.ConstructorNode {
         public ConstructorNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.ConstructorNode.class, cast).ifPresent(n -> setParameterTypes(n.getParameterTypes()));
+            if (cast instanceof Path.ConstructorNode) {
+                setParameterTypes(((Path.ConstructorNode) cast).getParameterTypes());
+            }
         }
 
         public ConstructorNodeImpl(final String simpleName, List<Class<?>> paramTypes) {
@@ -451,7 +477,9 @@ public abstract class NodeImpl implements Path.Node, Serializable {
     public static class MethodNodeImpl extends NodeImpl implements Path.MethodNode {
         public MethodNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.MethodNode.class, cast).ifPresent(n -> setParameterTypes(n.getParameterTypes()));
+            if (cast instanceof Path.MethodNode) {
+                setParameterTypes(((Path.MethodNode) cast).getParameterTypes());
+            }
         }
 
         public MethodNodeImpl(final String name, final List<Class<?>> classes) {
@@ -489,8 +517,11 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
         public PropertyNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.PropertyNode.class, cast)
-                .ifPresent(n -> inContainer(n.getContainerClass(), n.getTypeArgumentIndex()));
+            // direct instanceof rather than optional(...) to avoid allocating an Optional per node copy
+            if (cast instanceof Path.PropertyNode) {
+                final Path.PropertyNode n = (Path.PropertyNode) cast;
+                inContainer(n.getContainerClass(), n.getTypeArgumentIndex());
+            }
         }
 
         @Override
@@ -507,8 +538,10 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
         public BeanNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.BeanNode.class, cast)
-                .ifPresent(n -> inContainer(n.getContainerClass(), n.getTypeArgumentIndex()));
+            if (cast instanceof Path.BeanNode) {
+                final Path.BeanNode n = (Path.BeanNode) cast;
+                inContainer(n.getContainerClass(), n.getTypeArgumentIndex());
+            }
         }
 
         @Override
@@ -531,8 +564,10 @@ public abstract class NodeImpl implements Path.Node, Serializable {
 
         public ContainerElementNodeImpl(final Node cast) {
             super(cast);
-            optional(Path.ContainerElementNode.class, cast)
-                .ifPresent(n -> inContainer(n.getContainerClass(), n.getTypeArgumentIndex()));
+            if (cast instanceof Path.ContainerElementNode) {
+                final Path.ContainerElementNode n = (Path.ContainerElementNode) cast;
+                inContainer(n.getContainerClass(), n.getTypeArgumentIndex());
+            }
         }
 
         @Override

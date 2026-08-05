@@ -26,6 +26,7 @@ import org.hibernate.validator.HibernateValidator;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.profile.JavaFlightRecorderProfiler;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -171,6 +172,42 @@ public class Jsr303Benchmark {
         final Set<ConstraintViolation<Book>> constraintViolations =
             hibernateValidator.validate(new Book());
         assertTrue(constraintViolations.iterator().hasNext());
+    }
+
+    // Bootstrap benchmarks: each invocation builds (and closes) a fresh ValidatorFactory rather than reusing the
+    // shared one. Unlike the steady-state benchmarks above, this measures start-up cost (provider resolution,
+    // factory construction, first metadata build) rather than repeated validation throughput.
+
+    @Benchmark
+    public void bvalBuildFactory(final Blackhole bh) {
+        try (ValidatorFactory factory =
+            Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory()) {
+            bh.consume(factory);
+        }
+    }
+
+    @Benchmark
+    public void hibernateBuildFactory(final Blackhole bh) {
+        try (ValidatorFactory factory =
+            Validation.byProvider(HibernateValidator.class).configure().buildValidatorFactory()) {
+            bh.consume(factory);
+        }
+    }
+
+    @Benchmark
+    public void bvalBootstrapAndValidate(final Blackhole bh) {
+        try (ValidatorFactory factory =
+            Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory()) {
+            bh.consume(factory.getValidator().validate(new BookSimple("Hello", "Awesome validation", 3, 76)));
+        }
+    }
+
+    @Benchmark
+    public void hibernateBootstrapAndValidate(final Blackhole bh) {
+        try (ValidatorFactory factory =
+            Validation.byProvider(HibernateValidator.class).configure().buildValidatorFactory()) {
+            bh.consume(factory.getValidator().validate(new BookSimple("Hello", "Awesome validation", 3, 76)));
+        }
     }
 
 

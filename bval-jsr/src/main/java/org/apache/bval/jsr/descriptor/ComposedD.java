@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import jakarta.validation.metadata.CascadableDescriptor;
@@ -87,6 +88,20 @@ public abstract class ComposedD<D extends ElementD<?, ?>> implements ElementDesc
             s = Stream.of(descriptor);
         }
         return s.map(delegateType::cast);
+    }
+
+    /**
+     * Like {@link #unwrap} but visits each leaf delegate without building a stream (hot path).
+     */
+    public static <T extends ElementD<?, ?>> void forEachUnwrapped(ElementDescriptor descriptor, Class<T> delegateType,
+        Consumer<T> action) {
+        if (descriptor instanceof ComposedD<?>) {
+            for (final Object o : ((ComposedD<?>) descriptor).delegates) {
+                forEachUnwrapped((ElementDescriptor) o, delegateType, action);
+            }
+        } else {
+            action.accept(delegateType.cast(descriptor));
+        }
     }
 
     protected final List<D> delegates;

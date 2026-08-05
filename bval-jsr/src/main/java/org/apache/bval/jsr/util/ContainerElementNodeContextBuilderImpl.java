@@ -41,13 +41,13 @@ public class ContainerElementNodeContextBuilderImpl implements ContainerElementN
 
     @Override
     public ContainerElementNodeBuilderDefinedContext atKey(Object key) {
-        path.getLeafNode().setKey(key);
+        path.mutableLeafNode().setKey(key);
         return new ContainerElementNodeBuilderDefinedContextImpl(path, builder);
     }
 
     @Override
     public ContainerElementNodeBuilderDefinedContext atIndex(Integer index) {
-        path.getLeafNode().setIndex(index);
+        path.mutableLeafNode().setIndex(index);
         return new ContainerElementNodeBuilderDefinedContextImpl(path, builder);
     }
 

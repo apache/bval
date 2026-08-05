@@ -27,7 +27,6 @@ import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;
-import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -90,9 +89,7 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
         }
         try {
             final Object value = getValue(context.getValue());
-            final PathImpl p = context.getPath();
-            p.addProperty(getPropertyName());
-            return Stream.of(context.child(p, value));
+            return Stream.of(context.child(p -> p.addProperty(getPropertyName()), value));
         } catch (Exception e) {
             throw e instanceof ValidationException ? (ValidationException) e : new ValidationException(e);
         }

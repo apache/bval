@@ -63,6 +63,8 @@ public class ValidationMappingParser implements MetadataSource {
                 "META-INF/validation-mapping-3.0.xsd")
         .add(XmlBuilder.Version.v31.getId(), "https://jakarta.ee/xml/ns/validation/mapping",
                 "META-INF/validation-mapping-3.1.xsd")
+        .add(XmlBuilder.Version.v40.getId(), "https://jakarta.ee/xml/ns/validation/mapping",
+                "META-INF/validation-mapping-4.0.xsd")
         .build();
 
     private ApacheValidatorFactory validatorFactory;

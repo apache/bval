@@ -59,6 +59,7 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
          * {@inheritDoc}
          */
         @Override
+        @SuppressWarnings("removal")
         public NodeBuilderDefinedContext addNode(String name) {
             return new NodeBuilderDefinedContextImpl(extensiblePath().addProperty(name), this);
         }

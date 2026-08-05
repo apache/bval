@@ -126,6 +126,11 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
     }
 
     @Override
+    public <V> V getAttribute(String name, Class<V> type) {
+        return type.cast(attributes.get(name));
+    }
+
+    @Override
     public Set<ConstraintDescriptor<?>> getComposingConstraints() {
         return composingConstraints;
     }

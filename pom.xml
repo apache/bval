@@ -51,7 +51,10 @@
         <!-- Testing dependencies -->
         <version.tomcat>11.0.5</version.tomcat> <!-- used for EL API + EL impl in tests -->
          <version.owb>4.0.3</version.owb>
-        <version.arquillian>1.8.0.Final</version.arquillian>
+        <version.arquillian>1.10.2.Final</version.arquillian>
+        <!-- the jakarta protocol modules carry their own version line -->
+        <version.arquillian.jakarta>10.0.0.Final</version.arquillian.jakarta>
+        <version.junit.jupiter>6.1.2</version.junit.jupiter>
     </properties>
 
     <inceptionYear>2010</inceptionYear>
@@ -331,6 +334,20 @@
         </plugins>
     </reporting>
 
+    <repositories>
+        <!-- Jakarta Validation 4.0 API and TCK snapshots -->
+        <repository>
+            <id>central-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <!--
         default versions for dependencies that child modules may include
     -->
@@ -339,7 +356,7 @@
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
-                <version>3.1.1</version>
+                <version>4.0.0-SNAPSHOT</version>
             </dependency>
 
             <!-- JPA2 spec required for JPA TraversableResolver support -->

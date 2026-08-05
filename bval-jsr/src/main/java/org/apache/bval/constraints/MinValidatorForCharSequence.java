@@ -20,29 +20,29 @@ package org.apache.bval.constraints;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
 
 /**
- * Check that the String being validated represents a number, and has a value
- * less than or equal to the maximum value specified.
+ * Check that the character sequence being validated represents a number, and
+ * has a value more than or equal to the minimum value specified.
  */
-public class MaxValidatorForString implements ConstraintValidator<Max, String> {
+public class MinValidatorForCharSequence implements ConstraintValidator<Min, CharSequence> {
 
-    private long max;
+    private long minValue;
 
     @Override
-    public void initialize(Max annotation) {
-        this.max = annotation.value();
+    public void initialize(Min annotation) {
+        this.minValue = annotation.value();
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
         }
         try {
-            return new BigDecimal(value).compareTo(BigDecimal.valueOf(max)) < 1;
+            return new BigDecimal(value.toString()).compareTo(BigDecimal.valueOf(minValue)) >= 0;
         } catch (NumberFormatException nfe) {
             return false;
         }

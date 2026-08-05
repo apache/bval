@@ -66,18 +66,8 @@ public class MinMaxValidatorsForCharSequenceTest extends ValidationTestBase {
         assertEquals(0, validator.validate(new Bean(null)).size());
     }
 
-    public static class MinMaxOnlyBean {
-        @Min(10)
-        @Max(20)
-        private final CharSequence value;
-
-        MinMaxOnlyBean(CharSequence value) {
-            this.value = value;
-        }
-    }
-
     @Test
     public void testNotANumber() {
-        assertEquals(2, validator.validate(new MinMaxOnlyBean(new StringBuilder("foo"))).size());
+        assertEquals(4, validator.validate(new Bean(new StringBuilder("foo"))).size());
     }
 }

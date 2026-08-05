@@ -26,13 +26,28 @@ import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.constraints.DecimalMin;
 
 public abstract class DecimalMinValidator<T> implements ConstraintValidator<DecimalMin, T> {
+    /**
+     * Check that the character sequence being validated represents a number, and
+     * has a value more than or equal to the minimum value specified.
+     */
     public static class ForCharSequence extends DecimalMinValidator<CharSequence> {
         @Override
         public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-            return value == null || isValid(new BigDecimal(value.toString()));
+            if (value == null) {
+                return true;
+            }
+            try {
+                return isValid(new BigDecimal(value.toString()));
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
         }
     }
 
+    /**
+     * Check that the number being validated has a value more than or equal to
+     * the minimum value specified.
+     */
     public static class ForNumber extends DecimalMinValidator<Number> {
         @Override
         public boolean isValid(Number value, ConstraintValidatorContext context) {
@@ -65,10 +80,6 @@ public abstract class DecimalMinValidator<T> implements ConstraintValidator<Deci
     }
 
     protected boolean isValid(BigDecimal value) {
-        // null values are valid
-        if (value == null) {
-            return true;
-        }
         final int comparison = value.compareTo(minValue);
         return comparison > 0 || inclusive && comparison == 0;
     }

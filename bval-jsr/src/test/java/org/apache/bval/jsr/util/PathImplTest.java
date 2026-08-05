@@ -21,8 +21,11 @@ package org.apache.bval.jsr.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import jakarta.validation.Path;
@@ -187,6 +190,55 @@ public class PathImplTest {
         path.removeLeafNode();
         assertTrue(path.isRootPath());
         assertEquals(1, countNodes(path));
+    }
+
+    @Test
+    public void testLength() {
+        assertEquals(1, PathImpl.create().length());
+        assertEquals(4, PathImpl.createPathFromString("order[3].deliveryAddress.addressline[1]").length());
+        assertEquals(0, emptyPath().length());
+    }
+
+    @Test
+    public void testGetNode() {
+        final PathImpl path = PathImpl.createPathFromString("order[3].deliveryAddress.addressline[1]");
+
+        assertEquals("order", path.getNode(0).getName());
+        assertEquals("deliveryAddress", path.getNode(1).getName());
+        assertEquals("addressline", path.getNode(2).getName());
+        assertNull(path.getNode(3).getName());
+
+        assertThrows(IndexOutOfBoundsException.class, () -> path.getNode(-1));
+        assertThrows(IndexOutOfBoundsException.class, () -> path.getNode(4));
+    }
+
+    @Test
+    public void testGetRootNodeAndGetLeafNode() {
+        final PathImpl path = PathImpl.createPathFromString("order[3].deliveryAddress.addressline[1]");
+
+        assertSame(path.getNode(0), path.getRootNode());
+        assertSame(path.getNode(path.length() - 1), path.getLeafNode());
+
+        final PathImpl root = PathImpl.create();
+        assertSame(root.getRootNode(), root.getLeafNode());
+    }
+
+    @Test
+    public void testAccessorsOnEmptyPath() {
+        final PathImpl path = emptyPath();
+
+        assertThrows(IndexOutOfBoundsException.class, () -> path.getNode(0));
+        assertThrows(IndexOutOfBoundsException.class, path::getRootNode);
+        assertThrows(IndexOutOfBoundsException.class, path::getLeafNode);
+    }
+
+    /**
+     * A {@link PathImpl} holding no nodes at all. {@link PathImpl#create()} always seeds a root node and
+     * {@link PathImpl#removeLeafNode()} restores one, so the only way to reach this state is to copy a foreign
+     * empty {@link Path}.
+     */
+    private PathImpl emptyPath() {
+        return PathImpl.copy(Collections.<Path.Node> emptyList()::iterator);
     }
 
     private int countNodes(Path path) {

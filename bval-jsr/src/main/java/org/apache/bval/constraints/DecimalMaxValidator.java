@@ -26,10 +26,10 @@ import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.constraints.DecimalMax;
 
 public abstract class DecimalMaxValidator<T> implements ConstraintValidator<DecimalMax, T> {
-    public static class ForString extends DecimalMaxValidator<String> {
+    public static class ForCharSequence extends DecimalMaxValidator<CharSequence> {
         @Override
-        public boolean isValid(String value, ConstraintValidatorContext context) {
-            return value == null || isValid(new BigDecimal(value));
+        public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+            return value == null || isValid(new BigDecimal(value.toString()));
         }
     }
 

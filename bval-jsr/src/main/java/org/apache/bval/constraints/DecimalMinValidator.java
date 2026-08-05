@@ -26,10 +26,10 @@ import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.constraints.DecimalMin;
 
 public abstract class DecimalMinValidator<T> implements ConstraintValidator<DecimalMin, T> {
-    public static class ForString extends DecimalMinValidator<String> {
+    public static class ForCharSequence extends DecimalMinValidator<CharSequence> {
         @Override
-        public boolean isValid(String value, ConstraintValidatorContext context) {
-            return value == null || isValid(new BigDecimal(value));
+        public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+            return value == null || isValid(new BigDecimal(value.toString()));
         }
     }
 

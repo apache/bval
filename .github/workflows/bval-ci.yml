@@ -23,6 +23,7 @@ on:
   push:
     branches:
       - master
+      - 'bval-*'
   pull_request:
   workflow_dispatch:
 
@@ -36,7 +37,7 @@ jobs:
     name: Build (Java ${{ matrix.jdk }})
     strategy:
       matrix:
-        jdk: [ '17', '21', '23' ]
+        jdk: [ '17', '21', '25' ]
 
     steps:
       - uses: actions/checkout@v7

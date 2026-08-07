@@ -29,8 +29,12 @@ Apache BVal - Apache's implementation of the Jakarta Validation specification fo
 
 ## Branches
 
-### master / 3.1.x
-Jakarta Validation 3.1 implementation (Jakarta EE 11), requires Java 17+.  
+### master / 4.0.x
+Jakarta Validation 4.0 implementation (Jakarta EE 12, WIP), requires Java 17+.  
+
+### 3.1.x
+![3.1.x](https://img.shields.io/maven-central/v/org.apache.bval/bval-jsr?versionPrefix=3.1&color=cyan)  
+Jakarta Validation 3.1 implementation (Jakarta EE 11), requires Java 17+.
 
 ### 3.0.x
 ![3.0.x](https://img.shields.io/maven-central/v/org.apache.bval/bval-jsr?versionPrefix=3.0&color=cyan)  
@@ -47,7 +51,7 @@ Bean Validation 1.1 (JSR-349) implementation (Java EE 7), requires Java 6+.
 ## Minimum Requirements (master)
 
 - Java 17+
-- Jakarta Validation 3.1 (Jakarta EE 11)
+- Jakarta Validation 4.0 (Jakarta EE 12)
 - TCK compliant
 
 ## Installation

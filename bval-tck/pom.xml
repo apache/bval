@@ -23,7 +23,7 @@ under the License.
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>3.1.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>bval-tck</artifactId>
@@ -31,7 +31,7 @@ under the License.
     <description>Aggregates dependencies and runs the JSR-380 TCK</description>
 
     <properties>
-        <tck.version>3.1.1</tck.version>
+        <tck.version>4.0.0-SNAPSHOT</tck.version>
         <validation.provider>org.apache.bval.jsr.ApacheValidationProvider</validation.provider>
     </properties>
 
@@ -132,22 +132,22 @@ under the License.
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.arquillian.testng</groupId>
-            <artifactId>arquillian-testng-container</artifactId>
+            <groupId>org.jboss.arquillian.junit5</groupId>
+            <artifactId>arquillian-junit5-container</artifactId>
             <version>${version.arquillian}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.protocol</groupId>
             <artifactId>arquillian-protocol-servlet-jakarta</artifactId>
-            <version>${version.arquillian}</version>
+            <version>${version.arquillian.jakarta}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>7.12.0</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${version.junit.jupiter}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -172,38 +172,12 @@ under the License.
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <version>3.11.0</version>
-                        <executions>
-                            <execution>
-                                <id>copy-tck-test-suite-file</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <configuration>
-                                    <stripVersion>true</stripVersion>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>jakarta.validation</groupId>
-                                            <artifactId>validation-tck-tests</artifactId>
-                                            <type>xml</type>
-                                            <classifier>suite</classifier>
-                                            <overWrite>false</overWrite>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <argLine>-Duser.language=en --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
-                            <suiteXmlFiles>
-                                <suiteXmlFile>${project.build.directory}/dependency/validation-tck-tests-suite.xml</suiteXmlFile>
-                            </suiteXmlFiles>
+                            <dependenciesToScan>
+                                <dependency>jakarta.validation:validation-tck-tests</dependency>
+                            </dependenciesToScan>
                             <systemProperties>
                                 <property>
                                     <name>validation.provider</name>
@@ -218,8 +192,6 @@ under the License.
                                     <value>${project.basedir}/src/test/resources/logging.properties</value>
                                 </property>
                             </systemProperties>
-                            <parallel>classes</parallel>
-                            <threadCount>1</threadCount>
                             <reuseForks>false</reuseForks>
                         </configuration>
                     </plugin>

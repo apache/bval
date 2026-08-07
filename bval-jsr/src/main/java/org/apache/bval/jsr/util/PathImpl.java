@@ -311,14 +311,41 @@ public class PathImpl implements Path, Serializable {
     }
 
     /**
-     * Get the leaf node (if any) from this {@link PathImpl}
-     * 
-     * @return {@link NodeImpl}
+     * {@inheritDoc}
      */
+    @Override
+    public int length() {
+        return nodeList.size();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeImpl getNode(int index) {
+        Exceptions.raiseIf(index < 0 || index >= nodeList.size(), IndexOutOfBoundsException::new,
+            "Index %d is out of bounds for path of length %d", index, nodeList.size());
+
+        return nodeList.get(index);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeImpl getRootNode() {
+        Exceptions.raiseIf(nodeList.isEmpty(), IndexOutOfBoundsException::new, "Path is empty");
+
+        return nodeList.peekFirst();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public NodeImpl getLeafNode() {
-        if (nodeList.isEmpty()) {
-            return null;
-        }
+        Exceptions.raiseIf(nodeList.isEmpty(), IndexOutOfBoundsException::new, "Path is empty");
+
         return nodeList.peekLast();
     }
 

@@ -35,7 +35,7 @@ public class TCKSuiteOWBEnhancements implements LoadableExtension {
         extensionBuilder.override(DeployableContainer.class, OwbStandaloneContainer.class, ExtendedOwbStandaloneContainer.class);
     }
 
-    // testng suites handling looks buggy since it does not shutdown previous container when running another suite so this does not work with owb
+    // the container is not shut down between test archives, so owb needs to be pinned to the arquillian singleton service
     public static class ExtendedOwbStandaloneContainer extends OwbStandaloneContainer {
         @Override
         public void setup(final OwbStandaloneConfiguration owbStandaloneConfiguration) {

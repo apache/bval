@@ -58,6 +58,7 @@ public final class NodeBuilderCustomizableContextImpl
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("removal")
     public ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext addNode(String name) {
         return addPropertyNode(name);
     }

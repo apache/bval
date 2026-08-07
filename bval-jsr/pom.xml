@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.bval</groupId>
         <artifactId>bval-parent</artifactId>
-        <version>3.1.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>bval-jsr</artifactId>
@@ -205,11 +205,10 @@
             <artifactId>tomcat-jasper-el</artifactId>
         </dependency>
 
-        <!-- TODO update to 6.0.0 once released -->
         <dependency>
             <groupId>org.glassfish.expressly</groupId>
             <artifactId>expressly</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -270,8 +269,8 @@
                     <extension>true</extension>
                     <enableIntrospection>true</enableIntrospection>
                     <sources>
-	                    <source>${project.basedir}/src/main/xsd/validation-configuration-3.1.xsd</source>
-	                    <source>${project.basedir}/src/main/xsd/validation-mapping-3.1.xsd</source>
+	                    <source>${project.basedir}/src/main/xsd/validation-configuration-4.0.xsd</source>
+	                    <source>${project.basedir}/src/main/xsd/validation-mapping-4.0.xsd</source>
                     </sources>
                 </configuration>
                 <dependencies>

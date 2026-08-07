@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import jakarta.validation.ClockProvider;
+import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorFactory;
 import jakarta.validation.MessageInterpolator;
 import jakarta.validation.ParameterNameProvider;
@@ -45,6 +46,7 @@ import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder.ForBean;
 import org.apache.bval.jsr.metadata.MetadataBuilders;
 import org.apache.bval.jsr.metadata.MetadataSource;
+import org.apache.bval.jsr.metadata.ServiceLoaderValidatorMappingProvider;
 import org.apache.bval.jsr.util.AnnotationsManager;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.jsr.valueextraction.ValueExtractors.OnDuplicateContainerElementKey;
@@ -137,6 +139,9 @@ public class ApacheValidatorFactory implements ValidatorFactory, Cloneable {
             ApacheValidatorFactory.class.getClassLoader());
 
         toClose.add(participantFactory);
+
+        constraintsCache.setServiceLoaderValidatorMappingProvider(new ServiceLoaderValidatorMappingProvider(
+            participantFactory.loadServiceClasses(ConstraintValidator.class)));
 
         valueExtractors = createBaseValueExtractors(participantFactory).createChild();
         configuration.getValueExtractors().forEach(valueExtractors::add);

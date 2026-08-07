@@ -55,8 +55,6 @@ public class DefaultConstraintValidatorFactory implements ConstraintValidatorFac
             }
         }
 
-        // 2011-03-27 jw: Do not use PrivilegedAction.
-        // Otherwise any user code would be executed with the privileges of this class.
         try {
             if (useCdi) {
                 try {

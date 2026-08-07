@@ -106,13 +106,32 @@ public class ConstraintCached {
     private final Lazy<ValidatorMappingProvider> validatorMappingProvider =
         new Lazy<>(this::createValidatorMappingProvider);
 
+    private ValidatorMappingProvider serviceLoaderValidatorMappingProvider;
+
     public ConcurrentMap<ConstraintD<?>, ConstraintValidator<?, ?>> getValidators() {
         return validators;
     }
 
     public void add(ValidatorMappingProvider validatorMappingProvider) {
         customValidatorMappingProviders.add(validatorMappingProvider);
-        this.validatorMappingProvider.reset(this::createValidatorMappingProvider);
+        resetValidatorMappingProvider();
+    }
+
+    /**
+     * Set the provider of the {@link ConstraintValidator} implementations registered via the service loader
+     * mechanism. These rank alongside the built-in validators: they are merged with, rather than overridden by,
+     * {@code @Constraint.validatedBy()} and XML {@code <constraint-definition>} registrations that include existing
+     * validators.
+     */
+    public void setServiceLoaderValidatorMappingProvider(ValidatorMappingProvider serviceLoaderValidatorMappingProvider) {
+        this.serviceLoaderValidatorMappingProvider = serviceLoaderValidatorMappingProvider;
+        resetValidatorMappingProvider();
+    }
+
+    private void resetValidatorMappingProvider() {
+        validatorMappingProvider.reset(this::createValidatorMappingProvider);
+        // memoized per-constraint results were computed from the previous composition:
+        constraintValidatorInfo.clear();
     }
 
     public <A extends Annotation> List<Class<? extends ConstraintValidator<A, ?>>> getConstraintValidatorClasses(
@@ -146,6 +165,10 @@ public class ConstraintCached {
             }
             configured = new DualValidationMappingProvider(AnnotationDeclaredValidatorMappingProvider.INSTANCE, custom);
         }
-        return new DualValidationMappingProvider(ConstraintDefaults.INSTANCE, configured);
+        final ValidatorMappingProvider preconfigured = serviceLoaderValidatorMappingProvider == null
+            ? ConstraintDefaults.INSTANCE
+            : new DualValidationMappingProvider(ConstraintDefaults.INSTANCE, serviceLoaderValidatorMappingProvider);
+
+        return new DualValidationMappingProvider(preconfigured, configured);
     }
 }

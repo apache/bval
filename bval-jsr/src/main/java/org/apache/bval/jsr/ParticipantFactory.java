@@ -78,6 +78,29 @@ class ParticipantFactory implements Closeable {
     }
 
     <T> Set<T> loadServices(Class<T> type) { // todo: enable somehow to cache shared classloader (think tomcat/tomee)
+        return serviceEntries(type).stream().<T> map(this::create).collect(ToUnmodifiable.set());
+    }
+
+    /**
+     * Read the service entries declared for {@code type} without instantiating them. Used where the declared classes
+     * themselves are the participants, e.g. {@code ConstraintValidator} implementations, whose instantiation is the
+     * business of the configured {@code ConstraintValidatorFactory}.
+     */
+    <T> Set<Class<? extends T>> loadServiceClasses(Class<T> type) {
+        return serviceEntries(type).stream().map(classname -> asSubclass(loadClass(classname), type))
+            .collect(ToUnmodifiable.set());
+    }
+
+    private static <T> Class<? extends T> asSubclass(Class<?> loaded, Class<T> type) {
+        try {
+            return loaded.asSubclass(type);
+        } catch (ClassCastException e) {
+            throw new ValidationException(String.format("%s declared in %s%s does not implement it", loaded.getName(),
+                META_INF_SERVICES, type.getName()), e);
+        }
+    }
+
+    private Set<String> serviceEntries(Class<?> type) {
         Validate.notNull(type);
         final Set<URL> resources = new LinkedHashSet<>();
         final String resourceName = META_INF_SERVICES + type.getName();
@@ -90,17 +113,27 @@ class ParticipantFactory implements Closeable {
                 log.log(Level.SEVERE, "Error searching for resource(s) " + resourceName, e);
             }
         }
-        return resources.stream().distinct().map(this::read).flatMap(Collection::stream).<T> map(this::create)
+        return resources.stream().distinct().map(this::read).flatMap(Collection::stream)
             .collect(ToUnmodifiable.set());
     }
 
     private Set<String> read(URL url) {
         try (BufferedReader r = new BufferedReader(new InputStreamReader(url.openStream()))) {
-            return r.lines().map(String::trim).filter(line -> line.charAt(0) != '#').collect(Collectors.toSet());
+            return r.lines().map(ParticipantFactory::stripComment).filter(line -> !line.isEmpty())
+                .collect(Collectors.toSet());
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unable to read resource " + url, e);
             return Collections.emptySet();
         }
+    }
+
+    /**
+     * Per the service provider configuration file format, a {@code '#'} starts a comment running to the end of the
+     * line, whether or not anything precedes it.
+     */
+    private static String stripComment(String line) {
+        final int comment = line.indexOf('#');
+        return (comment < 0 ? line : line.substring(0, comment)).trim();
     }
 
     @SuppressWarnings("unchecked")

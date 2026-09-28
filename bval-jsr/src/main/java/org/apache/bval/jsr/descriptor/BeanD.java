@@ -19,11 +19,15 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstructorDescriptor;
@@ -31,6 +35,7 @@ import jakarta.validation.metadata.MethodDescriptor;
 import jakarta.validation.metadata.MethodType;
 import jakarta.validation.metadata.PropertyDescriptor;
 
+import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.ToUnmodifiable;
@@ -52,6 +57,17 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     private final Set<ConstructorDescriptor> constrainedConstructors;
     private final Map<Set<MethodType>, Set<MethodDescriptor>> methodCache = new HashMap<>();
 
+    /** Leaf (non-composed) delegates of {@link #properties}. */
+    private final PropertyD<?>[] leafProperties;
+    /**
+     * Requested group strategy to the strategy with {@link Group#DEFAULT} redefined as this bean's default group
+     * sequence; {@link #UNCHANGED} when the redefinition is a no-op.
+     */
+    private final ConcurrentMap<GroupStrategy, GroupStrategy> localGroupStrategies = new ConcurrentHashMap<>();
+    private final ConcurrentMap<GroupStrategy, PropertyD<?>[]> propertiesByGroups = new ConcurrentHashMap<>();
+
+    private static final GroupStrategy UNCHANGED = GroupStrategy.simple(Collections.emptySet());
+
     BeanD(MetadataReader.ForBean<T> reader) {
         super(reader);
         this.beanClass = reader.meta.getHost();
@@ -65,6 +81,11 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
             cfpn.put(p.getPropertyName(), p);
         }
         constraintsForPropertyByName = Map.copyOf(cfpn);
+        final List<PropertyD<?>> leaves = new ArrayList<>();
+        for (PropertyDescriptor p : properties) {
+            ComposedD.forEachUnwrapped(p, PropertyD.class, leaves::add);
+        }
+        leafProperties = leaves.toArray(new PropertyD<?>[0]);
         constructors = reader.getConstructors(this);
         methods = reader.getMethods(this);
         
@@ -139,6 +160,53 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     @Override
     public GroupStrategy getGroupStrategy() {
         return groupStrategy;
+    }
+
+    /**
+     * Get {@code groups} with {@link Group#DEFAULT} redefined as this bean's default group sequence. Returns
+     * {@code groups} itself (same instance) when no redefinition applies.
+     *
+     * @param groups
+     * @return {@link GroupStrategy}
+     */
+    public GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+        GroupStrategy result = localGroupStrategies.get(groups);
+        if (result == null) {
+            final GroupStrategy computed =
+                GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, groupStrategy));
+            result = computed == groups ? UNCHANGED : computed;
+            localGroupStrategies.putIfAbsent(groups, result);
+        }
+        return result == UNCHANGED ? groups : result;
+    }
+
+    /**
+     * Get the leaf constrained properties that need a validation frame for {@code groups}: those with constraints
+     * applying to any of its groups, with constrained container element types, or that are cascaded. The result is
+     * cached and must not be modified.
+     *
+     * @param groups
+     * @return {@link PropertyD} array, possibly empty
+     */
+    public PropertyD<?>[] getPropertiesFor(GroupStrategy groups) {
+        PropertyD<?>[] result = propertiesByGroups.get(groups);
+        if (result == null) {
+            final Set<Group> targetGroups = groups.getGroups();
+            final List<PropertyD<?>> relevant = new ArrayList<>(leafProperties.length);
+            for (PropertyD<?> p : leafProperties) {
+                if (p.isCascadedDeep() || !p.getConstrainedContainerElementTypes().isEmpty()
+                    || p.getConstraintDescriptors().stream().map(ConstraintD.class::cast)
+                        .anyMatch(c -> matchesGroups(c, targetGroups))) {
+                    relevant.add(p);
+                }
+            }
+            result = relevant.toArray(new PropertyD<?>[0]);
+            final PropertyD<?>[] previous = propertiesByGroups.putIfAbsent(groups, result);
+            if (previous != null) {
+                result = previous;
+            }
+        }
+        return result;
     }
 
     public final Type getGenericType() {

@@ -24,10 +24,14 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.ElementDescriptor;
 
+import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.Meta;
@@ -72,11 +76,33 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         }
     }
 
+    private static final ConstraintD<?>[] NO_CONSTRAINTS = {};
+
+    /**
+     * Learn whether {@code constraint} applies to any of {@code targetGroups}.
+     *
+     * @param constraint
+     * @param targetGroups
+     * @return {@code boolean}
+     */
+    public static boolean matchesGroups(ConstraintD<?> constraint, Set<Group> targetGroups) {
+        final Set<Class<?>> constraintGroups = constraint.getGroups();
+        final boolean impliesDefault = constraintGroups.contains(Default.class);
+        for (final Group target : targetGroups) {
+            final Class<?> g = target.getGroup();
+            if (constraintGroups.contains(g) || impliesDefault && constraint.getDeclaringClass().equals(g)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected final Type genericType;
     final GroupsComputer groupsComputer;
 
     private final Meta<E> meta;
     private final Set<ConstraintD<?>> constraints;
+    private final ConcurrentMap<GroupStrategy, ConstraintD<?>[]> constraintsByGroups;
 
     protected ElementD(R reader) {
         super();
@@ -84,6 +110,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         this.meta = reader.meta;
         this.genericType = reader.meta.getType();
         this.constraints = reader.getConstraints();
+        this.constraintsByGroups = constraints.isEmpty() ? null : new ConcurrentHashMap<>();
         this.groupsComputer = reader.getValidatorFactory().getGroupsComputer();
     }
 
@@ -96,6 +123,28 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     @Override
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
         return (Set) constraints;
+    }
+
+    /**
+     * Get the constraints of this element that apply to any group of {@code groups}, in declaration order. The
+     * result is cached per {@link GroupStrategy} and must not be modified.
+     *
+     * @param groups
+     * @return {@link ConstraintD} array, possibly empty
+     */
+    public ConstraintD<?>[] getConstraintsFor(GroupStrategy groups) {
+        if (constraintsByGroups == null) {
+            return NO_CONSTRAINTS;
+        }
+        final ConstraintD<?>[] cached = constraintsByGroups.get(groups);
+        if (cached != null) {
+            return cached;
+        }
+        final Set<Group> targetGroups = groups.getGroups();
+        final ConstraintD<?>[] result =
+            constraints.stream().filter(c -> matchesGroups(c, targetGroups)).toArray(ConstraintD<?>[]::new);
+        final ConstraintD<?>[] previous = constraintsByGroups.putIfAbsent(groups, result);
+        return previous == null ? result : previous;
     }
 
     @Override

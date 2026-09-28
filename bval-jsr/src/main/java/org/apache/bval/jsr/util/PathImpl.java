@@ -19,9 +19,9 @@
 package org.apache.bval.jsr.util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -164,7 +164,7 @@ public class PathImpl implements Path, Serializable {
         return n != null && n.getName() == null && (n.isInIterable() || n.getContainerClass() != null);
     }
 
-    private final LinkedList<NodeImpl> nodeList = new LinkedList<>();
+    private final ArrayList<NodeImpl> nodeList;
 
     // Copy-on-write for the leaf node. copy() of another PathImpl shares node references instead of deep-copying
     // (nodes are effectively immutable once they are interior; only the current leaf is ever mutated in place).
@@ -172,12 +172,14 @@ public class PathImpl implements Path, Serializable {
     private boolean sharedLeaf;
 
     private PathImpl() {
+        nodeList = new ArrayList<>(4);
     }
 
     private PathImpl(Path path) {
         if (path instanceof PathImpl) {
             final PathImpl source = (PathImpl) path;
             // share node references; the leaf will be copied on first mutation by whichever path mutates it
+            nodeList = new ArrayList<>(source.nodeList.size() + 2);
             nodeList.addAll(source.nodeList);
             if (!nodeList.isEmpty()) {
                 sharedLeaf = true;
@@ -185,6 +187,7 @@ public class PathImpl implements Path, Serializable {
                 source.sharedLeaf = true;
             }
         } else {
+            nodeList = new ArrayList<>();
             path.forEach(n -> nodeList.add(newNode(n)));
         }
     }
@@ -229,7 +232,7 @@ public class PathImpl implements Path, Serializable {
         if (nodeList.size() != 1) {
             return false;
         }
-        final Path.Node first = nodeList.peekFirst();
+        final Path.Node first = nodeList.get(0);
         return !first.isInIterable() && first.getName() == null;
     }
 
@@ -243,7 +246,7 @@ public class PathImpl implements Path, Serializable {
     public PathImpl addNode(Node node) {
         final NodeImpl impl = node instanceof NodeImpl ? (NodeImpl) node : newNode(node);
         if (isRootPath()) {
-            nodeList.pop();
+            nodeList.remove(0);
         }
         nodeList.add(impl);
         // the appended node is caller-owned/fresh, so the new leaf is exclusively owned
@@ -298,7 +301,7 @@ public class PathImpl implements Path, Serializable {
         Exceptions.raiseIf(isRootPath() || nodeList.isEmpty(), IllegalStateException::new, "No nodes in path!");
 
         try {
-            return nodeList.removeLast();
+            return nodeList.remove(nodeList.size() - 1);
         } finally {
             if (nodeList.isEmpty()) {
                 nodeList.add(new NodeImpl.BeanNodeImpl());
@@ -336,7 +339,7 @@ public class PathImpl implements Path, Serializable {
     public NodeImpl getRootNode() {
         Exceptions.raiseIf(nodeList.isEmpty(), IndexOutOfBoundsException::new, "Path is empty");
 
-        return nodeList.peekFirst();
+        return nodeList.get(0);
     }
 
     /**
@@ -346,7 +349,7 @@ public class PathImpl implements Path, Serializable {
     public NodeImpl getLeafNode() {
         Exceptions.raiseIf(nodeList.isEmpty(), IndexOutOfBoundsException::new, "Path is empty");
 
-        return nodeList.peekLast();
+        return nodeList.get(nodeList.size() - 1);
     }
 
     /**

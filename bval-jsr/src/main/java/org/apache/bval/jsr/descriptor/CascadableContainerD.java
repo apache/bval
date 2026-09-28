@@ -36,6 +36,7 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
     private final boolean cascaded;
     private final Set<GroupConversion> groupConversions;
     private final Set<ContainerElementTypeDescriptor> containerElementTypes;
+    private final boolean cascadedDeep;
 
     protected CascadableContainerD(MetadataReader.ForContainer<E> reader, P parent) {
         super(reader, parent);
@@ -45,6 +46,17 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
                                       .stream()
                                       .filter(DescriptorManager::isConstrained)
                                       .collect(ToUnmodifiable.set());
+        cascadedDeep = cascaded || containerElementTypes.stream().anyMatch(DescriptorManager::isCascaded);
+    }
+
+    /**
+     * Learn whether this element or any of its constrained container element types (recursively) is cascaded.
+     *
+     * @return {@code boolean}
+     * @see DescriptorManager#isCascaded
+     */
+    public boolean isCascadedDeep() {
+        return cascadedDeep;
     }
 
     @Override

@@ -69,6 +69,7 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
      */
     private final GroupStrategyMap<GroupStrategy> localGroupStrategies = new GroupStrategyMap<>();
     private final GroupStrategyMap<PropertyD<?>[]> propertiesByGroups = new GroupStrategyMap<>();
+    private final GroupStrategyMap<GroupPlan> plans = new GroupStrategyMap<>();
 
     /** Descriptors by executable, {@link #NOT_CONSTRAINED} for unconstrained ones. */
     private final ConcurrentMap<Executable, Object> executableDescriptors = new ConcurrentHashMap<>();
@@ -206,6 +207,50 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
             result = localGroupStrategies.putIfAbsent(groups, computed == groups ? UNCHANGED : computed);
         }
         return result == UNCHANGED ? groups : result;
+    }
+
+    /**
+     * What validating this bean for a requested group strategy involves.
+     */
+    public static final class GroupPlan {
+        private final GroupStrategy localGroupStrategy;
+        private final PropertyD<?>[] properties;
+
+        GroupPlan(GroupStrategy localGroupStrategy, PropertyD<?>[] properties) {
+            this.localGroupStrategy = localGroupStrategy;
+            this.properties = properties;
+        }
+
+        /**
+         * @param groups the requested strategy this plan was obtained for
+         * @return {@link BeanD#getLocalGroupStrategy(GroupStrategy)} of {@code groups}
+         */
+        public GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+            return localGroupStrategy == null ? groups : localGroupStrategy;
+        }
+
+        /**
+         * @return {@link BeanD#getPropertiesFor(GroupStrategy)} of the local group strategy; must not be modified
+         */
+        public PropertyD<?>[] getProperties() {
+            return properties;
+        }
+    }
+
+    /**
+     * Get the {@link GroupPlan} for validating this bean for {@code groups}, combining
+     * {@link #getLocalGroupStrategy(GroupStrategy)} and {@link #getPropertiesFor(GroupStrategy)} in one lookup.
+     *
+     * @param groups
+     * @return {@link GroupPlan}
+     */
+    public GroupPlan getPlan(GroupStrategy groups) {
+        final GroupPlan cached = plans.get(groups);
+        if (cached != null) {
+            return cached;
+        }
+        final GroupStrategy local = getLocalGroupStrategy(groups);
+        return plans.putIfAbsent(groups, new GroupPlan(local == groups ? null : local, getPropertiesFor(local)));
     }
 
     /**

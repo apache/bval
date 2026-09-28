@@ -273,41 +273,57 @@ public abstract class ValidationJob<T> {
         @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-            final GroupStrategy localGroupStrategy = descriptor.getLocalGroupStrategy(groups);
+            final BeanD.GroupPlan plan = descriptor.getPlan(groups);
+            final GroupStrategy localGroupStrategy = plan.getLocalGroupStrategy(groups);
             final boolean redefined = localGroupStrategy != groups;
-            final PropertyFrames propertyFrames = new PropertyFrames(descriptor.getPropertiesFor(localGroupStrategy));
-            final PropertyD<?>[] properties = propertyFrames.properties;
+            final PropertyD<?>[] properties = plan.getProperties();
+            // frames are created on first use, so that properties relevant only to groups that are never validated
+            // (e.g. later steps of a failing group sequence) are not read
+            final Object[] propertyFrames = properties.length == 0 ? NO_FRAMES : new Object[properties.length];
 
-            localGroupStrategy.applyTo(gs -> {
-                final int originalCount = violationCount();
-                validateDescriptorConstraints(gs, sink);
-                for (int i = 0; i < properties.length; i++) {
-                    final PropertyD<?> d = properties[i];
-                    final boolean recurse = !redefined && d.isCascadedDeep();
-                    if (!recurse && d.getConstraintsFor(gs).length == 0
-                            && d.getConstrainedContainerElementTypes().isEmpty()) {
-                        continue;
-                    }
-                    final Frame<?> p = propertyFrames.get(i);
-                    if (p != null) {
-                        p.validateDescriptorConstraints(gs, sink);
-                        if (recurse) {
-                            p.recurse(gs, sink);
-                        }
-                    }
-                }
-                return violationCount() == originalCount;
-            });
+            if (localGroupStrategy instanceof Group) {
+                // a single group: applyTo would just call back once
+                validateGroup(localGroupStrategy, properties, propertyFrames, redefined, sink);
+            } else {
+                localGroupStrategy.applyTo(gs -> validateGroup(gs, properties, propertyFrames, redefined, sink));
+            }
             if (redefined) {
                 for (int i = 0; i < properties.length; i++) {
                     if (properties[i].isCascadedDeep()) {
-                        final Frame<?> p = propertyFrames.get(i);
+                        final Frame<?> p = propertyFrame(properties, propertyFrames, i);
                         if (p != null) {
                             p.recurse(groups, sink);
                         }
                     }
                 }
             }
+        }
+
+        /**
+         * Validate this bean and its properties for one group of the local group strategy.
+         *
+         * @return whether no violation was found
+         */
+        private boolean validateGroup(GroupStrategy gs, PropertyD<?>[] properties, Object[] propertyFrames,
+                boolean redefined, Consumer<ConstraintViolation<T>> sink) {
+            final int originalCount = violationCount();
+            validateDescriptorConstraints(gs, sink);
+            for (int i = 0; i < properties.length; i++) {
+                final PropertyD<?> d = properties[i];
+                final boolean recurse = !redefined && d.isCascadedDeep();
+                if (!recurse && d.getConstraintsFor(gs).length == 0
+                        && d.getConstrainedContainerElementTypes().isEmpty()) {
+                    continue;
+                }
+                final Frame<?> p = propertyFrame(properties, propertyFrames, i);
+                if (p != null) {
+                    p.validateDescriptorConstraints(gs, sink);
+                    if (recurse) {
+                        p.recurse(gs, sink);
+                    }
+                }
+            }
+            return violationCount() == originalCount;
         }
 
         protected Frame<?> propertyFrame(PropertyD<?> d, GraphContext context) {
@@ -320,52 +336,36 @@ public abstract class ValidationJob<T> {
         }
 
         /**
-         * Frames of the properties of this bean, created on first use so that properties relevant only to groups
-         * that are never validated (e.g. later steps of a failing group sequence) are not read.
+         * @return the frame for {@code properties[i]}, created on first use, or {@code null} if that property is not
+         *         reachable or its value is already being validated further up the graph
          */
-        private class PropertyFrames {
-            final PropertyD<?>[] properties;
-            private Object[] frames;
-
-            PropertyFrames(PropertyD<?>[] properties) {
-                this.properties = properties;
+        private Frame<?> propertyFrame(PropertyD<?>[] properties, Object[] frames, int i) {
+            Object frame = frames[i];
+            if (frame == null) {
+                frame = createPropertyFrame(properties[i]);
+                frames[i] = frame;
             }
+            return frame == NO_FRAME ? null : (Frame<?>) frame;
+        }
 
-            /**
-             * @return the frame for {@code properties[i]}, or {@code null} if that property is not reachable or its
-             *         value is already being validated further up the graph
-             */
-            Frame<?> get(int i) {
-                if (frames == null) {
-                    frames = new Object[properties.length];
-                }
-                Object frame = frames[i];
-                if (frame == null) {
-                    frame = create(properties[i]);
-                    frames[i] = frame;
-                }
-                return frame == NO_FRAME ? null : (Frame<?>) frame;
-            }
-
-            private Object create(PropertyD<?> d) {
-                final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
-                if (!traversesAll(traversableResolver)) {
-                    final PathImpl p = realContext.getPath();
-                    p.addProperty(d.getPropertyName());
-                    try {
-                        if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
-                                p, d.getElementType())) {
-                            return NO_FRAME;
-                        }
-                    } catch (ValidationException ve) {
-                        throw ve;
-                    } catch (Exception e) {
-                        throw new ValidationException(e);
+        private Object createPropertyFrame(PropertyD<?> d) {
+            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            if (!traversesAll(traversableResolver)) {
+                final PathImpl p = realContext.getPath();
+                p.addProperty(d.getPropertyName());
+                try {
+                    if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                            p, d.getElementType())) {
+                        return NO_FRAME;
                     }
+                } catch (ValidationException ve) {
+                    throw ve;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
                 }
-                final GraphContext child = d.readChild(realContext);
-                return child == null || child.isRecursive() ? NO_FRAME : propertyFrame(d, child);
             }
+            final GraphContext child = d.readChild(realContext);
+            return child == null || child.isRecursive() ? NO_FRAME : propertyFrame(d, child);
         }
     }
 
@@ -405,7 +405,12 @@ public abstract class ValidationJob<T> {
             }
             final Set<GroupConversionDescriptor> groupConversions = descriptor.getGroupConversions();
             if (groupConversions.isEmpty()) {
-                groups.applyTo(noViolations(gs -> cascade(gs, sink)));
+                if (groups instanceof Group) {
+                    // a single group: applyTo would just call back once, and the result is not needed
+                    cascade(groups, sink);
+                } else {
+                    groups.applyTo(noViolations(gs -> cascade(gs, sink)));
+                }
                 return;
             }
             final Map<Group, GroupStrategy> conversions = new HashMap<>();
@@ -453,18 +458,20 @@ public abstract class ValidationJob<T> {
                     throw new ValidationException(e);
                 }
             }
-            multiplexEach(cx -> {
-                if (cx.getValue() != null && !cx.isRecursive()) {
-                    new BeanFrame<>(this, cx).process(groups, sink);
-                }
-            });
+            multiplexEach(groups, sink);
         }
 
         protected GraphContext getMultiplexContext() {
             return context;
         }
 
-        private void multiplexEach(Consumer<GraphContext> consumer) {
+        private void cascadeInto(GraphContext cx, GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
+            if (cx.getValue() != null && !cx.isRecursive()) {
+                new BeanFrame<>(this, cx).process(groups, sink);
+            }
+        }
+
+        private void multiplexEach(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             final GraphContext multiplexContext = getMultiplexContext();
             final Object value = multiplexContext.getValue();
             if (value == null) {
@@ -474,37 +481,37 @@ public abstract class ValidationJob<T> {
                 // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
                 final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
                 for (int i = 0, n = Array.getLength(value); i < n; i++) {
-                    consumer.accept(
-                            multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                    cascadeInto(multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null),
+                            Array.get(value, i)), groups, sink);
                 }
                 return;
             }
             if (Map.class.isInstance(value)) {
                 for (final Map.Entry<?, ?> e : ((Map<?, ?>) value).entrySet()) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
-                            e.getValue()));
+                            e.getValue()), groups, sink);
                 }
                 return;
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
                 for (int i = 0, n = l.size(); i < n; i++) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            l.get(i)));
+                            l.get(i)), groups, sink);
                 }
                 return;
             }
             if (Iterable.class.isInstance(value)) {
                 for (final Object o : (Iterable<?>) value) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            o));
+                            o), groups, sink);
                 }
                 return;
             }
-            consumer.accept(multiplexContext);
+            cascadeInto(multiplexContext, groups, sink);
         }
 
         // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type
@@ -559,12 +566,11 @@ public abstract class ValidationJob<T> {
             GraphContext ancestor = context.getParent();
             Validate.validState(ancestor != null, "Expected parent context");
 
-            final PathImpl contextPath = context.pathReference();
-            final NodeImpl leafNode = contextPath.getLeafNode();
+            final NodeImpl leafNode = context.getLeafNode();
 
             if (leafNode.getKind() == ElementKind.CONTAINER_ELEMENT) {
                 // recurse using elided path: the ancestor whose path is ours minus the container element node
-                while (!contextPath.isParentPath(ancestor.pathReference())) {
+                while (!context.hasParentPath(ancestor)) {
                     ancestor = ancestor.getParent();
                     Validate.validState(ancestor != null, "Expected parent context");
                 }
@@ -605,6 +611,7 @@ public abstract class ValidationJob<T> {
     }
 
     private static final Object NO_FRAME = new Object();
+    private static final Object[] NO_FRAMES = {};
 
     /**
      * Sink for the violations of constraints composing one reported as a single violation. Recognized by identity so

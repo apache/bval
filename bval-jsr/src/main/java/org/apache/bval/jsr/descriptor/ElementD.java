@@ -24,8 +24,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.ConstraintDescriptor;
@@ -102,7 +100,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     private final Meta<E> meta;
     private final Set<ConstraintD<?>> constraints;
-    private final ConcurrentMap<GroupStrategy, ConstraintD<?>[]> constraintsByGroups;
+    private final GroupStrategyMap<ConstraintD<?>[]> constraintsByGroups;
 
     protected ElementD(R reader) {
         super();
@@ -110,7 +108,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         this.meta = reader.meta;
         this.genericType = reader.meta.getType();
         this.constraints = reader.getConstraints();
-        this.constraintsByGroups = constraints.isEmpty() ? null : new ConcurrentHashMap<>();
+        this.constraintsByGroups = constraints.isEmpty() ? null : new GroupStrategyMap<>();
         this.groupsComputer = reader.getValidatorFactory().getGroupsComputer();
     }
 
@@ -136,15 +134,10 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         if (constraintsByGroups == null) {
             return NO_CONSTRAINTS;
         }
-        final ConstraintD<?>[] cached = constraintsByGroups.get(groups);
-        if (cached != null) {
-            return cached;
-        }
-        final Set<Group> targetGroups = groups.getGroups();
-        final ConstraintD<?>[] result =
-            constraints.stream().filter(c -> matchesGroups(c, targetGroups)).toArray(ConstraintD<?>[]::new);
-        final ConstraintD<?>[] previous = constraintsByGroups.putIfAbsent(groups, result);
-        return previous == null ? result : previous;
+        return constraintsByGroups.computeIfAbsent(groups, g -> {
+            final Set<Group> targetGroups = g.getGroups();
+            return constraints.stream().filter(c -> matchesGroups(c, targetGroups)).toArray(ConstraintD<?>[]::new);
+        });
     }
 
     @Override

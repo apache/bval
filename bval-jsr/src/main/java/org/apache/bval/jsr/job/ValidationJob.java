@@ -21,7 +21,6 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -267,22 +266,37 @@ public abstract class ValidationJob<T> {
             Validate.notNull(sink, "sink");
             final GroupStrategy localGroupStrategy = descriptor.getLocalGroupStrategy(groups);
             final boolean redefined = localGroupStrategy != groups;
-            final List<Frame<?>> propertyFrames = propertyFrames(descriptor.getPropertiesFor(localGroupStrategy));
+            final PropertyFrames propertyFrames = new PropertyFrames(descriptor.getPropertiesFor(localGroupStrategy));
+            final PropertyD<?>[] properties = propertyFrames.properties;
 
             localGroupStrategy.applyTo(gs -> {
                 final int originalCount = violationCount();
                 validateDescriptorConstraints(gs, sink);
-                for (final Frame<?> p : propertyFrames) {
-                    p.validateDescriptorConstraints(gs, sink);
-                    if (!redefined) {
-                        p.recurse(gs, sink);
+                for (int i = 0; i < properties.length; i++) {
+                    final PropertyD<?> d = properties[i];
+                    final boolean recurse = !redefined && d.isCascadedDeep();
+                    if (!recurse && d.getConstraintsFor(gs).length == 0
+                            && d.getConstrainedContainerElementTypes().isEmpty()) {
+                        continue;
+                    }
+                    final Frame<?> p = propertyFrames.get(i);
+                    if (p != null) {
+                        p.validateDescriptorConstraints(gs, sink);
+                        if (recurse) {
+                            p.recurse(gs, sink);
+                        }
                     }
                 }
                 return violationCount() == originalCount;
             });
             if (redefined) {
-                for (final Frame<?> p : propertyFrames) {
-                    p.recurse(groups, sink);
+                for (int i = 0; i < properties.length; i++) {
+                    if (properties[i].isCascadedDeep()) {
+                        final Frame<?> p = propertyFrames.get(i);
+                        if (p != null) {
+                            p.recurse(groups, sink);
+                        }
+                    }
                 }
             }
         }
@@ -296,21 +310,43 @@ public abstract class ValidationJob<T> {
             return context.getValue();
         }
 
-        private List<Frame<?>> propertyFrames(PropertyD<?>[] properties) {
-            if (properties.length == 0) {
-                return Collections.emptyList();
+        /**
+         * Frames of the properties of this bean, created on first use so that properties relevant only to groups
+         * that are never validated (e.g. later steps of a failing group sequence) are not read.
+         */
+        private class PropertyFrames {
+            final PropertyD<?>[] properties;
+            private Object[] frames;
+
+            PropertyFrames(PropertyD<?>[] properties) {
+                this.properties = properties;
             }
-            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
-            final boolean traverseAll = traversesAll(traversableResolver);
-            final List<Frame<?>> frames = new ArrayList<>(properties.length);
-            for (final PropertyD<?> d : properties) {
-                if (!traverseAll) {
+
+            /**
+             * @return the frame for {@code properties[i]}, or {@code null} if that property is not reachable or its
+             *         value is already being validated further up the graph
+             */
+            Frame<?> get(int i) {
+                if (frames == null) {
+                    frames = new Object[properties.length];
+                }
+                Object frame = frames[i];
+                if (frame == null) {
+                    frame = create(properties[i]);
+                    frames[i] = frame;
+                }
+                return frame == NO_FRAME ? null : (Frame<?>) frame;
+            }
+
+            private Object create(PropertyD<?> d) {
+                final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+                if (!traversesAll(traversableResolver)) {
                     final PathImpl p = realContext.getPath();
                     p.addProperty(d.getPropertyName());
                     try {
                         if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
                                 p, d.getElementType())) {
-                            continue;
+                            return NO_FRAME;
                         }
                     } catch (ValidationException ve) {
                         throw ve;
@@ -319,11 +355,8 @@ public abstract class ValidationJob<T> {
                     }
                 }
                 final GraphContext child = d.readChild(realContext);
-                if (child != null && !child.isRecursive()) {
-                    frames.add(propertyFrame(d, child));
-                }
+                return child == null || child.isRecursive() ? NO_FRAME : propertyFrame(d, child);
             }
-            return frames;
         }
     }
 
@@ -573,6 +606,8 @@ public abstract class ValidationJob<T> {
             return parent.getBean();
         }
     }
+
+    private static final Object NO_FRAME = new Object();
 
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];

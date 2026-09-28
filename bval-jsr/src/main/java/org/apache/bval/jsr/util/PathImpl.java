@@ -179,8 +179,11 @@ public class PathImpl implements Path, Serializable {
         if (path instanceof PathImpl) {
             final PathImpl source = (PathImpl) path;
             // share node references; the leaf will be copied on first mutation by whichever path mutates it
-            nodeList = new ArrayList<>(source.nodeList.size() + 2);
-            nodeList.addAll(source.nodeList);
+            final int size = source.nodeList.size();
+            nodeList = new ArrayList<>(size + 2);
+            for (int i = 0; i < size; i++) {
+                nodeList.add(source.nodeList.get(i));
+            }
             if (!nodeList.isEmpty()) {
                 sharedLeaf = true;
                 // the source now shares its leaf with this copy, so it must copy-on-write too

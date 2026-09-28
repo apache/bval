@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstructorDescriptor;
@@ -63,8 +61,8 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
      * Requested group strategy to the strategy with {@link Group#DEFAULT} redefined as this bean's default group
      * sequence; {@link #UNCHANGED} when the redefinition is a no-op.
      */
-    private final ConcurrentMap<GroupStrategy, GroupStrategy> localGroupStrategies = new ConcurrentHashMap<>();
-    private final ConcurrentMap<GroupStrategy, PropertyD<?>[]> propertiesByGroups = new ConcurrentHashMap<>();
+    private final GroupStrategyMap<GroupStrategy> localGroupStrategies = new GroupStrategyMap<>();
+    private final GroupStrategyMap<PropertyD<?>[]> propertiesByGroups = new GroupStrategyMap<>();
 
     private static final GroupStrategy UNCHANGED = GroupStrategy.simple(Collections.emptySet());
 
@@ -170,13 +168,11 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
      * @return {@link GroupStrategy}
      */
     public GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
-        GroupStrategy result = localGroupStrategies.get(groups);
-        if (result == null) {
+        final GroupStrategy result = localGroupStrategies.computeIfAbsent(groups, g -> {
             final GroupStrategy computed =
-                GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, groupStrategy));
-            result = computed == groups ? UNCHANGED : computed;
-            localGroupStrategies.putIfAbsent(groups, result);
-        }
+                GroupStrategy.redefining(g, Collections.singletonMap(Group.DEFAULT, groupStrategy));
+            return computed == g ? UNCHANGED : computed;
+        });
         return result == UNCHANGED ? groups : result;
     }
 
@@ -189,9 +185,8 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
      * @return {@link PropertyD} array, possibly empty
      */
     public PropertyD<?>[] getPropertiesFor(GroupStrategy groups) {
-        PropertyD<?>[] result = propertiesByGroups.get(groups);
-        if (result == null) {
-            final Set<Group> targetGroups = groups.getGroups();
+        return propertiesByGroups.computeIfAbsent(groups, g -> {
+            final Set<Group> targetGroups = g.getGroups();
             final List<PropertyD<?>> relevant = new ArrayList<>(leafProperties.length);
             for (PropertyD<?> p : leafProperties) {
                 if (p.isCascadedDeep() || !p.getConstrainedContainerElementTypes().isEmpty()
@@ -200,13 +195,8 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
                     relevant.add(p);
                 }
             }
-            result = relevant.toArray(new PropertyD<?>[0]);
-            final PropertyD<?>[] previous = propertiesByGroups.putIfAbsent(groups, result);
-            if (previous != null) {
-                result = previous;
-            }
-        }
-        return result;
+            return relevant.toArray(new PropertyD<?>[0]);
+        });
     }
 
     public final Type getGenericType() {

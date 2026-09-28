@@ -24,10 +24,7 @@ import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.BeanD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.util.PathImpl;
-import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Validate;
-
-import java.util.Map;
 
 public final class ValidateBean<T> extends ValidationJob<T> {
 
@@ -41,16 +38,9 @@ public final class ValidateBean<T> extends ValidationJob<T> {
 
     @Override
     protected boolean hasWork() {
-        final Class<?> beanClass = bean.getClass();
-        final Map<Class<?>, Class<?>> classCache = validatorContext.getFactory().getUnwrappedClassCache();
-        Class<?> unwrappedClass = classCache.get(beanClass);
-        if (unwrappedClass == null) {
-            unwrappedClass = Proxies.classFor(beanClass);
-            classCache.putIfAbsent(beanClass, unwrappedClass);
-        }
         @SuppressWarnings("unchecked")
         final BeanD<T> d =
-            (BeanD<T>) validatorContext.getFactory().getDescriptorManager().getBeanDescriptor(unwrappedClass);
+            (BeanD<T>) validatorContext.getDescriptorManager().getBeanDescriptorForRuntimeClass(bean.getClass());
         descriptor = d;
         return d.isBeanConstrained();
     }

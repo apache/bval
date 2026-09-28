@@ -38,6 +38,7 @@ import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.HierarchyBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.ReflectionBuilder;
+import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Validate;
 
 public class DescriptorManager {
@@ -62,6 +63,8 @@ public class DescriptorManager {
 
     private final ApacheValidatorFactory validatorFactory;
     private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
+    /** Keyed by the runtime class of validated objects, which may be a proxy of the described class. */
+    private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptorsByRuntimeClass = new ConcurrentHashMap<>();
     // synchronization unnecessary
     private final ReflectionBuilder reflectionBuilder;
 
@@ -84,8 +87,27 @@ public class DescriptorManager {
         return previous == null ? value : previous;
     }
 
+    /**
+     * Get the descriptor for an object of runtime type {@code runtimeClass}, which is first unwrapped if it is a
+     * proxy class.
+     *
+     * @param runtimeClass
+     * @return {@link BeanD}
+     * @see Proxies#classFor(Class)
+     */
+    public BeanD<?> getBeanDescriptorForRuntimeClass(Class<?> runtimeClass) {
+        final BeanD<?> existing = beanDescriptorsByRuntimeClass.get(runtimeClass);
+        if (existing != null) {
+            return existing;
+        }
+        final BeanD<?> result = (BeanD<?>) getBeanDescriptor(Proxies.classFor(runtimeClass));
+        beanDescriptorsByRuntimeClass.putIfAbsent(runtimeClass, result);
+        return result;
+    }
+
     public void clear() {
         beanDescriptors.clear();
+        beanDescriptorsByRuntimeClass.clear();
     }
 
     private <T> MetadataBuilder.ForBean<T> builder(Class<T> beanClass) {

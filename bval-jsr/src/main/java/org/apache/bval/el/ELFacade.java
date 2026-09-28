@@ -34,27 +34,10 @@ import jakarta.el.ResourceBundleELResolver;
 import jakarta.el.ValueExpression;
 import jakarta.el.VariableMapper;
 
-import org.apache.bval.jsr.util.LookBehindRegexHolder;
 import org.apache.bval.util.Lazy;
 
 // ELProcessor or JavaEE 7 would be perfect too but this impl can be used in javaee 6
 public final class ELFacade implements MessageEvaluator {
-    private enum EvaluationType {
-        IMMEDIATE("\\$"), DEFERRED("#");
-
-        /**
-         * {@link LookBehindRegexHolder} to recognize a non-escaped EL
-         * expression of this evaluation type, hallmarked by a trigger
-         * character.
-         */
-        private final LookBehindRegexHolder regex;
-
-        private EvaluationType(String trigger) {
-            this.regex = new LookBehindRegexHolder(
-                String.format("(?<!(?:^|[^\\\\])(?:\\\\\\\\){0,%%d}\\\\)%s\\{", trigger), n -> (n - 3) / 2);
-        }
-    }
-
     private static final ELResolver RESOLVER = initResolver();
 
     // Lazily initialized: ExpressionFactory.newInstance() performs a relatively expensive
@@ -78,14 +61,38 @@ public final class ELFacade implements MessageEvaluator {
                     expressionFactory.createValueExpression(validatedValue, Object.class));
 
                 // Java Bean Validation does not support EL expressions that look like JSP "deferred" expressions
-                return expressionFactory.createValueExpression(context,
-                    EvaluationType.DEFERRED.regex.matcher(message).replaceAll("\\$0"), String.class).getValue(context)
-                    .toString();
+                return expressionFactory.createValueExpression(context, disarmDeferredExpressions(message), String.class)
+                    .getValue(context).toString();
             } catch (final Exception e) {
                 // no-op
             }
         }
         return message;
+    }
+
+    /**
+     * Replace each {@code #{} that is not escaped by an odd number of preceding backslashes with {@code $0}, so that
+     * it is not evaluated as a deferred expression.
+     */
+    static String disarmDeferredExpressions(String message) {
+        int trigger = message.indexOf("#{");
+        if (trigger < 0) {
+            return message;
+        }
+        final StringBuilder result = new StringBuilder(message.length());
+        int copied = 0;
+        do {
+            int backslashes = 0;
+            while (trigger - backslashes > 0 && message.charAt(trigger - backslashes - 1) == '\\') {
+                backslashes++;
+            }
+            if (backslashes % 2 == 0) {
+                result.append(message, copied, trigger).append("$0");
+                copied = trigger + 2;
+            }
+            trigger = message.indexOf("#{", trigger + 2);
+        } while (trigger >= 0);
+        return result.append(message, copied, message.length()).toString();
     }
 
     private static ELResolver initResolver() {

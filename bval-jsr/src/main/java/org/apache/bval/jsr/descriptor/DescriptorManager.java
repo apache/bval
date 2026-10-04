@@ -38,6 +38,7 @@ import org.apache.bval.jsr.metadata.EmptyBuilder;
 import org.apache.bval.jsr.metadata.HierarchyBuilder;
 import org.apache.bval.jsr.metadata.MetadataBuilder;
 import org.apache.bval.jsr.metadata.ReflectionBuilder;
+import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Validate;
 
 public class DescriptorManager {
@@ -49,6 +50,9 @@ public class DescriptorManager {
 
     public static <D extends ElementDescriptor & CascadableDescriptor & ContainerDescriptor> boolean isCascaded(
         D descriptor) {
+        if (descriptor instanceof CascadableContainerD<?, ?>) {
+            return ((CascadableContainerD<?, ?>) descriptor).isCascadedDeep();
+        }
         return descriptor != null && (descriptor.isCascaded()
             || descriptor.getConstrainedContainerElementTypes().stream().anyMatch(DescriptorManager::isCascaded));
     }
@@ -59,8 +63,8 @@ public class DescriptorManager {
 
     private final ApacheValidatorFactory validatorFactory;
     private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptors = new ConcurrentHashMap<>();
-    /** Same meaning as {@link BeanDescriptor#isBeanConstrained()} — avoids loading metadata on repeat {@code hasWork} checks. */
-    private final ConcurrentMap<Class<?>, Boolean> beanConstrainedByType = new ConcurrentHashMap<>();
+    /** Keyed by the runtime class of validated objects, which may be a proxy of the described class. */
+    private final ConcurrentMap<Class<?>, BeanD<?>> beanDescriptorsByRuntimeClass = new ConcurrentHashMap<>();
     // synchronization unnecessary
     private final ReflectionBuilder reflectionBuilder;
 
@@ -70,32 +74,40 @@ public class DescriptorManager {
         this.reflectionBuilder = new ReflectionBuilder(validatorFactory);
     }
 
-    /**
-     * @return cached result of {@link BeanDescriptor#isBeanConstrained()} for this class, or {@code null} if unknown
-     */
-    public Boolean getCachedBeanConstrained(Class<?> beanClass) {
-        return beanConstrainedByType.get(beanClass);
-    }
-
     public <T> BeanDescriptor getBeanDescriptor(Class<T> beanClass) {
         Validate.notNull(beanClass, IllegalArgumentException::new, "beanClass");
 
         // cannot use computeIfAbsent due to recursion being the usual case:
         final BeanD<?> existing = beanDescriptors.get(beanClass);
         if (existing != null) {
-            beanConstrainedByType.put(beanClass, existing.isBeanConstrained());
             return existing;
         }
         final BeanD<?> value = new BeanD<>(new MetadataReader(validatorFactory, beanClass).forBean(builder(beanClass)));
         final BeanD<?> previous = beanDescriptors.putIfAbsent(beanClass, value);
-        final BeanD<?> result = previous == null ? value : previous;
-        beanConstrainedByType.put(beanClass, result.isBeanConstrained());
+        return previous == null ? value : previous;
+    }
+
+    /**
+     * Get the descriptor for an object of runtime type {@code runtimeClass}, which is first unwrapped if it is a
+     * proxy class.
+     *
+     * @param runtimeClass
+     * @return {@link BeanD}
+     * @see Proxies#classFor(Class)
+     */
+    public BeanD<?> getBeanDescriptorForRuntimeClass(Class<?> runtimeClass) {
+        final BeanD<?> existing = beanDescriptorsByRuntimeClass.get(runtimeClass);
+        if (existing != null) {
+            return existing;
+        }
+        final BeanD<?> result = (BeanD<?>) getBeanDescriptor(Proxies.classFor(runtimeClass));
+        beanDescriptorsByRuntimeClass.putIfAbsent(runtimeClass, result);
         return result;
     }
 
     public void clear() {
         beanDescriptors.clear();
-        beanConstrainedByType.clear();
+        beanDescriptorsByRuntimeClass.clear();
     }
 
     private <T> MetadataBuilder.ForBean<T> builder(Class<T> beanClass) {

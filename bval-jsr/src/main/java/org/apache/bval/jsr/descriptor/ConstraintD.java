@@ -80,6 +80,10 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     private final Set<ConstraintDescriptor<?>> composingConstraints;
     private final List<Class<? extends ConstraintValidator<A, ?>>> constraintValidatorClasses;
+    // racy single-check memoization: the annotation is immutable, so concurrent initializations agree
+    private String messageTemplate;
+    /** Memo of this constraint's entry in the factory's validator cache. */
+    private volatile ConstraintValidator<?, ?> validator;
     private final Lazy<String> toString =
         new Lazy<>(() -> String.format("%s: %s", ConstraintD.class.getSimpleName(), getAnnotation()));
 
@@ -142,7 +146,12 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
 
     @Override
     public String getMessageTemplate() {
-        return read(ConstraintAnnotationAttributes.MESSAGE, Optionality.REQUIRED);
+        String result = messageTemplate;
+        if (result == null) {
+            result = read(ConstraintAnnotationAttributes.MESSAGE, Optionality.REQUIRED);
+            messageTemplate = result;
+        }
+        return result;
     }
 
     @Override
@@ -162,6 +171,24 @@ public class ConstraintD<A extends Annotation> implements ConstraintDescriptor<A
         } catch (ClassCastException e) {
             throw new ValidationException(e);
         }
+    }
+
+    /**
+     * Get the initialized {@link ConstraintValidator} previously recorded with {@link #setValidator}.
+     *
+     * @return {@link ConstraintValidator} or {@code null}
+     */
+    public ConstraintValidator<?, ?> getValidator() {
+        return validator;
+    }
+
+    /**
+     * Record the initialized {@link ConstraintValidator} the factory caches for this constraint.
+     *
+     * @param validator
+     */
+    public void setValidator(ConstraintValidator<?, ?> validator) {
+        this.validator = validator;
     }
 
     public Scope getScope() {

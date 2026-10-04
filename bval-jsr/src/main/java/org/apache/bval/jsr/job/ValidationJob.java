@@ -21,10 +21,9 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +31,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintViolation;
@@ -44,8 +41,8 @@ import jakarta.validation.TraversableResolver;
 import jakarta.validation.UnexpectedTypeException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.constraintvalidation.ValidationTarget;
-import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.CascadableDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.ContainerDescriptor;
 import jakarta.validation.metadata.ContainerElementTypeDescriptor;
 import jakarta.validation.metadata.GroupConversionDescriptor;
@@ -57,6 +54,7 @@ import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.BeanD;
+import org.apache.bval.jsr.descriptor.CascadableContainerD;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.ContainerElementTypeD;
@@ -67,9 +65,9 @@ import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.Groups;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
+import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
-import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.jsr.valueextraction.ExtractValues;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.util.Exceptions;
@@ -104,8 +102,7 @@ public abstract class ValidationJob<T> {
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
 
-            GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()))
-                    .applyTo(noViolations(gs -> validateDescriptorConstraints(gs, sink)));
+            descriptor.getLocalGroupStrategy(groups).applyTo(noViolations(gs -> validateDescriptorConstraints(gs, sink)));
 
             recurse(groups, sink);
         }
@@ -117,7 +114,9 @@ public abstract class ValidationJob<T> {
         abstract Object getBean();
 
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            constraintsFor(descriptor, groups).forEach(c -> validateUnwrapped(c, sink));
+            for (final ConstraintD<?> c : descriptor.getConstraintsFor(groups)) {
+                validateUnwrapped(c, sink);
+            }
         }
 
         // Visit each (possibly unwrapped) frame for this constraint without allocating a Stream per constraint;
@@ -150,7 +149,7 @@ public abstract class ValidationJob<T> {
             // GraphContext#isRecursive(), not by tracking completed validations.
             final ConstraintValidator constraintValidator = getConstraintValidator(constraint);
             final ConstraintValidatorContextImpl<T> constraintValidatorContext =
-                    new ConstraintValidatorContextImpl<>(this, constraint);
+                    new ConstraintValidatorContextImpl<>(this, constraint, sink == DISCARD);
 
             final boolean valid;
             if (constraintValidator == null) {
@@ -185,26 +184,33 @@ public abstract class ValidationJob<T> {
             if (constraint.getComposingConstraints().isEmpty()) {
                 return true;
             }
-            final Consumer<ConstraintViolation<T>> effectiveSink = constraint.isReportAsSingleViolation() ? cv -> {
-            } : sink;
+            @SuppressWarnings("unchecked")
+            final Consumer<ConstraintViolation<T>> effectiveSink =
+                    constraint.isReportAsSingleViolation() ? (Consumer<ConstraintViolation<T>>) DISCARD : sink;
 
-            // collect validation results to set of Boolean, ensuring all are evaluated:
-            final Set<Boolean> validationResults = constraint.getComposingConstraints().stream().map(ConstraintD.class::cast)
-                    .map(c -> validate(c, effectiveSink)).collect(Collectors.toSet());
-
-            return Collections.singleton(Boolean.TRUE).equals(validationResults);
+            // evaluate all composing constraints, even after one has failed:
+            boolean allValid = true;
+            for (final ConstraintDescriptor<?> c : constraint.getComposingConstraints()) {
+                allValid &= validate((ConstraintD<?>) c, effectiveSink);
+            }
+            return allValid;
         }
 
         @SuppressWarnings({ "rawtypes" })
         private ConstraintValidator getConstraintValidator(ConstraintD<?> constraint) {
             // Fast path: the validator is cached after first use, so avoid building the (capturing) supplier
             // lambda and going through computeIfAbsent on the common cache-hit path.
+            final ConstraintValidator memo = constraint.getValidator();
+            if (memo != null) {
+                return memo;
+            }
             final ConstraintValidator existing =
                     validatorContext.getConstraintsCache().getValidators().get(constraint);
             if (existing != null) {
+                constraint.setValidator(existing);
                 return existing;
             }
-            return validatorContext.getOrComputeConstraintValidator(constraint, () -> {
+            final ConstraintValidator computed = validatorContext.getOrComputeConstraintValidator(constraint, () -> {
                 final Class<? extends ConstraintValidator> constraintValidatorClass =
                         new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
                                 getValidationTarget(), computeValidatedType(constraint)).get();
@@ -230,6 +236,8 @@ public abstract class ValidationJob<T> {
                 }
                 return constraintValidator;
             });
+            constraint.setValidator(computed);
+            return computed;
         }
 
         private Class<?> computeValidatedType(ConstraintD<?> constraint) {
@@ -254,31 +262,68 @@ public abstract class ValidationJob<T> {
         }
 
         BeanFrame(Frame<?> parent, GraphContext context) {
-            super(parent, getBeanDescriptor(context.getValue()),
-                    context.child(PathImpl::addBean, context.getValue()));
+            this(parent, context, getBeanDescriptor(context.getValue()));
+        }
+
+        BeanFrame(Frame<?> parent, GraphContext context, BeanD<B> descriptor) {
+            super(parent, descriptor, context.child(PathImpl::addBean, context.getValue()));
             this.realContext = context;
         }
 
         @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-            final Lazy<Set<Frame<?>>> propertyFrames = new Lazy<>(this::propertyFrames);
+            final BeanD.GroupPlan plan = descriptor.getPlan(groups);
+            final GroupStrategy localGroupStrategy = plan.getLocalGroupStrategy(groups);
+            final boolean redefined = localGroupStrategy != groups;
+            final PropertyD<?>[] properties = plan.getProperties();
+            // frames are created on first use, so that properties relevant only to groups that are never validated
+            // (e.g. later steps of a failing group sequence) are not read
+            final Object[] propertyFrames = properties.length == 0 ? NO_FRAMES : new Object[properties.length];
 
-            final GroupStrategy localGroupStrategy = GroupStrategy.redefining(groups,
-                    Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()));
+            if (localGroupStrategy instanceof Group) {
+                // a single group: applyTo would just call back once
+                validateGroup(localGroupStrategy, properties, propertyFrames, redefined, sink);
+            } else {
+                localGroupStrategy.applyTo(gs -> validateGroup(gs, properties, propertyFrames, redefined, sink));
+            }
+            if (redefined) {
+                for (int i = 0; i < properties.length; i++) {
+                    if (properties[i].isCascadedDeep()) {
+                        final Frame<?> p = propertyFrame(properties, propertyFrames, i);
+                        if (p != null) {
+                            p.recurse(groups, sink);
+                        }
+                    }
+                }
+            }
+        }
 
-            localGroupStrategy.applyTo(noViolations(gs -> {
-                validateDescriptorConstraints(gs, sink);
-                propertyFrames.get().forEach(p -> {
+        /**
+         * Validate this bean and its properties for one group of the local group strategy.
+         *
+         * @return whether no violation was found
+         */
+        private boolean validateGroup(GroupStrategy gs, PropertyD<?>[] properties, Object[] propertyFrames,
+                boolean redefined, Consumer<ConstraintViolation<T>> sink) {
+            final int originalCount = violationCount();
+            validateDescriptorConstraints(gs, sink);
+            for (int i = 0; i < properties.length; i++) {
+                final PropertyD<?> d = properties[i];
+                final boolean recurse = !redefined && d.isCascadedDeep();
+                if (!recurse && d.getConstraintsFor(gs).length == 0
+                        && d.getConstrainedContainerElementTypes().isEmpty()) {
+                    continue;
+                }
+                final Frame<?> p = propertyFrame(properties, propertyFrames, i);
+                if (p != null) {
                     p.validateDescriptorConstraints(gs, sink);
-                    if (localGroupStrategy == groups) {
+                    if (recurse) {
                         p.recurse(gs, sink);
                     }
-                });
-            }));
-            if (localGroupStrategy != groups) {
-                propertyFrames.get().forEach(p -> p.recurse(groups, sink));
+                }
             }
+            return violationCount() == originalCount;
         }
 
         protected Frame<?> propertyFrame(PropertyD<?> d, GraphContext context) {
@@ -290,32 +335,37 @@ public abstract class ValidationJob<T> {
             return context.getValue();
         }
 
-        private Set<Frame<?>> propertyFrames() {
-            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
-            final Set<Frame<?>> frames = new HashSet<>();
-            for (final PropertyDescriptor pd : descriptor.getConstrainedProperties()) {
-                ComposedD.forEachUnwrapped(pd, PropertyD.class, d -> {
-                    final PathImpl p = realContext.getPath();
-                    p.addProperty(d.getPropertyName());
-                    try {
-                        if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
-                                p, d.getElementType())) {
-                            return;
-                        }
-                    } catch (ValidationException ve) {
-                        throw ve;
-                    } catch (Exception e) {
-                        throw new ValidationException(e);
-                    }
-                    for (final Iterator<GraphContext> it = d.read(realContext).iterator(); it.hasNext();) {
-                        final GraphContext child = it.next();
-                        if (!child.isRecursive()) {
-                            frames.add(propertyFrame(d, child));
-                        }
-                    }
-                });
+        /**
+         * @return the frame for {@code properties[i]}, created on first use, or {@code null} if that property is not
+         *         reachable or its value is already being validated further up the graph
+         */
+        private Frame<?> propertyFrame(PropertyD<?>[] properties, Object[] frames, int i) {
+            Object frame = frames[i];
+            if (frame == null) {
+                frame = createPropertyFrame(properties[i]);
+                frames[i] = frame;
             }
-            return frames;
+            return frame == NO_FRAME ? null : (Frame<?>) frame;
+        }
+
+        private Object createPropertyFrame(PropertyD<?> d) {
+            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            if (!traversesAll(traversableResolver)) {
+                final PathImpl p = realContext.getPath();
+                p.addProperty(d.getPropertyName());
+                try {
+                    if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                            p, d.getElementType())) {
+                        return NO_FRAME;
+                    }
+                } catch (ValidationException ve) {
+                    throw ve;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
+                }
+            }
+            final GraphContext child = d.readChild(realContext);
+            return child == null || child.isRecursive() ? NO_FRAME : propertyFrame(d, child);
         }
     }
 
@@ -333,21 +383,17 @@ public abstract class ValidationJob<T> {
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             super.validateDescriptorConstraints(groups, sink);
             if (context.getValue() != null) {
-                for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
-                    ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                        if (!constraintsFor(d, groups).findFirst().isPresent()
-                                && d.getConstrainedContainerElementTypes().isEmpty()) {
-                            return;
+                for (final ContainerElementTypeD d : containerElementTypes(descriptor)) {
+                    if (d.getConstraintsFor(groups).length == 0 && d.getConstrainedContainerElementTypes().isEmpty()) {
+                        continue;
+                    }
+                    final ValueExtractor<?> declaredTypeValueExtractor =
+                            context.getValidatorContext().getValueExtractors().find(d.getKey());
+                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
+                        if (!e.isRecursive()) {
+                            new ContainerElementConstraintsFrame(this, d, e).validateDescriptorConstraints(groups, sink);
                         }
-                        final ValueExtractor<?> declaredTypeValueExtractor =
-                                context.getValidatorContext().getValueExtractors().find(d.getKey());
-                        for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
-                            if (!e.isRecursive()) {
-                                new ContainerElementConstraintsFrame(this, d, e)
-                                        .validateDescriptorConstraints(groups, sink);
-                            }
-                        }
-                    });
+                    }
                 }
             }
         }
@@ -357,8 +403,18 @@ public abstract class ValidationJob<T> {
             if (context.getValue() == null || !DescriptorManager.isCascaded(descriptor)) {
                 return;
             }
+            final Set<GroupConversionDescriptor> groupConversions = descriptor.getGroupConversions();
+            if (groupConversions.isEmpty()) {
+                if (groups instanceof Group) {
+                    // a single group: applyTo would just call back once, and the result is not needed
+                    cascade(groups, sink);
+                } else {
+                    groups.applyTo(noViolations(gs -> cascade(gs, sink)));
+                }
+                return;
+            }
             final Map<Group, GroupStrategy> conversions = new HashMap<>();
-            for (final GroupConversionDescriptor gc : descriptor.getGroupConversions()) {
+            for (final GroupConversionDescriptor gc : groupConversions) {
                 conversions.put(Group.of(gc.getFrom()),
                         validatorContext.getGroupsComputer().computeGroups(gc.getTo()).asStrategy());
             }
@@ -367,25 +423,23 @@ public abstract class ValidationJob<T> {
         }
 
         private void cascade(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
-                ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                    if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
-                        return;
+            for (final ContainerElementTypeD d : containerElementTypes(descriptor)) {
+                if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
+                    continue;
+                }
+                final ValueExtractor<?> runtimeTypeValueExtractor =
+                        context.getValidatorContext().getValueExtractors().find(d.getRuntimeKey(context));
+                for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
+                    if (!e.isRecursive()) {
+                        new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
                     }
-                    final ValueExtractor<?> runtimeTypeValueExtractor =
-                            context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
-                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
-                        if (!e.isRecursive()) {
-                            new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
-                        }
-                    }
-                });
+                }
             }
             if (!descriptor.isCascaded()) {
                 return;
             }
-            if (descriptor instanceof PropertyDescriptor) {
-                final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            if (descriptor instanceof PropertyDescriptor && !traversesAll(traversableResolver)) {
 
                 final Object traversableObject =
                         Optional.ofNullable(context.getParent()).map(GraphContext::getValue).orElse(null);
@@ -404,18 +458,20 @@ public abstract class ValidationJob<T> {
                     throw new ValidationException(e);
                 }
             }
-            multiplexEach(cx -> {
-                if (cx.getValue() != null && !cx.isRecursive()) {
-                    new BeanFrame<>(this, cx).process(groups, sink);
-                }
-            });
+            multiplexEach(groups, sink);
         }
 
         protected GraphContext getMultiplexContext() {
             return context;
         }
 
-        private void multiplexEach(Consumer<GraphContext> consumer) {
+        private void cascadeInto(GraphContext cx, GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
+            if (cx.getValue() != null && !cx.isRecursive()) {
+                new BeanFrame<>(this, cx).process(groups, sink);
+            }
+        }
+
+        private void multiplexEach(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             final GraphContext multiplexContext = getMultiplexContext();
             final Object value = multiplexContext.getValue();
             if (value == null) {
@@ -425,37 +481,37 @@ public abstract class ValidationJob<T> {
                 // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
                 final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
                 for (int i = 0, n = Array.getLength(value); i < n; i++) {
-                    consumer.accept(
-                            multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                    cascadeInto(multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null),
+                            Array.get(value, i)), groups, sink);
                 }
                 return;
             }
             if (Map.class.isInstance(value)) {
                 for (final Map.Entry<?, ?> e : ((Map<?, ?>) value).entrySet()) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
-                            e.getValue()));
+                            e.getValue()), groups, sink);
                 }
                 return;
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
                 for (int i = 0, n = l.size(); i < n; i++) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            l.get(i)));
+                            l.get(i)), groups, sink);
                 }
                 return;
             }
             if (Iterable.class.isInstance(value)) {
                 for (final Object o : (Iterable<?>) value) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            o));
+                            o), groups, sink);
                 }
                 return;
             }
-            consumer.accept(multiplexContext);
+            cascadeInto(multiplexContext, groups, sink);
         }
 
         // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type
@@ -507,32 +563,25 @@ public abstract class ValidationJob<T> {
 
         @Override
         protected GraphContext getMultiplexContext() {
-            final PathImpl path = context.getPath();
-
             GraphContext ancestor = context.getParent();
             Validate.validState(ancestor != null, "Expected parent context");
 
-            final NodeImpl leafNode = path.getLeafNode();
-
-            final NodeImpl newLeaf;
+            final NodeImpl leafNode = context.getLeafNode();
 
             if (leafNode.getKind() == ElementKind.CONTAINER_ELEMENT) {
-                // recurse using elided path:
-                path.removeLeafNode();
-
-                while (!path.equals(ancestor.getPath())) {
+                // recurse using elided path: the ancestor whose path is ours minus the container element node
+                while (!context.hasParentPath(ancestor)) {
                     ancestor = ancestor.getParent();
                     Validate.validState(ancestor != null, "Expected parent context");
                 }
-                newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
+                final NodeImpl newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
                 newLeaf.setName(null);
-            } else {
-                final ContainerElementKey key = descriptor.getKey();
-                newLeaf = new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
-                        key.getTypeArgumentIndex());
+                return ancestor.child(newLeaf, context.getValue());
             }
-            path.addNode(newLeaf);
-
+            final ContainerElementKey key = descriptor.getKey();
+            final PathImpl path = context.getPath();
+            path.addNode(new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
+                    key.getTypeArgumentIndex()));
             return ancestor.child(path, context.getValue());
         }
     }
@@ -561,35 +610,46 @@ public abstract class ValidationJob<T> {
         }
     }
 
+    private static final Object NO_FRAME = new Object();
+    private static final Object[] NO_FRAMES = {};
+
+    /**
+     * Sink for the violations of constraints composing one reported as a single violation. Recognized by identity so
+     * that such violations are not built at all.
+     */
+    private static final Consumer<?> DISCARD = cv -> {
+    };
+
+    private static ContainerElementTypeD[] containerElementTypes(ContainerDescriptor descriptor) {
+        if (descriptor instanceof CascadableContainerD<?, ?>) {
+            return ((CascadableContainerD<?, ?>) descriptor).getLeafContainerElementTypes();
+        }
+        final List<ContainerElementTypeD> result = new ArrayList<>();
+        for (final ContainerElementTypeDescriptor d : descriptor.getConstrainedContainerElementTypes()) {
+            ComposedD.forEachUnwrapped(d, ContainerElementTypeD.class, result::add);
+        }
+        return result.toArray(new ContainerElementTypeD[0]);
+    }
+
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
 
-    private static Stream<ConstraintD<?>> constraintsFor(ElementD<?, ?> descriptor, GroupStrategy groups) {
-        // Resolve the target groups once per call rather than once per constraint: GroupStrategy.getGroups()
-        // may allocate (a singleton for a plain Group, a fully streamed-and-collected set for a Composite),
-        // and it is invariant across the constraints being filtered.
-        final Set<Group> targetGroups = groups.getGroups();
-        return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
-                .filter(c -> matchesGroups(c, targetGroups));
-    }
-
-    private static boolean matchesGroups(ConstraintD<?> constraint, Set<Group> targetGroups) {
-        final Set<Class<?>> constraintGroups = constraint.getGroups();
-        final boolean impliesDefault = constraintGroups.contains(Default.class);
-        for (final Group target : targetGroups) {
-            final Class<?> g = target.getGroup();
-            if (constraintGroups.contains(g)
-                    || impliesDefault && constraint.getDeclaringClass().equals(g)) {
-                return true;
-            }
-        }
-        return false;
+    /**
+     * Learn whether {@code traversableResolver} is known to report every property as reachable and cascadable, so
+     * that consulting it (and building the paths it takes) can be skipped.
+     */
+    private static boolean traversesAll(TraversableResolver traversableResolver) {
+        return traversableResolver.getClass() == DefaultTraversableResolver.class
+                && ((DefaultTraversableResolver) traversableResolver).isTraverseAll();
     }
 
     protected final ApacheFactoryContext validatorContext;
     protected final Groups groups;
 
-    private final Lazy<Set<ConstraintViolation<T>>> results = new Lazy<>(LinkedHashSet::new);
+    /** Collected violations; {@code null} until the first one is reported. */
+    private Set<ConstraintViolation<T>> results;
+    /** What {@link #getResults()} returns once computed. */
+    private Set<ConstraintViolation<T>> resultsView;
 
     ValidationJob(ApacheFactoryContext validatorContext, Class<?>[] groups) {
         super();
@@ -598,33 +658,32 @@ public abstract class ValidationJob<T> {
     }
 
     public final Set<ConstraintViolation<T>> getResults() {
-        if (results.optional().isPresent()) {
-            return results.get();
+        if (resultsView != null) {
+            return resultsView;
         }
         if (hasWork()) {
             final Frame<?> baseFrame = computeBaseFrame();
             Validate.validState(baseFrame != null, "%s computed null baseFrame", getClass().getName());
 
-            final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
-
-            baseFrame.process(groups.asStrategy(), sink);
-            if (results.optional().isPresent()) {
-                return Collections.unmodifiableSet(results.get());
+            baseFrame.process(groups.asStrategy(), this::addResult);
+            if (results != null) {
+                return resultsView = Collections.unmodifiableSet(results);
             }
         }
-        return results.reset(Collections::emptySet).get();
+        return resultsView = Collections.emptySet();
+    }
+
+    private void addResult(ConstraintViolation<T> violation) {
+        if (results == null) {
+            results = new LinkedHashSet<>();
+        }
+        results.add(violation);
     }
 
     @SuppressWarnings("unchecked")
     private <O> BeanD<O> getBeanDescriptor(Object bean) {
-        final Class<?> beanClass = Validate.notNull(bean, "bean").getClass();
-        final Map<Class<?>, Class<?>> classCache = validatorContext.getFactory().getUnwrappedClassCache();
-        Class<?> unwrappedClass = classCache.get(beanClass);
-        if (unwrappedClass == null) {
-            unwrappedClass = Proxies.classFor(beanClass);
-            classCache.putIfAbsent(beanClass, unwrappedClass);
-        }
-        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(unwrappedClass);
+        return (BeanD<O>) validatorContext.getDescriptorManager()
+                .getBeanDescriptorForRuntimeClass(Validate.notNull(bean, "bean").getClass());
     }
 
     final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,
@@ -658,8 +717,7 @@ public abstract class ValidationJob<T> {
     }
 
     private int violationCount() {
-        final Optional<Set<ConstraintViolation<T>>> maybeResults = results.optional();
-        return maybeResults.isPresent() ? maybeResults.get().size() : 0;
+        return results == null ? 0 : results.size();
     }
 
     private String interpolate(String messageTemplate, MessageInterpolator.Context context) {

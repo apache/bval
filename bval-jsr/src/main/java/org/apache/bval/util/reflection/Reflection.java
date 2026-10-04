@@ -149,6 +149,7 @@ public class Reflection {
      * Maps primitive {@code Class}es to their corresponding wrapper {@code Class}.
      */
     private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_MAP;
+    private static final Map<Class<?>, Class<?>> WRAPPER_PRIMITIVE_MAP;
     static {
         final Map<Class<?>, Class<?>> m = new HashMap<>();
         m.put(Boolean.TYPE, Boolean.class);
@@ -161,6 +162,9 @@ public class Reflection {
         m.put(Float.TYPE, Float.class);
         m.put(Void.TYPE, Void.TYPE);
         PRIMITIVE_WRAPPER_MAP = Collections.unmodifiableMap(m);
+        final Map<Class<?>, Class<?>> reverse = new HashMap<>();
+        m.forEach((primitive, wrapper) -> reverse.put(wrapper, primitive));
+        WRAPPER_PRIMITIVE_MAP = Collections.unmodifiableMap(reverse);
     }
 
     /**
@@ -184,12 +188,7 @@ public class Reflection {
     }
 
     public static Class<?> wrapperToPrimitive(final Class<?> cls) {
-        for (Map.Entry<Class<?>, Class<?>> primitiveEntry : PRIMITIVE_WRAPPER_MAP.entrySet()) {
-            if (primitiveEntry.getValue().equals(cls)) {
-                return primitiveEntry.getKey();
-            }
-        }
-        return null;
+        return WRAPPER_PRIMITIVE_MAP.get(cls);
     }
 
     /**

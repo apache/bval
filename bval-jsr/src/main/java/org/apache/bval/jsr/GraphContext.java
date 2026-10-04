@@ -65,6 +65,12 @@ public class GraphContext {
     }
 
     public PathImpl getPath() {
+        final PathImpl p = path;
+        if (p == null && pendingNode == null) {
+            // derive a private copy straight from the parent rather than materializing this context's path only to
+            // copy it again; the mutation appends fresh nodes, so nothing is shared with other copies
+            return derivePath();
+        }
         return PathImpl.copy(pathReference());
     }
 
@@ -77,15 +83,44 @@ public class GraphContext {
     public PathImpl pathReference() {
         PathImpl p = path;
         if (p == null) {
-            p = PathImpl.copy(parent.pathReference());
-            if (pendingNode != null) {
-                p.addNode(pendingNode);
-            } else {
-                pendingMutation.accept(p);
-            }
+            p = derivePath();
             path = p;
         }
         return p;
+    }
+
+    private PathImpl derivePath() {
+        final PathImpl p = PathImpl.copy(parent.pathReference());
+        if (pendingNode != null) {
+            p.addNode(pendingNode);
+        } else {
+            pendingMutation.accept(p);
+        }
+        return p;
+    }
+
+    /**
+     * Get the leaf node of this context's path without materializing the path when it is only pending.
+     *
+     * @return {@link NodeImpl}
+     */
+    public NodeImpl getLeafNode() {
+        return path == null && pendingNode != null ? pendingNode : pathReference().getLeafNode();
+    }
+
+    /**
+     * Learn whether {@code other}'s path equals this context's path with its leaf node removed, as by
+     * {@link PathImpl#removeLeafNode()}.
+     *
+     * @param other
+     * @return {@code boolean}
+     */
+    public boolean hasParentPath(GraphContext other) {
+        if (path == null && pendingNode != null && !parent.pathReference().isRootPath()) {
+            // our path is the parent's with pendingNode appended, so removing the leaf yields the parent's path
+            return other == parent || other.pathReference().equals(parent.pathReference());
+        }
+        return pathReference().isParentPath(other.pathReference());
     }
 
     public Object getValue() {

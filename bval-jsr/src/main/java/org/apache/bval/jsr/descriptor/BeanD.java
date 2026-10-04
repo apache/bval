@@ -18,19 +18,28 @@
  */
 package org.apache.bval.jsr.descriptor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstructorDescriptor;
+import jakarta.validation.metadata.ExecutableDescriptor;
 import jakarta.validation.metadata.MethodDescriptor;
 import jakarta.validation.metadata.MethodType;
 import jakarta.validation.metadata.PropertyDescriptor;
 
+import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.Signature;
 import org.apache.bval.jsr.util.ToUnmodifiable;
@@ -52,6 +61,23 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     private final Set<ConstructorDescriptor> constrainedConstructors;
     private final Map<Set<MethodType>, Set<MethodDescriptor>> methodCache = new HashMap<>();
 
+    /** Leaf (non-composed) delegates of {@link #properties}. */
+    private final PropertyD<?>[] leafProperties;
+    /**
+     * Requested group strategy to the strategy with {@link Group#DEFAULT} redefined as this bean's default group
+     * sequence; {@link #UNCHANGED} when the redefinition is a no-op.
+     */
+    private final GroupStrategyMap<GroupStrategy> localGroupStrategies = new GroupStrategyMap<>();
+    private final GroupStrategyMap<PropertyD<?>[]> propertiesByGroups = new GroupStrategyMap<>();
+    private final GroupStrategyMap<GroupPlan> plans = new GroupStrategyMap<>();
+
+    /** Descriptors by executable, {@link #NOT_CONSTRAINED} for unconstrained ones. */
+    private final ConcurrentMap<Executable, Object> executableDescriptors = new ConcurrentHashMap<>();
+
+    private static final Object NOT_CONSTRAINED = new Object();
+
+    private static final GroupStrategy UNCHANGED = GroupStrategy.simple(Collections.emptySet());
+
     BeanD(MetadataReader.ForBean<T> reader) {
         super(reader);
         this.beanClass = reader.meta.getHost();
@@ -65,6 +91,11 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
             cfpn.put(p.getPropertyName(), p);
         }
         constraintsForPropertyByName = Map.copyOf(cfpn);
+        final List<PropertyD<?>> leaves = new ArrayList<>();
+        for (PropertyDescriptor p : properties) {
+            ComposedD.forEachUnwrapped(p, PropertyD.class, leaves::add);
+        }
+        leafProperties = leaves.toArray(new PropertyD<?>[0]);
         constructors = reader.getConstructors(this);
         methods = reader.getMethods(this);
         
@@ -114,6 +145,25 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
         });
     }
 
+    /**
+     * Like {@link #getConstraintsForMethod(String, Class...)} or {@link #getConstraintsForConstructor(Class...)} for
+     * {@code executable}, cached by executable.
+     *
+     * @param executable
+     * @return {@link ExecutableDescriptor} or {@code null} if {@code executable} is not constrained
+     */
+    public ExecutableDescriptor getConstraintsForExecutable(Executable executable) {
+        Object result = executableDescriptors.get(executable);
+        if (result == null) {
+            final ExecutableDescriptor descriptor = executable instanceof Method
+                ? getConstraintsForMethod(executable.getName(), executable.getParameterTypes())
+                : getConstraintsForConstructor(((Constructor<?>) executable).getParameterTypes());
+            result = descriptor == null ? NOT_CONSTRAINED : descriptor;
+            executableDescriptors.putIfAbsent(executable, result);
+        }
+        return result == NOT_CONSTRAINED ? null : (ExecutableDescriptor) result;
+    }
+
     @Override
     public ConstructorDescriptor getConstraintsForConstructor(Class<?>... parameterTypes) {
         return constructors.get(new Signature(beanClass.getName(), parameterTypes));
@@ -139,6 +189,93 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     @Override
     public GroupStrategy getGroupStrategy() {
         return groupStrategy;
+    }
+
+    /**
+     * Get {@code groups} with {@link Group#DEFAULT} redefined as this bean's default group sequence. Returns
+     * {@code groups} itself (same instance) when no redefinition applies.
+     *
+     * @param groups
+     * @return {@link GroupStrategy}
+     */
+    @Override
+    public GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+        GroupStrategy result = localGroupStrategies.get(groups);
+        if (result == null) {
+            final GroupStrategy computed =
+                GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, groupStrategy));
+            result = localGroupStrategies.putIfAbsent(groups, computed == groups ? UNCHANGED : computed);
+        }
+        return result == UNCHANGED ? groups : result;
+    }
+
+    /**
+     * What validating this bean for a requested group strategy involves.
+     */
+    public static final class GroupPlan {
+        private final GroupStrategy localGroupStrategy;
+        private final PropertyD<?>[] properties;
+
+        GroupPlan(GroupStrategy localGroupStrategy, PropertyD<?>[] properties) {
+            this.localGroupStrategy = localGroupStrategy;
+            this.properties = properties;
+        }
+
+        /**
+         * @param groups the requested strategy this plan was obtained for
+         * @return {@link BeanD#getLocalGroupStrategy(GroupStrategy)} of {@code groups}
+         */
+        public GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+            return localGroupStrategy == null ? groups : localGroupStrategy;
+        }
+
+        /**
+         * @return {@link BeanD#getPropertiesFor(GroupStrategy)} of the local group strategy; must not be modified
+         */
+        public PropertyD<?>[] getProperties() {
+            return properties;
+        }
+    }
+
+    /**
+     * Get the {@link GroupPlan} for validating this bean for {@code groups}, combining
+     * {@link #getLocalGroupStrategy(GroupStrategy)} and {@link #getPropertiesFor(GroupStrategy)} in one lookup.
+     *
+     * @param groups
+     * @return {@link GroupPlan}
+     */
+    public GroupPlan getPlan(GroupStrategy groups) {
+        final GroupPlan cached = plans.get(groups);
+        if (cached != null) {
+            return cached;
+        }
+        final GroupStrategy local = getLocalGroupStrategy(groups);
+        return plans.putIfAbsent(groups, new GroupPlan(local == groups ? null : local, getPropertiesFor(local)));
+    }
+
+    /**
+     * Get the leaf constrained properties that need a validation frame for {@code groups}: those with constraints
+     * applying to any of its groups, with constrained container element types, or that are cascaded. The result is
+     * cached and must not be modified.
+     *
+     * @param groups
+     * @return {@link PropertyD} array, possibly empty
+     */
+    public PropertyD<?>[] getPropertiesFor(GroupStrategy groups) {
+        final PropertyD<?>[] cached = propertiesByGroups.get(groups);
+        if (cached != null) {
+            return cached;
+        }
+        final Set<Group> targetGroups = groups.getGroups();
+        final List<PropertyD<?>> relevant = new ArrayList<>(leafProperties.length);
+        for (PropertyD<?> p : leafProperties) {
+            if (p.isCascadedDeep() || !p.getConstrainedContainerElementTypes().isEmpty()
+                || p.getConstraintDescriptors().stream().map(ConstraintD.class::cast)
+                    .anyMatch(c -> matchesGroups(c, targetGroups))) {
+                relevant.add(p);
+            }
+        }
+        return propertiesByGroups.putIfAbsent(groups, relevant.toArray(new PropertyD<?>[0]));
     }
 
     public final Type getGenericType() {

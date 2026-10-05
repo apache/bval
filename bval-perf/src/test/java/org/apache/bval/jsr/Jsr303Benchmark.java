@@ -24,8 +24,11 @@ import org.apache.bval.jsr.example.First;
 import org.apache.bval.jsr.example.Second;
 import org.hibernate.validator.HibernateValidator;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.profile.JavaFlightRecorderProfiler;
 import org.openjdk.jmh.runner.Runner;
@@ -46,6 +49,10 @@ import java.util.Set;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+// defaults for running without command line options; enough to compare changes, -f/-wi/-i override them
+@Fork(2)
+@Warmup(iterations = 3, time = 1)
+@Measurement(iterations = 5, time = 1)
 @State(Scope.Benchmark)
 public class Jsr303Benchmark {
 

@@ -36,6 +36,7 @@ import org.apache.bval.jsr.util.ToUnmodifiable;
 public interface GroupStrategy {
     public static class Simple implements GroupStrategy {
         private final Set<Group> groups;
+        private int hashCode;
 
         private Simple(Set<Group> groups) {
             this.groups = groups;
@@ -57,7 +58,12 @@ public interface GroupStrategy {
 
         @Override
         public int hashCode() {
-            return groups.hashCode();
+            int result = hashCode;
+            if (result == 0) {
+                result = groups.hashCode();
+                hashCode = result;
+            }
+            return result;
         }
 
         @Override
@@ -75,6 +81,7 @@ public interface GroupStrategy {
     public static class Composite implements GroupStrategy {
         private final Set<? extends GroupStrategy> components;
         protected final boolean ordered;
+        private int hashCode;
 
         public Composite(Collection<? extends GroupStrategy> components, boolean ordered) {
             this.components = new LinkedHashSet<>(components);
@@ -117,7 +124,12 @@ public interface GroupStrategy {
 
         @Override
         public int hashCode() {
-            return Objects.hash(components, ordered);
+            int result = hashCode;
+            if (result == 0) {
+                result = Objects.hash(components, ordered);
+                hashCode = result;
+            }
+            return result;
         }
 
         @Override

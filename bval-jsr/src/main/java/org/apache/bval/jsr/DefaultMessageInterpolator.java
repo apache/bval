@@ -87,6 +87,8 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     private final ConcurrentMap<ComputedMessageKey, String> interpolatedMessages = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Method> toStringMethods = new ConcurrentHashMap<>();
     private final ConcurrentMap<MessageWithParamsKey, String> interpolations = new ConcurrentHashMap<>();
+    /** Fully interpolated messages that involve no EL evaluation and so do not depend on the validated value. */
+    private final ConcurrentMap<FinalMessageKey, String> finalMessages = new ConcurrentHashMap<>();
 
     private final MessageEvaluator evaluator;
 
@@ -134,6 +136,12 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     /** {@inheritDoc} */
     @Override
     public String interpolate(final String message, final Context context, final Locale locale) {
+        final Map<String, Object> annotationParameters = context.getConstraintDescriptor().getAttributes();
+        final FinalMessageKey finalKey = new FinalMessageKey(locale, message, annotationParameters);
+        final String cached = finalMessages.get(finalKey);
+        if (cached != null) {
+            return cached;
+        }
         if (!message.contains("{")) {
             return resolveEscapeSequences(message);
         }
@@ -141,10 +149,14 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         String resolvedMessage = getSharedInterpolatedMessage(message, locale);
 
         // resolve annotation attributes (step 4)
-        final Map<String, Object> annotationParameters = context.getConstraintDescriptor().getAttributes();
         resolvedMessage = replaceAnnotationAttributes(resolvedMessage, annotationParameters);
 
-        // EL handling
+        // EL handling; the evaluator leaves messages without "${" untouched
+        if (!resolvedMessage.contains("${")) {
+            final String result = resolveEscapeSequences(resolvedMessage);
+            finalMessages.putIfAbsent(finalKey, result);
+            return result;
+        }
         if (evaluateExpressionLanguage(message, context)) {
             resolvedMessage = evaluator.interpolate(resolvedMessage, annotationParameters, context.getValidatedValue());
         }
@@ -323,6 +335,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
     public void clearCache() {
         interpolatedMessages.clear();
         interpolations.clear();
+        finalMessages.clear();
     }
 
     private Method getToStringMethod(final Object variable) {
@@ -392,6 +405,46 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         }
     }
 
+    /**
+     * Keys the parameter map by identity, like {@link MessageWithParamsKey}.
+     */
+    private static class FinalMessageKey {
+        private final Locale locale;
+        private final String message;
+        private final Map<String, Object> annotationParameters;
+        private final int hash;
+
+        private FinalMessageKey(final Locale locale, final String message,
+            final Map<String, Object> annotationParameters) {
+            this.locale = locale;
+            this.message = message;
+            this.annotationParameters = annotationParameters;
+            this.hash = 31 * (31 * locale.hashCode() + message.hashCode()) + System.identityHashCode(annotationParameters);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final FinalMessageKey that = (FinalMessageKey) o;
+            return annotationParameters == that.annotationParameters && message.equals(that.message)
+                && locale.equals(that.locale);
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+    }
+
+    /**
+     * Keys the parameter map by identity: a constraint descriptor hands out the same attribute map instance on every
+     * call, so this avoids hashing and comparing the whole map for each interpolation.
+     */
     private static class MessageWithParamsKey {
         private final String message;
         private final Map<String, Object> annotationParameters;
@@ -400,7 +453,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
         private MessageWithParamsKey(final String message, final Map<String, Object> annotationParameters) {
             this.message = message;
             this.annotationParameters = annotationParameters;
-            this.hash = Objects.hash(message, annotationParameters);
+            this.hash = 31 * message.hashCode() + System.identityHashCode(annotationParameters);
         }
 
         @Override
@@ -412,7 +465,7 @@ public class DefaultMessageInterpolator implements MessageInterpolator {
                 return false;
             }
             final MessageWithParamsKey that = MessageWithParamsKey.class.cast(o);
-            return message.equals(that.message) && annotationParameters.equals(that.annotationParameters);
+            return annotationParameters == that.annotationParameters && message.equals(that.message);
         }
 
         @Override

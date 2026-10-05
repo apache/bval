@@ -198,12 +198,17 @@ public abstract class ValidationJob<T> {
         private ConstraintValidator getConstraintValidator(ConstraintD<?> constraint) {
             // Fast path: the validator is cached after first use, so avoid building the (capturing) supplier
             // lambda and going through computeIfAbsent on the common cache-hit path.
+            final ConstraintValidator memo = constraint.getValidator();
+            if (memo != null) {
+                return memo;
+            }
             final ConstraintValidator existing =
                     validatorContext.getConstraintsCache().getValidators().get(constraint);
             if (existing != null) {
+                constraint.setValidator(existing);
                 return existing;
             }
-            return validatorContext.getOrComputeConstraintValidator(constraint, () -> {
+            final ConstraintValidator computed = validatorContext.getOrComputeConstraintValidator(constraint, () -> {
                 final Class<? extends ConstraintValidator> constraintValidatorClass =
                         new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
                                 getValidationTarget(), computeValidatedType(constraint)).get();
@@ -229,6 +234,8 @@ public abstract class ValidationJob<T> {
                 }
                 return constraintValidator;
             });
+            constraint.setValidator(computed);
+            return computed;
         }
 
         private Class<?> computeValidatedType(ConstraintD<?> constraint) {

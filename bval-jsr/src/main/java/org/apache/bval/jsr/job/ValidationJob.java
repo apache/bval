@@ -271,14 +271,20 @@ public abstract class ValidationJob<T> {
         @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-            final GroupStrategy localGroupStrategy = descriptor.getLocalGroupStrategy(groups);
+            final BeanD.GroupPlan plan = descriptor.getPlan(groups);
+            final GroupStrategy localGroupStrategy = plan.getLocalGroupStrategy(groups);
             final boolean redefined = localGroupStrategy != groups;
-            final PropertyD<?>[] properties = descriptor.getPropertiesFor(localGroupStrategy);
+            final PropertyD<?>[] properties = plan.getProperties();
             // frames are created on first use, so that properties relevant only to groups that are never validated
             // (e.g. later steps of a failing group sequence) are not read
             final Object[] propertyFrames = properties.length == 0 ? NO_FRAMES : new Object[properties.length];
 
-            localGroupStrategy.applyTo(gs -> validateGroup(gs, properties, propertyFrames, redefined, sink));
+            if (localGroupStrategy instanceof Group) {
+                // a single group: applyTo would just call back once
+                validateGroup(localGroupStrategy, properties, propertyFrames, redefined, sink);
+            } else {
+                localGroupStrategy.applyTo(gs -> validateGroup(gs, properties, propertyFrames, redefined, sink));
+            }
             if (redefined) {
                 for (int i = 0; i < properties.length; i++) {
                     if (properties[i].isCascadedDeep()) {

@@ -63,6 +63,7 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
      */
     private final GroupStrategyMap<GroupStrategy> localGroupStrategies = new GroupStrategyMap<>();
     private final GroupStrategyMap<PropertyD<?>[]> propertiesByGroups = new GroupStrategyMap<>();
+    private final GroupStrategyMap<GroupPlan> plans = new GroupStrategyMap<>();
 
     private static final GroupStrategy UNCHANGED = GroupStrategy.simple(Collections.emptySet());
 
@@ -179,6 +180,50 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     }
 
     /**
+     * What validating this bean for a requested group strategy involves.
+     */
+    public static final class GroupPlan {
+        private final GroupStrategy localGroupStrategy;
+        private final PropertyD<?>[] properties;
+
+        GroupPlan(GroupStrategy localGroupStrategy, PropertyD<?>[] properties) {
+            this.localGroupStrategy = localGroupStrategy;
+            this.properties = properties;
+        }
+
+        /**
+         * @param groups the requested strategy this plan was obtained for
+         * @return {@link BeanD#getLocalGroupStrategy(GroupStrategy)} of {@code groups}
+         */
+        public GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+            return localGroupStrategy == null ? groups : localGroupStrategy;
+        }
+
+        /**
+         * @return the leaf properties that need a validation frame for the local group strategy; must not be modified
+         */
+        public PropertyD<?>[] getProperties() {
+            return properties;
+        }
+    }
+
+    /**
+     * Get the {@link GroupPlan} for validating this bean for {@code groups}, combining
+     * {@link #getLocalGroupStrategy(GroupStrategy)} and the properties that need a validation frame in one lookup.
+     *
+     * @param groups
+     * @return {@link GroupPlan}
+     */
+    public GroupPlan getPlan(GroupStrategy groups) {
+        final GroupPlan cached = plans.get(groups);
+        if (cached != null) {
+            return cached;
+        }
+        final GroupStrategy local = getLocalGroupStrategy(groups);
+        return plans.putIfAbsent(groups, new GroupPlan(local == groups ? null : local, getPropertiesFor(local)));
+    }
+
+    /**
      * Get the leaf constrained properties that need a validation frame for {@code groups}: those with constraints
      * applying to any of its groups, with constrained container element types, or that are cascaded. The result is
      * cached and must not be modified.
@@ -186,7 +231,7 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
      * @param groups
      * @return {@link PropertyD} array, possibly empty
      */
-    public PropertyD<?>[] getPropertiesFor(GroupStrategy groups) {
+    private PropertyD<?>[] getPropertiesFor(GroupStrategy groups) {
         final PropertyD<?>[] cached = propertiesByGroups.get(groups);
         if (cached != null) {
             return cached;

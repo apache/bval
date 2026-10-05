@@ -551,32 +551,25 @@ public abstract class ValidationJob<T> {
 
         @Override
         protected GraphContext getMultiplexContext() {
-            final PathImpl path = context.getPath();
-
             GraphContext ancestor = context.getParent();
             Validate.validState(ancestor != null, "Expected parent context");
 
-            final NodeImpl leafNode = path.getLeafNode();
-
-            final NodeImpl newLeaf;
+            final NodeImpl leafNode = context.getLeafNode();
 
             if (leafNode.getKind() == ElementKind.CONTAINER_ELEMENT) {
-                // recurse using elided path:
-                path.removeLeafNode();
-
-                while (!path.equals(ancestor.getPath())) {
+                // recurse using elided path: the ancestor whose path is ours minus the container element node
+                while (!context.hasParentPath(ancestor)) {
                     ancestor = ancestor.getParent();
                     Validate.validState(ancestor != null, "Expected parent context");
                 }
-                newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
+                final NodeImpl newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
                 newLeaf.setName(null);
-            } else {
-                final ContainerElementKey key = descriptor.getKey();
-                newLeaf = new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
-                        key.getTypeArgumentIndex());
+                return ancestor.child(newLeaf, context.getValue());
             }
-            path.addNode(newLeaf);
-
+            final ContainerElementKey key = descriptor.getKey();
+            final PathImpl path = context.getPath();
+            path.addNode(new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
+                    key.getTypeArgumentIndex()));
             return ancestor.child(path, context.getValue());
         }
     }

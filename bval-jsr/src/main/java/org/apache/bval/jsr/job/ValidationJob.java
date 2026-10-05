@@ -403,8 +403,18 @@ public abstract class ValidationJob<T> {
             if (context.getValue() == null || !DescriptorManager.isCascaded(descriptor)) {
                 return;
             }
+            final Set<GroupConversionDescriptor> groupConversions = descriptor.getGroupConversions();
+            if (groupConversions.isEmpty()) {
+                if (groups instanceof Group) {
+                    // a single group: applyTo would just call back once, and the result is not needed
+                    cascade(groups, sink);
+                } else {
+                    groups.applyTo(noViolations(gs -> cascade(gs, sink)));
+                }
+                return;
+            }
             final Map<Group, GroupStrategy> conversions = new HashMap<>();
-            for (final GroupConversionDescriptor gc : descriptor.getGroupConversions()) {
+            for (final GroupConversionDescriptor gc : groupConversions) {
                 conversions.put(Group.of(gc.getFrom()),
                         validatorContext.getGroupsComputer().computeGroups(gc.getTo()).asStrategy());
             }
@@ -448,18 +458,20 @@ public abstract class ValidationJob<T> {
                     throw new ValidationException(e);
                 }
             }
-            multiplexEach(cx -> {
-                if (cx.getValue() != null && !cx.isRecursive()) {
-                    new BeanFrame<>(this, cx).process(groups, sink);
-                }
-            });
+            multiplexEach(groups, sink);
         }
 
         protected GraphContext getMultiplexContext() {
             return context;
         }
 
-        private void multiplexEach(Consumer<GraphContext> consumer) {
+        private void cascadeInto(GraphContext cx, GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
+            if (cx.getValue() != null && !cx.isRecursive()) {
+                new BeanFrame<>(this, cx).process(groups, sink);
+            }
+        }
+
+        private void multiplexEach(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             final GraphContext multiplexContext = getMultiplexContext();
             final Object value = multiplexContext.getValue();
             if (value == null) {
@@ -469,37 +481,37 @@ public abstract class ValidationJob<T> {
                 // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
                 final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
                 for (int i = 0, n = Array.getLength(value); i < n; i++) {
-                    consumer.accept(
-                            multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                    cascadeInto(multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null),
+                            Array.get(value, i)), groups, sink);
                 }
                 return;
             }
             if (Map.class.isInstance(value)) {
                 for (final Map.Entry<?, ?> e : ((Map<?, ?>) value).entrySet()) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
-                            e.getValue()));
+                            e.getValue()), groups, sink);
                 }
                 return;
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
                 for (int i = 0, n = l.size(); i < n; i++) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            l.get(i)));
+                            l.get(i)), groups, sink);
                 }
                 return;
             }
             if (Iterable.class.isInstance(value)) {
                 for (final Object o : (Iterable<?>) value) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            o));
+                            o), groups, sink);
                 }
                 return;
             }
-            consumer.accept(multiplexContext);
+            cascadeInto(multiplexContext, groups, sink);
         }
 
         // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type

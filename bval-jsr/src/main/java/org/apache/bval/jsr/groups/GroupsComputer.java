@@ -61,6 +61,9 @@ public class GroupsComputer {
     /** caching resolved groups in a thread-safe map. */
     private final Map<Class<?>, List<Group>> resolvedSequences = new ConcurrentHashMap<>();
 
+    /** Results of {@link #computeGroups(Class...)} for a single group, the common case for explicit groups. */
+    private final Map<Class<?>, Groups> singleGroups = new ConcurrentHashMap<>();
+
     /**
      * Compute groups from an array of group classes.
      * 
@@ -73,6 +76,15 @@ public class GroupsComputer {
 
         if (groups.length == 0 || (groups.length == 1 && groups[0] == Default.class)) {
             return DEFAULT_GROUPS;
+        }
+        if (groups.length == 1 && groups[0] != null) {
+            final Groups cached = singleGroups.get(groups[0]);
+            if (cached != null) {
+                return cached;
+            }
+            final Groups result = computeGroups(Arrays.asList(groups));
+            singleGroups.putIfAbsent(groups[0], result);
+            return result;
         }
         return computeGroups(Arrays.asList(groups));
     }

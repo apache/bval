@@ -21,6 +21,7 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -53,6 +54,7 @@ import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.BeanD;
+import org.apache.bval.jsr.descriptor.CascadableContainerD;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.ContainerElementTypeD;
@@ -381,21 +383,17 @@ public abstract class ValidationJob<T> {
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             super.validateDescriptorConstraints(groups, sink);
             if (context.getValue() != null) {
-                for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
-                    ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                        if (d.getConstraintsFor(groups).length == 0
-                                && d.getConstrainedContainerElementTypes().isEmpty()) {
-                            return;
+                for (final ContainerElementTypeD d : containerElementTypes(descriptor)) {
+                    if (d.getConstraintsFor(groups).length == 0 && d.getConstrainedContainerElementTypes().isEmpty()) {
+                        continue;
+                    }
+                    final ValueExtractor<?> declaredTypeValueExtractor =
+                            context.getValidatorContext().getValueExtractors().find(d.getKey());
+                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
+                        if (!e.isRecursive()) {
+                            new ContainerElementConstraintsFrame(this, d, e).validateDescriptorConstraints(groups, sink);
                         }
-                        final ValueExtractor<?> declaredTypeValueExtractor =
-                                context.getValidatorContext().getValueExtractors().find(d.getKey());
-                        for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
-                            if (!e.isRecursive()) {
-                                new ContainerElementConstraintsFrame(this, d, e)
-                                        .validateDescriptorConstraints(groups, sink);
-                            }
-                        }
-                    });
+                    }
                 }
             }
         }
@@ -415,19 +413,17 @@ public abstract class ValidationJob<T> {
         }
 
         private void cascade(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
-                ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                    if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
-                        return;
+            for (final ContainerElementTypeD d : containerElementTypes(descriptor)) {
+                if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
+                    continue;
+                }
+                final ValueExtractor<?> runtimeTypeValueExtractor =
+                        context.getValidatorContext().getValueExtractors().find(d.getRuntimeKey(context));
+                for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
+                    if (!e.isRecursive()) {
+                        new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
                     }
-                    final ValueExtractor<?> runtimeTypeValueExtractor =
-                            context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
-                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
-                        if (!e.isRecursive()) {
-                            new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
-                        }
-                    }
-                });
+                }
             }
             if (!descriptor.isCascaded()) {
                 return;
@@ -618,6 +614,17 @@ public abstract class ValidationJob<T> {
      */
     private static final Consumer<?> DISCARD = cv -> {
     };
+
+    private static ContainerElementTypeD[] containerElementTypes(ContainerDescriptor descriptor) {
+        if (descriptor instanceof CascadableContainerD<?, ?>) {
+            return ((CascadableContainerD<?, ?>) descriptor).getLeafContainerElementTypes();
+        }
+        final List<ContainerElementTypeD> result = new ArrayList<>();
+        for (final ContainerElementTypeDescriptor d : descriptor.getConstrainedContainerElementTypes()) {
+            ComposedD.forEachUnwrapped(d, ContainerElementTypeD.class, result::add);
+        }
+        return result.toArray(new ContainerElementTypeD[0]);
+    }
 
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];

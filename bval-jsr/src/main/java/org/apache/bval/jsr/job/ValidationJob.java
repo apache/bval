@@ -21,10 +21,9 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintViolation;
@@ -103,8 +101,7 @@ public abstract class ValidationJob<T> {
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
 
-            GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()))
-                    .applyTo(noViolations(gs -> validateDescriptorConstraints(gs, sink)));
+            descriptor.getLocalGroupStrategy(groups).applyTo(noViolations(gs -> validateDescriptorConstraints(gs, sink)));
 
             recurse(groups, sink);
         }
@@ -275,22 +272,23 @@ public abstract class ValidationJob<T> {
         @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-            final Lazy<Set<Frame<?>>> propertyFrames = new Lazy<>(this::propertyFrames);
-
-            final GroupStrategy localGroupStrategy = GroupStrategy.redefining(groups,
-                    Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()));
+            final GroupStrategy localGroupStrategy = descriptor.getLocalGroupStrategy(groups);
+            final boolean redefined = localGroupStrategy != groups;
+            final List<Frame<?>> propertyFrames = propertyFrames(descriptor.getPropertiesFor(localGroupStrategy));
 
             localGroupStrategy.applyTo(noViolations(gs -> {
                 validateDescriptorConstraints(gs, sink);
-                propertyFrames.get().forEach(p -> {
+                for (final Frame<?> p : propertyFrames) {
                     p.validateDescriptorConstraints(gs, sink);
-                    if (localGroupStrategy == groups) {
+                    if (!redefined) {
                         p.recurse(gs, sink);
                     }
-                });
+                }
             }));
-            if (localGroupStrategy != groups) {
-                propertyFrames.get().forEach(p -> p.recurse(groups, sink));
+            if (redefined) {
+                for (final Frame<?> p : propertyFrames) {
+                    p.recurse(groups, sink);
+                }
             }
         }
 
@@ -303,32 +301,32 @@ public abstract class ValidationJob<T> {
             return context.getValue();
         }
 
-        private Set<Frame<?>> propertyFrames() {
+        private List<Frame<?>> propertyFrames(PropertyD<?>[] properties) {
+            if (properties.length == 0) {
+                return Collections.emptyList();
+            }
             final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
-            final Set<Frame<?>> frames = new HashSet<>();
-            for (final PropertyDescriptor pd : descriptor.getConstrainedProperties()) {
-                ComposedD.forEachUnwrapped(pd, PropertyD.class, d -> {
-                    if (!traversesAll(traversableResolver)) {
-                        final PathImpl p = realContext.getPath();
-                        p.addProperty(d.getPropertyName());
-                        try {
-                            if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(),
-                                    getRootBeanClass(), p, d.getElementType())) {
-                                return;
-                            }
-                        } catch (ValidationException ve) {
-                            throw ve;
-                        } catch (Exception e) {
-                            throw new ValidationException(e);
+            final boolean traverseAll = traversesAll(traversableResolver);
+            final List<Frame<?>> frames = new ArrayList<>(properties.length);
+            for (final PropertyD<?> d : properties) {
+                if (!traverseAll) {
+                    final PathImpl p = realContext.getPath();
+                    p.addProperty(d.getPropertyName());
+                    try {
+                        if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                                p, d.getElementType())) {
+                            continue;
                         }
+                    } catch (ValidationException ve) {
+                        throw ve;
+                    } catch (Exception e) {
+                        throw new ValidationException(e);
                     }
-                    for (final Iterator<GraphContext> it = d.read(realContext).iterator(); it.hasNext();) {
-                        final GraphContext child = it.next();
-                        if (!child.isRecursive()) {
-                            frames.add(propertyFrame(d, child));
-                        }
-                    }
-                });
+                }
+                final GraphContext child = d.readChild(realContext);
+                if (child != null && !child.isRecursive()) {
+                    frames.add(propertyFrame(d, child));
+                }
             }
             return frames;
         }

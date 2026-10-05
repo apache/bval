@@ -72,6 +72,11 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         public final GroupStrategy getGroupStrategy() {
             return getBean().getGroupStrategy();
         }
+
+        @Override
+        public final GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+            return getBean().getLocalGroupStrategy(groups);
+        }
     }
 
     private static final ConstraintD<?>[] NO_CONSTRAINTS = {};
@@ -163,6 +168,15 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     public abstract Type getGenericType();
 
     public abstract GroupStrategy getGroupStrategy();
+
+    /**
+     * Get {@code groups} with {@link Group#DEFAULT} redefined as {@link #getGroupStrategy()}. Returns
+     * {@code groups} itself (same instance) when no redefinition applies.
+     *
+     * @param groups
+     * @return {@link GroupStrategy}
+     */
+    public abstract GroupStrategy getLocalGroupStrategy(GroupStrategy groups);
 
     @Override
     public String toString() {

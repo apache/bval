@@ -67,6 +67,7 @@ import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.Groups;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
+import org.apache.bval.jsr.resolver.DefaultTraversableResolver;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.jsr.valueextraction.ExtractValues;
@@ -304,17 +305,19 @@ public abstract class ValidationJob<T> {
             final Set<Frame<?>> frames = new HashSet<>();
             for (final PropertyDescriptor pd : descriptor.getConstrainedProperties()) {
                 ComposedD.forEachUnwrapped(pd, PropertyD.class, d -> {
-                    final PathImpl p = realContext.getPath();
-                    p.addProperty(d.getPropertyName());
-                    try {
-                        if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
-                                p, d.getElementType())) {
-                            return;
+                    if (!traversesAll(traversableResolver)) {
+                        final PathImpl p = realContext.getPath();
+                        p.addProperty(d.getPropertyName());
+                        try {
+                            if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(),
+                                    getRootBeanClass(), p, d.getElementType())) {
+                                return;
+                            }
+                        } catch (ValidationException ve) {
+                            throw ve;
+                        } catch (Exception e) {
+                            throw new ValidationException(e);
                         }
-                    } catch (ValidationException ve) {
-                        throw ve;
-                    } catch (Exception e) {
-                        throw new ValidationException(e);
                     }
                     for (final Iterator<GraphContext> it = d.read(realContext).iterator(); it.hasNext();) {
                         final GraphContext child = it.next();
@@ -393,8 +396,8 @@ public abstract class ValidationJob<T> {
             if (!descriptor.isCascaded()) {
                 return;
             }
-            if (descriptor instanceof PropertyDescriptor) {
-                final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            if (descriptor instanceof PropertyDescriptor && !traversesAll(traversableResolver)) {
 
                 final Object traversableObject =
                         Optional.ofNullable(context.getParent()).map(GraphContext::getValue).orElse(null);
@@ -593,6 +596,15 @@ public abstract class ValidationJob<T> {
             }
         }
         return false;
+    }
+
+    /**
+     * Learn whether {@code traversableResolver} is known to report every property as reachable and cascadable, so
+     * that consulting it (and building the paths it takes) can be skipped.
+     */
+    private static boolean traversesAll(TraversableResolver traversableResolver) {
+        return traversableResolver.getClass() == DefaultTraversableResolver.class
+                && ((DefaultTraversableResolver) traversableResolver).isTraverseAll();
     }
 
     protected final ApacheFactoryContext validatorContext;

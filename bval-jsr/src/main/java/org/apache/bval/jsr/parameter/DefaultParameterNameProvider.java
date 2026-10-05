@@ -22,7 +22,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,8 +33,16 @@ import jakarta.validation.ParameterNameProvider;
 
 public class DefaultParameterNameProvider implements ParameterNameProvider {
 
-    private static List<String> parameterNames(Executable exe) {
-        return Stream.of(exe.getParameters()).map(Parameter::getName).collect(Collectors.toList());
+    private final ConcurrentMap<Executable, List<String>> parameterNames = new ConcurrentHashMap<>();
+
+    private List<String> parameterNames(Executable exe) {
+        List<String> result = parameterNames.get(exe);
+        if (result == null) {
+            result = Collections.unmodifiableList(
+                Stream.of(exe.getParameters()).map(Parameter::getName).collect(Collectors.toList()));
+            parameterNames.putIfAbsent(exe, result);
+        }
+        return result;
     }
 
     @Override

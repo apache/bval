@@ -32,7 +32,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintValidator;
@@ -46,6 +45,7 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.constraintvalidation.ValidationTarget;
 import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.CascadableDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.ContainerDescriptor;
 import jakarta.validation.metadata.ContainerElementTypeDescriptor;
 import jakarta.validation.metadata.GroupConversionDescriptor;
@@ -150,7 +150,7 @@ public abstract class ValidationJob<T> {
             // GraphContext#isRecursive(), not by tracking completed validations.
             final ConstraintValidator constraintValidator = getConstraintValidator(constraint);
             final ConstraintValidatorContextImpl<T> constraintValidatorContext =
-                    new ConstraintValidatorContextImpl<>(this, constraint);
+                    new ConstraintValidatorContextImpl<>(this, constraint, sink == DISCARD);
 
             final boolean valid;
             if (constraintValidator == null) {
@@ -185,14 +185,16 @@ public abstract class ValidationJob<T> {
             if (constraint.getComposingConstraints().isEmpty()) {
                 return true;
             }
-            final Consumer<ConstraintViolation<T>> effectiveSink = constraint.isReportAsSingleViolation() ? cv -> {
-            } : sink;
+            @SuppressWarnings("unchecked")
+            final Consumer<ConstraintViolation<T>> effectiveSink =
+                    constraint.isReportAsSingleViolation() ? (Consumer<ConstraintViolation<T>>) DISCARD : sink;
 
-            // collect validation results to set of Boolean, ensuring all are evaluated:
-            final Set<Boolean> validationResults = constraint.getComposingConstraints().stream().map(ConstraintD.class::cast)
-                    .map(c -> validate(c, effectiveSink)).collect(Collectors.toSet());
-
-            return Collections.singleton(Boolean.TRUE).equals(validationResults);
+            // evaluate all composing constraints, even after one has failed:
+            boolean allValid = true;
+            for (final ConstraintDescriptor<?> c : constraint.getComposingConstraints()) {
+                allValid &= validate((ConstraintD<?>) c, effectiveSink);
+            }
+            return allValid;
         }
 
         @SuppressWarnings({ "rawtypes" })
@@ -572,6 +574,13 @@ public abstract class ValidationJob<T> {
             return parent.getBean();
         }
     }
+
+    /**
+     * Sink for the violations of constraints composing one reported as a single violation. Recognized by identity so
+     * that such violations are not built at all.
+     */
+    private static final Consumer<?> DISCARD = cv -> {
+    };
 
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];

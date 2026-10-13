@@ -25,9 +25,11 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.ElementDescriptor;
 
+import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.groups.GroupsComputer;
 import org.apache.bval.jsr.metadata.Meta;
@@ -70,6 +72,32 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         public final GroupStrategy getGroupStrategy() {
             return getBean().getGroupStrategy();
         }
+
+        @Override
+        public final GroupStrategy getLocalGroupStrategy(GroupStrategy groups) {
+            return getBean().getLocalGroupStrategy(groups);
+        }
+    }
+
+    private static final ConstraintD<?>[] NO_CONSTRAINTS = {};
+
+    /**
+     * Learn whether {@code constraint} applies to any of {@code targetGroups}.
+     *
+     * @param constraint
+     * @param targetGroups
+     * @return {@code boolean}
+     */
+    static boolean matchesGroups(ConstraintD<?> constraint, Set<Group> targetGroups) {
+        final Set<Class<?>> constraintGroups = constraint.getGroups();
+        final boolean impliesDefault = constraintGroups.contains(Default.class);
+        for (final Group target : targetGroups) {
+            final Class<?> g = target.getGroup();
+            if (constraintGroups.contains(g) || impliesDefault && constraint.getDeclaringClass().equals(g)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected final Type genericType;
@@ -77,6 +105,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
 
     private final Meta<E> meta;
     private final Set<ConstraintD<?>> constraints;
+    private final GroupStrategyMap<ConstraintD<?>[]> constraintsByGroups;
 
     protected ElementD(R reader) {
         super();
@@ -84,6 +113,7 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
         this.meta = reader.meta;
         this.genericType = reader.meta.getType();
         this.constraints = reader.getConstraints();
+        this.constraintsByGroups = constraints.isEmpty() ? null : new GroupStrategyMap<>();
         this.groupsComputer = reader.getValidatorFactory().getGroupsComputer();
     }
 
@@ -96,6 +126,26 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     @Override
     public Set<ConstraintDescriptor<?>> getConstraintDescriptors() {
         return (Set) constraints;
+    }
+
+    /**
+     * Get the constraints of this element that apply to any group of {@code groups}, in declaration order. The
+     * result is cached per {@link GroupStrategy} and must not be modified.
+     *
+     * @param groups
+     * @return {@link ConstraintD} array, possibly empty
+     */
+    public ConstraintD<?>[] getConstraintsFor(GroupStrategy groups) {
+        if (constraintsByGroups == null) {
+            return NO_CONSTRAINTS;
+        }
+        final ConstraintD<?>[] cached = constraintsByGroups.get(groups);
+        if (cached != null) {
+            return cached;
+        }
+        final Set<Group> targetGroups = groups.getGroups();
+        return constraintsByGroups.putIfAbsent(groups,
+            constraints.stream().filter(c -> matchesGroups(c, targetGroups)).toArray(ConstraintD<?>[]::new));
     }
 
     @Override
@@ -118,6 +168,15 @@ public abstract class ElementD<E extends AnnotatedElement, R extends MetadataRea
     public abstract Type getGenericType();
 
     public abstract GroupStrategy getGroupStrategy();
+
+    /**
+     * Get {@code groups} with {@link Group#DEFAULT} redefined as {@link #getGroupStrategy()}. Returns
+     * {@code groups} itself (same instance) when no redefinition applies.
+     *
+     * @param groups
+     * @return {@link GroupStrategy}
+     */
+    public abstract GroupStrategy getLocalGroupStrategy(GroupStrategy groups);
 
     @Override
     public String toString() {

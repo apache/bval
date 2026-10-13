@@ -19,9 +19,12 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.AnnotatedType;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import jakarta.validation.metadata.ContainerElementTypeDescriptor;
 
+import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.util.Validate;
 
@@ -29,6 +32,8 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
     implements ContainerElementTypeDescriptor {
 
     private final ContainerElementKey key;
+    /** {@link GraphContext#runtimeKey(ContainerElementKey)} of {@link #key} by runtime container class. */
+    private final ConcurrentMap<Class<?>, ContainerElementKey> runtimeKeys = new ConcurrentHashMap<>();
 
     ContainerElementTypeD(ContainerElementKey key, MetadataReader.ForContainer<AnnotatedType> reader,
         CascadableContainerD<?, ?> parent) {
@@ -48,5 +53,25 @@ public class ContainerElementTypeD extends CascadableContainerD<CascadableContai
 
     public ContainerElementKey getKey() {
         return key;
+    }
+
+    /**
+     * Get {@link #getKey()} in terms of the runtime type of the container held by {@code context}.
+     *
+     * @param context
+     * @return {@link ContainerElementKey}
+     * @see GraphContext#runtimeKey(ContainerElementKey)
+     */
+    public ContainerElementKey getRuntimeKey(GraphContext context) {
+        final Object value = context.getValue();
+        if (value == null || value.getClass() == key.getContainerClass()) {
+            return key;
+        }
+        ContainerElementKey result = runtimeKeys.get(value.getClass());
+        if (result == null) {
+            result = context.runtimeKey(key);
+            runtimeKeys.putIfAbsent(value.getClass(), result);
+        }
+        return result;
     }
 }

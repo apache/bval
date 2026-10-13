@@ -29,7 +29,6 @@ import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
 /**
@@ -40,7 +39,7 @@ public final class ExtractValues {
     private static class Receiver implements ValueExtractor.ValueReceiver {
         private final GraphContext context;
         private final ContainerElementKey containerElementKey;
-        private final Lazy<List<GraphContext>> result = new Lazy<>(ArrayList::new);
+        private List<GraphContext> result;
 
         Receiver(GraphContext context, ContainerElementKey containerElementKey) {
             super();
@@ -77,7 +76,10 @@ public final class ExtractValues {
         private void addChild(NodeImpl node, Object value) {
             // child(NodeImpl, ...) copies the path exactly once; building the path here and passing it to
             // child(Path, ...) would copy it a second time.
-            result.get().add(context.child(
+            if (result == null) {
+                result = new ArrayList<>();
+            }
+            result.add(context.child(
                 node.inContainer(containerElementKey.getContainerClass(), containerElementKey.getTypeArgumentIndex()),
                 value));
         }
@@ -102,7 +104,7 @@ public final class ExtractValues {
             } catch (Exception e) {
                 throw new ValidationException(e);
             }
-            return receiver.result.optional().orElse(Collections.emptyList());
+            return receiver.result == null ? Collections.<GraphContext> emptyList() : receiver.result;
         }
         return Collections.singletonList(context);
     }

@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import jakarta.validation.Path;
 import jakarta.validation.Path.Node;
+import jakarta.validation.metadata.ExecutableDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.metadata.Meta;
@@ -44,6 +45,9 @@ public abstract class ValidateExecutable<E extends Executable, T> extends Valida
     protected final E executable;
 
     private final Function<E, Path.Node> executableNode;
+    private PathImpl basePath;
+    private ExecutableDescriptor executableDescriptor;
+    private boolean described;
 
     @SuppressWarnings("unchecked")
     public ValidateExecutable(ApacheFactoryContext validatorContext, Class<?>[] groups, Meta<E> meta) {
@@ -64,8 +68,25 @@ public abstract class ValidateExecutable<E extends Executable, T> extends Valida
     }
 
     protected PathImpl createBasePath() {
-        final PathImpl path = PathImpl.create();
-        path.addNode(executableNode.apply(executable));
-        return path;
+        if (basePath == null) {
+            basePath = PathImpl.create();
+            basePath.addNode(executableNode.apply(executable));
+        }
+        return PathImpl.copy(basePath);
     }
+
+    /**
+     * Get the descriptor of {@link #executable}, computed once per job.
+     *
+     * @return {@link ExecutableDescriptor} or {@code null} if the executable is not constrained
+     */
+    protected final ExecutableDescriptor getExecutableDescriptor() {
+        if (!described) {
+            executableDescriptor = describe();
+            described = true;
+        }
+        return executableDescriptor;
+    }
+
+    protected abstract ExecutableDescriptor describe();
 }

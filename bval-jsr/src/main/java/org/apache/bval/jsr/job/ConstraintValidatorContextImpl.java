@@ -18,8 +18,8 @@
  */
 package org.apache.bval.jsr.job;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.validation.ClockProvider;
 import jakarta.validation.ConstraintValidatorContext;
@@ -40,7 +40,6 @@ import org.apache.bval.jsr.util.NodeBuilderDefinedContextImpl;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 
 public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorContext, ApacheMessageContext {
@@ -136,7 +135,8 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
 
     private final ValidationJob<T>.Frame<?> frame;
     private final ConstraintD<?> constraint;
-    private final Lazy<Set<ConstraintViolation<T>>> violations = new Lazy<>(HashSet::new);
+    // typically holds a single violation; a list with a containment check keeps set semantics cheaply
+    private List<ConstraintViolation<T>> violations;
     private boolean defaultConstraintViolationDisabled;
 
     ConstraintValidatorContextImpl(ValidationJob<T>.Frame<?> frame, ConstraintD<?> constraint) {
@@ -178,14 +178,14 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
         return frame;
     }
 
-    Set<ConstraintViolation<T>> getRequiredViolations() {
-        if (!violations.optional().isPresent()) {
+    List<ConstraintViolation<T>> getRequiredViolations() {
+        if (violations == null) {
             if (defaultConstraintViolationDisabled) {
                 Exceptions.raise(ValidationException::new, "Expected custom constraint violation(s)");
             }
             addError(getDefaultConstraintMessageTemplate(), frame.context.getPath());
         }
-        return violations.get();
+        return violations;
     }
 
     @Override
@@ -200,7 +200,14 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void addError(String messageTemplate, PathImpl propertyPath) {
-        violations.get().add(((ValidationJob) frame.getJob()).createViolation(messageTemplate, this, propertyPath));
+        if (violations == null) {
+            violations = new ArrayList<>(2);
+        }
+        final ConstraintViolation<T> violation =
+            ((ValidationJob) frame.getJob()).createViolation(messageTemplate, this, propertyPath);
+        if (!violations.contains(violation)) {
+            violations.add(violation);
+        }
     }
 
     @Override

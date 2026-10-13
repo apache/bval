@@ -321,6 +321,10 @@ public class ValueExtractors {
             valueUnwrapping == ValidateUnwrappedValue.UNWRAP ? unwrapForcedCache : unwrapDefaultCache;
         // computeIfAbsent does not cache a thrown exception, so the UNWRAP "not found" error below is
         // re-evaluated on each call for that (rare, misconfigured) case rather than being memoized.
+        final Optional<UnwrappingInfo> cached = cache.get(containerClass);
+        if (cached != null) {
+            return cached;
+        }
         return cache.computeIfAbsent(containerClass, k -> computeUnwrappingInfo(k, valueUnwrapping));
     }
 

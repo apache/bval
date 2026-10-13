@@ -16,6 +16,11 @@
  */
 package org.apache.bval.jsr.descriptor;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -48,12 +53,27 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public Object getValue(Object parent) throws Exception {
+            final MethodHandle getter = getter();
+            if (getter != null) {
+                try {
+                    return (Object) getter.invokeExact(parent);
+                } catch (Exception | Error e) {
+                    throw e;
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            }
             Reflection.makeAccessible(getTarget());
             try {
                 return getTarget().get(parent);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException(e);
             }
+        }
+
+        @Override
+        MethodHandle unreflect(Lookup lookup) throws IllegalAccessException {
+            return lookup.unreflectGetter(getTarget());
         }
     }
 
@@ -70,6 +90,15 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
         @Override
         public Object getValue(Object parent) throws Exception {
+            final MethodHandle getter = getter();
+            if (getter != null) {
+                try {
+                    return (Object) getter.invokeExact(parent);
+                } catch (Throwable t) {
+                    // same wrapping as Method#invoke followed by the catch below
+                    throw new IllegalArgumentException(new InvocationTargetException(t));
+                }
+            }
             Reflection.makeAccessible(getTarget());
             try {
                 return getTarget().invoke(parent);
@@ -77,7 +106,23 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
                 throw new IllegalArgumentException(e);
             }
         }
+
+        @Override
+        MethodHandle unreflect(Lookup lookup) throws IllegalAccessException {
+            return lookup.unreflect(getTarget());
+        }
     }
+
+    private static final MethodType GETTER_TYPE = MethodType.methodType(Object.class, Object.class);
+
+    /**
+     * Reading through a cached {@link MethodHandle} avoids the slow path that {@link Field#get(Object)} and
+     * {@link Method#invoke(Object, Object...)} take when the reflective object is not a JIT constant. Holds
+     * {@link #NO_GETTER} when no handle can be created, in which case reflection is used.
+     */
+    private volatile MethodHandle getter;
+
+    private static final MethodHandle NO_GETTER = MethodHandles.constant(Object.class, null);
 
     protected PropertyD(MetadataReader.ForContainer<E> reader, BeanD<?> parent) {
         super(reader, parent);
@@ -96,4 +141,23 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
     }
 
     public abstract Object getValue(Object parent) throws Exception;
+
+    abstract MethodHandle unreflect(Lookup lookup) throws IllegalAccessException;
+
+    /**
+     * Get a {@code (Object)Object} handle reading this property, or {@code null} if none could be created.
+     */
+    final MethodHandle getter() {
+        MethodHandle result = getter;
+        if (result == null) {
+            try {
+                Reflection.makeAccessible((AccessibleObject) getTarget());
+                result = unreflect(MethodHandles.lookup()).asType(GETTER_TYPE);
+            } catch (RuntimeException | IllegalAccessException e) {
+                result = NO_GETTER;
+            }
+            getter = result;
+        }
+        return result == NO_GETTER ? null : result;
+    }
 }

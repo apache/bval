@@ -50,6 +50,16 @@ public class DefaultTraversableResolver implements TraversableResolver, CachingR
     }
 
     /**
+     * Learn whether this resolver reports every property as both reachable and cascadable, i.e. whether calls to it
+     * can be skipped altogether.
+     *
+     * @return {@code true} if no JPA-aware resolver is in use
+     */
+    public boolean isTraverseAll() {
+        return jpaTR == null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

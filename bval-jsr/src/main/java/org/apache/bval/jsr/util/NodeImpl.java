@@ -383,7 +383,11 @@ public abstract class NodeImpl implements Path.Node, Serializable {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(name, Boolean.valueOf(inIterable), index, key, getKind());
+        int h = Objects.hashCode(name);
+        h = 31 * h + Boolean.hashCode(inIterable);
+        h = 31 * h + Objects.hashCode(index);
+        h = 31 * h + Objects.hashCode(key);
+        return 31 * h + Objects.hashCode(getKind());
     }
 
     public int getParameterIndex() {

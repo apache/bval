@@ -83,8 +83,17 @@ public class ConstraintViolationImpl<T> implements ConstraintViolation<T>, Seria
         this.elementType = elementType;
         this.returnValue = returnValue;
         this.parameters = parameters;
-        this.hashCode = Arrays.deepHashCode(new Object[] { messageTemplate, message, rootBean, rootBeanClass, leafBean,
-            value, propertyPath, elementType, constraintDescriptor, returnValue, parameters });
+        int h = Objects.hashCode(messageTemplate);
+        h = 31 * h + Objects.hashCode(message);
+        h = 31 * h + Objects.hashCode(rootBean);
+        h = 31 * h + Objects.hashCode(rootBeanClass);
+        h = 31 * h + Objects.hashCode(leafBean);
+        h = 31 * h + Objects.hashCode(value);
+        h = 31 * h + Objects.hashCode(propertyPath);
+        h = 31 * h + Objects.hashCode(elementType);
+        h = 31 * h + Objects.hashCode(constraintDescriptor);
+        h = 31 * h + Objects.hashCode(returnValue);
+        this.hashCode = 31 * h + Arrays.deepHashCode(parameters);
     }
 
     /**

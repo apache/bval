@@ -21,6 +21,7 @@ package org.apache.bval.jsr.job;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -53,6 +54,7 @@ import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.BeanD;
+import org.apache.bval.jsr.descriptor.CascadableContainerD;
 import org.apache.bval.jsr.descriptor.ComposedD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.ContainerElementTypeD;
@@ -381,21 +383,17 @@ public abstract class ValidationJob<T> {
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             super.validateDescriptorConstraints(groups, sink);
             if (context.getValue() != null) {
-                for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
-                    ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                        if (d.getConstraintsFor(groups).length == 0
-                                && d.getConstrainedContainerElementTypes().isEmpty()) {
-                            return;
+                for (final ContainerElementTypeD d : containerElementTypes(descriptor)) {
+                    if (d.getConstraintsFor(groups).length == 0 && d.getConstrainedContainerElementTypes().isEmpty()) {
+                        continue;
+                    }
+                    final ValueExtractor<?> declaredTypeValueExtractor =
+                            context.getValidatorContext().getValueExtractors().find(d.getKey());
+                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
+                        if (!e.isRecursive()) {
+                            new ContainerElementConstraintsFrame(this, d, e).validateDescriptorConstraints(groups, sink);
                         }
-                        final ValueExtractor<?> declaredTypeValueExtractor =
-                                context.getValidatorContext().getValueExtractors().find(d.getKey());
-                        for (final GraphContext e : ExtractValues.extract(context, d.getKey(), declaredTypeValueExtractor)) {
-                            if (!e.isRecursive()) {
-                                new ContainerElementConstraintsFrame(this, d, e)
-                                        .validateDescriptorConstraints(groups, sink);
-                            }
-                        }
-                    });
+                    }
                 }
             }
         }
@@ -405,8 +403,18 @@ public abstract class ValidationJob<T> {
             if (context.getValue() == null || !DescriptorManager.isCascaded(descriptor)) {
                 return;
             }
+            final Set<GroupConversionDescriptor> groupConversions = descriptor.getGroupConversions();
+            if (groupConversions.isEmpty()) {
+                if (groups instanceof Group) {
+                    // a single group: applyTo would just call back once, and the result is not needed
+                    cascade(groups, sink);
+                } else {
+                    groups.applyTo(noViolations(gs -> cascade(gs, sink)));
+                }
+                return;
+            }
             final Map<Group, GroupStrategy> conversions = new HashMap<>();
-            for (final GroupConversionDescriptor gc : descriptor.getGroupConversions()) {
+            for (final GroupConversionDescriptor gc : groupConversions) {
                 conversions.put(Group.of(gc.getFrom()),
                         validatorContext.getGroupsComputer().computeGroups(gc.getTo()).asStrategy());
             }
@@ -415,19 +423,17 @@ public abstract class ValidationJob<T> {
         }
 
         private void cascade(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
-                ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                    if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
-                        return;
+            for (final ContainerElementTypeD d : containerElementTypes(descriptor)) {
+                if (!d.isCascaded() && d.getConstrainedContainerElementTypes().isEmpty()) {
+                    continue;
+                }
+                final ValueExtractor<?> runtimeTypeValueExtractor =
+                        context.getValidatorContext().getValueExtractors().find(d.getRuntimeKey(context));
+                for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
+                    if (!e.isRecursive()) {
+                        new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
                     }
-                    final ValueExtractor<?> runtimeTypeValueExtractor =
-                            context.getValidatorContext().getValueExtractors().find(context.runtimeKey(d.getKey()));
-                    for (final GraphContext e : ExtractValues.extract(context, d.getKey(), runtimeTypeValueExtractor)) {
-                        if (!e.isRecursive()) {
-                            new ContainerElementCascadeFrame(this, d, e).recurse(groups, sink);
-                        }
-                    }
-                });
+                }
             }
             if (!descriptor.isCascaded()) {
                 return;
@@ -452,18 +458,20 @@ public abstract class ValidationJob<T> {
                     throw new ValidationException(e);
                 }
             }
-            multiplexEach(cx -> {
-                if (cx.getValue() != null && !cx.isRecursive()) {
-                    new BeanFrame<>(this, cx).process(groups, sink);
-                }
-            });
+            multiplexEach(groups, sink);
         }
 
         protected GraphContext getMultiplexContext() {
             return context;
         }
 
-        private void multiplexEach(Consumer<GraphContext> consumer) {
+        private void cascadeInto(GraphContext cx, GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
+            if (cx.getValue() != null && !cx.isRecursive()) {
+                new BeanFrame<>(this, cx).process(groups, sink);
+            }
+        }
+
+        private void multiplexEach(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             final GraphContext multiplexContext = getMultiplexContext();
             final Object value = multiplexContext.getValue();
             if (value == null) {
@@ -473,37 +481,37 @@ public abstract class ValidationJob<T> {
                 // inconsistent: use Object[] here but specific type for Iterable? RI compatibility
                 final Class<?> arrayType = value instanceof Object[] ? Object[].class : value.getClass();
                 for (int i = 0, n = Array.getLength(value); i < n; i++) {
-                    consumer.accept(
-                            multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null), Array.get(value, i)));
+                    cascadeInto(multiplexContext.child(NodeImpl.atIndex(i).inContainer(arrayType, null),
+                            Array.get(value, i)), groups, sink);
                 }
                 return;
             }
             if (Map.class.isInstance(value)) {
                 for (final Map.Entry<?, ?> e : ((Map<?, ?>) value).entrySet()) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atKey(e.getKey()), MAP_VALUE, descriptor.getElementClass()),
-                            e.getValue()));
+                            e.getValue()), groups, sink);
                 }
                 return;
             }
             if (List.class.isInstance(value)) {
                 final List<?> l = (List<?>) value;
                 for (int i = 0, n = l.size(); i < n; i++) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(i), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            l.get(i)));
+                            l.get(i)), groups, sink);
                 }
                 return;
             }
             if (Iterable.class.isInstance(value)) {
                 for (final Object o : (Iterable<?>) value) {
-                    consumer.accept(multiplexContext.child(
+                    cascadeInto(multiplexContext.child(
                             setContainerInformation(NodeImpl.atIndex(null), ITERABLE_ELEMENT, descriptor.getElementClass()),
-                            o));
+                            o), groups, sink);
                 }
                 return;
             }
-            consumer.accept(multiplexContext);
+            cascadeInto(multiplexContext, groups, sink);
         }
 
         // RI apparently wants to use e.g. Set for Iterable containers, so use declared type + assigned type
@@ -555,32 +563,25 @@ public abstract class ValidationJob<T> {
 
         @Override
         protected GraphContext getMultiplexContext() {
-            final PathImpl path = context.getPath();
-
             GraphContext ancestor = context.getParent();
             Validate.validState(ancestor != null, "Expected parent context");
 
-            final NodeImpl leafNode = path.getLeafNode();
-
-            final NodeImpl newLeaf;
+            final NodeImpl leafNode = context.getLeafNode();
 
             if (leafNode.getKind() == ElementKind.CONTAINER_ELEMENT) {
-                // recurse using elided path:
-                path.removeLeafNode();
-
-                while (!path.equals(ancestor.getPath())) {
+                // recurse using elided path: the ancestor whose path is ours minus the container element node
+                while (!context.hasParentPath(ancestor)) {
                     ancestor = ancestor.getParent();
                     Validate.validState(ancestor != null, "Expected parent context");
                 }
-                newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
+                final NodeImpl newLeaf = new NodeImpl.PropertyNodeImpl(leafNode);
                 newLeaf.setName(null);
-            } else {
-                final ContainerElementKey key = descriptor.getKey();
-                newLeaf = new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
-                        key.getTypeArgumentIndex());
+                return ancestor.child(newLeaf, context.getValue());
             }
-            path.addNode(newLeaf);
-
+            final ContainerElementKey key = descriptor.getKey();
+            final PathImpl path = context.getPath();
+            path.addNode(new NodeImpl.PropertyNodeImpl((String) null).inContainer(key.getContainerClass(),
+                    key.getTypeArgumentIndex()));
             return ancestor.child(path, context.getValue());
         }
     }
@@ -618,6 +619,17 @@ public abstract class ValidationJob<T> {
      */
     private static final Consumer<?> DISCARD = cv -> {
     };
+
+    private static ContainerElementTypeD[] containerElementTypes(ContainerDescriptor descriptor) {
+        if (descriptor instanceof CascadableContainerD<?, ?>) {
+            return ((CascadableContainerD<?, ?>) descriptor).getLeafContainerElementTypes();
+        }
+        final List<ContainerElementTypeD> result = new ArrayList<>();
+        for (final ContainerElementTypeDescriptor d : descriptor.getConstrainedContainerElementTypes()) {
+            ComposedD.forEachUnwrapped(d, ContainerElementTypeD.class, result::add);
+        }
+        return result.toArray(new ContainerElementTypeD[0]);
+    }
 
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];

@@ -18,6 +18,9 @@
  */
 package org.apache.bval.jsr.descriptor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,9 +29,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstructorDescriptor;
+import jakarta.validation.metadata.ExecutableDescriptor;
 import jakarta.validation.metadata.MethodDescriptor;
 import jakarta.validation.metadata.MethodType;
 import jakarta.validation.metadata.PropertyDescriptor;
@@ -64,6 +70,11 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
     private final GroupStrategyMap<GroupStrategy> localGroupStrategies = new GroupStrategyMap<>();
     private final GroupStrategyMap<PropertyD<?>[]> propertiesByGroups = new GroupStrategyMap<>();
     private final GroupStrategyMap<GroupPlan> plans = new GroupStrategyMap<>();
+
+    /** Descriptors by executable, {@link #NOT_CONSTRAINED} for unconstrained ones. */
+    private final ConcurrentMap<Executable, Object> executableDescriptors = new ConcurrentHashMap<>();
+
+    private static final Object NOT_CONSTRAINED = new Object();
 
     private static final GroupStrategy UNCHANGED = GroupStrategy.simple(Collections.emptySet());
 
@@ -132,6 +143,25 @@ public class BeanD<T> extends ElementD<Class<T>, MetadataReader.ForBean<T>> impl
             }
             return methods.values().stream().filter(m -> k.contains(m.getMethodType())).collect(ToUnmodifiable.set());
         });
+    }
+
+    /**
+     * Like {@link #getConstraintsForMethod(String, Class...)} or {@link #getConstraintsForConstructor(Class...)} for
+     * {@code executable}, cached by executable.
+     *
+     * @param executable
+     * @return {@link ExecutableDescriptor} or {@code null} if {@code executable} is not constrained
+     */
+    public ExecutableDescriptor getConstraintsForExecutable(Executable executable) {
+        Object result = executableDescriptors.get(executable);
+        if (result == null) {
+            final ExecutableDescriptor descriptor = executable instanceof Method
+                ? getConstraintsForMethod(executable.getName(), executable.getParameterTypes())
+                : getConstraintsForConstructor(((Constructor<?>) executable).getParameterTypes());
+            result = descriptor == null ? NOT_CONSTRAINED : descriptor;
+            executableDescriptors.putIfAbsent(executable, result);
+        }
+        return result == NOT_CONSTRAINED ? null : (ExecutableDescriptor) result;
     }
 
     @Override

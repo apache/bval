@@ -317,6 +317,31 @@ public class PathImpl implements Path, Serializable {
     }
 
     /**
+     * Learn whether {@code other} equals this path with its leaf node removed as by {@link #removeLeafNode()},
+     * without copying either path.
+     *
+     * @param other
+     * @return {@code boolean}
+     */
+    public boolean isParentPath(PathImpl other) {
+        final int parentLength = nodeList.size() - 1;
+        if (parentLength < 1) {
+            final PathImpl parent = copy(this);
+            parent.removeLeafNode();
+            return parent.equals(other);
+        }
+        if (other.nodeList.size() != parentLength) {
+            return false;
+        }
+        for (int i = 0; i < parentLength; i++) {
+            if (!nodeList.get(i).equals(other.nodeList.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

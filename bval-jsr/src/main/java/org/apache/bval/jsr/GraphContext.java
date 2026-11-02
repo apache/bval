@@ -99,6 +99,30 @@ public class GraphContext {
         return p;
     }
 
+    /**
+     * Get the leaf node of this context's path without materializing the path when it is only pending.
+     *
+     * @return {@link NodeImpl}
+     */
+    public NodeImpl getLeafNode() {
+        return path == null && pendingNode != null ? pendingNode : pathReference().getLeafNode();
+    }
+
+    /**
+     * Learn whether {@code other}'s path equals this context's path with its leaf node removed, as by
+     * {@link PathImpl#removeLeafNode()}.
+     *
+     * @param other
+     * @return {@code boolean}
+     */
+    public boolean hasParentPath(GraphContext other) {
+        if (path == null && pendingNode != null && !parent.pathReference().isRootPath()) {
+            // our path is the parent's with pendingNode appended, so removing the leaf yields the parent's path
+            return other == parent || other.pathReference().equals(parent.pathReference());
+        }
+        return pathReference().isParentPath(other.pathReference());
+    }
+
     public Object getValue() {
         return value;
     }

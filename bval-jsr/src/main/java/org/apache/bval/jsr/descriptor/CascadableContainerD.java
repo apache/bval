@@ -19,6 +19,8 @@
 package org.apache.bval.jsr.descriptor;
 
 import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.validation.metadata.CascadableDescriptor;
@@ -37,6 +39,7 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
     private final Set<GroupConversion> groupConversions;
     private final Set<ContainerElementTypeDescriptor> containerElementTypes;
     private final boolean cascadedDeep;
+    private final ContainerElementTypeD[] leafContainerElementTypes;
 
     protected CascadableContainerD(MetadataReader.ForContainer<E> reader, P parent) {
         super(reader, parent);
@@ -47,6 +50,21 @@ public abstract class CascadableContainerD<P extends ElementD<?, ?>, E extends A
                                       .filter(DescriptorManager::isConstrained)
                                       .collect(ToUnmodifiable.set());
         cascadedDeep = cascaded || containerElementTypes.stream().anyMatch(DescriptorManager::isCascaded);
+        final List<ContainerElementTypeD> leaves = new ArrayList<>();
+        for (ContainerElementTypeDescriptor d : containerElementTypes) {
+            ComposedD.forEachUnwrapped(d, ContainerElementTypeD.class, leaves::add);
+        }
+        leafContainerElementTypes = leaves.toArray(new ContainerElementTypeD[0]);
+    }
+
+    /**
+     * Get the leaf (non-composed) delegates of {@link #getConstrainedContainerElementTypes()}. The result must not
+     * be modified.
+     *
+     * @return {@link ContainerElementTypeD} array, possibly empty
+     */
+    public ContainerElementTypeD[] getLeafContainerElementTypes() {
+        return leafContainerElementTypes;
     }
 
     /**

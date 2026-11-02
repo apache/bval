@@ -26,6 +26,7 @@ import jakarta.validation.metadata.ExecutableDescriptor;
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
+import org.apache.bval.jsr.descriptor.BeanD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.ReturnValueD;
 import org.apache.bval.jsr.metadata.Meta;
@@ -60,8 +61,8 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
         @Override
         protected ExecutableDescriptor describe() {
-            return validatorContext.getDescriptorManager().getBeanDescriptor(object.getClass())
-                .getConstraintsForMethod(executable.getName(), executable.getParameterTypes());
+            return ((BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(object.getClass()))
+                .getConstraintsForExecutable(executable);
         }
 
         @Override
@@ -97,8 +98,8 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
         @Override
         protected ExecutableDescriptor describe() {
-            return validatorContext.getDescriptorManager().getBeanDescriptor(executable.getDeclaringClass())
-                .getConstraintsForConstructor(executable.getParameterTypes());
+            return ((BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(executable.getDeclaringClass()))
+                .getConstraintsForExecutable(executable);
         }
 
         @Override
@@ -127,7 +128,7 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     protected Frame<?> computeBaseFrame() {
-        return createBaseFrame((ReturnValueD<?, ?>) describe().getReturnValueDescriptor(), new GraphContext(
+        return createBaseFrame((ReturnValueD<?, ?>) getExecutableDescriptor().getReturnValueDescriptor(), new GraphContext(
             validatorContext, createBasePath().addNode(new NodeImpl.ReturnValueNodeImpl()), returnValue));
     }
 
@@ -141,11 +142,9 @@ public abstract class ValidateReturnValue<E extends Executable, T> extends Valid
 
     @Override
     protected boolean hasWork() {
-        final ExecutableDescriptor descriptor = describe();
+        final ExecutableDescriptor descriptor = getExecutableDescriptor();
         return descriptor != null && descriptor.hasConstrainedReturnValue();
     }
-
-    protected abstract ExecutableDescriptor describe();
 
     protected abstract T getRootBean();
 

@@ -23,8 +23,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintViolation;
@@ -43,7 +40,6 @@ import jakarta.validation.TraversableResolver;
 import jakarta.validation.UnexpectedTypeException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.constraintvalidation.ValidationTarget;
-import jakarta.validation.groups.Default;
 import jakarta.validation.metadata.CascadableDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.ContainerDescriptor;
@@ -104,8 +100,7 @@ public abstract class ValidationJob<T> {
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
 
-            GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()))
-                    .applyTo(noViolations(gs -> validateDescriptorConstraints(gs, sink)));
+            descriptor.getLocalGroupStrategy(groups).applyTo(noViolations(gs -> validateDescriptorConstraints(gs, sink)));
 
             recurse(groups, sink);
         }
@@ -117,7 +112,9 @@ public abstract class ValidationJob<T> {
         abstract Object getBean();
 
         void validateDescriptorConstraints(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
-            constraintsFor(descriptor, groups).forEach(c -> validateUnwrapped(c, sink));
+            for (final ConstraintD<?> c : descriptor.getConstraintsFor(groups)) {
+                validateUnwrapped(c, sink);
+            }
         }
 
         // Visit each (possibly unwrapped) frame for this constraint without allocating a Stream per constraint;
@@ -274,23 +271,57 @@ public abstract class ValidationJob<T> {
         @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-            final Lazy<Set<Frame<?>>> propertyFrames = new Lazy<>(this::propertyFrames);
+            final BeanD.GroupPlan plan = descriptor.getPlan(groups);
+            final GroupStrategy localGroupStrategy = plan.getLocalGroupStrategy(groups);
+            final boolean redefined = localGroupStrategy != groups;
+            final PropertyD<?>[] properties = plan.getProperties();
+            // frames are created on first use, so that properties relevant only to groups that are never validated
+            // (e.g. later steps of a failing group sequence) are not read
+            final Object[] propertyFrames = properties.length == 0 ? NO_FRAMES : new Object[properties.length];
 
-            final GroupStrategy localGroupStrategy = GroupStrategy.redefining(groups,
-                    Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()));
+            if (localGroupStrategy instanceof Group) {
+                // a single group: applyTo would just call back once
+                validateGroup(localGroupStrategy, properties, propertyFrames, redefined, sink);
+            } else {
+                localGroupStrategy.applyTo(gs -> validateGroup(gs, properties, propertyFrames, redefined, sink));
+            }
+            if (redefined) {
+                for (int i = 0; i < properties.length; i++) {
+                    if (properties[i].isCascadedDeep()) {
+                        final Frame<?> p = propertyFrame(properties, propertyFrames, i);
+                        if (p != null) {
+                            p.recurse(groups, sink);
+                        }
+                    }
+                }
+            }
+        }
 
-            localGroupStrategy.applyTo(noViolations(gs -> {
-                validateDescriptorConstraints(gs, sink);
-                propertyFrames.get().forEach(p -> {
+        /**
+         * Validate this bean and its properties for one group of the local group strategy.
+         *
+         * @return whether no violation was found
+         */
+        private boolean validateGroup(GroupStrategy gs, PropertyD<?>[] properties, Object[] propertyFrames,
+                boolean redefined, Consumer<ConstraintViolation<T>> sink) {
+            final int originalCount = violationCount();
+            validateDescriptorConstraints(gs, sink);
+            for (int i = 0; i < properties.length; i++) {
+                final PropertyD<?> d = properties[i];
+                final boolean recurse = !redefined && d.isCascadedDeep();
+                if (!recurse && d.getConstraintsFor(gs).length == 0
+                        && d.getConstrainedContainerElementTypes().isEmpty()) {
+                    continue;
+                }
+                final Frame<?> p = propertyFrame(properties, propertyFrames, i);
+                if (p != null) {
                     p.validateDescriptorConstraints(gs, sink);
-                    if (localGroupStrategy == groups) {
+                    if (recurse) {
                         p.recurse(gs, sink);
                     }
-                });
-            }));
-            if (localGroupStrategy != groups) {
-                propertyFrames.get().forEach(p -> p.recurse(groups, sink));
+                }
             }
+            return violationCount() == originalCount;
         }
 
         protected Frame<?> propertyFrame(PropertyD<?> d, GraphContext context) {
@@ -302,34 +333,37 @@ public abstract class ValidationJob<T> {
             return context.getValue();
         }
 
-        private Set<Frame<?>> propertyFrames() {
-            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
-            final Set<Frame<?>> frames = new HashSet<>();
-            for (final PropertyDescriptor pd : descriptor.getConstrainedProperties()) {
-                ComposedD.forEachUnwrapped(pd, PropertyD.class, d -> {
-                    if (!traversesAll(traversableResolver)) {
-                        final PathImpl p = realContext.getPath();
-                        p.addProperty(d.getPropertyName());
-                        try {
-                            if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(),
-                                    getRootBeanClass(), p, d.getElementType())) {
-                                return;
-                            }
-                        } catch (ValidationException ve) {
-                            throw ve;
-                        } catch (Exception e) {
-                            throw new ValidationException(e);
-                        }
-                    }
-                    for (final Iterator<GraphContext> it = d.read(realContext).iterator(); it.hasNext();) {
-                        final GraphContext child = it.next();
-                        if (!child.isRecursive()) {
-                            frames.add(propertyFrame(d, child));
-                        }
-                    }
-                });
+        /**
+         * @return the frame for {@code properties[i]}, created on first use, or {@code null} if that property is not
+         *         reachable or its value is already being validated further up the graph
+         */
+        private Frame<?> propertyFrame(PropertyD<?>[] properties, Object[] frames, int i) {
+            Object frame = frames[i];
+            if (frame == null) {
+                frame = createPropertyFrame(properties[i]);
+                frames[i] = frame;
             }
-            return frames;
+            return frame == NO_FRAME ? null : (Frame<?>) frame;
+        }
+
+        private Object createPropertyFrame(PropertyD<?> d) {
+            final TraversableResolver traversableResolver = validatorContext.getTraversableResolver();
+            if (!traversesAll(traversableResolver)) {
+                final PathImpl p = realContext.getPath();
+                p.addProperty(d.getPropertyName());
+                try {
+                    if (!traversableResolver.isReachable(context.getValue(), p.removeLeafNode(), getRootBeanClass(),
+                            p, d.getElementType())) {
+                        return NO_FRAME;
+                    }
+                } catch (ValidationException ve) {
+                    throw ve;
+                } catch (Exception e) {
+                    throw new ValidationException(e);
+                }
+            }
+            final GraphContext child = d.readChild(realContext);
+            return child == null || child.isRecursive() ? NO_FRAME : propertyFrame(d, child);
         }
     }
 
@@ -349,7 +383,7 @@ public abstract class ValidationJob<T> {
             if (context.getValue() != null) {
                 for (final ContainerElementTypeDescriptor ctd : descriptor.getConstrainedContainerElementTypes()) {
                     ComposedD.forEachUnwrapped(ctd, ContainerElementTypeD.class, d -> {
-                        if (!constraintsFor(d, groups).findFirst().isPresent()
+                        if (d.getConstraintsFor(groups).length == 0
                                 && d.getConstrainedContainerElementTypes().isEmpty()) {
                             return;
                         }
@@ -575,6 +609,9 @@ public abstract class ValidationJob<T> {
         }
     }
 
+    private static final Object NO_FRAME = new Object();
+    private static final Object[] NO_FRAMES = {};
+
     /**
      * Sink for the violations of constraints composing one reported as a single violation. Recognized by identity so
      * that such violations are not built at all.
@@ -584,28 +621,6 @@ public abstract class ValidationJob<T> {
 
     protected static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
     protected static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
-
-    private static Stream<ConstraintD<?>> constraintsFor(ElementD<?, ?> descriptor, GroupStrategy groups) {
-        // Resolve the target groups once per call rather than once per constraint: GroupStrategy.getGroups()
-        // may allocate (a singleton for a plain Group, a fully streamed-and-collected set for a Composite),
-        // and it is invariant across the constraints being filtered.
-        final Set<Group> targetGroups = groups.getGroups();
-        return descriptor.getConstraintDescriptors().stream().<ConstraintD<?>> map(ConstraintD.class::cast)
-                .filter(c -> matchesGroups(c, targetGroups));
-    }
-
-    private static boolean matchesGroups(ConstraintD<?> constraint, Set<Group> targetGroups) {
-        final Set<Class<?>> constraintGroups = constraint.getGroups();
-        final boolean impliesDefault = constraintGroups.contains(Default.class);
-        for (final Group target : targetGroups) {
-            final Class<?> g = target.getGroup();
-            if (constraintGroups.contains(g)
-                    || impliesDefault && constraint.getDeclaringClass().equals(g)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * Learn whether {@code traversableResolver} is known to report every property as reachable and cascadable, so

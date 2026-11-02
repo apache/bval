@@ -50,6 +50,9 @@ public class DescriptorManager {
 
     public static <D extends ElementDescriptor & CascadableDescriptor & ContainerDescriptor> boolean isCascaded(
         D descriptor) {
+        if (descriptor instanceof CascadableContainerD<?, ?>) {
+            return ((CascadableContainerD<?, ?>) descriptor).isCascadedDeep();
+        }
         return descriptor != null && (descriptor.isCascaded()
             || descriptor.getConstrainedContainerElementTypes().stream().anyMatch(DescriptorManager::isCascaded));
     }

@@ -30,6 +30,7 @@ import jakarta.el.ExpressionFactory;
 import jakarta.el.FunctionMapper;
 import jakarta.el.ListELResolver;
 import jakarta.el.MapELResolver;
+import jakarta.el.RecordELResolver;
 import jakarta.el.ResourceBundleELResolver;
 import jakarta.el.ValueExpression;
 import jakarta.el.VariableMapper;
@@ -94,6 +95,7 @@ public final class ELFacade implements MessageEvaluator {
         resolver.add(new ListELResolver());
         resolver.add(new ArrayELResolver());
         resolver.add(new ResourceBundleELResolver());
+        resolver.add(new RecordELResolver());
         resolver.add(new BeanELResolver());
         return resolver;
     }

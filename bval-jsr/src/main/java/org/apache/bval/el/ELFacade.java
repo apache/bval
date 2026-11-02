@@ -94,6 +94,7 @@ public final class ELFacade implements MessageEvaluator {
         resolver.add(new ListELResolver());
         resolver.add(new ArrayELResolver());
         resolver.add(new ResourceBundleELResolver());
+        resolver.add(new FallThroughRecordELResolver());
         resolver.add(new BeanELResolver());
         return resolver;
     }

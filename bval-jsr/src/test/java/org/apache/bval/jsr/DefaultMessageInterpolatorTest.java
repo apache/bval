@@ -244,7 +244,7 @@ public class DefaultMessageInterpolatorTest {
             .getConstraintDescriptors().stream().filter(forConstraintType(NotNull.class)).findFirst()
             .orElseThrow(() -> new AssertionError("expected constraint missing")));
 
-        assertEquals("Record value widget is invalid",
+        assertEquals("Record value widget (Display widget) is invalid",
             interpolator.interpolate(context.getConstraintDescriptor().getMessageTemplate(), context));
     }
 
@@ -349,10 +349,13 @@ public class DefaultMessageInterpolatorTest {
         @Pattern(message = "Mixed message value of length ${validatedValue.length()} should match {regexp}", regexp = "....$")
         public String mixedMessageValue;
 
-        @NotNull(message = "Record value ${validatedValue.name} is invalid")
+        @NotNull(message = "Record value ${validatedValue.name} (${validatedValue.displayName}) is invalid")
         public Item recordValue;
     }
 
     public record Item(String name) {
+        public String getDisplayName() {
+            return "Display " + name;
+        }
     }
 }

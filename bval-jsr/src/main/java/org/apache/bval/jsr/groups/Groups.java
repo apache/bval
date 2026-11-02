@@ -38,6 +38,7 @@ import org.apache.bval.util.Exceptions;
 public class Groups {
     private final Set<Group> groups = new LinkedHashSet<>();
     private final Set<Group.Sequence> sequences = new LinkedHashSet<>();
+    private volatile GroupStrategy strategy;
 
     /**
      * Get the Groups.
@@ -65,6 +66,7 @@ public class Groups {
      * @return success
      */
     boolean insertGroup(Group group) {
+        strategy = null;
         return groups.add(group);
     }
 
@@ -76,6 +78,7 @@ public class Groups {
      * @return success
      */
     boolean insertSequence(Collection<Group> groups) {
+        strategy = null;
         return !(groups == null || groups.isEmpty()) && sequences.add(Group.sequence(groups));
     }
 
@@ -120,9 +123,14 @@ public class Groups {
     }
 
     public GroupStrategy asStrategy() {
-        final List<GroupStrategy> components = new ArrayList<>();
-        components.addAll(groups);
-        components.addAll(sequences);
-        return GroupStrategy.composite(components);
+        GroupStrategy result = strategy;
+        if (result == null) {
+            final List<GroupStrategy> components = new ArrayList<>();
+            components.addAll(groups);
+            components.addAll(sequences);
+            result = GroupStrategy.composite(components);
+            strategy = result;
+        }
+        return result;
     }
 }

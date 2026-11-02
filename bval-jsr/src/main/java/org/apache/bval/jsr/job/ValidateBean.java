@@ -23,16 +23,13 @@ import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.descriptor.BeanD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
-import org.apache.bval.jsr.descriptor.DescriptorManager;
 import org.apache.bval.jsr.util.PathImpl;
-import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.util.Validate;
-
-import java.util.Map;
 
 public final class ValidateBean<T> extends ValidationJob<T> {
 
     private final T bean;
+    private BeanD<T> descriptor;
 
     ValidateBean(ApacheFactoryContext validatorContext, T bean, Class<?>[] groups) {
         super(validatorContext, groups);
@@ -41,24 +38,16 @@ public final class ValidateBean<T> extends ValidationJob<T> {
 
     @Override
     protected boolean hasWork() {
-        final Class<?> beanClass = bean.getClass();
-        final Map<Class<?>, Class<?>> classCache = validatorContext.getFactory().getUnwrappedClassCache();
-        Class<?> unwrappedClass = classCache.get(beanClass);
-        if (unwrappedClass == null) {
-            unwrappedClass = Proxies.classFor(beanClass);
-            classCache.putIfAbsent(beanClass, unwrappedClass);
-        }
-        final DescriptorManager dm = validatorContext.getFactory().getDescriptorManager();
-        final Boolean cached = dm.getCachedBeanConstrained(unwrappedClass);
-        if (cached != null) {
-            return cached;
-        }
-        return dm.getBeanDescriptor(unwrappedClass).isBeanConstrained();
+        @SuppressWarnings("unchecked")
+        final BeanD<T> d =
+            (BeanD<T>) validatorContext.getDescriptorManager().getBeanDescriptorForRuntimeClass(bean.getClass());
+        descriptor = d;
+        return d.isBeanConstrained();
     }
 
     @Override
     protected Frame<BeanD<T>> computeBaseFrame() {
-        return new BeanFrame<T>(new GraphContext(validatorContext, PathImpl.create(), bean));
+        return new BeanFrame<T>(null, new GraphContext(validatorContext, PathImpl.create(), bean), descriptor);
     }
 
     @SuppressWarnings("unchecked")

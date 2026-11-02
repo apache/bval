@@ -19,6 +19,7 @@
 package org.apache.bval.jsr.job;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import jakarta.validation.ClockProvider;
@@ -137,12 +138,20 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
     private final ConstraintD<?> constraint;
     // typically holds a single violation; a list with a containment check keeps set semantics cheaply
     private List<ConstraintViolation<T>> violations;
+    /** Whether violations are only counted, not built, because the caller discards them. */
+    private final boolean discardViolations;
     private boolean defaultConstraintViolationDisabled;
 
     ConstraintValidatorContextImpl(ValidationJob<T>.Frame<?> frame, ConstraintD<?> constraint) {
+        this(frame, constraint, false);
+    }
+
+    ConstraintValidatorContextImpl(ValidationJob<T>.Frame<?> frame, ConstraintD<?> constraint,
+        boolean discardViolations) {
         super();
         this.frame = Validate.notNull(frame, "frame");
         this.constraint = Validate.notNull(constraint, "constraint");
+        this.discardViolations = discardViolations;
     }
 
     @Override
@@ -183,6 +192,10 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
             if (defaultConstraintViolationDisabled) {
                 Exceptions.raise(ValidationException::new, "Expected custom constraint violation(s)");
             }
+            if (discardViolations) {
+                violations = Collections.emptyList();
+                return violations;
+            }
             addError(getDefaultConstraintMessageTemplate(), frame.context.getPath());
         }
         return violations;
@@ -200,6 +213,10 @@ public class ConstraintValidatorContextImpl<T> implements ConstraintValidatorCon
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void addError(String messageTemplate, PathImpl propertyPath) {
+        if (discardViolations) {
+            violations = Collections.emptyList();
+            return;
+        }
         if (violations == null) {
             violations = new ArrayList<>(2);
         }

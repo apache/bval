@@ -65,6 +65,12 @@ public class GraphContext {
     }
 
     public PathImpl getPath() {
+        final PathImpl p = path;
+        if (p == null && pendingNode == null) {
+            // derive a private copy straight from the parent rather than materializing this context's path only to
+            // copy it again; the mutation appends fresh nodes, so nothing is shared with other copies
+            return derivePath();
+        }
         return PathImpl.copy(pathReference());
     }
 
@@ -77,13 +83,18 @@ public class GraphContext {
     public PathImpl pathReference() {
         PathImpl p = path;
         if (p == null) {
-            p = PathImpl.copy(parent.pathReference());
-            if (pendingNode != null) {
-                p.addNode(pendingNode);
-            } else {
-                pendingMutation.accept(p);
-            }
+            p = derivePath();
             path = p;
+        }
+        return p;
+    }
+
+    private PathImpl derivePath() {
+        final PathImpl p = PathImpl.copy(parent.pathReference());
+        if (pendingNode != null) {
+            p.addNode(pendingNode);
+        } else {
+            pendingMutation.accept(p);
         }
         return p;
     }

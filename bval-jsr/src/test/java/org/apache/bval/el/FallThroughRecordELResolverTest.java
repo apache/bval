@@ -57,6 +57,17 @@ public class FallThroughRecordELResolverTest {
         }
     }
 
+    public interface Data {
+        boolean isGood();
+    }
+
+    public record DataImpl(int status) implements Data {
+        @Override
+        public boolean isGood() {
+            return status == 1;
+        }
+    }
+
     private final FallThroughRecordELResolver resolver = new FallThroughRecordELResolver();
 
     private static ELContext newContext() {
@@ -107,6 +118,17 @@ public class FallThroughRecordELResolverTest {
             assertFalse(base + "." + property + " must stay unresolved", context.isPropertyResolved());
         }
         assertEquals(0, item.invocations().get());
+    }
+
+    /**
+     * Interface property implemented by a record, see https://github.com/jakartaee/expression-language/issues/489.
+     */
+    @Test
+    public void interpolatesInterfacePropertyOfRecord() {
+        final ELFacade el = new ELFacade();
+
+        assertEquals("true", el.interpolate("${validatedValue.good}", Collections.emptyMap(), new DataImpl(1)));
+        assertEquals("1", el.interpolate("${validatedValue.status}", Collections.emptyMap(), new DataImpl(1)));
     }
 
     @Test

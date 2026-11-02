@@ -93,4 +93,17 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- JDK 23+ no longer runs annotation processors implicitly; JMH needs its generator -->
+          <proc>full</proc>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

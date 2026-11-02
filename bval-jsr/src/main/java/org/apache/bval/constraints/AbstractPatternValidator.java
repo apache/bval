@@ -42,6 +42,12 @@ public abstract class AbstractPatternValidator<A extends Annotation, T extends C
 
     protected Pattern pattern;
 
+    /**
+     * Whether {@link #pattern} is {@code .*} without flags, the default of {@code @Email}, which matches exactly the
+     * values without a line terminator.
+     */
+    private boolean matchesAnyLine;
+
     protected AbstractPatternValidator(Function<A, PatternDescriptor> toDescriptor) {
         super();
         this.toDescriptor = Validate.notNull(toDescriptor);
@@ -60,6 +66,7 @@ public abstract class AbstractPatternValidator<A extends Annotation, T extends C
         }
         try {
             pattern = Pattern.compile(pd.regexp(), intFlag);
+            matchesAnyLine = intFlag == 0 && ".*".equals(pd.regexp());
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Invalid regular expression.", e);
         }
@@ -67,6 +74,25 @@ public abstract class AbstractPatternValidator<A extends Annotation, T extends C
 
     @Override
     public boolean isValid(T value, ConstraintValidatorContext context) {
-        return value == null || pattern.matcher(value).matches();
+        if (value == null) {
+            return true;
+        }
+        return matchesAnyLine ? !containsLineTerminator(value) : pattern.matcher(value).matches();
+    }
+
+    private static boolean containsLineTerminator(CharSequence value) {
+        for (int i = 0, n = value.length(); i < n; i++) {
+            switch (value.charAt(i)) {
+            case '\n':
+            case '\r':
+            case '\u0085':
+            case '\u2028':
+            case '\u2029':
+                return true;
+            default:
+                break;
+            }
+        }
+        return false;
     }
 }

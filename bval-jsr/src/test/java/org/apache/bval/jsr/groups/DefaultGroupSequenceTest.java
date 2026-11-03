@@ -18,7 +18,7 @@
  */
 package org.apache.bval.jsr.groups;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,32 +53,20 @@ public class DefaultGroupSequenceTest {
         List<Group> defaultSequence = new ArrayList<Group>();
         defaultSequence.add(Group.DEFAULT);
         defaultSequence.add(new Group(GroupA.class));
-        try {
-            chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-            fail();
-        } catch (GroupDefinitionException e) {
-            // success
-        }
+        assertThrows(GroupDefinitionException.class,
+            () -> chain.assertDefaultGroupSequenceIsExpandable(defaultSequence));
 
         defaultSequence.clear();
         defaultSequence.add(new Group(GroupA.class));
         defaultSequence.add(new Group(Default.class));
-        try {
-            chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-            fail();
-        } catch (GroupDefinitionException e) {
-            // success
-        }
+        assertThrows(GroupDefinitionException.class,
+            () -> chain.assertDefaultGroupSequenceIsExpandable(defaultSequence));
 
         defaultSequence.clear();
         defaultSequence.add(Group.DEFAULT);
         defaultSequence.add(new Group(GroupC.class));
-        try {
-            chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-            fail();
-        } catch (GroupDefinitionException e) {
-            // success
-        }
+        assertThrows(GroupDefinitionException.class,
+            () -> chain.assertDefaultGroupSequenceIsExpandable(defaultSequence));
 
         defaultSequence.clear();
         defaultSequence.add(new Group(GroupC.class));
@@ -87,7 +75,7 @@ public class DefaultGroupSequenceTest {
     }
 
     @Test
-    public void testAssertDefaulGroupSequenceIsExpandableWithDefaultAtBeginningOfSequence() {
+    public void testAssertDefaultGroupSequenceIsExpandableWithDefaultAtBeginningOfSequence() {
         // create a dummy sequence
         Group a = new Group(GroupA.class);
         Group b = new Group(GroupB.class);
@@ -111,32 +99,20 @@ public class DefaultGroupSequenceTest {
         defaultSequence.clear();
         defaultSequence.add(new Group(GroupA.class));
         defaultSequence.add(Group.DEFAULT);
-        try {
-            chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-            fail();
-        } catch (GroupDefinitionException e) {
-            // success
-        }
+        assertThrows(GroupDefinitionException.class,
+            () -> chain.assertDefaultGroupSequenceIsExpandable(defaultSequence));
 
         defaultSequence.clear();
         defaultSequence.add(Group.DEFAULT);
         defaultSequence.add(new Group(GroupC.class));
-        try {
-            chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-            fail();
-        } catch (GroupDefinitionException e) {
-            // success
-        }
+        assertThrows(GroupDefinitionException.class,
+            () -> chain.assertDefaultGroupSequenceIsExpandable(defaultSequence));
 
         defaultSequence.clear();
         defaultSequence.add(new Group(GroupC.class));
         defaultSequence.add(Group.DEFAULT);
-        try {
-            chain.assertDefaultGroupSequenceIsExpandable(defaultSequence);
-            fail();
-        } catch (GroupDefinitionException e) {
-            // success
-        }
+        assertThrows(GroupDefinitionException.class,
+            () -> chain.assertDefaultGroupSequenceIsExpandable(defaultSequence));
     }
 }
 

@@ -37,6 +37,7 @@ import jakarta.el.ExpressionFactory;
 import jakarta.validation.MessageInterpolator;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.metadata.ConstraintDescriptor;
 
@@ -235,6 +236,19 @@ public class DefaultMessageInterpolatorTest {
     }
 
     @Test
+    public void testRecordPropertyEvaluation() {
+        assumeTrue(elAvailable);
+
+        final MessageInterpolator.Context context = context(new Item("widget"),
+            () -> validator.getConstraintsForClass(Person.class).getConstraintsForProperty("recordValue")
+            .getConstraintDescriptors().stream().filter(forConstraintType(NotNull.class)).findFirst()
+            .orElseThrow(() -> new AssertionError("expected constraint missing")));
+
+        assertEquals("Record value widget (Display widget) is invalid",
+            interpolator.interpolate(context.getConstraintDescriptor().getMessageTemplate(), context));
+    }
+
+    @Test
     public void testELEscapingTomcatJuel() {
         assumeTrue(elAvailable);
         assumeThat(elImpl, anyOf(equalTo("tomcat")));
@@ -334,5 +348,14 @@ public class DefaultMessageInterpolatorTest {
         
         @Pattern(message = "Mixed message value of length ${validatedValue.length()} should match {regexp}", regexp = "....$")
         public String mixedMessageValue;
+
+        @NotNull(message = "Record value ${validatedValue.name} (${validatedValue.displayName}) is invalid")
+        public Item recordValue;
+    }
+
+    public record Item(String name) {
+        public String getDisplayName() {
+            return "Display " + name;
+        }
     }
 }

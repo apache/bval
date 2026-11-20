@@ -25,6 +25,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import jakarta.validation.ValidationException;
@@ -32,6 +33,7 @@ import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.apache.bval.jsr.GraphContext;
 import org.apache.bval.jsr.util.Methods;
+import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.reflection.Reflection;
 import org.apache.commons.weaver.privilizer.Privilizing;
 import org.apache.commons.weaver.privilizer.Privilizing.CallTo;
@@ -115,6 +117,8 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
 
     private static final MethodType GETTER_TYPE = MethodType.methodType(Object.class, Object.class);
 
+    private final Consumer<PathImpl> addPropertyNode = p -> p.addProperty(getPropertyName());
+
     /**
      * Reading through a cached {@link MethodHandle} avoids the slow path that {@link Field#get(Object)} and
      * {@link Method#invoke(Object, Object...)} take when the reflective object is not a JIT constant. Holds
@@ -129,12 +133,22 @@ public abstract class PropertyD<E extends AnnotatedElement> extends CascadableCo
     }
 
     public final Stream<GraphContext> read(GraphContext context) {
+        final GraphContext child = readChild(context);
+        return child == null ? Stream.empty() : Stream.of(child);
+    }
+
+    /**
+     * Read this property from the bean held by {@code context}.
+     *
+     * @param context
+     * @return child {@link GraphContext} holding the property value, or {@code null} if {@code context} holds no bean
+     */
+    public final GraphContext readChild(GraphContext context) {
         if (context.getValue() == null) {
-            return Stream.empty();
+            return null;
         }
         try {
-            final Object value = getValue(context.getValue());
-            return Stream.of(context.child(p -> p.addProperty(getPropertyName()), value));
+            return context.child(addPropertyNode, getValue(context.getValue()));
         } catch (Exception e) {
             throw e instanceof ValidationException ? (ValidationException) e : new ValidationException(e);
         }

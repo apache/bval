@@ -22,31 +22,27 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ParameterNameProvider;
 import jakarta.validation.constraintvalidation.ValidationTarget;
 import jakarta.validation.metadata.ExecutableDescriptor;
+import jakarta.validation.metadata.ParameterDescriptor;
 
 import org.apache.bval.jsr.ApacheFactoryContext;
 import org.apache.bval.jsr.ConstraintViolationImpl;
 import org.apache.bval.jsr.GraphContext;
+import org.apache.bval.jsr.descriptor.BeanD;
 import org.apache.bval.jsr.descriptor.ConstraintD;
 import org.apache.bval.jsr.descriptor.CrossParameterD;
 import org.apache.bval.jsr.descriptor.ParameterD;
-import org.apache.bval.jsr.groups.Group;
 import org.apache.bval.jsr.groups.GroupStrategy;
 import org.apache.bval.jsr.metadata.Meta;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
 import org.apache.bval.util.Exceptions;
-import org.apache.bval.util.Lazy;
 import org.apache.bval.util.Validate;
 import org.apache.bval.util.reflection.TypeUtils;
 
@@ -63,8 +59,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
         @Override
         protected ExecutableDescriptor describe() {
-            return validatorContext.getDescriptorManager().getBeanDescriptor(object.getClass())
-                .getConstraintsForMethod(executable.getName(), executable.getParameterTypes());
+            return ((BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(object.getClass()))
+                .getConstraintsForExecutable(executable);
         }
 
         @SuppressWarnings("unchecked")
@@ -94,8 +90,8 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
         @Override
         protected ExecutableDescriptor describe() {
-            return validatorContext.getDescriptorManager().getBeanDescriptor(executable.getDeclaringClass())
-                .getConstraintsForConstructor(executable.getParameterTypes());
+            return ((BeanD<?>) validatorContext.getDescriptorManager().getBeanDescriptor(executable.getDeclaringClass()))
+                .getConstraintsForExecutable(executable);
         }
 
         @SuppressWarnings("unchecked")
@@ -132,33 +128,34 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         @Override
         void process(GroupStrategy groups, Consumer<ConstraintViolation<T>> sink) {
             Validate.notNull(sink, "sink");
-            final Lazy<Set<Frame<?>>> parameterFrames = new Lazy<>(this::parameterFrames);
-
-            GroupStrategy.redefining(groups, Collections.singletonMap(Group.DEFAULT, descriptor.getGroupStrategy()))
-                .applyTo(noViolations(gs -> {
-                    validateDescriptorConstraints(gs, sink);
-                    parameterFrames.get().forEach(p -> p.validateDescriptorConstraints(gs, sink));
-                }));
-            parameterFrames.get().forEach(p -> p.recurse(groups, sink));
+            final List<ParameterDescriptor> parameters = executableDescriptor.getParameterDescriptors();
+            @SuppressWarnings("unchecked")
+            final Frame<?>[] parameterFrames = new Frame[parameters.size()];
+            for (int i = 0; i < parameterFrames.length; i++) {
+                final ParameterD<?> pd = (ParameterD<?>) parameters.get(i);
+                parameterFrames[i] = new SproutFrame<ParameterD<?>>(this, pd, parameter(pd.getIndex()));
+            }
+            descriptor.getLocalGroupStrategy(groups).applyTo(noViolations(gs -> {
+                validateDescriptorConstraints(gs, sink);
+                for (final Frame<?> p : parameterFrames) {
+                    p.validateDescriptorConstraints(gs, sink);
+                }
+            }));
+            for (final Frame<?> p : parameterFrames) {
+                p.recurse(groups, sink);
+            }
         }
 
         @Override
         Object getBean() {
             return object;
         }
-
-        private Set<Frame<?>> parameterFrames() {
-            return executableDescriptor.getParameterDescriptors().stream()
-                .map(pd -> new SproutFrame<ParameterD<?>>(this, (ParameterD<?>) pd, parameter(pd.getIndex())))
-                .collect(Collectors.toSet());
-        }
     }
 
     private static final String PARAMETERS_DO_NOT_MATCH = "Parameters do not match";
 
     protected final T object;
-    protected final Lazy<List<String>> parameterNames =
-        new Lazy<>(() -> getParameterNames(validatorContext.getParameterNameProvider()));
+    private List<String> parameterNames;
 
     private final Object[] parameterValues;
 
@@ -172,24 +169,23 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
         final Type[] genericParameterTypes = executable.getGenericParameterTypes();
         Exceptions.raiseUnless(parameterValues.length == genericParameterTypes.length, IllegalArgumentException::new,
             PARAMETERS_DO_NOT_MATCH);
-        IntStream.range(0, genericParameterTypes.length)
-            .forEach(n -> Exceptions.raiseUnless(TypeUtils.isInstance(parameterValues[n], genericParameterTypes[n]),
-                IllegalArgumentException::new, PARAMETERS_DO_NOT_MATCH));
+        for (int n = 0; n < genericParameterTypes.length; n++) {
+            Exceptions.raiseUnless(TypeUtils.isInstance(parameterValues[n], genericParameterTypes[n]),
+                IllegalArgumentException::new, PARAMETERS_DO_NOT_MATCH);
+        }
     }
 
     @Override
     protected Frame<?> computeBaseFrame() {
-        return new ParametersFrame(describe(), new GraphContext(validatorContext,
+        return new ParametersFrame(getExecutableDescriptor(), new GraphContext(validatorContext,
             createBasePath().addNode(new NodeImpl.CrossParameterNodeImpl()), parameterValues));
     }
 
     @Override
     protected boolean hasWork() {
-        final ExecutableDescriptor descriptor = describe();
+        final ExecutableDescriptor descriptor = getExecutableDescriptor();
         return descriptor != null && descriptor.hasConstrainedParameters();
     }
-
-    protected abstract ExecutableDescriptor describe();
 
     protected abstract List<String> getParameterNames(ParameterNameProvider parameterNameProvider);
 
@@ -205,7 +201,10 @@ public abstract class ValidateParameters<E extends Executable, T> extends Valida
 
     private GraphContext parameter(int i) {
         final PathImpl path = createBasePath();
-        path.addNode(new NodeImpl.ParameterNodeImpl(parameterNames.get().get(i), i));
+        if (parameterNames == null) {
+            parameterNames = getParameterNames(validatorContext.getParameterNameProvider());
+        }
+        path.addNode(new NodeImpl.ParameterNodeImpl(parameterNames.get(i), i));
         return new GraphContext(validatorContext, path, parameterValues[i]);
     }
 }

@@ -69,7 +69,6 @@ import org.apache.bval.jsr.groups.Groups;
 import org.apache.bval.jsr.metadata.ContainerElementKey;
 import org.apache.bval.jsr.util.NodeImpl;
 import org.apache.bval.jsr.util.PathImpl;
-import org.apache.bval.jsr.util.Proxies;
 import org.apache.bval.jsr.valueextraction.ExtractValues;
 import org.apache.bval.jsr.valueextraction.ValueExtractors;
 import org.apache.bval.util.Exceptions;
@@ -199,12 +198,17 @@ public abstract class ValidationJob<T> {
         private ConstraintValidator getConstraintValidator(ConstraintD<?> constraint) {
             // Fast path: the validator is cached after first use, so avoid building the (capturing) supplier
             // lambda and going through computeIfAbsent on the common cache-hit path.
+            final ConstraintValidator memo = constraint.getValidator();
+            if (memo != null) {
+                return memo;
+            }
             final ConstraintValidator existing =
                     validatorContext.getConstraintsCache().getValidators().get(constraint);
             if (existing != null) {
+                constraint.setValidator(existing);
                 return existing;
             }
-            return validatorContext.getOrComputeConstraintValidator(constraint, () -> {
+            final ConstraintValidator computed = validatorContext.getOrComputeConstraintValidator(constraint, () -> {
                 final Class<? extends ConstraintValidator> constraintValidatorClass =
                         new ComputeConstraintValidatorClass<>(validatorContext.getConstraintsCache(), constraint,
                                 getValidationTarget(), computeValidatedType(constraint)).get();
@@ -230,6 +234,8 @@ public abstract class ValidationJob<T> {
                 }
                 return constraintValidator;
             });
+            constraint.setValidator(computed);
+            return computed;
         }
 
         private Class<?> computeValidatedType(ConstraintD<?> constraint) {
@@ -254,8 +260,11 @@ public abstract class ValidationJob<T> {
         }
 
         BeanFrame(Frame<?> parent, GraphContext context) {
-            super(parent, getBeanDescriptor(context.getValue()),
-                    context.child(PathImpl::addBean, context.getValue()));
+            this(parent, context, getBeanDescriptor(context.getValue()));
+        }
+
+        BeanFrame(Frame<?> parent, GraphContext context, BeanD<B> descriptor) {
+            super(parent, descriptor, context.child(PathImpl::addBean, context.getValue()));
             this.realContext = context;
         }
 
@@ -589,7 +598,10 @@ public abstract class ValidationJob<T> {
     protected final ApacheFactoryContext validatorContext;
     protected final Groups groups;
 
-    private final Lazy<Set<ConstraintViolation<T>>> results = new Lazy<>(LinkedHashSet::new);
+    /** Collected violations; {@code null} until the first one is reported. */
+    private Set<ConstraintViolation<T>> results;
+    /** What {@link #getResults()} returns once computed. */
+    private Set<ConstraintViolation<T>> resultsView;
 
     ValidationJob(ApacheFactoryContext validatorContext, Class<?>[] groups) {
         super();
@@ -598,33 +610,32 @@ public abstract class ValidationJob<T> {
     }
 
     public final Set<ConstraintViolation<T>> getResults() {
-        if (results.optional().isPresent()) {
-            return results.get();
+        if (resultsView != null) {
+            return resultsView;
         }
         if (hasWork()) {
             final Frame<?> baseFrame = computeBaseFrame();
             Validate.validState(baseFrame != null, "%s computed null baseFrame", getClass().getName());
 
-            final Consumer<ConstraintViolation<T>> sink = results.consumer(Set::add);
-
-            baseFrame.process(groups.asStrategy(), sink);
-            if (results.optional().isPresent()) {
-                return Collections.unmodifiableSet(results.get());
+            baseFrame.process(groups.asStrategy(), this::addResult);
+            if (results != null) {
+                return resultsView = Collections.unmodifiableSet(results);
             }
         }
-        return results.reset(Collections::emptySet).get();
+        return resultsView = Collections.emptySet();
+    }
+
+    private void addResult(ConstraintViolation<T> violation) {
+        if (results == null) {
+            results = new LinkedHashSet<>();
+        }
+        results.add(violation);
     }
 
     @SuppressWarnings("unchecked")
     private <O> BeanD<O> getBeanDescriptor(Object bean) {
-        final Class<?> beanClass = Validate.notNull(bean, "bean").getClass();
-        final Map<Class<?>, Class<?>> classCache = validatorContext.getFactory().getUnwrappedClassCache();
-        Class<?> unwrappedClass = classCache.get(beanClass);
-        if (unwrappedClass == null) {
-            unwrappedClass = Proxies.classFor(beanClass);
-            classCache.putIfAbsent(beanClass, unwrappedClass);
-        }
-        return (BeanD<O>) validatorContext.getDescriptorManager().getBeanDescriptor(unwrappedClass);
+        return (BeanD<O>) validatorContext.getDescriptorManager()
+                .getBeanDescriptorForRuntimeClass(Validate.notNull(bean, "bean").getClass());
     }
 
     final ConstraintViolationImpl<T> createViolation(String messageTemplate, ConstraintValidatorContextImpl<T> context,
@@ -658,8 +669,7 @@ public abstract class ValidationJob<T> {
     }
 
     private int violationCount() {
-        final Optional<Set<ConstraintViolation<T>>> maybeResults = results.optional();
-        return maybeResults.isPresent() ? maybeResults.get().size() : 0;
+        return results == null ? 0 : results.size();
     }
 
     private String interpolate(String messageTemplate, MessageInterpolator.Context context) {
